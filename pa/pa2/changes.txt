@@ -1,0 +1,6 @@
+Vision Document
+- Change MongoDB Atlas to local server in "4.2. Assumptions and Dependency"
+- Revise "6.1. Non-Functional Requirements"
+
+Software Development Plan
+- Complete Risk Management
