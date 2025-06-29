@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' },
   roles: {
   type: [String],
-  enum: ['customer', 'cashier', 'check-incounter' ,'branchmanager','administrator'], 
+  enum: ['customer', 'cashier', 'checkincounter' ,'branchmanager','administrator'], 
   default: ['customer']
 },
   loyaltyRank: {
