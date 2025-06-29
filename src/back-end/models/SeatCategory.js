@@ -20,7 +20,7 @@ const seatCategorySchema = new mongoose.Schema({
     required: true,
     default: 0,
   }
-}, { timestamps: false, _id: false });
+}, { timestamps: false });
 
 seatCategorySchema.pre('save', function(next) {
     this._id = this.shortname;
