@@ -86,6 +86,6 @@ promotionSchema.pre('save', function(next) {
     next();
 });
 
-promotionSchema.index({ promotionCode: 1 });
+// Removed redundant explicit index for promotionCode as unique: true already creates it.
 
 module.exports = mongoose.model('Promotion', promotionSchema);
