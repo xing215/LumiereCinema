@@ -46,7 +46,7 @@ const promotionSchema = new mongoose.Schema({
   // RemainingUse: Số lượt sử dụng còn lại
   remainingUse: {
       type: Number,
-      default: Infinity
+      default: null
   },
 
   // MinimumSpend: Điều kiện chi tiêu tối thiểu để được áp dụng
