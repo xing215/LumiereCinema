@@ -77,11 +77,11 @@ const promotionSchema = new mongoose.Schema({
 // Middleware để kiểm tra ngày tháng
 promotionSchema.pre('save', function(next) {
     if (this.endDate < this.startDate) {
-        return next(new Error('Ngày kết thúc phải sau ngày bắt đầu.'));
+        return next(new Error('The end date must be after the start date.'));
     }
     // Logic kiểm tra discountRate dựa trên discountType
     if (this.discountType === 'Percentage' && (this.discountRate < 0 || this.discountRate > 100)) {
-        return next(new Error('Tỷ lệ phần trăm giảm giá phải từ 0 đến 100.'));
+        return next(new Error('The discount percentage must be between 0 and 100.'));
     }
     next();
 });
