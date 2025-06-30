@@ -2,7 +2,7 @@
 import React from 'react';
 import Header from "../layouts/LandingPage/Header.jsx";
 import Banner from "../layouts/LandingPage/Banner.jsx";
-import ChatBot from "../components/modal/ChatBot.jsx";
+import ChatBot from "../components/display/ChatBot.jsx";
 import NowShowing from "../layouts/LandingPage/NowShowingMovie.jsx";
 
 const LandingPage = () => {
