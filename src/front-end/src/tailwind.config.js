@@ -8,7 +8,6 @@ export default {
         extend: {
             fontFamily: {
                 unbounded: ['Unbounded', 'sans-serif'],
-                mina: ['Mina', 'sans-serif'],
             },
             color:{
                 "gray-custom" : "#d9d9d9b2",

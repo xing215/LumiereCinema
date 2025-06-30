@@ -5,8 +5,8 @@ const SearchButton = () => (
         <div className="lg:w-[83px] md:w-[53px] sm:[33-px] w-[10px] h-full"/>
         <div className="lg:w-[15px] md:w-[10px] w-[5px] h-full"/>
         <button
-            className="xl:w-[22.5px] lg:w-[20px] md:w-[15px] w-[12px]
-            xl:h-[45px] lg:h-[40px] md:h-[30px] h-[25px]"
+            className="lg:w-[20px] w-[15px]
+            lg:h-[40px]"
             aria-label="Search"
         >
             <img
