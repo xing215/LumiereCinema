@@ -15,7 +15,7 @@ const Label = () => {
 
 const UpComing = () => {
     return (
-        <section className="relative flex-col bg-slate-950 w-screen h-auto z-18 overflow-y-visible no-scrollbar">
+        <div className="relative flex-col bg-slate-950 w-screen h-auto z-18">
             <div className="absolute mix-blend-lighten bg-purple-600/60 blur-[100px] z-10
             left-1/3 -translate-x-1/2
             xl:bottom-[-150px] lg:bottom-[-100px] md:bottom-[-50px] bottom-[-30px]
@@ -26,7 +26,7 @@ const UpComing = () => {
             <div className="relative bg-transparent w-screen xl:h-10 lg:h-6 sm:h-4 h-2"/>
             <SeeMoreButton/>
             <div className="relative bg-transparent w-screen xl:h-15 lg:h-9 sm:h-6 h-3"/>
-        </section>
+        </div>
     );
 }
 

@@ -24,7 +24,7 @@ Lưu ở [assets](src/assets) không lưu ở [public](public). Các ảnh xài 
 ## 6. Responsive:
 ***LÀM TỪ ĐẦU MAI MỐT KHỎI CẦN GIAI ĐOẠN ĐI RESPONSIVE.*** <br/>
 Xem ở: https://tailwindcss.com/docs/responsive-design và YouTube.<br/>
-Tham khảo ở: [navButton.jsx](src/components/buttons/navButton.jsx) <br/>
+Tham khảo ở: [navButton.jsx](src/components/buttons/header/navButton.jsx) <br/>
 Thấy dòng code ```<div className="lg:w-[15px] md:w-[10px] sm:w-[5px] w-[3px] h-full"/>``` hong? <br/>
 Đại loại nó là Breakpoint, ứng với mỗi loại màn hình sẽ quy định size của Component khác nhau. Cụ thể xem ở trong tai liệu ở trên á.
 ![img.png](src/assets/img.png)

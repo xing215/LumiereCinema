@@ -14,7 +14,7 @@ const Label = () => {
 
 const Maps = () => {
     return (
-        <section className="relative z-19 w-screen flex flex-col items-center justify-center bg-slate-950 overflow-y-visible no-scrollbar">
+        <div className="relative z-19 w-screen flex flex-col items-center justify-center bg-slate-950">
             <Label/>
             <div className="w-full xl:h-10 lg:h-5 h-3"/>
             <IntegratedMap/>
@@ -27,7 +27,7 @@ const Maps = () => {
             xl:right-[-150px] lg:right-[-100px] md:right-[-70px] right-0
             xl:w-[315px] lg:w-[200px] md:w-[150px] w-[100px]
             xl:h-[488px] lg:h-[400px] md:h-[300px] h-[200px]" />
-        </section>
+        </div>
     );
 }
 
