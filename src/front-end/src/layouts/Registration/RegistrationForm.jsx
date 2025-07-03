@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
+import ShowIcon from '../../assets/icons/show.svg';
+import HideIcon from '../../assets/icons/hide.svg';
 
 const RegistrationForm = () => {
     const [formData, setFormData] = useState({
@@ -12,16 +14,108 @@ const RegistrationForm = () => {
         retypePassword: ''
     });
 
+    const [errors, setErrors] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [showRetypePassword, setShowRetypePassword] = useState(false);
+
+    // Validation patterns
+    const patterns = {
+        name: /^[a-zA-ZÀ-ỹ\s]{2,}\s+[a-zA-ZÀ-ỹ\s]{2,}$/,
+        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        phoneNumber: /^(?:\+84|0084|0)[235789][0-9]{1,2}[0-9]{7}$/,
+        gender: /^(Male|Female|Other)$/
+    };
+
+    const validateField = (name, value) => {
+        let error = '';
+        
+        switch (name) {
+            case 'name':
+                if (!patterns.name.test(value.trim())) {
+                    error = 'Name must contain at least two words (e.g., John Smith)';
+                }
+                break;
+            case 'email':
+                if (!patterns.email.test(value)) {
+                    error = 'Please enter a valid email address';
+                }
+                break;
+            case 'phoneNumber':
+                if (!patterns.phoneNumber.test(value)) {
+                    error = 'Please enter a valid Vietnamese phone number';
+                }
+                break;
+            case 'birthday':
+                if (value) {
+                    const selectedDate = new Date(value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset time to compare only dates
+                    if (selectedDate >= today) {
+                        error = 'Birthday must be before today';
+                    }
+                }
+                break;
+            case 'gender':
+                if (value && !patterns.gender.test(value)) {
+                    error = 'Please select a valid gender option';
+                }
+                break;
+            case 'password':
+                if (value.length < 6) {
+                    error = 'Password must be at least 6 characters long';
+                }
+                break;
+            case 'retypePassword':
+                if (value !== formData.password) {
+                    error = 'Passwords do not match';
+                }
+                break;
+            default:
+                break;
+        }
+        
+        return error;
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+
+        // Real-time validation
+        const error = validateField(name, value);
+        setErrors(prev => ({
+            ...prev,
+            [name]: error
+        }));
+
+        // Special case: validate retypePassword when password changes
+        if (name === 'password' && formData.retypePassword) {
+            const retypeError = validateField('retypePassword', formData.retypePassword);
+            setErrors(prev => ({
+                ...prev,
+                retypePassword: retypeError
+            }));
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Validate all fields before submit
+        const newErrors = {};
+        Object.keys(formData).forEach(key => {
+            const error = validateField(key, formData[key]);
+            if (error) newErrors[key] = error;
+        });
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
         // Handle registration logic here
         console.log('Registration data:', formData);
     };
@@ -55,9 +149,12 @@ const RegistrationForm = () => {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            className="w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs"
+                            className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
                             required
                         />
+                        {errors.name && (
+                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.name}</p>
+                        )}
                     </div>
 
                     {/* Birthday and Gender Row */}
@@ -71,9 +168,12 @@ const RegistrationForm = () => {
                                 name="birthday"
                                 value={formData.birthday}
                                 onChange={handleInputChange}
-                                className="w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs"
+                                className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black focus:outline-none focus:ring-2 ${errors.birthday ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
                                 required
                             />
+                            {errors.birthday && (
+                                <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.birthday}</p>
+                            )}
                         </div>
                         <div className="flex-1">
                             <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
@@ -83,7 +183,7 @@ const RegistrationForm = () => {
                                 value={formData.gender}
                                 onChange={handleInputChange}
                                 name="gender"
-                                placeholder="Select"
+                                placeholder="Select..."
                                 bgColor="zinc-300"
                                 hoverColor="zinc-200"
                                 borderColor="zinc-400"
@@ -95,6 +195,9 @@ const RegistrationForm = () => {
                                     { value: 'Other', label: 'Other' }
                                 ]}
                             />
+                            {errors.gender && (
+                                <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.gender}</p>
+                            )}
                         </div>
                     </div>
 
@@ -108,9 +211,12 @@ const RegistrationForm = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className="w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs"
+                            className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
                             required
                         />
+                        {errors.email && (
+                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.email}</p>
+                        )}
                     </div>
 
                     {/* Phone Number */}
@@ -123,9 +229,12 @@ const RegistrationForm = () => {
                             name="phoneNumber"
                             value={formData.phoneNumber}
                             onChange={handleInputChange}
-                            className="w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs"
+                            className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.phoneNumber ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
                             required
                         />
+                        {errors.phoneNumber && (
+                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.phoneNumber}</p>
+                        )}
                     </div>
 
                     {/* Password */}
@@ -133,14 +242,30 @@ const RegistrationForm = () => {
                         <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
                             Password
                         </label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            className="w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs"
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                className={`w-full lg:h-12 md:h-11 h-8 px-4 pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center"
+                            >
+                                <img 
+                                    src={showPassword ? HideIcon : ShowIcon} 
+                                    alt={showPassword ? "Hide password" : "Show password"}
+                                    className="w-full h-full filter"
+                                />
+                            </button>
+                        </div>
+                        {errors.password && (
+                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.password}</p>
+                        )}
                     </div>
 
                     {/* Retype Password */}
@@ -148,14 +273,30 @@ const RegistrationForm = () => {
                         <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
                             Retype Password
                         </label>
-                        <input
-                            type="password"
-                            name="retypePassword"
-                            value={formData.retypePassword}
-                            onChange={handleInputChange}
-                            className="w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs"
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                type={showRetypePassword ? "text" : "password"}
+                                name="retypePassword"
+                                value={formData.retypePassword}
+                                onChange={handleInputChange}
+                                className={`w-full lg:h-12 md:h-11 h-8 px-4 pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.retypePassword ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowRetypePassword(!showRetypePassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center"
+                            >
+                                <img 
+                                    src={showRetypePassword ? HideIcon : ShowIcon} 
+                                    alt={showRetypePassword ? "Hide password" : "Show password"}
+                                    className="w-full h-full filter"
+                                />
+                            </button>
+                        </div>
+                        {errors.retypePassword && (
+                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.retypePassword}</p>
+                        )}
                     </div>
 
                     {/* Register Button */}
