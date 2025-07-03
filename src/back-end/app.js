@@ -1,10 +1,16 @@
+// app.js
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./db');
+const { connectDB, connectRedis } = require('./config/database.config'); // Import từ file config
 
+// Nạp biến môi trường
 dotenv.config();
+
+// Thực hiện kết nối
 connectDB();
+connectRedis();
 
 const app = express();
 app.use(cors());
