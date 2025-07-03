@@ -59,7 +59,7 @@ const CustomDropdown = ({
                 </span>
                 <svg
                     className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                    fill="none"
+                    fill="currentColor"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                 >
