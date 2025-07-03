@@ -121,16 +121,16 @@ const RegistrationForm = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen lg:pt-20 md:pt-16 pt-12 lg:px-8 md:px-6 px-4">
-            <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl">
+        <div className="flex flex-col items-center justify-center min-h-screen lg:pt-20 md:pt-16 sm:pt-14 pt-12 lg:px-8 md:px-6 sm:px-5 px-4">
+            <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-lg xl:max-w-xl">
                 {/* Title */}
                 <h1 className="text-center text-white font-['Unbounded'] font-bold
-                xl:text-5xl lg:text-4xl md:text-2xl text-sm mb-4">
+                xl:text-5xl lg:text-4xl md:text-2xl sm:text-lg text-sm mb-4">
                     REGISTER
                 </h1>
                 
                 {/* Login Link */}
-                <p className="text-white text-center lg:text-lg md:text-base text-sm mb-8">
+                <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8">
                     Already have an account? 
                     <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-semibold">
                         Login
@@ -138,10 +138,10 @@ const RegistrationForm = () => {
                 </p>
 
                 {/* Registration Form */}
-                <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 lg:space-y-6">
                     {/* Name */}
                     <div>
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Name
                         </label>
                         <input
@@ -149,7 +149,7 @@ const RegistrationForm = () => {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                            className={`w-full lg:h-12 md:h-11 sm:h-9 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm sm:text-xs text-xs`}
                             required
                         />
                         {errors.name && (
@@ -158,9 +158,9 @@ const RegistrationForm = () => {
                     </div>
 
                     {/* Birthday and Gender Row */}
-                    <div className="flex lg:gap-6 md:gap-4 gap-3">
+                    <div className="flex lg:gap-6 md:gap-4 sm:gap-3 gap-2">
                         <div className="flex-1">
-                            <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                            <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                                 Birthday
                             </label>
                             <input
@@ -168,7 +168,7 @@ const RegistrationForm = () => {
                                 name="birthday"
                                 value={formData.birthday}
                                 onChange={handleInputChange}
-                                className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black focus:outline-none focus:ring-2 ${errors.birthday ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                                className={`w-full lg:h-12 md:h-11 sm:h-9 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black focus:outline-none focus:ring-2 ${errors.birthday ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm sm:text-xs text-xs`}
                                 required
                             />
                             {errors.birthday && (
@@ -176,7 +176,7 @@ const RegistrationForm = () => {
                             )}
                         </div>
                         <div className="flex-1">
-                            <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                            <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                                 Gender
                             </label>
                             <CustomDropdown
@@ -203,7 +203,7 @@ const RegistrationForm = () => {
 
                     {/* Email */}
                     <div>
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Email
                         </label>
                         <input
@@ -211,7 +211,7 @@ const RegistrationForm = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                            className={`w-full lg:h-12 md:h-11 sm:h-9 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm sm:text-xs text-xs`}
                             required
                         />
                         {errors.email && (
@@ -221,7 +221,7 @@ const RegistrationForm = () => {
 
                     {/* Phone Number */}
                     <div>
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Phone Number
                         </label>
                         <input
@@ -229,7 +229,7 @@ const RegistrationForm = () => {
                             name="phoneNumber"
                             value={formData.phoneNumber}
                             onChange={handleInputChange}
-                            className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.phoneNumber ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                            className={`w-full lg:h-12 md:h-11 sm:h-9 h-8 px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.phoneNumber ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm sm:text-xs text-xs`}
                             required
                         />
                         {errors.phoneNumber && (
@@ -239,7 +239,7 @@ const RegistrationForm = () => {
 
                     {/* Password */}
                     <div>
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Password
                         </label>
                         <div className="relative">
@@ -248,13 +248,13 @@ const RegistrationForm = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleInputChange}
-                                className={`w-full lg:h-12 md:h-11 h-8 px-4 pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                                className={`w-full lg:h-12 md:h-11 sm:h-9 h-8 px-4 pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm sm:text-xs text-xs`}
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 flex items-center justify-center"
                             >
                                 <img 
                                     src={showPassword ? HideIcon : ShowIcon} 
@@ -270,7 +270,7 @@ const RegistrationForm = () => {
 
                     {/* Retype Password */}
                     <div>
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg text-base">
+                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Retype Password
                         </label>
                         <div className="relative">
@@ -279,13 +279,13 @@ const RegistrationForm = () => {
                                 name="retypePassword"
                                 value={formData.retypePassword}
                                 onChange={handleInputChange}
-                                className={`w-full lg:h-12 md:h-11 h-8 px-4 pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.retypePassword ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm text-xs`}
+                                className={`w-full lg:h-12 md:h-11 sm:h-9 h-8 px-4 pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.retypePassword ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] lg:text-base md:text-sm sm:text-xs text-xs`}
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowRetypePassword(!showRetypePassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 flex items-center justify-center"
                             >
                                 <img 
                                     src={showRetypePassword ? HideIcon : ShowIcon} 
@@ -303,14 +303,14 @@ const RegistrationForm = () => {
                     <div className="pt-4 flex justify-center">
                         <button
                             type="submit"
-                            className="lg:w-64 sm:w-46 w-32
-                            lg:h-9 sm:h-7 h-6
+                            className="lg:w-64 md:w-56 sm:w-46 w-32
+                            lg:h-9 md:h-8 sm:h-7 h-6
                             bg-pink-400
-                            lg:rounded-xl sm:rounded-lg rounded-md
+                            lg:rounded-xl md:rounded-lg sm:rounded-lg rounded-md
                             shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]
                             text-white font-bold font-['Unbounded']
                             flex items-center justify-center
-                            lg:text-lg md:text-sm text-xs
+                            lg:text-lg md:text-base sm:text-sm text-xs
                             hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)]
                             transition-all duration-300"
                         >
