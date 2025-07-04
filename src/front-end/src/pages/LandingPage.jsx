@@ -9,7 +9,7 @@ import UpComing from "../layouts/LandingPage/UpcomingMovie.jsx";
 
 const LandingPage = () => {
     return (
-        <div className="bg-slate-950 overflow-x-hidden max-w-screen h-auto">
+        <div className="bg-slate-950 overflow-x-hidden w-screen h-auto no-scrollbar">
             <Header/>
             <Banner/>
             <ChatBot/>

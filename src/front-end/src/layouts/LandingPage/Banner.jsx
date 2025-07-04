@@ -40,7 +40,7 @@ const Label = () => {
 }
 
 const Banner = () => (
-    <div className="relative lg:pt-3 z-10 gap-8 w-screen overflow-x-hidden justify-center bg-slate-950">
+    <section className="relative lg:pt-3 z-10 gap-8 w-screen overflow-x-hidden justify-center bg-slate-950 overflow-y-visible no-scrollbar">
         <div className="relative w-screen">
             {/*Left*/}
             <div className="absolute top-0 left-0 h-full lg:w-95 sm:w-60 w-30 bg-gradient-to-r from-black via-slate-900/80 to-transparent z-15" />
@@ -56,7 +56,7 @@ const Banner = () => (
         </div>
         <Label/>
         <AiSearch />
-    </div>
+    </section>
 );
 
 export default Banner;
