@@ -1,17 +1,12 @@
-import React from 'react'
+import React from 'react';
+import LandingPage from './pages/LandingPage';
 
 const App = () => {
     return (
         <div>
-            <h1 className="text-4xl font-semibold text-center">
-                Phan Nhut Anh <br/>
-                Vuong Ngu Tin Thanh <br/>
-                Nguyen Thien Nha Tran <br/>
-                Ta Thien Lam <br/>
-                Ngo Hong Thanh <br/>tail
-
-            </h1>
+            <LandingPage/>
         </div>
-    )
-}
-export default App
+    );
+};
+
+export default App;
