@@ -12,7 +12,7 @@ const forwardButton = () => {
                 <img
                     src={backAndForwardButton}
                     alt="forwardButton-bg"
-                   className="absolute w-full h-full top-1/2 transform -translate-y-1/4 right-0"
+                    className="absolute w-full h-full top-1/2 transform -translate-y-1/4 right-0"
                 />
                 <img
                     src={ArrowForwardButton}
