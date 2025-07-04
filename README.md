@@ -58,58 +58,6 @@ Lumiere Cinema is a modern cinema management system designed to streamline cinem
 
 ## 🔧 Technology Stack
 
-## 🛠️ Development Process
-
-### Agile Methodology
-
-The project follows Agile development practices with:
-- **Sprint Planning**: Regular sprint planning sessions
-- **Sprint Reviews**: End-of-sprint demonstrations
-- **Weekly Reports**: Progress tracking and updates
-- **Continuous Integration**: Regular code integration
-
-### Documentation
-
-Comprehensive project documentation includes:
-- **Vision Document**: Project goals and scope
-- **Software Development Plan**: Development methodology and timeline
-- **Use Case Specification**: Detailed feature requirements
-- **Sprint Reports**: Development progress tracking
-
-## 📋 Project Timeline
-
-### Sprint 1 (Completed)
-- Project setup and initial planning
-- Technology stack selection
-- Basic project structure
-- Initial documentation setup
-
-### Sprint 2 (Completed)
-- Documentation framework completion
-- Project architecture design
-- Development environment setup
-- Team workflow establishment
-
-### Sprint 3 (In Progress)
-- Core feature development
-- User interface design
-- Database design and setup
-- Authentication system
-
-### Future Sprints
-- Advanced features implementation
-- Testing and quality assurance
-- Performance optimization
-- Deployment preparation
-
-## 🤝 Contributing
-
-This is a university team project. Team collaboration guidelines:
-
-1. Follow the established coding standards
-2. Update documentation for any changes
-3. Participate in sprint planning and reviews
-4. Communicate regularly with team members
 
 ## 👥 Team Members
 
@@ -119,19 +67,10 @@ This is a university team project. Team collaboration guidelines:
 - **Nguyen Thien Nha Tran** ([@heyyouknowme](https://github.com/heyyouknowme))
 - **Ngo Hong Thanh** ([@hnaht277](https://github.com/hnaht277))
 
-## 📚 Learning Outcomes
-
-This project provides hands-on experience with:
-- Modern web development technologies
-- Software engineering principles
-- Agile development methodology
-- Team collaboration and project management
-- User experience design
-- System architecture and design patterns
-
 ## 📞 Support
 
-For project-related questions or issues, please contact the development team or refer to the project documentation in the `docs/` folder.
+For project-related questions or issues, please refer to the project documentation in the `docs/` folder.
+Reach our team via email at lumiere.cinema@clc.fitus.edu.vn.
 
 ---
 

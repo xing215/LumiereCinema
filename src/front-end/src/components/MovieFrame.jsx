@@ -1,7 +1,8 @@
 const MovieFrame = ({linkImg}) => {
     return (
-        <div className="h-full min-w-1/6 justify-start overflow-hidden top-65 shadow-lg">
-            <img src={linkImg}  alt={linkImg} className="h-full w-full object-cover rounded-2xl" />
+        <div className="h-full bg-transparent justify-start overflow-hidden shadow-lg
+        xl:min-w-1/6 lg:min-w-1/4 min-w-1/3">
+            <img src={linkImg}  alt={linkImg} className="h-full w-full object-cover xl:rounded-2xl lg:rounded-xl md:rounded-lg rounded-sm" />
         </div>
     );
 }

@@ -4,9 +4,9 @@ import MovieFrame from "../../../components/MovieFrame.jsx";
 import BackwardButton from "../../../components/buttons/backwardButton.jsx";
 import ForwardButton from "../../../components/buttons/forwardButton.jsx";
 
-const NowShowingFrame = () => {
+const UpComingFrame = () => {
     return (
-        <div className="relative w-screen bg-transparent">
+        <div className="relative w-screen bg-transparent z-20">
             <BackwardButton/>
             <ForwardButton/>
             {/*Left*/}
@@ -20,10 +20,13 @@ const NowShowingFrame = () => {
             <div className="relative w-sceen h:pt-8 lg:h-6 md:h-4 h-2 "/>
             <div className="relative bg-transparent flex justify-center w-screem h-full overflow-x-auto no-scrollbar
             xl:gap-10 lg:gap-6 md:gap-4 gap-2">
-                <MovieFrame linkImg={Sample1}/>
+                <MovieFrame linkImg={Sample2}/>
                 <MovieFrame linkImg={Sample1}/>
                 <MovieFrame linkImg={Sample1}/>
                 <MovieFrame linkImg={Sample2}/>
+                <MovieFrame linkImg={Sample2}/>
+                <MovieFrame linkImg={Sample1}/>
+                <MovieFrame linkImg={Sample1}/>
                 <MovieFrame linkImg={Sample2}/>
                 <MovieFrame linkImg={Sample1}/>
             </div>
@@ -31,4 +34,4 @@ const NowShowingFrame = () => {
     );
 }
 
-export default NowShowingFrame;
+export default UpComingFrame;
