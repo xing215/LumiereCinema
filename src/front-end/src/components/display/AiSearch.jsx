@@ -10,7 +10,7 @@ const Icon = () => {
 }
 const AiSearch = () =>{
     return (
-       <div className="relative items-center w-screen z-10 xl:pt-30 lg:pt-20 md:pt-15 pt-7">
+        <div className="relative items-center w-screen z-10 xl:pt-30 lg:pt-20 md:pt-15 pt-7">
             <button className="absolute rounded-2xl bg-gray-300/70 left-1/2 top-1/2 transform -translate-1/2
             xl:w-[1350px] lg:w-[850px] md:w-[580px] w-[300px]
             xl:h-[66px] lg:h-[50px] md:h-[35px] h-[20px]">
