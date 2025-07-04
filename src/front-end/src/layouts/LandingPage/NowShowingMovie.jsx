@@ -11,6 +11,7 @@ const Label = () => {
         </div>
     );
 }
+
 const NowShowing = () => {
     return (
         <section className="relative flex-col bg-slate-950 w-screen h-auto z-20 overflow-y-visible no-scrollbar">
