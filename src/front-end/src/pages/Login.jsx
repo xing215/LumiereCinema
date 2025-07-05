@@ -7,7 +7,7 @@ const Login = () => {
     return (
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-purple-900 min-h-screen overflow-x-hidden max-w-screen">
             <Header/>
-            <div className="lg:pt-12 md:pt-8 sm:pt-4 pt-0">
+            <div className="flex flex-col items-center justify-center min-h-screen lg:pt-20 md:pt-16 sm:pt-14 pt-12 lg:px-8 md:px-6 sm:px-5 px-4">
                 <LoginForm/>
             </div>
             <ChatBot/>  
