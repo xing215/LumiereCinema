@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
   name: {type: String, required: true},
   phone: {type: String, required: true, unique: true},
   birthday: Date,
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other'], default: 'male'
+  },
   branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' },
   roles: {
   type: [String],
