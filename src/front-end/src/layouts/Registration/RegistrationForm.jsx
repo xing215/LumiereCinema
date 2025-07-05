@@ -130,9 +130,9 @@ const RegistrationForm = () => {
                 </h1>
                 
                 {/* Login Link */}
-                <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8">
+                <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Mina']">
                     Already have an account? 
-                    <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-semibold">
+                    <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Mina']">
                         Login
                     </span>
                 </p>
