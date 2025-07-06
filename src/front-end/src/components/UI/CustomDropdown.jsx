@@ -52,9 +52,9 @@ const CustomDropdown = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full lg:h-12 md:h-11 h-8 px-4 rounded-lg ${backgroundClass} text-${textColor} font-['Unbounded'] text-left focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200`}
+                className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 rounded-lg ${backgroundClass} text-${textColor} font-['Unbounded'] text-left focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200`}
             >
-                <span className="lg:text-base md:text-sm text-xs">
+                <span className="text-sm sm:text-base md:text-lg">
                     {value || placeholder}
                 </span>
                 <svg
@@ -75,7 +75,7 @@ const CustomDropdown = ({
                             key={option.value}
                             type="button"
                             onClick={() => handleSelect(option.value)}
-                            className={`w-full px-4 py-3 text-left text-${textColor} font-['Unbounded'] lg:text-base md:text-sm text-xs hover:bg-${hoverColor} transition-colors
+                            className={`w-full px-3 sm:px-4 py-3 text-left text-${textColor} font-['Unbounded'] text-sm sm:text-base md:text-lg hover:bg-${hoverColor} transition-colors
                                 ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''}`}
                         >
                             {option.label}
