@@ -48,7 +48,6 @@ const StaffLogin = () => {
                 mix-blend-lighten bg-amber-300/60 rounded-full blur-[100px]
                 pointer-events-none
             "/>
-            {/* <div className="w-44 h-44 mix-blend-lighten bg-amber-300/60 rounded-full blur-[100px]" /> */}
 
             {/* Main component */}
             <div className="
