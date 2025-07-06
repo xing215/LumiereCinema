@@ -23,7 +23,7 @@ const movieSchema = new mongoose.Schema({
   ageRating: { 
     type: String, 
     required: true, 
-    enum: ['P', 'C13', 'C16', 'C18'], 
+    enum: ['P', 'K', 'T13', 'T16', 'T18', 'C'], 
     default: 'P'
   },
   
