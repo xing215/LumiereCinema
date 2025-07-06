@@ -1,7 +1,7 @@
 import React from 'react';
 import ChangePwd from "../../layouts/ChangePwd/ChangePwdForm.jsx";
 
-const StaffLogin = () => {
+const StaffChangePwd = () => {
     return (
         <section className="relative bg-slate-950 overflow-x-hidden overflow-y-hidden w-screen min-h-screen no-scrollbar">
             
@@ -54,4 +54,4 @@ const StaffLogin = () => {
     );
 };
 
-export default StaffLogin;
+export default StaffChangePwd;

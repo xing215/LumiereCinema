@@ -5,7 +5,7 @@ import ChatBot from "../components/display/ChatBot.jsx";
 import BackwardButton from "../components/buttons/backwardButton.jsx";
 import { useNavigate } from "react-router-dom";
 
-const ResetPwd = () => {
+const ChangePwd = () => {
     const navigate = useNavigate();
     return (
         <section className="relative bg-slate-950 overflow-x-hidden overflow-y-hidden w-screen min-h-screen no-scrollbar">
@@ -55,4 +55,4 @@ const ResetPwd = () => {
     );
 };
 
-export default ResetPwd;
+export default ChangePwd;
