@@ -78,9 +78,9 @@ const LoginForm = ({ showRegister = true }) => {
             
             {/* Register Link */}
             {showRegister && (
-                <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Mina']">
+                <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Libre_Franklin']">
                     Don't have an account? 
-                    <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Mina']">
+                    <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']">
                         Register
                     </span>
                 </p>
@@ -90,7 +90,7 @@ const LoginForm = ({ showRegister = true }) => {
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 lg:space-y-6">
                 {/* Email */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Email
                     </label>
                     <input
@@ -102,13 +102,13 @@ const LoginForm = ({ showRegister = true }) => {
                         required
                     />
                     {errors.email && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.email}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.email}</p>
                     )}
                 </div>
 
                 {/* Password */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Password
                     </label>
                     <div className="relative">
@@ -133,7 +133,7 @@ const LoginForm = ({ showRegister = true }) => {
                         </button>
                     </div>
                     {errors.password && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.password}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.password}</p>
                     )}
                 </div>
 

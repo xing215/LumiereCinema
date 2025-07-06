@@ -129,9 +129,9 @@ const RegistrationForm = () => {
             </h1>
             
             {/* Login Link */}
-            <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Mina']">
+            <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Libre_Franklin']">
                 Already have an account? 
-                <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Mina']">
+                <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']">
                     Login
                 </span>
             </p>
@@ -140,7 +140,7 @@ const RegistrationForm = () => {
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 lg:space-y-6">
                 {/* Name */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Name
                     </label>
                     <input
@@ -152,14 +152,14 @@ const RegistrationForm = () => {
                         required
                     />
                     {errors.name && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.name}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.name}</p>
                     )}
                 </div>
 
                 {/* Birthday and Gender Row */}
                 <div className="flex lg:gap-6 md:gap-4 sm:gap-3 gap-2">
                     <div className="flex-1">
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                        <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Birthday
                         </label>
                         <input
@@ -171,11 +171,11 @@ const RegistrationForm = () => {
                             required
                         />
                         {errors.birthday && (
-                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.birthday}</p>
+                            <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.birthday}</p>
                         )}
                     </div>
                     <div className="flex-1">
-                        <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                        <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                             Gender
                         </label>
                         <CustomDropdown
@@ -195,14 +195,14 @@ const RegistrationForm = () => {
                             ]}
                         />
                         {errors.gender && (
-                            <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.gender}</p>
+                            <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.gender}</p>
                         )}
                     </div>
                 </div>
 
                 {/* Email */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Email
                     </label>
                     <input
@@ -214,13 +214,13 @@ const RegistrationForm = () => {
                         required
                     />
                     {errors.email && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.email}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.email}</p>
                     )}
                 </div>
 
                 {/* Phone Number */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Phone Number
                     </label>
                     <input
@@ -232,13 +232,13 @@ const RegistrationForm = () => {
                         required
                     />
                     {errors.phoneNumber && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.phoneNumber}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.phoneNumber}</p>
                     )}
                 </div>
 
                 {/* Password */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Password
                     </label>
                     <div className="relative">
@@ -263,13 +263,13 @@ const RegistrationForm = () => {
                         </button>
                     </div>
                     {errors.password && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.password}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.password}</p>
                     )}
                 </div>
 
                 {/* Retype Password */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Mina'] lg:text-xl md:text-lg sm:text-base text-sm">
+                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] lg:text-xl md:text-lg sm:text-base text-sm">
                         Retype Password
                     </label>
                     <div className="relative">
@@ -294,7 +294,7 @@ const RegistrationForm = () => {
                         </button>
                     </div>
                     {errors.retypePassword && (
-                        <p className="text-red-400 text-sm mt-1 font-['Mina']">{errors.retypePassword}</p>
+                        <p className="text-red-400 text-sm mt-1 font-['Libre_Franklin']">{errors.retypePassword}</p>
                     )}
                 </div>
 
