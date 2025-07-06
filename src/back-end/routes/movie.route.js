@@ -15,7 +15,7 @@ const {
     updateMovie,
     deleteMovie,
     getMovieShowtimes,
-    getMovieRating,
+    getMovieRatingSummary,
 } = require('../controllers/movie.controller.js');
 
 // Public routes (no authentication required)
@@ -34,7 +34,7 @@ router.delete('/:movieId', protect, restrictTo('administrator'), deleteMovie);
 
 // Route động phải đặt ở cuối (public route)
 router.get('/:movieId/showscreen', getMovieShowtimes);
-router.get('/:movieId/get-ratings', getMovieRating);
+router.get('/:movieId/get-ratings', getMovieRatingSummary);
 router.get('/:movieId', getMovieDetails);
 
 module.exports = router;

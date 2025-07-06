@@ -355,11 +355,11 @@ const getMovieShowtimes = async (req, res) => {
 };
 
 /**
- * @desc    Lấy đánh giá của phim
+ * @desc    Lấy tổng hợp đánh giá của phim
  * @route   GET /api/movies/:movieId/get-ratings
  * @access  Customer
  */
-const getMovieRating = async (req, res) => {
+const getMovieRatingSummary = async (req, res) => {
     try {
         const { movieId } = req.params;
         const { page = 1, limit = 10 } = req.query;
@@ -389,7 +389,7 @@ const getMovieRating = async (req, res) => {
             ratingsQuantity: movie.ratingsQuantity
         });
     } catch (error) {
-        console.error('Get Movie Rating Error:', error);
+        console.error('Get Movie Rating Summary Error:', error);
         res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
     }
 };
@@ -405,5 +405,5 @@ module.exports = {
     updateMovie,
     deleteMovie,
     getMovieShowtimes,
-    getMovieRating,
+    getMovieRatingSummary,
 };
