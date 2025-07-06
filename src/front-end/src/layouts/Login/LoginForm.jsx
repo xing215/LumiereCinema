@@ -143,7 +143,10 @@ const LoginForm = ({ isCustomer = true }) => {
                     
                     {/* Forget Password Link */}
                     <div className="text-right mt-2">
-                        <span className="text-white hover:text-purple-300 cursor-pointer font-['Libre_Franklin'] font-normal text-sm sm:text-base md:text-lg">
+                        <span 
+                            onClick={() => navigate(isCustomer ? '/reset-password' : '/staff/reset-password')}
+                            className="text-white hover:text-purple-300 cursor-pointer font-['Libre_Franklin'] font-normal text-sm sm:text-base md:text-lg"
+                        >
                             Forget password?
                         </span>
                     </div>
