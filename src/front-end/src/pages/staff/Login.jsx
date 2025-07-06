@@ -23,11 +23,19 @@ const StaffLogin = () => {
                 pointer-events-none
             "/>
             <div className="
-                absolute lg:bottom-[300px] md:bottom-[295px] sm:bottom-[290px] bottom-[285px]
+                absolute lg:bottom-[500px] md:bottom-[480px] sm:bottom-[400px] bottom-[390px]
                 lg:-right-[50px] md:-right-[40px] sm:-right-[30px] -right-[20px]
                 lg:w-44 md:w-36 sm:w-35 w-30
                 lg:h-44 md:h-36 sm:h-35 h-30 
                 mix-blend-lighten bg-amber-300/60 rounded-full blur-[100px]
+                pointer-events-none
+            "/>
+            <div className="
+                absolute lg:-bottom-[100px] md:bottom-[90px] sm:bottom-[0px] bottom-[50px]
+                lg:right-[250px] md:right-[100px] sm:-right-[0px] right-[20px]
+                lg:w-56 md:w-50 sm:w-45 w-40
+                lg:h-56 md:h-50 sm:h-45 h-40
+                mix-blend-lighten bg-purple-600/60 rounded-full blur-[100px]
                 pointer-events-none
             "/>
 
