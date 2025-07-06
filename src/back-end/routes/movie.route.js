@@ -33,8 +33,8 @@ router.patch('/:movieId', protect, restrictTo('administrator'), updateMovie);
 router.delete('/:movieId', protect, restrictTo('administrator'), deleteMovie);
 
 // Route động phải đặt ở cuối (public route)
-router.get('/:id', getMovieDetails);
 router.get('/:movieId/showscreen', getMovieShowtimes);
 router.get('/:movieId/get-ratings', getMovieRating);
+router.get('/:movieId', getMovieDetails);
 
 module.exports = router;
