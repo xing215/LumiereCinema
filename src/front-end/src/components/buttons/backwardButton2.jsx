@@ -1,5 +1,4 @@
-import backAndForwardButton from "../../assets/img/backAndForwardButton.png"
-import ArrowBackwardButton from "../../assets/img/backwardButton.svg"
+import backward from "../../assets/img/backward2.svg"
 
 const backwardButton = ({ onClick, position = "absolute" }) => {
     const positionClass = position === "absolute" 
@@ -10,21 +9,14 @@ const backwardButton = ({ onClick, position = "absolute" }) => {
         <button 
             onClick={onClick}
             className={`${positionClass}
-        xl:w-[80px] lg:w-[70px] sm:w-[60px] w-[45px]
-        xl:h-[80px] lg:h-[70px] sm:h-[60px] h-[45px]`}
+        xl:w-[60px] lg:w-[50px] sm:w-[40px] w-[30px]
+        xl:h-[60px] lg:h-[50px] sm:h-[40px] h-[30px]`}
         aria-label="BackwardButton">
                 <div className="relative w-full h-full">
                     <img
-                        src={backAndForwardButton}
+                        src={backward}
                         alt="forwardButton-bg"
                         className="absolute w-full h-full top-1/2 transform -translate-y-1/4 right-0"
-                    />
-                    <img
-                        src={ArrowBackwardButton}
-                        alt="arrow"
-                        className="absolute lg:w-4.5 sm:w-4 w-3
-                        xl:h-10 lg:h-9 sm:h-8 h-6
-                        top-1/2 xl:left-7 lg:left-6 sm:left-5 left-4"
                     />
                 </div>
         </button>
