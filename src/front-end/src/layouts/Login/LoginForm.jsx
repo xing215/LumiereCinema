@@ -3,7 +3,7 @@ import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
 import ShowIcon from '../../assets/icons/show.svg';
 import HideIcon from '../../assets/icons/hide.svg';
 
-const RegistrationForm = () => {
+const LoginForm = ({ showRegister = true }) => {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -64,7 +64,7 @@ const RegistrationForm = () => {
             return;
         }
 
-        // Handle registration logic here
+        // Handle login logic here
         console.log('Login data:', formData);
     };
 
@@ -76,15 +76,17 @@ const RegistrationForm = () => {
                 LOGIN
             </h1>
             
-            {/* Login Link */}
-            <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Mina']">
-                Don't have an account? 
-                <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Mina']">
-                    Register
-                </span>
-            </p>
+            {/* Register Link */}
+            {showRegister && (
+                <p className="text-white text-center lg:text-lg md:text-base sm:text-sm text-xs mb-8 font-['Mina']">
+                    Don't have an account? 
+                    <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Mina']">
+                        Register
+                    </span>
+                </p>
+            )}
 
-            {/* Registration Form */}
+            {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 lg:space-y-6">
                 {/* Email */}
                 <div>
@@ -158,4 +160,4 @@ const RegistrationForm = () => {
     );
 };
 
-export default RegistrationForm;
+export default LoginForm;
