@@ -53,9 +53,8 @@ const StaffLogin = () => {
             <div className="
                 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
                 lg:w-[1000px] md:w-[800px] sm:w-[600px] w-[500px]
-                lg:h-[584px] md:h-[450px] sm:h-[350px] h-[280px]
+                lg:h-[584px] md:h-[500px] sm:h-[450px] h-[400px]
                 mix-blend-color-dodge bg-zinc-300/30 rounded-xl
-                // lg:pt-30 md:pt-16 sm:pt-14 pt-15 lg:px-8 md:px-6 sm:px-4 px-6
             " />
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] lg:pt-30 md:pt-16 sm:pt-14 pt-15 lg:px-8 md:px-6 sm:px-4 px-6">
                 <LoginForm showRegister={false} />
