@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
 import ShowIcon from '../../assets/icons/show.svg';
 import HideIcon from '../../assets/icons/hide.svg';
 
 const RegistrationForm = () => {
+    const navigate = useNavigate();
+    
     const [formData, setFormData] = useState({
         name: '',
         birthday: '',
@@ -131,7 +134,10 @@ const RegistrationForm = () => {
             {/* Login Link */}
             <p className="text-white text-center text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 font-['Libre_Franklin']">
                 Already have an account? 
-                <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']">
+                <span 
+                    onClick={() => navigate('/login')}
+                    className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']"
+                >
                     Login
                 </span>
             </p>

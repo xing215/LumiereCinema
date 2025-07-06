@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
+import { useNavigate } from 'react-router-dom';
 import ShowIcon from '../../assets/icons/show.svg';
 import HideIcon from '../../assets/icons/hide.svg';
 
-const LoginForm = ({ showRegister = true }) => {
+const LoginForm = ({ isCustomer = true }) => {
+    const navigate = useNavigate();
+        
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -77,10 +79,13 @@ const LoginForm = ({ showRegister = true }) => {
             </h1>
             
             {/* Register Link */}
-            {showRegister && (
+            {isCustomer && (
                 <p className="text-white text-center text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 font-['Libre_Franklin']">
                     Don't have an account? 
-                    <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']">
+                    <span
+                        onClick={() => navigate('/register')}
+                        className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']"
+                    >
                         Register
                     </span>
                 </p>

@@ -57,7 +57,7 @@ const StaffLogin = () => {
                 mix-blend-color-dodge bg-zinc-300/30 rounded-xl
             " />
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] lg:pt-30 md:pt-16 sm:pt-14 pt-15 lg:px-8 md:px-6 sm:px-4 px-6">
-                <LoginForm showRegister={false} />
+                <LoginForm isCustomer={false} />
             </div>
         </section>
     );
