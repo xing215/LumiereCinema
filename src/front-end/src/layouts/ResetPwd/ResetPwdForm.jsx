@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 const ResetPwdForm = ({ isCustomer = true }) => {
         
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        email: ''
     });
 
     const [errors, setErrors] = useState({});

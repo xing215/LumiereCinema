@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import StaffLogin from './pages/staff/Login';
 import ResetPwd from './pages/ResetPwd';
 import StaffResetPwd from './pages/staff/ResetPwd';
+import ChangePwd from './pages/ChangePwd';
+import StaffChangePwd from './pages/staff/ChangePwd';
 
 const App = () => {
     return (
@@ -17,6 +19,8 @@ const App = () => {
                 <Route path="/staff/login" element={<StaffLogin />} />
                 <Route path="/reset-password" element={<ResetPwd />} />
                 <Route path="/staff/reset-password" element={<StaffResetPwd />} />
+                <Route path="/change-password" element={<ChangePwd />} />
+                <Route path="/staff/change-password" element={<StaffChangePwd />} />
             </Routes>
         </Router>
     );
