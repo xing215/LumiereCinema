@@ -7,7 +7,7 @@ const forwardButton = () => {
         xl:right-8 lg:right-6 sm:right-3 right-0 top-1/2 -translate-y-1/2
         xl:w-[80px] lg:w-[70px] sm:w-[60px] w-[45px]
         xl:h-[80px] lg:h-[70px] sm:h-[60px] h-[45px]"
-                aria-label="BackwardButton">
+                aria-label="ForwardButton">
             <div className="relative w-full h-full">
                 <img
                     src={backAndForwardButton}
