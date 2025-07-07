@@ -12,7 +12,7 @@ const movieSchema = new mongoose.Schema({
   genre: { type: [String], required: true },
   director: { type: String, required: true, trim: true },
   cast: { type: [String], required: true },
-  language: { type: String, required: true },
+  language: { type: String},
 
   status: { 
     type: String, 
@@ -23,7 +23,7 @@ const movieSchema = new mongoose.Schema({
   ageRating: { 
     type: String, 
     required: true, 
-    enum: ['P', 'C13', 'C16', 'C18'], 
+    enum: ['P', 'K', 'T13', 'T16', 'T18', 'C'], 
     default: 'P'
   },
   
