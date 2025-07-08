@@ -1,8 +1,8 @@
-const Label = ({text, className = "relative flex flex-col items-center justify-center w-screen"}) => {
+const Label = ({text, pt = ""}) => {
     return (
-        <div className={className}>
+        <div className={`relative flex flex-col items-center justify-center w-screen ${pt}`}>
             <div className="text-white font-bold font-['Unbounded']
-            xl:text-5xl lg:text-4xl md:text-2xl text-sm">
+            xl:text-5xl lg:text-4xl md:text-2xl text-2xl">
                 {text}
             </div>
         </div>
@@ -13,7 +13,7 @@ const Label = ({text, className = "relative flex flex-col items-center justify-c
 export const Title = ({ text }) => (
     <Label
         text={text}
-        className="relative flex flex-col items-center justify-center w-screen pt-12 sm:pt-18 lg:pt-21 xl:pt-26"
+        pt ="pt-12 sm:pt-18 lg:pt-21 xl:pt-26"
     />
 )
 
