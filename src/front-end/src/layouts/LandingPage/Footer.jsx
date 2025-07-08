@@ -145,7 +145,7 @@ const Footer = () => {
             <div className="absolute z-20 xl:left-1/6 md:left-1/5 left-1/2 transform -translate-x-1/2 text-center justify-start text-white  font-normal font-unbounded
             lg:text-xs md:text-[10px] text-[7px]
             top-2 md:top-auto md:bottom-3 ">
-                @2025 Lumierie Cinema. <span className="md:hidden" aria-hidden="true"><br /></span>
+                @2025 Lumiere Cinema. <span className="md:hidden" aria-hidden="true"><br /></span>
                 All rights reserved.
             </div>
             <ControlFrame/>
