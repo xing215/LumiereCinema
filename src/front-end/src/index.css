@@ -1,9 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 @import "tailwindcss";
-@tailwind utilities;
+
+@theme {
+    --font-unbounded: "Unbounded", sans-serif;
+    --font-merriweather: "Merriweather Sans", sans-serif;
+    --font-libre-franklin: "Libre Franklin", sans-serif;
+    --font-montserrat: "Montserrat", sans-serif;
+}
+
+@utility no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@layer utilities {
+    .bg-gradient-multi {
+        background-image: linear-gradient(
+                to right,
+                rgba(253, 224, 71, 0.6),   /* amber-300/60 */
+                rgba(139, 92, 246, 0.6),   /* violet-500/60 */
+                rgba(56, 189, 248, 0.6),   /* sky-400/60 */
+                rgba(244, 114, 182, 0.6)   /* pink-400/60 */
+        );
+    }
+}
 
 html, body, #root {
     margin: 0;
@@ -11,11 +41,4 @@ html, body, #root {
     height: 100%;
     width: 100%;
 }
-{/*Hide scrollbar*/}
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
+
