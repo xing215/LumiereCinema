@@ -1,125 +1,156 @@
 const Branch = require('../models/Branch.js');
 const Snack = require('../models/Snack.js');
-const mongoose = require('mongoose');
+const { redisClient } = require('../config/redis.config.js');
+
+const DEFAULT_EXPIRATION = 600; // Cache 10 phút
 
 /**
- * @desc    Lấy danh sách snack của 1 branch (có populate thông tin snack)
- * @route   GET /api/branches/:branchId/snacks
- */
-const getSnackList = async (req, res) => {
-  try {
-    const { branchId } = req.params;
-
-    const branch = await Branch.findById(branchId).populate('snacks.snack');
-    if (!branch) {
-      return res.status(404).json({ message: 'Không tìm thấy rạp.' });
-    }
-
-    res.status(200).json(branch.snacks);
-  } catch (error) {
-    console.error('Get Snack List Error:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ.' });
-  }
-};
-
-/**
- * @desc    Thêm snack vào branch
+ * @desc    Thêm snack mới cho một rạp 
  * @route   POST /api/branches/:branchId/snacks
- * @body    { snackId, stock }
+ * @access  Administrator
  */
 const createSnack = async (req, res) => {
   try {
     const { branchId } = req.params;
-    const { snackId, stock } = req.body;
+    const snackData = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(snackId)) {
-      return res.status(400).json({ message: 'SnackId không hợp lệ.' });
-    }
-
+    // 1. Kiểm tra rạp tồn tại
     const branch = await Branch.findById(branchId);
     if (!branch) {
-      return res.status(404).json({ message: 'Không tìm thấy rạp.' });
+      return res.status(404).json({ message: 'Branch not found.' });
     }
 
-    // Kiểm tra snack đã tồn tại trong branch chưa
-    const exists = branch.snacks.find(s => s.snack.toString() === snackId);
-    if (exists) {
-      return res.status(400).json({ message: 'Snack đã tồn tại trong branch.' });
+    // 2. Kiểm tra snack cùng shortname đã tồn tại trong rạp chưa
+    const existingSnack = await Snack.findOne({
+      branch: branchId,
+      shortname: snackData.shortname?.toUpperCase()
+    });
+
+    if (existingSnack) {
+      return res.status(400).json({
+        message: `Snack with shortname '${snackData.shortname}' already exists in this branch.`
+      });
     }
 
-    branch.snacks.push({ snack: snackId, stock: stock || 0 });
-    await branch.save();
+    // 3. Tạo snack mới
+    const newSnack = new Snack({
+      ...snackData,
+      branch: branchId,
+      shortname: snackData.shortname?.toUpperCase(), // đảm bảo viết hoa
+    });
 
-    res.status(201).json({ message: 'Thêm snack thành công.', snacks: branch.snacks });
+    await newSnack.save();
+
+    // 4. Xoá cache danh sách snack của rạp này
+    await redisClient.del(`snacks:branch:${branchId}`);
+
+    res.status(201).json({
+      message: 'Snack created successfully.',
+      snack: newSnack
+    });
   } catch (error) {
-    console.error('Add Snack to Branch Error:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ.' });
+    console.error('Create Snack Error:', error);
+    res.status(500).json({ message: 'Failed to create snack.' });
   }
 };
 
 /**
- * @desc    Cập nhật stock của snack trong branch
- * @route   PATCH /api/branches/:branchId/snacks/:snackId
- * @body    { stock }
+ * @desc    Cập nhật thông tin snack
+ * @route   PUT /api/branches/:branchId/snacks/:snackId
+ * @access  Administrator
  */
 const editSnack = async (req, res) => {
   try {
     const { branchId, snackId } = req.params;
-    const { stock } = req.body;
+    const updateData = req.body;
 
-    if (stock == null || stock < 0) {
-      return res.status(400).json({ message: 'Stock không hợp lệ.' });
+    const snack = await Snack.findOneAndUpdate(
+      { _id: snackId, branch: branchId },
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!snack) {
+      return res.status(404).json({ message: 'Snack not found for update.' });
     }
 
-    const branch = await Branch.findById(branchId);
-    if (!branch) return res.status(404).json({ message: 'Không tìm thấy rạp.' });
+    // Xoá cache danh sách snack của rạp này
+    await redisClient.del(`snacks:branch:${branchId}`);
 
-    // Tìm snack trong branch
-    const snackItem = branch.snacks.find(s => s.snack.toString() === snackId);
-    if (!snackItem) {
-      return res.status(404).json({ message: 'Snack không tồn tại trong branch.' });
-    }
-
-    snackItem.stock = stock;
-    await branch.save();
-
-    res.status(200).json({ message: 'Cập nhật stock thành công.', snack: snackItem });
+    res.status(200).json({
+      message: 'Snack updated successfully.',
+      snack
+    });
   } catch (error) {
-    console.error('Update Snack Stock Error:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ.' });
+    console.error('Edit Snack Error:', error);
+    res.status(500).json({ message: 'Failed to update snack.' });
   }
 };
 
 /**
- * @desc    Xóa snack khỏi branch
+ * @desc    Xoá snack
  * @route   DELETE /api/branches/:branchId/snacks/:snackId
+ * @access  Administrator
  */
 const deleteSnack = async (req, res) => {
   try {
     const { branchId, snackId } = req.params;
 
-    const branch = await Branch.findById(branchId);
-    if (!branch) return res.status(404).json({ message: 'Không tìm thấy rạp.' });
-
-    const originalLength = branch.snacks.length;
-    branch.snacks = branch.snacks.filter(s => s.snack.toString() !== snackId);
-
-    if (branch.snacks.length === originalLength) {
-      return res.status(404).json({ message: 'Snack không tồn tại trong branch.' });
+    const snack = await Snack.findOneAndDelete({ _id: snackId, branch: branchId });
+    if (!snack) {
+      return res.status(404).json({ message: 'Snack not found for deletion.' });
     }
 
-    await branch.save();
+    // Xoá cache
+    await redisClient.del(`snacks:branch:${branchId}`);
 
-    res.status(200).json({ message: 'Xóa snack khỏi branch thành công.' });
+    res.status(200).json({
+      message: 'Snack deleted successfully.',
+      snack
+    });
   } catch (error) {
-    console.error('Delete Snack from Branch Error:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ.' });
+    console.error('Delete Snack Error:', error);
+    res.status(500).json({ message: 'Failed to delete snack.' });
   }
 };
 
+/**
+ * @desc    Lấy danh sách snack theo rạp
+ * @route   GET /api/branches/:branchId/snacks
+ * @access  Public
+ */
+const getSnackList = async (req, res) => {
+  try {
+    // 1. Kiểm tra cache
+    const cachedSnacks = await redisClient.get(cacheKey);
+    if (cachedSnacks) {
+      console.log(`Cache HIT for snacks of branch ${branchId}`);
+      return res.status(200).json(JSON.parse(cachedSnacks));
+    }
+
+    // 2. Nếu cache miss → query DB
+    console.log(`Cache MISS for snacks of branch ${branchId}`);
+    const branch = await Branch.findById(branchId);
+    if (!branch) {
+      return res.status(404).json({ message: 'Không tìm thấy rạp.' });
+    }
+
+    const snacks = await Snack.find({ branch: branchId })
+      .select('name price discountedPrice imageURL stock isHidden description createdAt updatedAt');
+
+    // 3. Lưu vào cache
+    await redisClient.set(cacheKey, JSON.stringify(snacks), { EX: DEFAULT_EXPIRATION });
+
+    res.status(200).json(snacks);
+  } catch (error) {
+      console.error('Get Snack List Error:', error);
+      res.status(500).json({ message: 'Failed to fetch snack list.' });
+    }
+};
+
 module.exports = {
-  getSnackList,
   createSnack,
   editSnack,
   deleteSnack,
+  getSnackList
 };
