@@ -6,16 +6,20 @@ import ChatBot from "../components/display/ChatBot.jsx";
 import NowShowing from "../layouts/LandingPage/NowShowingMovie.jsx";
 import Maps from "../layouts/LandingPage/Maps.jsx";
 import UpComing from "../layouts/LandingPage/UpcomingMovie.jsx";
+import Footer from "../layouts/LandingPage/Footer.jsx";
 
 const LandingPage = () => {
     return (
-        <div className="bg-slate-950 overflow-x-hidden w-screen h-auto no-scrollbar">
+        <div className="bg-slate-950 overflow-hidden w-screen min-h-screen no-scrollbar">
             <Header/>
-            <Banner/>
+            <main className="flex flex-col gap-0">
+                <Banner/>
+                <NowShowing/>
+                <Maps/>
+                <UpComing/>
+                <Footer/>
+            </main>
             <ChatBot/>
-            <NowShowing/>
-            <Maps/>
-            <UpComing/>
         </div>
     );
 };

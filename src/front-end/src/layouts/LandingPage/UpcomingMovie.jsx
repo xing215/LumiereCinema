@@ -25,7 +25,7 @@ const UpComing = () => {
             <UpComingFrame/>
             <div className="relative bg-transparent w-screen xl:h-10 lg:h-6 sm:h-4 h-2"/>
             <SeeMoreButton/>
-            <div className="relative bg-transparent w-screen xl:h-15 lg:h-9 sm:h-6 h-3"/>
+            <div className="relative bg-transparent w-screen xl:h-25 lg:h-20 sm:h-15 h-10"/>
         </section>
     );
 }

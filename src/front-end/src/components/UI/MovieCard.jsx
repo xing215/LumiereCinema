@@ -1,4 +1,4 @@
-const MovieFrame = ({linkImg}) => {
+const MovieCard = ({linkImg}) => {
     return (
         <div className="h-full bg-transparent justify-start overflow-hidden shadow-lg
         xl:min-w-1/6 lg:min-w-1/4 min-w-1/3">
@@ -7,4 +7,4 @@ const MovieFrame = ({linkImg}) => {
     );
 }
 
-export default MovieFrame;
+export default MovieCard;

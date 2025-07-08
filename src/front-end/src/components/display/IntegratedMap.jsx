@@ -7,7 +7,7 @@ const IntegratedMap = () => {
             <div className="lg:absolute relative z-20
             lg:w-auto w-[35%]
             lg:h-full md:h-80 sm:h-75 h-70
-            xl:left-63 lg:left-28">
+            xl:left-53 lg:left-28">
                 <LocationTable/>
             </div>
 
