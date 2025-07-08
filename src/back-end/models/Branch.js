@@ -46,7 +46,22 @@ const branchSchema = new mongoose.Schema({
     // Tạo chỉ mục 2dsphere để tối ưu các truy vấn địa lý
     index: '2dsphere'
   },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+
+  snacks: [
+    {
+      snack: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Snack',
+        required: true
+      },
+      stock: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
+    }
+  ]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Branch', branchSchema);
