@@ -12,7 +12,19 @@ import MovieListPage from "./pages/MovieList.jsx";
 
 const App = () => {
     return (
-        <MovieListPage/>
+        <Router>
+            <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/register" element={<Registration />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/staff/login" element={<StaffLogin />} />
+                <Route path="/reset-password" element={<ResetPwd />} />
+                <Route path="/staff/reset-password" element={<StaffResetPwd />} />
+                <Route path="/change-password" element={<ChangePwd />} />
+                <Route path="/staff/change-password" element={<StaffChangePwd />} />
+                <Route path="/movies" element={<MovieListPage />} />
+            </Routes>
+        </Router>
     );
 };
 
