@@ -8,6 +8,7 @@ import ResetPwd from './pages/ResetPwd';
 import StaffResetPwd from './pages/staff/ResetPwd';
 import ChangePwd from './pages/ChangePwd';
 import StaffChangePwd from './pages/staff/ChangePwd';
+
 import MovieListPage from "./pages/MovieList.jsx";
 
 const App = () => {
