@@ -11,10 +11,10 @@ const SuggestionFame = () => {
         grid-cols-2
         lg:gap-7.5 md:gap-5 gap-3
         lg:py-6 md:py-4 py-3">
-            <MovieCard linkImg={Sample1}/>
-            <MovieCard linkImg={Sample2}/>
-            <MovieCard linkImg={Sample1}/>
-            <MovieCard linkImg={Sample2}/>
+            <MovieCard key="movie-1" linkImg={Sample1}/>
+            <MovieCard key="movie-2" linkImg={Sample2}/>
+            <MovieCard key="movie-3" linkImg={Sample1}/>
+            <MovieCard key="movie-4" linkImg={Sample2}/>
         </div>
     )
 }
