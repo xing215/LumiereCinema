@@ -1,6 +1,6 @@
 import {Heart} from "lucide-react";
 
-const WishlistButton = ({user}) => {
+const WishlistButton = () => {
     return (
         <div className="relative
         xl:h-12 lg:h-11 sm:h-10 h-7
