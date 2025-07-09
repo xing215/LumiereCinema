@@ -4,7 +4,7 @@ const branchFilterButton = () => {
     return (
         <div className="relative
         xl:w-60 lg:w-50 md:w-40 w-[49%]
-        xl:h-9 lh:h-8 md:h-7 h-6">
+        xl:h-9 lg:h-8 md:h-7 h-6">
             <div className="w-full h-full left-0 top-0 absolute bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]
             xl:rounded-xl rounded-lg " />
             <div className="absolute text-center justify-start text-white font-bold font-['Unbounded'] w-full
