@@ -28,7 +28,7 @@ const Rating = ({ rated = 0 , user = 0}) => {
             })}
 
             <p className="font-normal font-libre-franklin
-            xl:text-2xl lg:text-xl md:text-[16px] text-sm"> - {user} {user > 2 ? "users" : "user"}</p>
+            xl:text-2xl lg:text-xl md:text-[16px] text-sm"> - {user} {user !== 1 ? "users" : "user"}</p>
         </div>
     );
 };
