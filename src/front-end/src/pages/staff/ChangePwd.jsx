@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ChangePwd from "../../layouts/ChangePwd/ChangePwdForm.jsx";
+import StaffSidebar from '../../components/display/staffSidebar.jsx';
+import { useUser } from '../../contexts/UserContext.jsx';
 
 const StaffChangePwd = () => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { userRoles, userName } = useUser(); // Get user data from context
+
     return (
-        <section className="relative bg-slate-950 overflow-x-hidden overflow-y-hidden w-screen min-h-screen no-scrollbar">
+        <div className="flex h-screen bg-slate-950">
+            {/* Sidebar */}
+            <StaffSidebar
+                isCollapsed={isCollapsed}
+                onToggle={() => setIsCollapsed(!isCollapsed)}
+                theme="dark"
+                userRoles={userRoles}
+                currentUser={{
+                    name: userName,
+                    role: userRoles[0] || 'staff'
+                }}
+                showQuickActions={true}
+                onItemClick={(item) => console.log('Clicked:', item.label)}
+            />
+
+            {/* Main content area */}
+            <div className={`flex-1 transition-all duration-300 ${
+                isCollapsed ? 'ml-16' : 'ml-64'
+            } lg:ml-0 relative overflow-hidden`}>
+                <section className="relative bg-slate-950 overflow-x-hidden overflow-y-hidden w-full min-h-screen no-scrollbar">
             
             {/* Background visual */}
             <div className="
@@ -51,6 +75,8 @@ const StaffChangePwd = () => {
                 <ChangePwd />
             </div>
         </section>
+            </div>
+        </div>
     );
 };
 

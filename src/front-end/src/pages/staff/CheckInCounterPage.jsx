@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import {Camera} from 'lucide-react'
+import StaffSidebar from '../../components/display/staffSidebar.jsx';
+import { useUser } from '../../contexts/UserContext.jsx';
 
 const MainBody = () => {
     return (
@@ -64,6 +66,8 @@ const MainBody = () => {
 
 const CheckInCounterPage = () => {
     const [now, setNow] = useState(new Date());
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { userRoles, userName } = useUser(); // Get user data from context
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
@@ -71,29 +75,51 @@ const CheckInCounterPage = () => {
     }, []);
 
     return (
-        <div className="relative bg-slate-950 w-screen h-screen overflow-hidden">
-            <div className="absolute w-screen lg:h-[13%] md:h-[20%] h-[10%] md:top-0 top-10">
-                <div className="relative w-full h-full">
-                    <p className="absolute text-white text-nowrap font-bold font-unbounded top-1/3 left-1/2 transform -translate-x-1/2 md:translate-y-1/2 translate-y-1/2
-                    md:text-2xl text-md">{dayjs(now).format("DD/MM/YYYY - HH:mm:ss")}</p>
-                </div>
-            </div>
-            <MainBody/>
-            <div className="absolute w-screen lg:h-[13%] h-[15%] md:bottom-0 bottom-5">
-                <div className="relative w-full h-full">
-                    <p className="absolute text-white font-bold font-unbounded top-1/2 left-1/2 transform -translate-1/2 text-nowrap
-                    md:text-2xl text-md">LUMIERE CINEMA CAO THẮNG</p>
-                </div>
-            </div>
+        <div className="flex h-screen bg-slate-950">
+            {/* Sidebar */}
+            <StaffSidebar
+                isCollapsed={isCollapsed}
+                onToggle={() => setIsCollapsed(!isCollapsed)}
+                theme="dark"
+                userRoles={userRoles}
+                currentUser={{
+                    name: userName,
+                    role: userRoles[0] || 'staff'
+                }}
+                showQuickActions={true}
+                onItemClick={(item) => console.log('Clicked:', item.label)}
+            />
 
-            <div className="absolute top-0 left-1/5 tranform -translate-y-1/2
-            w-52 h-52 mix-blend-lighten bg-sky-400/60 rounded-full blur-[100px]" />
-            <div className="absolute top-1/4 left-0 tranform -translate-x-1/2
-            w-44 h-44 mix-blend-lighten bg-pink-400/60 rounded-full blur-[100px]" />
-            <div className="absolute top-1/2 right-1/11
-            w-28 h-28 mix-blend-lighten bg-amber-300/60 rounded-full blur-[100px]" />
-            <div className="absolute bottom-0 right-0 tranform translate-x-1/2
-            w-56 h-56 mix-blend-lighten bg-purple-600/60 rounded-full blur-[100px]" />
+            {/* Main content area */}
+            <div className={`flex-1 transition-all duration-300 ${
+                isCollapsed ? 'ml-16' : 'ml-64'
+            } lg:ml-0 relative overflow-hidden`}>
+                <div className="absolute w-full lg:h-[13%] md:h-[20%] h-[10%] md:top-0 top-10 z-10">
+                    <div className="relative w-full h-full">
+                        <p className="absolute text-white text-nowrap font-bold font-unbounded top-1/3 left-1/2 transform -translate-x-1/2 md:translate-y-1/2 translate-y-1/2
+                        md:text-2xl text-md">{dayjs(now).format("DD/MM/YYYY - HH:mm:ss")}</p>
+                    </div>
+                </div>
+                
+                <MainBody/>
+                
+                <div className="absolute w-full lg:h-[13%] h-[15%] md:bottom-0 bottom-5 z-10">
+                    <div className="relative w-full h-full">
+                        <p className="absolute text-white font-bold font-unbounded top-1/2 left-1/2 transform -translate-1/2 text-nowrap
+                        md:text-2xl text-md">LUMIERE CINEMA CAO THẮNG</p>
+                    </div>
+                </div>
+
+                {/* Background blur effects */}
+                <div className="absolute top-0 left-1/5 tranform -translate-y-1/2
+                w-52 h-52 mix-blend-lighten bg-sky-400/60 rounded-full blur-[100px]" />
+                <div className="absolute top-1/4 left-0 tranform -translate-x-1/2
+                w-44 h-44 mix-blend-lighten bg-pink-400/60 rounded-full blur-[100px]" />
+                <div className="absolute top-1/2 right-1/11
+                w-28 h-28 mix-blend-lighten bg-amber-300/60 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 right-0 tranform translate-x-1/2
+                w-56 h-56 mix-blend-lighten bg-purple-600/60 rounded-full blur-[100px]" />
+            </div>
         </div>
     )
 }
