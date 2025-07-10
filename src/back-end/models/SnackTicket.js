@@ -7,6 +7,7 @@ const snackTicketSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    immutable: true, // Không cho phép sửa đổi sau khi tạo
   },
 
   branch: {
@@ -65,6 +66,13 @@ const snackTicketSchema = new mongoose.Schema({
     enum: ['Confirmed','CheckedIn', 'Cancelled'], 
     default: 'Confirmed',
   },
+
+  ticketType: {
+    type: String,
+    enum: ['Snack'],
+    default: 'Snack', // Mặc định là Snack
+    immutable: true  // Tuỳ chọn: đảm bảo không ai sửa sau khi tạo
+  }
 
 }, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
 
