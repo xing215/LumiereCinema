@@ -1,4 +1,3 @@
-import Header from "../../layouts/LandingPage/Header.jsx";
 import Footer from "../../layouts/LandingPage/Footer.jsx";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
