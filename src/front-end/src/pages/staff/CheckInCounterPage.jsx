@@ -92,8 +92,10 @@ const CheckInCounterPage = () => {
 
             {/* Main content area */}
             <div className={`flex-1 transition-all duration-300 ${
-                isCollapsed ? 'ml-16' : 'ml-64'
-            } lg:ml-0 relative overflow-hidden`}>
+                isCollapsed 
+                ? 'ml-0' 
+                : 'ml-0 lg:ml-64'
+            } relative overflow-hidden`}>
                 <div className="absolute w-full lg:h-[13%] md:h-[20%] h-[10%] md:top-0 top-10 z-10">
                     <div className="relative w-full h-full">
                         <p className="absolute text-white text-nowrap font-bold font-unbounded top-1/3 left-1/2 transform -translate-x-1/2 md:translate-y-1/2 translate-y-1/2

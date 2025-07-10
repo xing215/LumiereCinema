@@ -54,7 +54,7 @@ export const sidebarConfig = {
     },
     cashier: {
       name: 'Cashier',
-      permissions: ['tickets', 'snacks']
+      permissions: ['tickets']
     },
     checkin: {
       name: 'Check-in counter',
@@ -90,7 +90,7 @@ export const sidebarConfig = {
       icon: Coffee,
       path: '#',
       description: 'Sell snacks and beverages',
-      permissions: ['snacks'],
+      permissions: ['tickets'],
       badge: null
     },
     {
