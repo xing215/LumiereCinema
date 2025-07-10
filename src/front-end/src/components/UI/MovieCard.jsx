@@ -1,12 +1,9 @@
-const MovieCard = ({linkImg, page}) => {
+const MovieCard = ({ linkImg, page }) => {
     return (
-        <div className={`h-full bg-transparent justify-start overflow-hidden shadow-lg
-            ${page === "Home" ? "xl:min-w-1/6 lg:min-w-1/4 min-w-1/3" : "w-full h-full"}
-
-            `}>
-            <img src={linkImg}  alt="Movie" className="h-full w-full object-cover xl:rounded-2xl lg:rounded-xl md:rounded-lg rounded-sm" />
+        <div className={`h-full justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'} `}>
+            <img src={linkImg} alt="Movie" className="h-full w-full rounded-sm object-cover md:rounded-lg lg:rounded-xl xl:rounded-2xl" />
         </div>
     );
-}
+};
 
 export default MovieCard;

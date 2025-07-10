@@ -8,10 +8,10 @@ import ResetPwd from './pages/ResetPwd';
 import StaffResetPwd from './pages/staff/ResetPwd';
 import ChangePwd from './pages/ChangePwd';
 import StaffChangePwd from './pages/staff/ChangePwd';
-import MovieListPage from "./pages/MovieList.jsx";
-import CheckInCounterPage from "./pages/staff/CheckInCounterPage.jsx";
+import MovieListPage from './pages/MovieList.jsx';
+import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
 import { UserProvider } from './contexts/UserContext.jsx';
-import ScheduleManagePage from "./pages/staff/ScheduleManagePage.jsx";
+import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 
 const App = () => {
     return (
@@ -28,11 +28,10 @@ const App = () => {
                     <Route path="/staff/change-password" element={<StaffChangePwd />} />
                     <Route path="/movies" element={<MovieListPage />} />
                     <Route path="/staff/checkin" element={<CheckInCounterPage />} />
-                     <Route path="/staff/schedule" element={<ScheduleManagePage/>} />
+                    <Route path="/staff/schedule" element={<ScheduleManagePage />} />
                 </Routes>
             </Router>
         </UserProvider>
-
     );
 };
 

@@ -1,18 +1,13 @@
 const BranchManagePage = () => {
     return (
-        <div className="w-screen h-screen bg-zinc-300/70">
-            <div className="absolute z-10 justify-start text-black font-bold font-unbounded text-5xl
-            left-1/6 top-5">Branches</div>
-            <div className="absolute z-5 w-44 h-44 mix-blend-hard-light bg-amber-300 rounded-full blur-[100px]
-            bottom-1/3 left-0 transform -translate-x-1/2" />
-            <div className="absolute z-5 w-44 h-44 mix-blend-hard-light bg-amber-300 rounded-full blur-[100px]
-            top-1/5 right-0 transform translate-x-1/2" />
-            <div className="absolute z-5 w-52 h-52 mix-blend-hard-light bg-blue-500 rounded-full blur-[100px]
-            left-1/3 transform -translate-y-2/3" />
-            <div className="absolute z-5 w-56 h-56 mix-blend-hard-light bg-purple-600 rounded-full blur-[100px]
-            right-0 bottom-0 transform translate-1/2" />
+        <div className="h-screen w-screen bg-zinc-300/70">
+            <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Branches</div>
+            <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+            <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+            <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
+            <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
         </div>
-    )
-}
+    );
+};
 
 export default BranchManagePage;

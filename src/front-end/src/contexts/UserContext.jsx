@@ -17,14 +17,16 @@ export const UserProvider = ({ children }) => {
     // EDIT USER MANAGEMENT HERE
     const [userRoles, setUserRoles] = useState(['all']); // Default roles
     const [userName, setUserName] = useState('Vương Ngũ Tín Thành'); // Default user name
-    
+
     return (
-        <UserContext.Provider value={{ 
-            userRoles, 
-            setUserRoles, 
-            userName, 
-            setUserName 
-        }}>
+        <UserContext.Provider
+            value={{
+                userRoles,
+                setUserRoles,
+                userName,
+                setUserName,
+            }}
+        >
             {children}
         </UserContext.Provider>
     );

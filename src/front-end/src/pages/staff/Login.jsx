@@ -1,53 +1,18 @@
 import React from 'react';
-import LoginForm from "../../layouts/Login/LoginForm.jsx";
+import LoginForm from '../../layouts/Login/LoginForm.jsx';
 
 const StaffLogin = () => {
     return (
-        <section className="relative bg-slate-950 overflow-x-hidden overflow-y-hidden w-screen min-h-screen no-scrollbar">
-            
+        <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden overflow-y-hidden bg-slate-950">
             {/* Background visual */}
-            <div className="
-                absolute lg:-top-[141px] md:top-[80px] sm:top-[100px] top-[150px] 
-                lg:left-[353px] md:left-[250px] sm:left-[180px] left-[20px]
-                lg:w-52 md:w-50 sm:w-45 w-40 
-                lg:h-52 md:h-50 sm:h-45 h-40 
-                mix-blend-lighten bg-sky-400/60 rounded-full blur-[100px]
-                pointer-events-none
-            "/>
-            <div className="
-                absolute lg:top-[373px] md:top-[400px] sm:top-[450px] top-[480px] 
-                lg:-left-[67px] md:-left-[50px] sm:-left-[30px] -left-[30px]
-                lg:w-44 md:w-36 sm:w-35 w-30
-                lg:h-44 md:h-36 sm:h-35 h-30 
-                mix-blend-lighten bg-pink-400/60 rounded-full blur-[100px]
-                pointer-events-none
-            "/>
-            <div className="
-                absolute lg:bottom-[500px] md:bottom-[480px] sm:bottom-[400px] bottom-[390px]
-                lg:-right-[50px] md:-right-[40px] sm:-right-[30px] -right-[20px]
-                lg:w-44 md:w-36 sm:w-35 w-30
-                lg:h-44 md:h-36 sm:h-35 h-30 
-                mix-blend-lighten bg-amber-300/60 rounded-full blur-[100px]
-                pointer-events-none
-            "/>
-            <div className="
-                absolute lg:-bottom-[100px] md:bottom-[90px] sm:bottom-[0px] bottom-[50px]
-                lg:right-[250px] md:right-[100px] sm:-right-[0px] right-[20px]
-                lg:w-56 md:w-50 sm:w-45 w-40
-                lg:h-56 md:h-50 sm:h-45 h-40
-                mix-blend-lighten bg-purple-600/60 rounded-full blur-[100px]
-                pointer-events-none
-            "/>
+            <div className="pointer-events-none absolute top-[150px] left-[20px] h-40 w-40 rounded-full bg-sky-400/60 mix-blend-lighten blur-[100px] sm:top-[100px] sm:left-[180px] sm:h-45 sm:w-45 md:top-[80px] md:left-[250px] md:h-50 md:w-50 lg:-top-[141px] lg:left-[353px] lg:h-52 lg:w-52" />
+            <div className="pointer-events-none absolute top-[480px] -left-[30px] h-30 w-30 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px] sm:top-[450px] sm:-left-[30px] sm:h-35 sm:w-35 md:top-[400px] md:-left-[50px] md:h-36 md:w-36 lg:top-[373px] lg:-left-[67px] lg:h-44 lg:w-44" />
+            <div className="pointer-events-none absolute -right-[20px] bottom-[390px] h-30 w-30 rounded-full bg-amber-300/60 mix-blend-lighten blur-[100px] sm:-right-[30px] sm:bottom-[400px] sm:h-35 sm:w-35 md:-right-[40px] md:bottom-[480px] md:h-36 md:w-36 lg:-right-[50px] lg:bottom-[500px] lg:h-44 lg:w-44" />
+            <div className="pointer-events-none absolute right-[20px] bottom-[50px] h-40 w-40 rounded-full bg-purple-600/60 mix-blend-lighten blur-[100px] sm:-right-[0px] sm:bottom-[0px] sm:h-45 sm:w-45 md:right-[100px] md:bottom-[90px] md:h-50 md:w-50 lg:right-[250px] lg:-bottom-[100px] lg:h-56 lg:w-56" />
 
             {/* Main component */}
-            <div className="
-                absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                lg:w-[1000px] md:w-[800px] sm:w-[600px] w-[500px]
-                lg:h-[584px] md:h-[500px] sm:h-[450px] h-[400px]
-                mix-blend-color-dodge bg-zinc-300/30 rounded-xl
-                pointer-events-none
-            " />
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] lg:pt-30 md:pt-16 sm:pt-14 pt-15 lg:px-8 md:px-6 sm:px-4 px-6">
+            <div className="pointer-events-none absolute top-1/2 left-1/2 h-[400px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-xl bg-zinc-300/30 mix-blend-color-dodge sm:h-[450px] sm:w-[600px] md:h-[500px] md:w-[800px] lg:h-[584px] lg:w-[1000px]" />
+            <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
                 <LoginForm isCustomer={false} />
             </div>
         </section>

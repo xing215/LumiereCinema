@@ -1,16 +1,13 @@
 import logo from '../../assets/img/Logo.svg';
 const Logo = () => {
     return (
-        <div className="relative w-auto h-auto flex z-100 -translate-y-1">
-            <button className="xl:w-14 lg:w-12 md:w-10 w-7
-            xl:h-10 lg:h-9 md:h-8 h-6
-            items-center">
-                <img src={logo} alt="Logo"
-                     className=" w-full h-full object-contain" />
+        <div className="relative z-100 flex h-auto w-auto -translate-y-1">
+            <button className="h-6 w-7 items-center md:h-8 md:w-10 lg:h-9 lg:w-12 xl:h-10 xl:w-14">
+                <img src={logo} alt="Logo" className="h-full w-full object-contain" />
             </button>
-            <div className="lg:w-[15px] md:w-[10px] w-[5px] h-full"/>
-            <div className="lg:w-[83px] md:w-[53px] sm:[33-px] w-[10px] h-full"/>
+            <div className="h-full w-[5px] md:w-[10px] lg:w-[15px]" />
+            <div className="sm:[33-px] h-full w-[10px] md:w-[53px] lg:w-[83px]" />
         </div>
-    )
-}
+    );
+};
 export default Logo;
