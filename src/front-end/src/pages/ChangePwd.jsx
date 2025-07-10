@@ -4,6 +4,7 @@ import ChangePwdForm from "../layouts/ChangePwd/ChangePwdForm.jsx";
 import ChatBot from "../components/display/ChatBot.jsx";
 import BackwardButton from "../components/buttons/backwardButton.jsx";
 import { useNavigate } from "react-router-dom";
+import Footer from "../layouts/LandingPage/Footer.jsx";
 
 const ChangePwd = () => {
     const navigate = useNavigate();
@@ -50,7 +51,9 @@ const ChangePwd = () => {
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] lg:pt-30 md:pt-16 sm:pt-14 pt-15 lg:px-8 md:px-6 sm:px-4 px-6">
                 <ChangePwdForm/>
             </div>
-            <ChatBot/>  
+            <ChatBot/>
+            <div className="w-screen lg:h-15"/>
+            <Footer/>
         </section>
     );
 };

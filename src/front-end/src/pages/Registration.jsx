@@ -3,6 +3,7 @@ import React from 'react';
 import Header from "../layouts/LandingPage/Header.jsx";
 import RegistrationForm from "../layouts/Registration/RegistrationForm.jsx";
 import ChatBot from "../components/display/ChatBot.jsx";
+import Footer from "../layouts/LandingPage/Footer.jsx";
 
 const Registration = () => {
     return (
@@ -49,6 +50,8 @@ const Registration = () => {
             </div>
 
             <ChatBot/>
+            <div className="w-screen lg:h-20 h-10"/>
+            <Footer/>
 
         </section>
     );

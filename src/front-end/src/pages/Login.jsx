@@ -2,6 +2,7 @@ import React from 'react';
 import Header from "../layouts/LandingPage/Header.jsx";
 import LoginForm from "../layouts/Login/LoginForm.jsx";
 import ChatBot from "../components/display/ChatBot.jsx";
+import Footer from "../layouts/LandingPage/Footer.jsx";
 
 const Login = () => {
     return (
@@ -38,7 +39,10 @@ const Login = () => {
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] lg:pt-30 md:pt-16 sm:pt-14 pt-15 lg:px-8 md:px-6 sm:px-4 px-6">
                 <LoginForm/>
             </div>
-            <ChatBot/>  
+            <ChatBot/>
+
+            <div className="w-screen lg:h-15"/>
+            <Footer/>
         </section>
     );
 };
