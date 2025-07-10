@@ -36,7 +36,7 @@ const Schedule = () => {
             <div className="relative z-10 h-[95%] w-[90%]">
                 <div className="flex justify-between px-[1px] py-1">
                     {Array.from({ length: 24 }, (_, hour) => {
-                        return <div className="font-libre-franklin justify-center text-center text-xs font-bold text-black">{hour < 10 ? `0${hour}` : hour}:00</div>;
+                        return <div key={hour} className="font-libre-franklin justify-center text-center text-xs font-bold text-black">{hour < 10 ? `0${hour}` : hour}:00</div>;
                     })}
                 </div>
 
