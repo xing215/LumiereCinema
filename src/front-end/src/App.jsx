@@ -10,23 +10,26 @@ import ChangePwd from './pages/ChangePwd';
 import StaffChangePwd from './pages/staff/ChangePwd';
 import MovieListPage from "./pages/MovieList.jsx";
 import CheckInCounterPage from "./pages/staff/CheckInCounterPage.jsx";
+import { UserProvider } from './contexts/UserContext.jsx';
 
 const App = () => {
     return (
-        <Router>
-            <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/register" element={<Registration />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/staff/login" element={<StaffLogin />} />
-                <Route path="/reset-password" element={<ResetPwd />} />
-                <Route path="/staff/reset-password" element={<StaffResetPwd />} />
-                <Route path="/change-password" element={<ChangePwd />} />
-                <Route path="/staff/change-password" element={<StaffChangePwd />} />
-                <Route path="/movies" element={<MovieListPage />} />
-                <Route path="/staff/checkin" element={<CheckInCounterPage />} />
-            </Routes>
-        </Router>
+        <UserProvider>
+            <Router>
+                <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/register" element={<Registration />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/staff/login" element={<StaffLogin />} />
+                    <Route path="/reset-password" element={<ResetPwd />} />
+                    <Route path="/staff/reset-password" element={<StaffResetPwd />} />
+                    <Route path="/change-password" element={<ChangePwd />} />
+                    <Route path="/staff/change-password" element={<StaffChangePwd />} />
+                    <Route path="/movies" element={<MovieListPage />} />
+                    <Route path="/staff/checkin" element={<CheckInCounterPage />} />
+                </Routes>
+            </Router>
+        </UserProvider>
     );
 };
 
