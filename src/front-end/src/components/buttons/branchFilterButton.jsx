@@ -13,7 +13,7 @@ const branchFilterButton = () => {
             <img src={DropdownArrow} alt="Backdrop Arrow"  className="absolute
             xl:h-3 lg:h-2.5 md:h-2 h-1.5
             xl:w-6 lg:w-5 md:w-4 w-3
-            right-1/13 bottom-1/2 transform translate-1/2"/>
+            right-1/12 bottom-1/2 transform translate-1/2"/>
         </div>
     )
 }
