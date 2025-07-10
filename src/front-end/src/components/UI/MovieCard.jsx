@@ -4,7 +4,7 @@ const MovieCard = ({linkImg, page}) => {
             ${page === "Home" ? "xl:min-w-1/6 lg:min-w-1/4 min-w-1/3" : "w-full h-full"}
 
             `}>
-            <img src={linkImg}  alt={Movie poster} className="h-full w-full object-cover xl:rounded-2xl lg:rounded-xl md:rounded-lg rounded-sm" />
+            <img src={linkImg}  alt="Movie" className="h-full w-full object-cover xl:rounded-2xl lg:rounded-xl md:rounded-lg rounded-sm" />
         </div>
     );
 }
