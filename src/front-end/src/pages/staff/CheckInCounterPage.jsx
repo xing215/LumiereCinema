@@ -1,4 +1,3 @@
-import Footer from "../../layouts/LandingPage/Footer.jsx";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import {Camera} from 'lucide-react'
