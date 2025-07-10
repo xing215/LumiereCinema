@@ -57,11 +57,9 @@ const Schedule = () => {
             <div className="absolute top-[5%] left-[4%] flex h-[95%] w-[4%] flex-col gap-3 bg-black/20 py-3">
                 {Array.from({ length: 5 }, (_, index) => {
                     return (
-                        <>
-                            <div key={index} className="relative h-[10%] w-full">
-                                <span className="text-bold font-unbounded absolute top-1/2 left-1/2 -translate-1/2 transform text-2xl font-black">{index}</span>
-                            </div>
-                        </>
+                        <div key={index} className="relative h-[10%] w-full">
+                            <span className="text-bold font-unbounded absolute top-1/2 left-1/2 -translate-1/2 transform text-2xl font-black">{index}</span>
+                        </div>
                     );
                 })}
             </div>
