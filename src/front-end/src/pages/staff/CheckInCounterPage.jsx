@@ -47,8 +47,6 @@ const CheckInCounterPage = () => {
     const [now, setNow] = useState(new Date());
     const [isCollapsed, setIsCollapsed] = useState(false);
     const { userRoles, userName } = useUser(); // Get user data from context
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const { userRoles, userName } = useUser(); // Get user data from context
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
@@ -71,7 +69,7 @@ const CheckInCounterPage = () => {
                 onItemClick={(item) => console.log('Clicked:', item.label)}
             />
 
-            <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-0 lg:ml-16' : 'ml-0 lg:ml-64'} relative overflow-hidden`}>
+            <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-0' : 'ml-0 lg:ml-64'} relative overflow-hidden`}>
                 <div className="absolute top-10 z-10 h-[10%] w-full md:top-0 md:h-[20%] lg:h-[13%]">
                     <div className="relative h-full w-full">
                         <p className="font-unbounded text-md absolute top-1/3 left-1/2 -translate-x-1/2 translate-y-1/2 transform font-bold text-nowrap text-white md:translate-y-1/2 md:text-2xl">

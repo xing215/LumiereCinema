@@ -24,7 +24,7 @@ const StaffChangePwd = () => {
             />
 
             {/* Main content area */}
-            <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-16' : 'ml-64'} relative overflow-hidden lg:ml-0`}>
+            <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-0' : 'ml-0 lg:ml-64'} relative overflow-hidden lg:ml-0`}>
                 <section className="no-scrollbar relative min-h-screen w-full overflow-x-hidden overflow-y-hidden bg-slate-950">
                     {/* Background visual */}
                     <div className="pointer-events-none absolute top-[150px] left-[20px] h-40 w-40 rounded-full bg-sky-400/60 mix-blend-lighten blur-[100px] sm:top-[100px] sm:left-[180px] sm:h-45 sm:w-45 md:top-[80px] md:left-[250px] md:h-50 md:w-50 lg:-top-[141px] lg:left-[353px] lg:h-52 lg:w-52" />
