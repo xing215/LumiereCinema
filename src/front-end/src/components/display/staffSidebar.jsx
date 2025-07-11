@@ -11,6 +11,7 @@ const StaffSidebar = ({
     userRoles = ['none'], // Default to all roles
     currentUser = null,
     showQuickActions = true,
+    onMobileToggle = () => {},
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -86,6 +87,7 @@ const StaffSidebar = ({
 
         // Close mobile menu after navigation
         setIsMobileOpen(false);
+        onMobileToggle(false);
 
         // Call parent callback
         onItemClick(item);
@@ -111,7 +113,7 @@ const StaffSidebar = ({
                 >
                     {Icon && <Icon size={18} className="flex-shrink-0" />}
 
-                    {!isCollapsed && (
+                    {(!isCollapsed || isMobileOpen) && (
                         <div className={`flex min-w-0 flex-1 items-center gap-3 ${isTransitioning ? 'sidebar-content-hide' : 'sidebar-content-show'}`}>
                             <span className={`flex-1 truncate text-left ${currentTheme.text}`}>{item.label}</span>
 
@@ -125,7 +127,7 @@ const StaffSidebar = ({
                 </button>
 
                 {/* Sub-items */}
-                {hasSubItems && isExpanded && !isCollapsed && (
+                {hasSubItems && isExpanded && (!isCollapsed || isMobileOpen) && (
                     <div className="mt-1 ml-4 space-y-1">
                         {item.subItems.map((subItem) => (
                             <button
@@ -147,22 +149,28 @@ const StaffSidebar = ({
 
     return (
         <>
-            {/* Mobile overlay */}
-            {isMobileOpen && <div className="bg-opacity-50 fixed inset-0 z-40 bg-slate-950 lg:hidden" onClick={() => setIsMobileOpen(false)} />}
+            {/* Mobile overlay - transparent, for closing menu */}
+            {isMobileOpen && <div className="fixed inset-0 z-40 lg:hidden" onClick={() => {
+                setIsMobileOpen(false);
+                onMobileToggle(false);
+            }} />}
 
             {/* Mobile toggle button */}
-            <button onClick={() => setIsMobileOpen(true)} className={`fixed top-4 left-4 z-50 rounded-lg p-2 lg:hidden ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} border`}>
+            <button onClick={() => {
+                setIsMobileOpen(true);
+                onMobileToggle(true);
+            }} className={`fixed top-4 left-4 z-50 rounded-lg p-2 lg:hidden ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} border`}>
                 <Menu size={20} />
             </button>
 
             {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 z-50 h-full transition-all duration-300 ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} ${isCollapsed ? 'w-16' : 'w-64'} ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col border-r lg:translate-x-0`}
+                className={`fixed top-0 left-0 z-50 h-full transition-all duration-300 ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} ${isCollapsed ? 'w-16 lg:w-16' : 'w-64'} ${isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full'} flex flex-col border-r lg:translate-x-0`}
             >
                 {/* Header */}
                 <div className={`border-b p-4 ${currentTheme.border}`}>
                     <div className="flex items-center justify-between">
-                        {!isCollapsed && (
+                        {(!isCollapsed || isMobileOpen) && (
                             <div className={`flex items-center gap-2 ${isTransitioning ? 'sidebar-content-hide' : 'sidebar-content-show'}`}>
                                 {typeof sidebarConfig.app.logo === 'string' ? (
                                     <img src={sidebarConfig.app.logo} alt="Logo" className="h-6 w-6 object-contain" />
@@ -179,7 +187,7 @@ const StaffSidebar = ({
                                 </div>
                             </div>
                         )}
-                        {isCollapsed && (
+                        {isCollapsed && !isMobileOpen && (
                             <button
                                 onClick={handleToggle}
                                 className={`rounded-lg p-1 ${currentTheme.hover} hidden lg:block ${isTransitioning ? 'sidebar-content-hide' : 'sidebar-content-show'}`}
@@ -192,7 +200,7 @@ const StaffSidebar = ({
                                 )}
                             </button>
                         )}
-                        {!isCollapsed && (
+                        {(!isCollapsed || isMobileOpen) && (
                             <button onClick={onToggle} className={`rounded-lg p-1 ${currentTheme.hover} hidden lg:block`} title="Collapse sidebar">
                                 <ChevronLeft size={16} />
                             </button>
