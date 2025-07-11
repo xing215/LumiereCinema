@@ -93,7 +93,7 @@ export const sidebarConfig = {
             id: 'manage-schedule',
             label: 'Manage schedule',
             icon: Calendar,
-            path: '#',
+            path: '/staff/schedule',
             description: 'Manage movie schedules',
             permissions: ['schedules'],
             badge: null,
