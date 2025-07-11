@@ -34,7 +34,7 @@ const SelectBranchButton = () => {
 
 const Schedule = () => {
     return (
-        <div className="absolute bottom-1/10 z-20 flex h-[67%] w-screen flex-col items-end overflow-x-hidden pr-[4%]">
+        <div className="absolute bottom-1/10 z-20 flex h-[67%] w-full flex-col items-end overflow-x-hidden pr-[4%]">
             {/*Calendar*/}
             <div className="relative z-10 h-[95%] w-[90%]">
                 <div className="flex justify-between px-[1px] py-1">
