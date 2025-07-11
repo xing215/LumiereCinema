@@ -6,7 +6,7 @@ import HideIcon from '../../assets/icons/hide.svg';
 
 const RegistrationForm = () => {
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState({
         name: '',
         birthday: '',
@@ -14,7 +14,7 @@ const RegistrationForm = () => {
         email: '',
         phoneNumber: '',
         password: '',
-        retypePassword: ''
+        retypePassword: '',
     });
 
     const [errors, setErrors] = useState({});
@@ -26,12 +26,12 @@ const RegistrationForm = () => {
         name: /^[a-zA-ZÀ-ỹ\s]{2,}\s+[a-zA-ZÀ-ỹ\s]{2,}$/,
         email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         phoneNumber: /^(?:\+84|0084|0)[235789][0-9]{1,2}[0-9]{7}$/,
-        gender: /^(Male|Female|Other)$/
+        gender: /^(Male|Female|Other)$/,
     };
 
     const validateField = (name, value) => {
         let error = '';
-        
+
         switch (name) {
             case 'name':
                 if (!patterns.name.test(value.trim())) {
@@ -76,40 +76,40 @@ const RegistrationForm = () => {
             default:
                 break;
         }
-        
+
         return error;
     };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
 
         // Real-time validation
         const error = validateField(name, value);
-        setErrors(prev => ({
+        setErrors((prev) => ({
             ...prev,
-            [name]: error
+            [name]: error,
         }));
 
         // Special case: validate retypePassword when password changes
         if (name === 'password' && formData.retypePassword) {
             const retypeError = validateField('retypePassword', formData.retypePassword);
-            setErrors(prev => ({
+            setErrors((prev) => ({
                 ...prev,
-                retypePassword: retypeError
+                retypePassword: retypeError,
             }));
         }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Validate all fields before submit
         const newErrors = {};
-        Object.keys(formData).forEach(key => {
+        Object.keys(formData).forEach((key) => {
             const error = validateField(key, formData[key]);
             if (error) newErrors[key] = error;
         });
@@ -124,20 +124,14 @@ const RegistrationForm = () => {
     };
 
     return (
-        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl px-4 sm:px-0">
+        <div className="w-full max-w-xs px-4 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-lg xl:max-w-xl">
             {/* Title */}
-            <h1 className="text-center text-white font-['Unbounded'] font-bold
-            text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-4 sm:mb-6">
-                REGISTER
-            </h1>
-            
+            <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">REGISTER</h1>
+
             {/* Login Link */}
-            <p className="text-white text-center text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 font-['Libre_Franklin']">
-                Already have an account? 
-                <span 
-                    onClick={() => navigate('/login')}
-                    className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1 font-['Libre_Franklin']"
-                >
+            <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
+                Already have an account?
+                <span onClick={() => navigate('/login')} className="ml-1 cursor-pointer font-['Libre_Franklin'] text-purple-400 hover:text-purple-300">
                     Login
                 </span>
             </p>
@@ -146,44 +140,34 @@ const RegistrationForm = () => {
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
                 {/* Name */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                        Name
-                    </label>
+                    <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Name</label>
                     <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.name ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                         required
                     />
-                    {errors.name && (
-                        <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.name}</p>
-                    )}
+                    {errors.name && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.name}</p>}
                 </div>
 
                 {/* Birthday and Gender Row - Stack on small screens */}
-                <div className="flex flex-col sm:flex-row sm:gap-4 gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
                     <div className="flex-1">
-                        <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                            Birthday
-                        </label>
+                        <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Birthday</label>
                         <input
                             type="date"
                             name="birthday"
                             value={formData.birthday}
                             onChange={handleInputChange}
-                            className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black focus:outline-none focus:ring-2 ${errors.birthday ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.birthday ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                             required
                         />
-                        {errors.birthday && (
-                            <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.birthday}</p>
-                        )}
+                        {errors.birthday && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.birthday}</p>}
                     </div>
                     <div className="flex-1">
-                        <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                            Gender
-                        </label>
+                        <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Gender</label>
                         <CustomDropdown
                             value={formData.gender}
                             onChange={handleInputChange}
@@ -197,127 +181,92 @@ const RegistrationForm = () => {
                             options={[
                                 { value: 'Male', label: 'Male' },
                                 { value: 'Female', label: 'Female' },
-                                { value: 'Other', label: 'Other' }
+                                { value: 'Other', label: 'Other' },
                             ]}
                         />
-                        {errors.gender && (
-                            <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.gender}</p>
-                        )}
+                        {errors.gender && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.gender}</p>}
                     </div>
                 </div>
 
                 {/* Email */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                        Email
-                    </label>
+                    <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Email</label>
                     <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.email ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                         required
                     />
-                    {errors.email && (
-                        <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.email}</p>
-                    )}
+                    {errors.email && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.email}</p>}
                 </div>
 
                 {/* Phone Number */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                        Phone Number
-                    </label>
+                    <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Phone Number</label>
                     <input
                         type="tel"
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleInputChange}
-                        className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.phoneNumber ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.phoneNumber ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                         required
                     />
-                    {errors.phoneNumber && (
-                        <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.phoneNumber}</p>
-                    )}
+                    {errors.phoneNumber && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.phoneNumber}</p>}
                 </div>
 
                 {/* Password */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                        Password
-                    </label>
+                    <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Password</label>
                     <div className="relative">
                         <input
-                            type={showPassword ? "text" : "password"}
+                            type={showPassword ? 'text' : 'password'}
                             name="password"
                             value={formData.password}
                             onChange={handleInputChange}
-                            className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 pr-10 sm:pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.password ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                             required
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
+                            className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6"
                         >
-                            <img 
-                                src={showPassword ? HideIcon : ShowIcon} 
-                                alt={showPassword ? "Hide password" : "Show password"}
-                                className="w-full h-full filter"
-                            />
+                            <img src={showPassword ? HideIcon : ShowIcon} alt={showPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
                         </button>
                     </div>
-                    {errors.password && (
-                        <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.password}</p>
-                    )}
+                    {errors.password && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.password}</p>}
                 </div>
 
                 {/* Retype Password */}
                 <div>
-                    <label className="block text-white font-bold mb-2 font-['Libre_Franklin'] text-sm sm:text-base md:text-lg lg:text-xl">
-                        Retype Password
-                    </label>
+                    <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Retype Password</label>
                     <div className="relative">
                         <input
-                            type={showRetypePassword ? "text" : "password"}
+                            type={showRetypePassword ? 'text' : 'password'}
                             name="retypePassword"
                             value={formData.retypePassword}
                             onChange={handleInputChange}
-                            className={`w-full h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14 px-3 sm:px-4 pr-10 sm:pr-12 rounded-lg bg-zinc-300 bg-opacity-70 text-black placeholder-gray-600 focus:outline-none focus:ring-2 ${errors.retypePassword ? 'focus:ring-red-500 ring-2 ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypePassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                             required
                         />
                         <button
                             type="button"
                             onClick={() => setShowRetypePassword(!showRetypePassword)}
-                            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
+                            className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6"
                         >
-                            <img 
-                                src={showRetypePassword ? HideIcon : ShowIcon} 
-                                alt={showRetypePassword ? "Hide password" : "Show password"}
-                                className="w-full h-full filter"
-                            />
+                            <img src={showRetypePassword ? HideIcon : ShowIcon} alt={showRetypePassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
                         </button>
                     </div>
-                    {errors.retypePassword && (
-                        <p className="text-red-400 text-xs sm:text-sm mt-1 font-['Libre_Franklin']">{errors.retypePassword}</p>
-                    )}
+                    {errors.retypePassword && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.retypePassword}</p>}
                 </div>
 
                 {/* Register Button */}
-                <div className="pt-4 sm:pt-6 flex justify-center">
+                <div className="flex justify-center pt-4 sm:pt-6">
                     <button
                         type="submit"
-                        className="w-full max-w-xs sm:max-w-sm md:max-w-md
-                        h-10 sm:h-11 md:h-12 lg:h-13
-                        bg-pink-400
-                        rounded-md sm:rounded-lg md:rounded-xl
-                        shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]
-                        text-white font-bold font-['Unbounded']
-                        flex items-center justify-center
-                        text-sm sm:text-base md:text-lg lg:text-xl
-                        hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)]
-                        transition-all duration-300"
+                        className="flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl"
                     >
                         REGISTER
                     </button>
