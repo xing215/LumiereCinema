@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import UploadCSVButton from '../../components/buttons/scheduleMange/uploadCsvButton.jsx';
 import AddScheduleButton from '../../components/buttons/scheduleMange/addScheduleButton.jsx';
 import { Download } from 'lucide-react';
 import { Circle } from 'lucide-react';
+import StaffSidebar from '../../components/display/staffSidebar.jsx';
+import { useUser } from '../../contexts/UserContext.jsx';
 
 const DownloadTemplateButton = () => {
     return (
@@ -68,29 +71,48 @@ const Schedule = () => {
 };
 
 const ScheduleManagePage = () => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { userRoles, userName } = useUser(); // Get user data from context
+
     return (
-        <div className="relative h-screen w-screen overflow-hidden bg-zinc-300/70">
-            <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
+        <div className="flex h-screen w-screen bg-zinc-300/70">
+            {/* Sidebar */}
+            <StaffSidebar
+                isCollapsed={isCollapsed}
+                onToggle={() => setIsCollapsed(!isCollapsed)}
+                theme="dark"
+                userRoles={userRoles}
+                currentUser={{
+                    name: userName,
+                    role: userRoles[0] || 'none',
+                }}
+                showQuickActions={true}
+                onItemClick={(item) => console.log('Clicked:', item.label)}
+            />
 
-            <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/10 xl:top-1/20">
-                <AddScheduleButton />
-                <div className="flex flex-col items-center">
-                    <DownloadTemplateButton />
-                    <UploadCSVButton />
+            <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-0 lg:ml-16' : 'ml-0 lg:ml-64'} relative overflow-hidden`}>
+                <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
+
+                <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/10 xl:top-1/20">
+                    <AddScheduleButton />
+                    <div className="flex flex-col items-center">
+                        <DownloadTemplateButton />
+                        <UploadCSVButton />
+                    </div>
+                    <DateChosenButton />
                 </div>
-                <DateChosenButton />
+
+                <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:h-[70%] xl:rounded-3xl"></div>
+
+                <Schedule />
+
+                <SelectBranchButton />
+
+                <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+                <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+                <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
+                <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
             </div>
-
-            <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:h-[70%] xl:rounded-3xl"></div>
-
-            <Schedule />
-
-            <SelectBranchButton />
-
-            <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
-            <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
-            <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
-            <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
         </div>
     );
 };

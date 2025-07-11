@@ -17,7 +17,7 @@ const StaffChangePwd = () => {
                 userRoles={userRoles}
                 currentUser={{
                     name: userName,
-                    role: userRoles[0] || 'staff',
+                    role: userRoles[0] || 'none',
                 }}
                 showQuickActions={true}
                 onItemClick={(item) => console.log('Clicked:', item.label)}
