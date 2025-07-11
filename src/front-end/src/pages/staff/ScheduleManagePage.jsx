@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 import { Circle } from 'lucide-react';
 import StaffSidebar from '../../components/display/staffSidebar.jsx';
 import { useUser } from '../../contexts/UserContext.jsx';
+import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
 
 const DownloadTemplateButton = () => {
     return (
@@ -91,22 +92,24 @@ const ScheduleManagePage = () => {
             />
 
             <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-0 lg:ml-16' : 'ml-0 lg:ml-64'} relative overflow-hidden`}>
-                <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
+                <MobileNotSupported>
+                    <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
 
-                <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/10 xl:top-1/20">
-                    <AddScheduleButton />
-                    <div className="flex flex-col items-center">
-                        <DownloadTemplateButton />
-                        <UploadCSVButton />
+                    <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/10 xl:top-1/20">
+                        <AddScheduleButton />
+                        <div className="flex flex-col items-center">
+                            <DownloadTemplateButton />
+                            <UploadCSVButton />
+                        </div>
+                        <DateChosenButton />
                     </div>
-                    <DateChosenButton />
-                </div>
 
-                <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:h-[70%] xl:rounded-3xl"></div>
+                    <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:h-[70%] xl:rounded-3xl"></div>
 
-                <Schedule />
+                    <Schedule />
 
-                <SelectBranchButton />
+                    <SelectBranchButton />
+                </MobileNotSupported>
 
                 <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
                 <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
