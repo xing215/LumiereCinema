@@ -1,4 +1,5 @@
 import React from 'react';
+import { UserProvider } from './contexts/UserContext.jsx';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Registration from './pages/Registration';
@@ -10,7 +11,6 @@ import ChangePwd from './pages/ChangePwd';
 import StaffChangePwd from './pages/staff/ChangePwd';
 import MovieListPage from './pages/MovieList.jsx';
 import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
-import { UserProvider } from './contexts/UserContext.jsx';
 import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 
 const App = () => {

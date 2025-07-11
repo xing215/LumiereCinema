@@ -47,6 +47,8 @@ const CheckInCounterPage = () => {
     const [now, setNow] = useState(new Date());
     const [isCollapsed, setIsCollapsed] = useState(false);
     const { userRoles, userName } = useUser(); // Get user data from context
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { userRoles, userName } = useUser(); // Get user data from context
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
