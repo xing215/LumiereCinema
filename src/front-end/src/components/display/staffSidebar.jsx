@@ -150,22 +150,30 @@ const StaffSidebar = ({
     return (
         <>
             {/* Mobile overlay - transparent, for closing menu */}
-            {isMobileOpen && <div className="fixed inset-0 z-40 lg:hidden" onClick={() => {
-                setIsMobileOpen(false);
-                onMobileToggle(false);
-            }} />}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 z-40 lg:hidden"
+                    onClick={() => {
+                        setIsMobileOpen(false);
+                        onMobileToggle(false);
+                    }}
+                />
+            )}
 
             {/* Mobile toggle button */}
-            <button onClick={() => {
-                setIsMobileOpen(true);
-                onMobileToggle(true);
-            }} className={`fixed top-4 left-4 z-50 rounded-lg p-2 lg:hidden ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} border`}>
+            <button
+                onClick={() => {
+                    setIsMobileOpen(true);
+                    onMobileToggle(true);
+                }}
+                className={`fixed top-4 left-4 z-50 rounded-lg p-2 lg:hidden ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} border`}
+            >
                 <Menu size={20} />
             </button>
 
             {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 z-50 h-full transition-all duration-300 ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} ${isCollapsed ? 'w-16 lg:w-16' : 'w-64'} ${isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full'} flex flex-col border-r lg:translate-x-0`}
+                className={`fixed top-0 left-0 z-50 h-full transition-all duration-300 ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} ${isCollapsed ? 'w-16 lg:w-16' : 'w-64'} ${isMobileOpen ? 'w-64 translate-x-0' : '-translate-x-full'} flex flex-col border-r lg:translate-x-0`}
             >
                 {/* Header */}
                 <div className={`border-b p-4 ${currentTheme.border}`}>
