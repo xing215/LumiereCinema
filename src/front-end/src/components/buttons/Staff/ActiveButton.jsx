@@ -1,5 +1,5 @@
-import {useState} from "react";
-import {Square, SquareCheckBig} from "lucide-react";
+import { useState } from 'react';
+import { Square, SquareCheckBig } from 'lucide-react';
 
 const ActiveButton = () => {
     const [checked, setChecked] = useState(false);

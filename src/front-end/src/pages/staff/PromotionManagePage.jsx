@@ -1,10 +1,10 @@
 import { Square, SquareCheckBig } from 'lucide-react';
 import { useState } from 'react';
 import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
-import StaffLayout from "../../layouts/StaffLayout.jsx";
-import MobileNotSupported from "../../components/display/MobileNotSupported.jsx";
-import TickButton from "../../components/buttons/Staff/TickButton.jsx";
-import ActiveButton from "../../components/buttons/Staff/ActiveButton.jsx";
+import StaffLayout from '../../layouts/StaffLayout.jsx';
+import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
+import TickButton from '../../components/buttons/Staff/TickButton.jsx';
+import ActiveButton from '../../components/buttons/Staff/ActiveButton.jsx';
 
 const SearchButton = () => {
     return (

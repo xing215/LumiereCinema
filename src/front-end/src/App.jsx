@@ -13,7 +13,7 @@ import MovieListPage from './pages/MovieList.jsx';
 import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
-import ScreenManagePage from "./pages/staff/ScreenManagePage.jsx";
+import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 
 const App = () => {
     return (

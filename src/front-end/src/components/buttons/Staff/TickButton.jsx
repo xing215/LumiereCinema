@@ -1,4 +1,4 @@
-import {Square, SquareCheckBig} from "lucide-react";
+import { Square, SquareCheckBig } from 'lucide-react';
 
 const TickButton = (props) => {
     return (

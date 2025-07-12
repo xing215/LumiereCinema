@@ -1,20 +1,19 @@
 import { Square, SquareCheckBig, SquarePen } from 'lucide-react';
 import { useState } from 'react';
 import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
-import StaffLayout from "../../layouts/StaffLayout.jsx";
-import MobileNotSupported from "../../components/display/MobileNotSupported.jsx";
-import EditSeatModal from "../../components/display/Modal/EditSeatModal.jsx";
-import TickButton from "../../components/buttons/Staff/TickButton.jsx";
-import ActiveButton from "../../components/buttons/Staff/ActiveButton.jsx";
+import StaffLayout from '../../layouts/StaffLayout.jsx';
+import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
+import EditSeatModal from '../../components/display/Modal/EditSeatModal.jsx';
+import TickButton from '../../components/buttons/Staff/TickButton.jsx';
+import ActiveButton from '../../components/buttons/Staff/ActiveButton.jsx';
 
 const EditSeatButton = ({ onClick }) => {
     return (
         <button onClick={onClick} className="h-5 w-5">
-            <SquarePen className="w-full h-full"/>
+            <SquarePen className="h-full w-full" />
         </button>
     );
 };
-
 
 const AddScreenButton = () => {
     return (
@@ -55,7 +54,7 @@ const RowTemplate = (props) => {
                                 ) : (
                                     <ActiveButton />
                                 )
-                            ): value === 'EditSeatButton' ? (
+                            ) : value === 'EditSeatButton' ? (
                                 props.isHeader ? (
                                     'Seat'
                                 ) : (
@@ -102,22 +101,14 @@ const ManageTable = (props) => {
             <RowTemplate data={['Null']} />
             <div className="no-scrollbar relative flex h-[90%] w-full flex-col items-center overflow-x-auto">
                 {props.data.map((row, index) => (
-                    <RowTemplate
-                        key={index}
-                        data={row}
-                        isHeader={false}
-                        rowIndex={index}
-                        checked={props.anyTicked.has(index)}
-                        onTicked={() => handleTick(index)}
-                        onEditSeat={props.onEditSeat}
-                    />
+                    <RowTemplate key={index} data={row} isHeader={false} rowIndex={index} checked={props.anyTicked.has(index)} onTicked={() => handleTick(index)} onEditSeat={props.onEditSeat} />
                 ))}
             </div>
         </div>
     );
 };
 
-const ScreenManagePage= () => {
+const ScreenManagePage = () => {
     const [tickedRows, setTickedRows] = useState(new Set());
     const [rowList, setRowList] = useState(Array.from({ length: 10 }, () => ['TickButton', 1, 1, 10, 20, 'ActiveButton', 'EditSeatButton']));
     const [selectedRowIndex, setSelectedRowIndex] = useState(null);
@@ -135,19 +126,9 @@ const ScreenManagePage= () => {
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 {tickedRows.size > 0 ? <DeleteScreenButton onClicked={handleDelete} /> : <AddScreenButton />}
-                <ManageTable
-                    anyTicked={tickedRows}
-                    setTickedRows={setTickedRows}
-                    data={rowList}
-                    onEditSeat={handleEditSeat}
-                />
+                <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} onEditSeat={handleEditSeat} />
 
-                {selectedRowIndex !== null && (
-                    <EditSeatModal
-                        screenData={rowList[selectedRowIndex]}
-                        onClose={() => setSelectedRowIndex(null)}
-                    />
-                )}
+                {selectedRowIndex !== null && <EditSeatModal screenData={rowList[selectedRowIndex]} onClose={() => setSelectedRowIndex(null)} />}
 
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Screen</div>
                 <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
