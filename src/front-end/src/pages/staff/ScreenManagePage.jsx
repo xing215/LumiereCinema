@@ -1,11 +1,11 @@
 import { SquarePen } from 'lucide-react';
 import { useState } from 'react';
-import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
 import StaffLayout from '../../layouts/StaffLayout.jsx';
 import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
 import EditSeatModal from '../../components/display/Modal/EditSeatModal.jsx';
 import TickButton from '../../components/buttons/Staff/TickButton.jsx';
 import ActiveButton from '../../components/buttons/Staff/ActiveButton.jsx';
+import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
 
 const EditSeatButton = ({ onClick }) => {
     return (
@@ -111,22 +111,22 @@ const ManageTable = (props) => {
 const ScreenManagePage = () => {
     const [tickedRows, setTickedRows] = useState(new Set());
     const [rowList, setRowList] = useState(Array.from({ length: 10 }, () => ['TickButton', 1, 1, 10, 20, 'ActiveButton', 'EditSeatButton']));
+    const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
     const [selectedRowIndex, setSelectedRowIndex] = useState(null);
 
     const handleDelete = () => {
         setRowList((prev) => prev.filter((_, index) => !tickedRows.has(index)));
         setTickedRows(new Set());
-    };
-
-    const handleEditSeat = (index) => {
-        setSelectedRowIndex(index);
+        setIsOpenConfirmationModal(false);
+        setTickedRows(new Set());
     };
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
-                {tickedRows.size > 0 ? <DeleteScreenButton onClicked={handleDelete} /> : <AddScreenButton />}
-                <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} onEditSeat={handleEditSeat} />
+                {tickedRows.size > 0 ? <DeleteScreenButton onClicked={() => setIsOpenConfirmationModal(true)} /> : <AddScreenButton />}
+                {isOpenConfirmationModal && <ConfirmationModal item={tickedRows.size} handleDelete={handleDelete} onClose={() => setIsOpenConfirmationModal(false)} />}
+                <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} onEditSeat={setSelectedRowIndex} />
 
                 {selectedRowIndex !== null && <EditSeatModal screenData={rowList[selectedRowIndex]} onClose={() => setSelectedRowIndex(null)} />}
 

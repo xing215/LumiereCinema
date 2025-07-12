@@ -1,10 +1,10 @@
-// Removed unused imports Square and SquareCheckBig
 import { useState } from 'react';
 import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
 import StaffLayout from '../../layouts/StaffLayout.jsx';
 import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
 import TickButton from '../../components/buttons/Staff/TickButton.jsx';
 import ActiveButton from '../../components/buttons/Staff/ActiveButton.jsx';
+import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
 
 const SearchButton = () => {
     return (
@@ -105,9 +105,12 @@ const ManageTable = (props) => {
 const PromotionManagePage = () => {
     const [tickedRows, setTickedRows] = useState(new Set());
     const [rowList, setRowList] = useState(Array.from({ length: 10 }, () => ['TickButton', 'MHVV', 'Mùa hè vui vẻ', '15', '50000', 'Snack', 'None', '5000', '12', '100', 'ActiveButton']));
+    const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
 
     const handleDelete = () => {
         setRowList((prev) => prev.filter((_, index) => !tickedRows.has(index)));
+        setTickedRows(new Set());
+        setIsOpenConfirmationModal(false);
         setTickedRows(new Set());
     };
 
@@ -115,7 +118,8 @@ const PromotionManagePage = () => {
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton />
-                {tickedRows.size > 0 ? <DeletePromotionButton onClicked={handleDelete} /> : <AddPromotionButton />}
+                {tickedRows.size > 0 ? <DeletePromotionButton onClicked={() => setIsOpenConfirmationModal(true)} /> : <AddPromotionButton />}
+                {isOpenConfirmationModal && <ConfirmationModal item={tickedRows.size} handleDelete={handleDelete} onClose={() => setIsOpenConfirmationModal(false)} />}
                 <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} />
                 <SelectBranchButton />
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Promotions</div>
