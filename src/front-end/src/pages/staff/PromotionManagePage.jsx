@@ -3,6 +3,8 @@ import { useState } from 'react';
 import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
 import StaffLayout from "../../layouts/StaffLayout.jsx";
 import MobileNotSupported from "../../components/display/MobileNotSupported.jsx";
+import TickButton from "../../components/buttons/Staff/TickButton.jsx";
+import ActiveButton from "../../components/buttons/Staff/ActiveButton.jsx";
 
 const SearchButton = () => {
     return (
@@ -10,28 +12,6 @@ const SearchButton = () => {
             <p className="font-unbounded text-base font-normal">Search: </p>
             <div className="h-6 w-60 rounded-lg bg-white" />
         </div>
-    );
-};
-
-const TickButton = (props) => {
-    return (
-        <button onClick={props.onTick} className="h-5 w-5 cursor-pointer">
-            {props.check ? <SquareCheckBig className="h-full w-full" /> : <Square className="h-full w-full" />}
-        </button>
-    );
-};
-
-const ActiveButton = () => {
-    const [checked, setChecked] = useState(false);
-
-    const handleClick = () => {
-        setChecked((prev) => !prev);
-    };
-
-    return (
-        <button onClick={handleClick} className="h-5 w-5 cursor-pointer">
-            {checked ? <SquareCheckBig className="h-full w-full" /> : <Square className="h-full w-full" />}
-        </button>
     );
 };
 
