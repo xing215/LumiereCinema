@@ -15,6 +15,7 @@ import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
 import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 
+
 const App = () => {
     return (
         <UserProvider>

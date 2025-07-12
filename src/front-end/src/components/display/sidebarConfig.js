@@ -111,7 +111,7 @@ export const sidebarConfig = {
             id: 'manage-promotion',
             label: 'Manage promotion',
             icon: Gift,
-            path: '#',
+            path: '/staff/promotion',
             description: 'Manage promotional campaigns',
             permissions: ['promotions'],
             badge: null,
