@@ -36,8 +36,6 @@ const userSchema = new mongoose.Schema({
     defaultDiscountRate: { type: Number, default: 0 }, // Giảm giá mặc định cho hạng này
   },
 
-  //lunarPoints: { type: Number, default: 0 },
-
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
 
   watchHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
