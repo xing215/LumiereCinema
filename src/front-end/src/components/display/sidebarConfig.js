@@ -129,7 +129,7 @@ export const sidebarConfig = {
             id: 'manage-branch',
             label: 'Manage branch',
             icon: MapPin,
-            path: '#',
+            path: '/staff/branch',
             description: 'Manage cinema branches',
             permissions: ['branches'],
             badge: null,
