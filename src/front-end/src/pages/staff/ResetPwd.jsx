@@ -17,7 +17,7 @@ const StaffResetPwd = () => {
             <div className="absolute top-10 left-5 flex items-center sm:top-10 sm:left-10 md:top-10 md:left-15 lg:top-10 lg:left-20">
                 <BackwardButton onClick={() => navigate(-1)} position="relative" />
             </div>
-            <div className="absolute top-1/2 left-1/2 h-[400px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-xl bg-zinc-300/30 mix-blend-color-dodge sm:h-[450px] sm:w-[600px] md:h-[500px] md:w-[800px] lg:h-[584px] lg:w-[1000px]" />
+            <div className="pointer-events-none absolute top-1/2 left-1/2 h-[400px] w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-xl bg-zinc-300/30 mix-blend-color-dodge sm:h-[450px] sm:w-[600px] md:h-[500px] md:w-[800px] lg:h-[584px] lg:w-[1000px]" />
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
                 <ResetPwdForm />
             </div>
