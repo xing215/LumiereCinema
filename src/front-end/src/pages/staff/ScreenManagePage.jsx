@@ -1,5 +1,6 @@
 import { SquarePen } from 'lucide-react';
 import { useState } from 'react';
+import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
 import StaffLayout from '../../layouts/StaffLayout.jsx';
 import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
 import EditSeatModal from '../../components/display/Modal/EditSeatModal.jsx';
@@ -127,7 +128,6 @@ const ScreenManagePage = () => {
                 {tickedRows.size > 0 ? <DeleteScreenButton onClicked={() => setIsOpenConfirmationModal(true)} /> : <AddScreenButton />}
                 {isOpenConfirmationModal && <ConfirmationModal item={tickedRows.size} handleDelete={handleDelete} onClose={() => setIsOpenConfirmationModal(false)} />}
                 <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} onEditSeat={setSelectedRowIndex} />
-
                 {selectedRowIndex !== null && <EditSeatModal screenData={rowList[selectedRowIndex]} onClose={() => setSelectedRowIndex(null)} />}
 
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Screen</div>
