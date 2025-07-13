@@ -47,7 +47,8 @@ const promotionSchema = new mongoose.Schema({
 
   appliedLoyaltyRank: {
     type: String, // Lưu 'rankName' của LoyaltyRank
-    ref: 'LoyaltyRank'
+    enum: ['SILVER', 'GOLD', 'PLATINUM'], // Chỉ áp dụng cho hạng khách hàng này
+    default: null, // Không giới hạn nếu không có giá trị
   },
   
   // RemainingUse: Số lượt sử dụng còn lại
@@ -87,7 +88,7 @@ promotionSchema.pre('save', function(next) {
         return next(new Error('The end date must be after the start date.'));
     }
     // Logic kiểm tra discountRate dựa trên discountType
-    if (this.discountType === 'Percentage' && (this.discountRate < 0 || this.discountRate > 100)) {
+    if (this.discountRate < 0 || this.discountRate > 100) {
         return next(new Error('The discount percentage must be between 0 and 100.'));
     }
     next();
