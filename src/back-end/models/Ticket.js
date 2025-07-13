@@ -28,28 +28,12 @@ const ticketSchema = new mongoose.Schema({
     ref: 'Branch',
     required: true,
   },
-  // screen: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'Screen',
-  //   required: true,
-  // },
 
   schedule: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Schedule',
     required: true,
   },
-
-  // movie: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'Movie',
-  //   required: true
-  // },
-
-  // showtime: { // Tương ứng với DateTime trong ERD
-  //   type: Date,
-  //   required: true,
-  // },
 
 
   // --------------------------------------------------------
