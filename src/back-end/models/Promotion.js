@@ -30,8 +30,6 @@ const promotionSchema = new mongoose.Schema({
     min: 0
   },
 
-  // AppliedProduct: ID của sản phẩm cụ thể được áp dụng (nếu có)
-  // Có thể là MovieId hoặc SnackId. Cần một trường để phân biệt.
   appliedProduct: {
     type: String, // Lưu 'productType' (ví dụ: 'Movie', 'Snack')
     enum: ['Movie', 'Snack'], // Chỉ áp dụng cho loại sản phẩm này
@@ -86,7 +84,5 @@ promotionSchema.pre('save', function(next) {
     }
     next();
 });
-
-// Removed redundant explicit index for promotionCode as unique: true already creates it.
 
 module.exports = mongoose.model('Promotion', promotionSchema);
