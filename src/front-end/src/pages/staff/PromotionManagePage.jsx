@@ -10,14 +10,14 @@ const SearchButton = () => {
     return (
         <div className="absolute top-1/20 right-1/15 flex gap-2">
             <p className="font-unbounded text-base font-normal">Search: </p>
-            <div className="h-6 w-60 rounded-lg bg-white" />
+            <div className="h-6 w-60 rounded-lg bg-white hover:cursor-pointer" />
         </div>
     );
 };
 
 const AddPromotionButton = () => {
     return (
-        <button className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]">
+        <button className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer">
             ADD PROMOTION
         </button>
     );
@@ -26,7 +26,7 @@ const AddPromotionButton = () => {
 const DeletePromotionButton = (props) => {
     return (
         <button
-            className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]"
+            className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer"
             onClick={props.onClicked}
         >
             DELETE

@@ -52,7 +52,7 @@ const CustomDropdown = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${backgroundClass} text-${textColor} flex items-center justify-between text-left font-['Unbounded'] shadow-sm transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none`}
+                className={`h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${backgroundClass} text-${textColor} flex items-center justify-between text-left font-['Unbounded'] shadow-sm transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none hover:cursor-pointer`}
             >
                 <span className="text-sm sm:text-base md:text-lg">{value || placeholder}</span>
                 <svg className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ const CustomDropdown = ({
                             key={option.value}
                             type="button"
                             onClick={() => handleSelect(option.value)}
-                            className={`w-full px-3 py-3 text-left sm:px-4 text-${textColor} font-['Unbounded'] text-sm sm:text-base md:text-lg hover:bg-${hoverColor} transition-colors ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''}`}
+                            className={`w-full px-3 py-3 text-left sm:px-4 text-${textColor} font-['Unbounded'] text-sm sm:text-base md:text-lg hover:bg-${hoverColor} transition-colors ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
                         >
                             {option.label}
                         </button>

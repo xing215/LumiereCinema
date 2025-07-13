@@ -138,7 +138,7 @@ export const sidebarConfig = {
             id: 'manage-screen',
             label: 'Manage screen',
             icon: Monitor,
-            path: '#',
+            path: '/staff/screen',
             description: 'Manage cinema screens',
             permissions: ['screens'],
             badge: null,

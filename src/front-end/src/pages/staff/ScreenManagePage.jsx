@@ -9,7 +9,7 @@ import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
 
 const EditSeatButton = ({ onClick }) => {
     return (
-        <button onClick={onClick} className="h-5 w-5">
+        <button onClick={onClick} className="h-5 w-5 hover:cursor-pointer">
             <SquarePen className="h-full w-full" />
         </button>
     );
@@ -17,7 +17,7 @@ const EditSeatButton = ({ onClick }) => {
 
 const AddScreenButton = () => {
     return (
-        <button className="font-unbounded absolute top-1/20 right-1/15 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]">
+        <button className="font-unbounded absolute top-1/20 right-1/15 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer">
             ADD SCREEN
         </button>
     );
@@ -26,7 +26,7 @@ const AddScreenButton = () => {
 const DeleteScreenButton = (props) => {
     return (
         <button
-            className="font-unbounded absolute top-1/20 right-1/15 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]"
+            className="font-unbounded absolute top-1/20 right-1/15 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer"
             onClick={props.onClicked}
         >
             DELETE
@@ -131,11 +131,11 @@ const ScreenManagePage = () => {
                 {selectedRowIndex !== null && <EditSeatModal screenData={rowList[selectedRowIndex]} onClose={() => setSelectedRowIndex(null)} />}
 
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Screen</div>
-                <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
-                <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
-                <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
-                <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
             </MobileNotSupported>
+            <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+            <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+            <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
+            <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
         </StaffLayout>
     );
 };
