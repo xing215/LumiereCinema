@@ -13,7 +13,7 @@ import MovieListPage from './pages/MovieList.jsx';
 import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
-
+import ReportPage from './pages/staff/ReportPage'; // Đảm bảo đường dẫn chính xác
 const App = () => {
     return (
         <UserProvider>

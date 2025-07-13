@@ -26,6 +26,7 @@ const ticketSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Branch',
     required: true,
+    index: true, // Thêm index
   },
   screen: {
     type: mongoose.Schema.Types.ObjectId,
@@ -69,6 +70,10 @@ const ticketSchema = new mongoose.Schema({
       default: 'Confirmed',
   },
 
+  createdAt: {
+    type: Date,
+    index: true, // Thêm index
+  },
 }, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
 
 
