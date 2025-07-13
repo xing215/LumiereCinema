@@ -1,43 +1,23 @@
-import { Square, SquareCheckBig } from 'lucide-react';
+// Removed unused imports Square and SquareCheckBig
 import { useState } from 'react';
 import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
-import StaffLayout from "../../layouts/StaffLayout.jsx";
-import MobileNotSupported from "../../components/display/MobileNotSupported.jsx";
+import StaffLayout from '../../layouts/StaffLayout.jsx';
+import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
+import TickButton from '../../components/buttons/Staff/TickButton.jsx';
+import ActiveButton from '../../components/buttons/Staff/ActiveButton.jsx';
 
 const SearchButton = () => {
     return (
         <div className="absolute top-1/20 right-1/15 flex gap-2">
             <p className="font-unbounded text-base font-normal">Search: </p>
-            <div className="h-6 w-60 rounded-lg bg-white" />
+            <div className="h-6 w-60 rounded-lg bg-white hover:cursor-pointer" />
         </div>
-    );
-};
-
-const TickButton = (props) => {
-    return (
-        <button onClick={props.onTick} className="h-5 w-5 cursor-pointer">
-            {props.check ? <SquareCheckBig className="h-full w-full" /> : <Square className="h-full w-full" />}
-        </button>
-    );
-};
-
-const ActiveButton = () => {
-    const [checked, setChecked] = useState(false);
-
-    const handleClick = () => {
-        setChecked((prev) => !prev);
-    };
-
-    return (
-        <button onClick={handleClick} className="h-5 w-5 cursor-pointer">
-            {checked ? <SquareCheckBig className="h-full w-full" /> : <Square className="h-full w-full" />}
-        </button>
     );
 };
 
 const AddPromotionButton = () => {
     return (
-        <button className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]">
+        <button className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer">
             ADD PROMOTION
         </button>
     );
@@ -46,7 +26,7 @@ const AddPromotionButton = () => {
 const DeletePromotionButton = (props) => {
     return (
         <button
-            className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]"
+            className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer"
             onClick={props.onClicked}
         >
             DELETE
@@ -139,11 +119,11 @@ const PromotionManagePage = () => {
                 <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} />
                 <SelectBranchButton />
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Promotions</div>
+                <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+                <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
+                <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
+                <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
             </MobileNotSupported>
-            <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
-            <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
-            <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
-            <div className="absolute right-0 bottom-0 z-5 h-56 w-56 translate-1/2 transform rounded-full bg-purple-600 mix-blend-hard-light blur-[100px]" />
         </StaffLayout>
     );
 };

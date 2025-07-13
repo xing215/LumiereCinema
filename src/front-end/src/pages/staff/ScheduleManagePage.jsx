@@ -8,7 +8,7 @@ import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
 
 const DownloadTemplateButton = () => {
     return (
-        <button className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline">
+        <button className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline hover:cursor-pointer">
             Download template
             <Download className="h-4 text-slate-950" />
         </button>
@@ -18,7 +18,7 @@ const DownloadTemplateButton = () => {
 const DateChosenButton = () => {
     return (
         <button className="relative z-20 flex h-8 items-center gap-2">
-            <button className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950">07/10/2025</button>
+            <button className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950 hover:cursor-pointer">07/10/2025</button>
         </button>
     );
 };

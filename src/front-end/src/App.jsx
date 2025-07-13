@@ -13,6 +13,8 @@ import MovieListPage from './pages/MovieList.jsx';
 import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
+import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
+
 
 const App = () => {
     return (
@@ -31,6 +33,7 @@ const App = () => {
                     <Route path="/staff/checkin" element={<CheckInCounterPage />} />
                     <Route path="/staff/schedule" element={<ScheduleManagePage />} />
                     <Route path="/staff/promotion" element={<PromotionManagePage />} />
+                    <Route path="/staff/screen" element={<ScreenManagePage />} />
                 </Routes>
             </Router>
         </UserProvider>
