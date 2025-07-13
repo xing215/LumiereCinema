@@ -23,13 +23,6 @@ const promotionSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  
-  // Logic ngầm định: Cần một trường để biết 'discountRate' là % hay số tiền cố định.
-  // discountType: {
-  //   type: String,
-  //   required: true,
-  //   enum: ['Percentage', 'FixedAmount'], // Giảm theo % hoặc số tiền cố định
-  // },
 
   maximumDiscount: {
     type: Number,
