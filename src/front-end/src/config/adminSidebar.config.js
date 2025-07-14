@@ -11,7 +11,7 @@
 // ROLE HIERARCHY: all > admin > manager > cashier/checkin
 
 import { Film, Users, Ticket, Calendar, MapPin, Gift, Settings, LogOut, BarChart3, Coffee, Monitor, UserCheck } from 'lucide-react';
-import LogoImage from '../../assets/img/Logo.svg';
+import LogoImage from '../assets/img/Logo.svg';
 
 export const sidebarConfig = {
     // Application info
