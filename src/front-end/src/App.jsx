@@ -13,7 +13,7 @@ import MovieListPage from './pages/MovieList.jsx';
 import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
-import ReportPage from './pages/staff/ReportPage'; // Đảm bảo đường dẫn chính xác
+import ReportPage from './pages/staff/ReportPage';
 import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 import BranchManagePage from './pages/staff/BranchManagePage.jsx';
 import AccountManagePage from './pages/staff/AccountManagePage.jsx';
@@ -35,7 +35,7 @@ const App = () => {
                     <Route path="/staff/checkin" element={<CheckInCounterPage />} />
                     <Route path="/staff/schedule" element={<ScheduleManagePage />} />
                     <Route path="/staff/promotion" element={<PromotionManagePage />} />
-                    <Route path="/staff/report" element={<ReportPage />} /> {/* Đã thêm dấu đóng */}
+                    <Route path="/staff/report" element={<ReportPage />} />
                     <Route path="/staff/screen" element={<ScreenManagePage />} />
                     <Route path="/staff/branch" element={<BranchManagePage />} />
                     <Route path="/staff/account" element={<AccountManagePage />} />
