@@ -23,24 +23,23 @@ const promotionSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  
-  // Logic ngầm định: Cần một trường để biết 'discountRate' là % hay số tiền cố định.
-  discountType: {
-    type: String,
-    required: true,
-    enum: ['Percentage', 'FixedAmount'], // Giảm theo % hoặc số tiền cố định
+
+  maximumDiscount: {
+    type: Number,
+    default: null, // Không giới hạn nếu không có giá trị
+    min: 0
   },
 
-  // AppliedProduct: ID của sản phẩm cụ thể được áp dụng (nếu có)
-  // Có thể là MovieId hoặc SnackId. Cần một trường để phân biệt.
   appliedProduct: {
-    id: { type: mongoose.Schema.Types.ObjectId },
-    type: { type: String, enum: ['Movie', 'Snack'] }
+    type: String, // Lưu 'productType' (ví dụ: 'Movie', 'Snack')
+    enum: ['Movie', 'Snack'], // Chỉ áp dụng cho loại sản phẩm này
+    required: true,
   },
 
   appliedLoyaltyRank: {
     type: String, // Lưu 'rankName' của LoyaltyRank
-    ref: 'LoyaltyRank'
+    enum: ['SILVER', 'GOLD', 'PLATINUM'], // Chỉ áp dụng cho hạng khách hàng này
+    default: null, // Không giới hạn nếu không có giá trị
   },
   
   // RemainingUse: Số lượt sử dụng còn lại
@@ -80,12 +79,10 @@ promotionSchema.pre('save', function(next) {
         return next(new Error('The end date must be after the start date.'));
     }
     // Logic kiểm tra discountRate dựa trên discountType
-    if (this.discountType === 'Percentage' && (this.discountRate < 0 || this.discountRate > 100)) {
+    if (this.discountRate < 0 || this.discountRate > 100) {
         return next(new Error('The discount percentage must be between 0 and 100.'));
     }
     next();
 });
-
-// Removed redundant explicit index for promotionCode as unique: true already creates it.
 
 module.exports = mongoose.model('Promotion', promotionSchema);

@@ -79,7 +79,7 @@ const CustomDropdown = ({
                             key={option.value}
                             type="button"
                             onClick={() => handleSelect(option.value)}
-                            className={`w-full px-3 py-3 text-left sm:px-4 text-${textColor} font-['Unbounded'] text-sm sm:text-base md:text-lg hover:bg-${hoverColor} transition-colors ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''}`}
+                            className={`w-full px-3 py-3 text-left sm:px-4 text-${textColor} font-['Unbounded'] text-sm sm:text-base md:text-lg hover:bg-${hoverColor} transition-colors ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
                         >
                             {option.label}
                         </button>

@@ -1,14 +1,13 @@
 import UploadCSVButton from '../../components/buttons/scheduleMange/uploadCsvButton.jsx';
 import AddScheduleButton from '../../components/buttons/scheduleMange/addScheduleButton.jsx';
 import { Download } from 'lucide-react';
-import { Circle } from 'lucide-react';
 import StaffLayout from '../../layouts/StaffLayout.jsx';
 import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
+import SelectBranchButton from '../../components/buttons/Staff/SelectBranch.jsx';
 
 const DownloadTemplateButton = () => {
     return (
-        <button className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline">
+        <button className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline hover:cursor-pointer">
             Download template
             <Download className="h-4 text-slate-950" />
         </button>
@@ -18,7 +17,7 @@ const DownloadTemplateButton = () => {
 const DateChosenButton = () => {
     return (
         <button className="relative z-20 flex h-8 items-center gap-2">
-            <button className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950">07/10/2025</button>
+            <button className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950 hover:cursor-pointer">07/10/2025</button>
         </button>
     );
 };
