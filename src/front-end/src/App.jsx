@@ -36,7 +36,7 @@ const App = () => {
                     <Route path="/staff/promotion" element={<PromotionManagePage />} />
                     <Route path="/staff/screen" element={<ScreenManagePage />} />
                     <Route path="/staff/branch" element={<BranchManagePage />} />
-                    <Route path="/staff/sell-ticket" element={<BranchManagePage />} />
+                    <Route path="/buy-ticket" element={<TicketPurchase />} />
                 </Routes>
             </Router>
         </UserProvider>
