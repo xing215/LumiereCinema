@@ -10,4 +10,5 @@ const Poster = ({Pics}) => {
     )
 }
 
+
 export default Poster;
