@@ -7,6 +7,7 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    immutable: true, // Không cho phép sửa đổi sau khi tạo
   },
   // Customer (FK): Tham chiếu đến người dùng mua vé
   customer: {
@@ -27,20 +28,14 @@ const ticketSchema = new mongoose.Schema({
     ref: 'Branch',
     required: true,
   },
-  screen: {
+
+  schedule: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Screen',
+    ref: 'Schedule',
     required: true,
   },
-  movie: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Movie',
-    required: true
-  },
-  showtime: { // Tương ứng với DateTime trong ERD
-    type: Date,
-    required: true,
-  },
+
+
   // --------------------------------------------------------
 
   // SeatNameList: Danh sách các ghế được đặt trong vé này
@@ -68,6 +63,13 @@ const ticketSchema = new mongoose.Schema({
       enum: ['Confirmed', 'CheckedIn', 'Cancelled'], // 'Confirmed' & 'CheckedIn' là hợp lệ
       default: 'Confirmed',
   },
+
+  ticketType: {
+    type: String,
+    enum: ['Movie'],
+    default: 'Movie', // Mặc định là Movie
+    immutable: true  // Tuỳ chọn: đảm bảo không ai sửa sau khi tạo
+  }
 
 }, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
 
