@@ -1,6 +1,6 @@
-import TickButton from "../../buttons/Staff/TickButton.jsx";
-import ActiveButton from "../../buttons/Staff/ActiveButton.jsx";
-import EditButton from "../../buttons/Staff/EditButton.jsx";
+import TickButton from '../../buttons/Staff/TickButton.jsx';
+import ActiveButton from '../../buttons/Staff/ActiveButton.jsx';
+import EditButton from '../../buttons/Staff/EditButton.jsx';
 
 const RowTemplate = (props) => {
     return (
@@ -11,13 +11,29 @@ const RowTemplate = (props) => {
                     return (
                         <p key={index} className={`font-libre-franklin h-full w-full justify-start text-left lg:text-lg xl:text-xl ${props.isHeader ? 'font-bold' : 'font-medium'}`}>
                             {value === 'TickButton' ? (
-                                props.isHeader ? '' : <TickButton check={props.checked} onTick={props.onTicked} />
+                                props.isHeader ? (
+                                    ''
+                                ) : (
+                                    <TickButton check={props.checked} onTick={props.onTicked} />
+                                )
                             ) : value === 'ActiveButton' ? (
-                                props.isHeader ? 'Active' : <ActiveButton />
+                                props.isHeader ? (
+                                    'Active'
+                                ) : (
+                                    <ActiveButton />
+                                )
                             ) : value === 'Edit' ? (
-                                props.isHeader ? 'Edit' : <EditButton onClick={() => props.onEdit?.(props.rowIndex)} />
+                                props.isHeader ? (
+                                    'Edit'
+                                ) : (
+                                    <EditButton onClick={() => props.onEdit?.(props.rowIndex)} />
+                                )
                             ) : value === 'EditSeatButton' ? (
-                                props.isHeader ? 'Seat' : <EditButton onClick={() => props.onEditSeat?.(props.rowIndex)} />
+                                props.isHeader ? (
+                                    'Seat'
+                                ) : (
+                                    <EditButton onClick={() => props.onEditSeat?.(props.rowIndex)} />
+                                )
                             ) : (
                                 value
                             )}
