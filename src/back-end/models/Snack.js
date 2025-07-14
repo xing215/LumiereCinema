@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const snackSchema = new mongoose.Schema({
+  branch: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Branch',
+  required: true,
+  },
+  
   shortname: {
     type: String,
     required: true,
