@@ -138,7 +138,7 @@ const ReportPage = () => {
           </div>
           {error && <p className="text-center text-red-500 mt-4 flex-shrink-0">{error}</p>}
         </div>
-        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-10 w-110">
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 w-110 origin-center">
             <CustomDropdown
               options={dropdownOptions}
               value={selectedBranch.name}
@@ -155,6 +155,7 @@ const ReportPage = () => {
               borderColor="purple-500"
               textColor="white"
               openDirection="up"
+              textAlign="center"
             />
         </div>
       </div>
