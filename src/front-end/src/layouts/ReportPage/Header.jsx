@@ -8,7 +8,7 @@ const ReportHeader = ({ startDate, setStartDate, endDate, setEndDate }) => {
       </h1>
       <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row sm:mr-[3%]">
         <div className="flex w-full items-center gap-2 sm:w-auto">
-          <label htmlFor="start-date" className="flex-shrink-0 text-sm">Start:</label>
+          <label htmlFor="start-date" className="w-16 h-5 flex justify-start text-slate-800 text-base font-normal font-['Unbounded']">Start:</label>
           <input
             type="date"
             id="start-date"
@@ -18,7 +18,7 @@ const ReportHeader = ({ startDate, setStartDate, endDate, setEndDate }) => {
           />
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
-          <label htmlFor="end-date" className="flex-shrink-0 text-sm">End:</label>
+          <label htmlFor="end-date" className="w-12 h-5 flex justify-start text-slate-800 text-base font-normal font-['Unbounded']">End:</label>
           <input
             type="date"
             id="end-date"

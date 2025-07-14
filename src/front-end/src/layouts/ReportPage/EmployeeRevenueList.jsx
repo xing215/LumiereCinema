@@ -11,11 +11,11 @@ const EmployeeRevenueList = ({ data }) => {
             key={index}
             className="flex justify-between items-center py-2 px-2 hover:bg-gray-100/50"
           >
-            <span className="text-gray-800 text-xs sm:text-sm font-medium truncate">
+            <span className="h-6 justify-start text-black text-xs sm:text-sm lg:text-lg font-normal font-['Libre_Franklin'] truncate">
               {employee.employeeName}
             </span>
-            <span className="text-indigo-600 text-xs sm:text-sm font-semibold">
-              {formatNumber(employee.revenue)} VND
+            <span className="h-6 justify-start text-indigo-600 text-xs sm:text-sm lg:text-lg font-normal font-['Libre_Franklin']">
+              {formatNumber(employee.revenue)} ₫
             </span>
           </div>
         ))
