@@ -15,6 +15,7 @@ import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
 import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 import BranchManagePage from './pages/staff/BranchManagePage.jsx';
+import AccountManagePage from "./pages/staff/AccountManagePage.jsx";
 
 const App = () => {
     return (
@@ -35,6 +36,7 @@ const App = () => {
                     <Route path="/staff/promotion" element={<PromotionManagePage />} />
                     <Route path="/staff/screen" element={<ScreenManagePage />} />
                     <Route path="/staff/branch" element={<BranchManagePage />} />
+                    <Route path="/staff/account" element={<AccountManagePage />} />
                 </Routes>
             </Router>
         </UserProvider>

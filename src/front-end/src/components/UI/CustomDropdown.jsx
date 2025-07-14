@@ -52,7 +52,7 @@ const CustomDropdown = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${backgroundClass} text-${textColor} flex items-center justify-between text-left font-['Unbounded'] shadow-sm transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none hover:cursor-pointer`}
+                className={`h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${backgroundClass} text-${textColor} flex items-center justify-between text-left font-['Unbounded'] shadow-sm transition-shadow duration-200 hover:cursor-pointer hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none`}
             >
                 <span className="text-sm sm:text-base md:text-lg">{value || placeholder}</span>
                 <svg className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,4 +1,4 @@
-const SelectBranchButton = ({clickable = false}) => {
+const SelectBranchButton = ({ clickable = false }) => {
     return (
         <button className={`absolute bottom-5 left-1/2 h-9 w-96 -translate-x-1/2 transform ${clickable ? 'hover:cursor-pointer' : ''}`}>
             <div className="absolute top-0 left-0 h-9 w-96 rounded-xl bg-white shadow-[inset_0px_0px_50px_3px_rgba(3,5,28,1.00)]" />
