@@ -14,7 +14,7 @@ const ReportHeader = ({ startDate, setStartDate, endDate, setEndDate }) => {
             id="start-date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full rounded-md bg-white/20 p-2 text-black shadow-md"
+            className="w-full rounded-md bg-white p-2 text-black shadow-md"
           />
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
@@ -24,7 +24,7 @@ const ReportHeader = ({ startDate, setStartDate, endDate, setEndDate }) => {
             id="end-date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full rounded-md bg-white/20 p-2 text-black shadow-md"
+            className="w-full rounded-md bg-white p-2 text-black shadow-md"
           />
         </div>
       </div>
