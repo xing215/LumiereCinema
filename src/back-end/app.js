@@ -5,13 +5,12 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 
 // 1. Import các hàm kết nối từ file config
-// Lưu ý: Giả sử bạn đã tạo một thư mục 'config' bên trong 'src/back-end'
 const { connectDB } = require('./config/database.config.js'); 
 const { connectRedis } = require('./config/redis.config.js');
 
 // Import các router
 const authRoutes = require('./routes/auth.route.js');
-// const movieRoutes = require('./routes/movie.route.js'); // Sẽ thêm ở các bước sau
+const movieRoutes = require('./routes/movie.route.js'); 
 
 // 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
 dotenv.config();
@@ -28,7 +27,7 @@ app.use(express.json());
 
 // 5. Sử dụng các router
 app.use('/api/auth', authRoutes);
-// app.use('/api/movies', movieRoutes); // Sẽ thêm ở các bước sau
+app.use('/api/movies', movieRoutes); 
 
 // Route mặc định để kiểm tra server
 app.get('/', (req, res) => {

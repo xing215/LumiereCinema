@@ -35,4 +35,28 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+/**
+ * Middleware để kiểm tra vai trò của người dùng
+ * @param {...string} roles - Các vai trò được phép truy cập
+ */
+const restrictTo = (...roles) => {
+    return (req, res, next) => {
+        // Kiểm tra xem user có tồn tại không (từ middleware protect)
+        if (!req.user) {
+            return res.status(401).json({ message: 'Vui lòng đăng nhập để truy cập.' });
+        }
+
+        // Kiểm tra xem user có ít nhất một vai trò được phép không
+        const hasPermission = req.user.roles.some(role => roles.includes(role));
+        
+        if (!hasPermission) {
+            return res.status(403).json({ 
+                message: 'Bạn không có quyền truy cập vào tài nguyên này.' 
+            });
+        }
+
+        next();
+    };
+};
+
+module.exports = { protect, restrictTo };
