@@ -147,7 +147,7 @@ export const sidebarConfig = {
             id: 'view-report',
             label: 'View report',
             icon: BarChart3,
-            path: '#',
+            path: '/staff/report',
             description: 'View analytics and reports',
             permissions: ['analytics'],
             badge: null,
