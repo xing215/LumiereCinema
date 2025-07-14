@@ -178,6 +178,7 @@ const RegistrationForm = () => {
                             borderColor="zinc-400"
                             textColor="black"
                             bgOpacity="bg-opacity-70"
+                            height="h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14"
                             options={[
                                 { value: 'Male', label: 'Male' },
                                 { value: 'Female', label: 'Female' },

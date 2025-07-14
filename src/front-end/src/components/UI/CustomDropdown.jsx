@@ -13,6 +13,7 @@
         borderColor="zinc-400"
         textColor="black"
         bgOpacity="bg-opacity-70"
+        height="h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14"
         options={[
             { value: 'Male', label: 'Male' },
             { value: 'Female', label: 'Female' },
@@ -37,6 +38,7 @@ const CustomDropdown = ({
     bgOpacity = '',
     openDirection = 'down',
     variant,
+    height = 'h-10 sm:h-11 md:h-12 lg:h-13 xl:h-11',
 }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -56,7 +58,7 @@ const CustomDropdown = ({
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
-                    h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-11 
+                    ${height} w-full rounded-lg px-3 sm:px-4 
                     ${backgroundClass} text-${textColor} 
                     flex items-center justify-between text-left font-['Unbounded'] 
                     transition-shadow duration-200 hover:shadow-md 
