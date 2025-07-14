@@ -120,7 +120,7 @@ export const sidebarConfig = {
             id: 'manage-account',
             label: 'Manage account',
             icon: Users,
-            path: '#',
+            path: '/staff/account',
             description: 'Manage user accounts',
             permissions: ['users'],
             badge: null,

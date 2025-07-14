@@ -1,5 +1,3 @@
-import SeatLayout from '../Seats.jsx';
-
 const CancelButton = (props) => {
     return (
         <button className="relative flex h-8 w-40 items-center justify-center" onClick={props.onClick}>
