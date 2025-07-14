@@ -1,4 +1,4 @@
-import {SquarePen} from "lucide-react";
+import { SquarePen } from 'lucide-react';
 
 const EditButton = ({ onClick }) => {
     return (

@@ -7,5 +7,4 @@ const ConfirmButton = (props) => {
     );
 };
 
-
 export default ConfirmButton;

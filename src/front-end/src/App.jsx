@@ -15,7 +15,7 @@ import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
 import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 import BranchManagePage from './pages/staff/BranchManagePage.jsx';
-import AccountManagePage from "./pages/staff/AccountManagePage.jsx";
+import AccountManagePage from './pages/staff/AccountManagePage.jsx';
 
 const App = () => {
     return (
