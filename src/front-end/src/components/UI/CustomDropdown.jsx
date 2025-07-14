@@ -35,6 +35,8 @@ const CustomDropdown = ({
     borderColor = 'indigo-700',
     textColor = 'white',
     bgOpacity = '',
+    openDirection = 'down',
+    variant,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -45,14 +47,22 @@ const CustomDropdown = ({
 
     const backgroundClass = bgOpacity ? `bg-${bgColor} ${bgOpacity}` : `bg-${bgColor}`;
     const dropdownBackgroundClass = bgOpacity ? `bg-${bgColor} ${bgOpacity}` : `bg-${bgColor}`;
+    
+    const isFigmaVariant = variant === 'figma';
 
     return (
         <div className="relative">
-            {/* Dropdown Button */}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${backgroundClass} text-${textColor} flex items-center justify-between text-left font-['Unbounded'] shadow-sm transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none`}
+                className={`
+                    h-10 w-full rounded-lg px-3 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-11 
+                    ${backgroundClass} text-${textColor} 
+                    flex items-center justify-between text-left font-['Unbounded'] 
+                    transition-shadow duration-200 hover:shadow-md 
+                    focus:ring-2 focus:ring-purple-500 focus:outline-none
+                    ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'}
+                `}
             >
                 <span className="text-sm sm:text-base md:text-lg">{value || placeholder}</span>
                 <svg className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,9 +70,10 @@ const CustomDropdown = ({
                 </svg>
             </button>
 
-            {/* Dropdown Options */}
             {isOpen && (
-                <div className={`absolute top-full right-0 left-0 mt-1 ${dropdownBackgroundClass} z-20 overflow-hidden rounded-lg border shadow-xl border-${borderColor}`}>
+                <div
+                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-20 overflow-hidden rounded-lg border shadow-xl border-${borderColor}`}
+                >
                     {options.map((option, index) => (
                         <button
                             key={option.value}
