@@ -6,7 +6,6 @@ const TotalRevenueCard = ({ data, isLoading, size }) => {  const formatNumber = 
   const revenue = data?.totalRevenue?.totalRevenue;
   const tickets = data?.totalRevenue?.totalTickets;
   const movies = data?.totalMovies;
-  // Chia doanh thu cho 1000 để hiển thị theo đơn vị nghìn
   const revenueInThousands = revenue ? Math.round(revenue / 1000) : 0;
 
   return (
@@ -19,7 +18,7 @@ const TotalRevenueCard = ({ data, isLoading, size }) => {  const formatNumber = 
             <p className="text-3xl sm:text-4xl lg:text-5xl font-unbounded font-bold text-slate-900">
               {formatNumber(revenueInThousands)}
             </p>
-            <p className="text-sm sm:text-base lg:text-lg text-black">nghìn VND</p>
+            <p className="text-sm sm:text-base lg:text-lg text-black">thousand Vietnam dongs</p>
             <div className="mt-4 space-y-1 text-xs sm:text-sm lg:text-base text-black">
               <p>{formatNumber(movies)} showing movies</p>
               <p>{formatNumber(tickets)} ticket bookings</p>

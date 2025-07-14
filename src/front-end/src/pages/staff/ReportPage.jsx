@@ -78,12 +78,12 @@ const ReportPage = () => {
     <StaffLayout backgroundClass="bg-gray-300">
       <div className="relative bg-gray-300 w-full min-h-screen lg:h-screen font-mina lg:overflow-hidden">
         <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute bottom-40 left-0 w-44 h-44 mix-blend-hard-light bg-yellow-300 rounded-full blur-[150px]"></div>
-          <div className="absolute -bottom-10 -right-15 w-44 h-44 mix-blend-hard-light bg-purple-400 rounded-full blur-[100px]"></div>
-          <div className="absolute -top-50 left-100 w-52 h-52 mix-blend-hard-light bg-sky-400 rounded-full blur-[120px]"></div>
-          <div className="absolute bottom-50 right-0 w-20 h-44 mix-blend-hard-light bg-yellow-400 rounded-full blur-[80px]"></div>
-          <div className="absolute bottom-100 left-0 w-24 h-24 mix-blend-hard-light bg-pink-400 rounded-full blur-[150px]"></div>
-          <div className="absolute top-20 right-20 w-44 h-44 mix-blend-hard-light bg-pink-400 rounded-full blur-[180px]"></div>
+          <div className="absolute bottom-40 left-0 w-44 h-44 mix-blend-hard-light bg-yellow-300 rounded-full blur-[150px]" />
+          <div className="absolute -bottom-10 -right-15 w-44 h-44 mix-blend-hard-light bg-purple-400 rounded-full blur-[100px]" />
+          <div className="absolute -top-50 left-100 w-52 h-52 mix-blend-hard-light bg-sky-400 rounded-full blur-[120px]" />
+          <div className="absolute bottom-50 right-0 w-20 h-44 mix-blend-hard-light bg-yellow-400 rounded-full blur-[80px]" />
+          <div className="absolute bottom-100 left-0 w-24 h-24 mix-blend-hard-light bg-pink-400 rounded-full blur-[150px]" />
+          <div className="absolute top-20 right-20 w-44 h-44 mix-blend-hard-light bg-pink-400 rounded-full blur-[180px]" />
         </div>
 
         <div className="relative z-10 w-full h-full lg:flex lg:flex-col p-4 sm:p-6">
