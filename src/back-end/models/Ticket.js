@@ -7,7 +7,7 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    immutable: true, // Không cho phép sửa đổi sau khi tạo
+    immutable: true,
   },
   // Customer (FK): Tham chiếu đến người dùng mua vé
   customer: {
@@ -27,6 +27,7 @@ const ticketSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Branch',
     required: true,
+    index: true,
   },
 
   schedule: {
@@ -67,8 +68,8 @@ const ticketSchema = new mongoose.Schema({
   ticketType: {
     type: String,
     enum: ['Movie'],
-    default: 'Movie', // Mặc định là Movie
-    immutable: true  // Tuỳ chọn: đảm bảo không ai sửa sau khi tạo
+    default: 'Movie',
+    immutable: true
   }
 
 }, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
