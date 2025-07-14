@@ -3,6 +3,7 @@ const Snack = require('../models/Snack');
 const Promotion = require('../models/Promotion');
 const User = require('../models/User'); 
 const Branch = require('../models/Branch'); 
+const Ticket = require('../models/Ticket'); 
 
 
 // ======= SUB FUNCTIONS =======
@@ -199,31 +200,95 @@ const getTicketByCode = async (req, res) => {
   }
 };
 
-// ======= GET TICKET LIST BY TIME =======
-// const getTicketListByTime = async (req, res) => {
-//   try {
-//     const { from, to, ticketType } = req.query;
+// ======= UPDATE TICKET =======
+const updateTicket = async (req, res) => {
+  try {
+    const { ticketCode } = req.params;
+    const isSnack = req.baseUrl.includes('/snacks');
+    const isMovie = req.baseUrl.includes('/movies');
+    const updateData = req.body;
 
-//     if (ticketType === 'Snack') {
-//       const tickets = await SnackTicket.find({
-//         createdAt: { $gte: new Date(from), $lte: new Date(to) },
-//         ticketType: 'Snack',
-//       });
+    if (isSnack) {
+      const ticket = await SnackTicket.findOne({ snackTicketCode: ticketCode });
 
-//       return res.status(200).json(tickets);
-//     }
+      if (!ticket) {
+        return res.status(404).json({ message: 'Snack ticket not found.' });
+      }
 
-//     if (ticketType === 'Movie') {
-//       // TODO: Query from MovieTicket collection
-//       return res.status(501).json({ message: 'MovieTicket query not implemented yet.' });
-//     }
+      // Chỉ cho phép cập nhật một số trường quan trọng
+      const allowedFields = ['status', 'seller', 'noLoginCustomerInfo'];
 
-//     return res.status(400).json({ message: 'Invalid or missing ticketType.' });
-//   } catch (error) {
-//     console.error('Get Ticket List Error:', error);
-//     return res.status(500).json({ message: 'Failed to fetch tickets.' });
-//   }
-// };
+      if(updateData.seller) {
+        const seller = await User.findById(updateData.seller);
+        if (!seller || !seller.roles.includes('cashier')) {
+          return res.status(400).json({ message: 'Invalid seller.' });
+        }
+      }
+
+      for (const field in updateData) {
+        if (!allowedFields.includes(field)) {
+          return res.status(400).json({ message: `Field ${field} cannot be updated.` });
+        }
+        ticket[field] = updateData[field];
+      }
+
+      await ticket.save();
+
+      return res.status(200).json({
+        message: 'Snack ticket updated successfully.',
+        ticket,
+      });
+    }
+
+    if (isMovie) {
+      // TODO: xử lý movie ticket sau
+      return res.status(501).json({ message: 'Movie ticket update not implemented yet.' });
+    }
+
+    return res.status(400).json({ message: 'Unknown ticket type in URL.' });
+  } catch (error) {
+    console.error('Update Ticket Error:', error);
+    return res.status(500).json({ message: 'Failed to update ticket.' });
+  }
+};
+
+// ======= DELETE TICKET (Cancel SnackTicket) =======
+const deleteTicket = async (req, res) => {
+  try {
+    const { ticketCode } = req.params;
+    const isSnack = req.baseUrl.includes('/snacks');
+    const isMovie = req.baseUrl.includes('/movies');
+
+    let ticket;
+
+    if (isSnack) {
+      ticket = await SnackTicket.findOne({ snackTicketCode: ticketCode });
+    } else if (isMovie) {
+      ticket = await Ticket.findOne({ ticketCode: ticketCode });
+    } else {
+      return res.status(400).json({ message: 'Unknown ticket type in URL.' });
+    }
+
+    if (!ticket) {
+      return res.status(404).json({ message: `${ticketCode} ticket not found.` });
+    }
+
+    if (ticket.status === 'Cancelled') {
+      return res.status(400).json({ message: `${ticketCode} ticket already cancelled.` });
+    }
+
+    ticket.status = 'Cancelled';
+    await ticket.save();
+
+    return res.status(200).json({
+      message: `${ticket.ticketType} ticket cancelled successfully.`,
+      ticket,
+    });
+  } catch (error) {
+    console.error('Delete Ticket Error:', error);
+    return res.status(500).json({ message: 'Failed to cancel ticket.' });
+  }
+};
 
 // ======= GET ALL TICKET =======
 const getAllTickets = async (req, res) => {
@@ -306,33 +371,12 @@ const getAllTickets = async (req, res) => {
 // };
 
 
-// // ======= UPDATE TICKET =======
-// const updateTicket = async (req, res) => {
-//   try {
-//     const { ticketId } = req.params;
-
-//     const ticket = await SnackTicket.findByIdAndUpdate(
-//       ticketId,
-//       { $set: req.body },
-//       { new: true, runValidators: true }
-//     );
-
-//     if (!ticket || ticket.ticketType !== 'Snack') {
-//       return res.status(404).json({ message: 'Snack ticket not found.' });
-//     }
-
-//     return res.status(200).json({ message: 'Ticket updated successfully.', ticket });
-//   } catch (error) {
-//     console.error('Update Error:', error);
-//     return res.status(500).json({ message: 'Failed to update ticket.' });
-//   }
-// };
-
-
 module.exports = {
   createTicket,
   getTicketByCode,
   getAllTickets,
+  updateTicket,
+  deleteTicket,
   // getTicketListByTime,
   // checkInTicket,
   // makeTicketValid,

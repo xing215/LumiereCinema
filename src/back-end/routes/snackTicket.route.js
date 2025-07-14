@@ -7,6 +7,8 @@ const {
   createTicket,
   getTicketByCode,
   getAllTickets,
+  updateTicket,
+  deleteTicket,
 } = require('../controllers/ticket.controller.js');
 
 
@@ -14,8 +16,10 @@ router.post('/', createTicket);
 
 router.get('/admin/all', protect, restrictTo('administrator'), getAllTickets);
 
-router.get('/admin/:code', protect, restrictTo('administrator'), getTicketByCode);
+router.get('/admin/:ticketCode', protect, restrictTo('administrator'), getTicketByCode);
 
+router.patch('/admin/:ticketCode', protect, restrictTo('administrator'), updateTicket);
 
+router.delete('/admin/:ticketCode', protect, restrictTo('administrator'), deleteTicket);
 
 module.exports = router;
