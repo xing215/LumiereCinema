@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const PaymentButton = ({ text }) => (
     <div className="relative h-auto w-[80vw] rounded-xl md:w-[35vw] lg:w-[30vw]">
-        <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge" />
+        <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
         <div className="relative py-3 text-center font-['Unbounded'] text-base font-black text-white">{text}</div>
     </div>
 );
@@ -52,7 +52,7 @@ const MenuPayment = ({ onNext, onBack }) => {
         <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
             <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[75vw]">
                 {/* Background layer */}
-                <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge" />
+                <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
 
                 {/* Poster */}
                 <div className="hidden md:block">

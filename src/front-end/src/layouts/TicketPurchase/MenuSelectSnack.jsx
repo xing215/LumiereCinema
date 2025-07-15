@@ -5,7 +5,7 @@ const MenuSelectSnack = ({ onNext, onBack }) => (
     <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
         <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
             {/* Background layer */}
-            <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge" />
+            <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
             {/* Main content */}
             <div className="relative flex flex-1 flex-col items-center justify-between">
                 <div className="inline-flex w-[90vw] flex-wrap items-start justify-start gap-5 pt-5 pl-2.5 md:pt-7 lg:w-[calc(70vw)]">

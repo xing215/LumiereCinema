@@ -9,7 +9,7 @@ const ticketDetails = [
 
 const TicketDetail = () => (
     <div className="relative mx-auto inline-flex w-full flex-col items-center justify-start gap-2 overflow-hidden rounded-xl md:h-full md:max-h-[470px] md:w-auto md:max-w-[300px] md:min-w-[200px]">
-        <div className="absolute inset-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge" />
+        <div className="absolute inset-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
         <div className="relative z-10 inline-flex w-auto flex-col items-center justify-center gap-2 px-7 py-4 md:px-6 lg:px-8">
             <div className="self-stretch pt-1 text-center font-['Unbounded'] text-base font-black text-white md:pt-5">TICKET DETAILS</div>
             <div className="h-px w-40" />
