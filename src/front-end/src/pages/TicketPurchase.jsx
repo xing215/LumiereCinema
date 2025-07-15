@@ -15,10 +15,10 @@ const TicketPurchase = () => {
         <div className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden bg-slate-950">
             <Header/>
             <Title text="BUY TICKET"/>
-            {/* <MenuSelectScreen/> */}
-            {/* <MenuSelectSeats/> */}
-            {/* <MenuSelectSnack/> */}
-            {/* <MenuInfo/> */}
+            <MenuSelectScreen/>
+            <MenuSelectSeats/>
+            <MenuSelectSnack/>
+            <MenuInfo/>
             <MenuPayment/>
             <div className="h-10 w-screen lg:h-20" />
             <Footer/>

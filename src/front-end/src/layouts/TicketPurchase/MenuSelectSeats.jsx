@@ -14,7 +14,7 @@ const SeatName = ({ type, text }) => (
 
 const MenuSelectSeats = () => {
   return (
-    <div className="relative flex items-center justify-center w-screen pt-3 sm:pt-6 md:pt-9 lg:pt-14">
+    <div className="relative flex items-center justify-center w-screen pt-3 md:pt-7">
       <div className="relative flex flex-row justify-start w-full h-full md:min-h-[470px] md:w-screen lg:w-[75vw] lg:h-auto rounded-xl">
         {/* Background layer */}
         <div className="absolute inset-0 mix-blend-color-dodge bg-zinc-300/30 rounded-xl pointer-events-none z-0" />

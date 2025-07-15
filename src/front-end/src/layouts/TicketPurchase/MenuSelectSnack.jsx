@@ -2,7 +2,7 @@ import NextNaviButton, { BackNaviButton } from '../../components/buttons/NaviBut
 import SnackSelect from '../../components/UI/SnackSelect';
 
 const MenuSelectSnack = () => (
-    <div className="relative flex w-screen items-center justify-center pt-3 sm:pt-6 md:pt-9 lg:pt-14">
+    <div className="relative flex w-screen items-center justify-center pt-3 md:pt-5">
         <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
             {/* Background layer */}
             <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge" />
