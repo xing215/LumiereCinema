@@ -1,10 +1,9 @@
 import UploadCSVButton from '../../components/buttons/scheduleMange/uploadCsvButton.jsx';
 import AddScheduleButton from '../../components/buttons/scheduleMange/addScheduleButton.jsx';
 import { Download } from 'lucide-react';
-import { Circle } from 'lucide-react';
 import StaffLayout from '../../layouts/StaffLayout.jsx';
 import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
+import SelectBranchButton from '../../components/buttons/Staff/SelectBranch.jsx';
 
 const DownloadTemplateButton = () => {
     return (

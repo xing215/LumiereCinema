@@ -11,7 +11,7 @@
 // ROLE HIERARCHY: all > admin > manager > cashier/checkin
 
 import { Film, Users, Ticket, Calendar, MapPin, Gift, Settings, LogOut, BarChart3, Coffee, Monitor, UserCheck } from 'lucide-react';
-import LogoImage from '../../assets/img/Logo.svg';
+import LogoImage from '../assets/img/Logo.svg';
 
 export const sidebarConfig = {
     // Application info
@@ -120,7 +120,7 @@ export const sidebarConfig = {
             id: 'manage-account',
             label: 'Manage account',
             icon: Users,
-            path: '#',
+            path: '/staff/account',
             description: 'Manage user accounts',
             permissions: ['users'],
             badge: null,
@@ -147,7 +147,7 @@ export const sidebarConfig = {
             id: 'view-report',
             label: 'View report',
             icon: BarChart3,
-            path: '#',
+            path: '/staff/report',
             description: 'View analytics and reports',
             permissions: ['analytics'],
             badge: null,

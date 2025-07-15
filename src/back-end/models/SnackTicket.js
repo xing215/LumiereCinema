@@ -7,6 +7,7 @@ const snackTicketSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    immutable: true, // Không cho phép sửa đổi sau khi tạo
   },
 
   branch: {
@@ -33,11 +34,18 @@ const snackTicketSchema = new mongoose.Schema({
     }
   ],
   
-  // Tham chiếu đến khách hàng
+  // Tham chiếu đến khách hàng (nếu khách hàng đã đăng nhập)
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    // required: true, // Không bắt buộc, có thể là khách hàng không đăng nhập, cần kiểm tra có customer hoặc noLoginCustomerInfo (ở dưới)
+  },
+
+  // Thông tin khách hàng không đăng nhập
+  noLoginCustomerInfo: {
+    name: { type: String},
+    phone: { type: String},
+    email: { type: String},
   },
 
   // SellerId: Tham chiếu đến nhân viên bán hàng (nếu mua tại quầy)
@@ -46,10 +54,11 @@ const snackTicketSchema = new mongoose.Schema({
     ref: 'User',
   },
 
-  // Tham chiếu đến mã khuyến mãi đã áp dụng
+  // tham chiếu đến chương trình khuyến mãi (nếu có)
   promotion: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Promotion',
+    default: null, // Không bắt buộc, có thể không áp dụng khuyến mãi
   },
 
   // Total: Tổng số tiền cuối cùng của hóa đơn
@@ -66,8 +75,28 @@ const snackTicketSchema = new mongoose.Schema({
     default: 'Confirmed',
   },
 
+  ticketType: {
+    type: String,
+    enum: ['Snack'],
+    default: 'Snack', // Mặc định là Snack
+    immutable: true  // Tuỳ chọn: đảm bảo không ai sửa sau khi tạo
+  }
+
 }, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
 
+// Custom validation: bắt buộc có customer hoặc đầy đủ thông tin không login
+snackTicketSchema.pre('validate', function (next) {
+  const hasCustomer = !!this.customer;
+  const info = this.noLoginCustomerInfo || {};
+
+  const hasGuestInfo = info.name && info.email && info.phone;
+
+  if (!hasCustomer && !hasGuestInfo) {
+    return next(new Error('Customer information is required: either a logged-in customer or full name, email, and phone number must be provided.'));
+  }
+
+  next();
+});
 
 // Tự động tạo snackTicketCode
 snackTicketSchema.pre('validate', function(next) {

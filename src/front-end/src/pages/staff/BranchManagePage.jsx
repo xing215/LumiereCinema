@@ -1,127 +1,33 @@
 import { useState } from 'react';
-import SelectBranchButton from '../../components/buttons/staffSelectBranch.jsx';
 import StaffLayout from '../../layouts/StaffLayout.jsx';
 import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import TickButton from '../../components/buttons/Staff/TickButton.jsx';
-import ActiveButton from '../../components/buttons/Staff/ActiveButton.jsx';
+import SearchButton from '../../components/buttons/Staff/SearchButton.jsx';
 import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
-
-const SearchButton = () => {
-    return (
-        <div className="absolute top-1/20 right-1/15 flex gap-2">
-            <p className="font-unbounded text-base font-normal">Search: </p>
-            <div className="h-6 w-60 rounded-lg bg-white hover:cursor-pointer" />
-        </div>
-    );
-};
-
-const AddBranchButton = () => {
-    return (
-        <button className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer">
-            ADD NEW BRANCH
-        </button>
-    );
-};
-
-const DeleteBranchButton = (props) => {
-    return (
-        <button
-            className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl bg-pink-400 text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer"
-            onClick={props.onClicked}
-        >
-            DELETE
-        </button>
-    );
-};
-
-const RowTemplate = (props) => {
-    return (
-        <div className="z-10 flex w-full flex-col">
-            <div className={`relative flex items-center justify-center gap-1 px-[3%] lg:py-3 xl:gap-2 xl:py-5 ${props.checked ? 'bg-zinc-400' : ''}`}>
-                {Array.from({ length: props.data?.length }, (_, index) => {
-                    const value = props.data?.[index];
-                    return (
-                        <p key={index} className={`font-libre-franklin h-full w-full justify-start text-left lg:text-lg xl:text-xl ${props.isHeader ? 'font-bold' : 'font-medium'}`}>
-                            {value === 'TickButton' ? (
-                                props.isHeader ? (
-                                    ''
-                                ) : (
-                                    <TickButton check={props.checked} onTick={props.onTicked} />
-                                )
-                            ) : value === 'ActiveButton' ? (
-                                props.isHeader ? (
-                                    'Active'
-                                ) : (
-                                    <ActiveButton />
-                                )
-                            ) : (
-                                value
-                            )}
-                        </p>
-                    );
-                })}
-            </div>
-            <div className="relative h-[3px] w-full bg-slate-950" />
-        </div>
-    );
-};
-
-const Header = () => {
-    const Data = ['TickButton', 'ID', 'Name', 'Address', 'ActiveButton'];
-
-    return (
-        <div className="fixed top-0 z-20 w-full rounded-t-xl lg:bg-zinc-400 xl:bg-zinc-300">
-            <RowTemplate data={Data} isHeader={true} />
-        </div>
-    );
-};
-
-const ManageTable = (props) => {
-    const handleTick = (rowIndex) => {
-        props.setTickedRows((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(rowIndex)) {
-                newSet.delete(rowIndex);
-            } else {
-                newSet.add(rowIndex);
-            }
-            return newSet;
-        });
-    };
-
-    return (
-        <div className="absolute top-1/4 left-1/2 w-[90%] -translate-x-1/2 transform lg:h-[65%] xl:h-[60%]">
-            <Header />
-            <RowTemplate data={['Null']} />
-            <div className="no-scrollbar relative flex h-[90%] w-full flex-col items-center overflow-x-auto">
-                {props.data.map((row, index) => (
-                    <RowTemplate key={index} data={row} isHeader={false} checked={props.anyTicked.has(index)} onTicked={() => handleTick(index)} />
-                ))}
-            </div>
-        </div>
-    );
-};
+import ManageTable from '../../components/UI/ManageTable.jsx';
+import DeleteButton from '../../components/buttons/Staff/DeleteButton.jsx';
+import AddButton from '../../components/buttons/Staff/AddButton.jsx';
 
 const BranchManagePage = () => {
-    const [tickedRows, setTickedRows] = useState(new Set());
-    const [rowList, setRowList] = useState(Array.from({ length: 10 }, () => ['TickButton', '1', 'Cao Thắng', '123 Nguyễn Văn Cừ, Phường Chợ Quán', 'ActiveButton']));
-    const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
+    const [tickedBranches, setTickedBranches] = useState(new Set());
+    const [branchRows, setBranchRows] = useState(Array.from({ length: 10 }, () => ['TickButton', '1', 'Cao Thắng', '123 Nguyễn Văn Cừ, Phường Chợ Quán', 'ActiveButton']));
+    const [showConfirmDeleteBranch, setShowConfirmDeleteBranch] = useState(false);
 
     const handleDelete = () => {
-        setRowList((prev) => prev.filter((_, index) => !tickedRows.has(index)));
-        setTickedRows(new Set());
-        setIsOpenConfirmationModal(false);
+        setBranchRows((prev) => prev.filter((_, index) => !tickedBranches.has(index)));
+        setTickedBranches(new Set());
+        setShowConfirmDeleteBranch(false);
     };
+
+    const header = ['TickButton', 'ID', 'Name', 'Address', 'ActiveButton'];
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton />
-                {tickedRows.size > 0 ? <DeleteBranchButton onClicked={() => setIsOpenConfirmationModal(true)} /> : <AddBranchButton />}
-                {isOpenConfirmationModal ? <ConfirmationModal item={tickedRows.size} handleDelete={handleDelete} onClose={() => setIsOpenConfirmationModal(false)} /> : null}
-                <ManageTable anyTicked={tickedRows} setTickedRows={setTickedRows} data={rowList} />
-                <SelectBranchButton />
-                <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Branches</div>
+                {tickedBranches.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteBranch(true)} /> : <AddButton />}
+                {showConfirmDeleteBranch && <ConfirmationModal item={tickedBranches.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteBranch(false)} />}
+                <ManageTable data={branchRows} anyTicked={tickedBranches} setTickedRows={setTickedBranches} header={header} />
+                <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Branches</div>
                 <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
                 <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
                 <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />
