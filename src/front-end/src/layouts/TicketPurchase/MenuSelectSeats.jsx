@@ -12,7 +12,7 @@ const SeatName = ({ type, text }) => (
   </div>
 );
 
-const MenuSelectSeats = () => {
+const MenuSelectSeats = ({ onNext, onBack }) => {
   return (
     <div className="relative flex items-center justify-center w-screen pt-3 md:pt-7">
       <div className="relative flex flex-row justify-start w-full h-full md:min-h-[470px] md:w-screen lg:w-[75vw] lg:h-auto rounded-xl">
@@ -50,20 +50,23 @@ const MenuSelectSeats = () => {
               Monday, 23th May, 2025, 07:00<br />
               Cinema: 123 NVC St, D3, HCM
             </div>
-            <BackNaviButton />
-            <NextNaviButton text="SEATINGS" />
+            <BackNaviButton onClick={onBack} />
+            <NextNaviButton text="SNACKS" onClick={onNext} />
           </div>
         </div>
         {/* Mobile footer */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-t border-white/10 flex flex-row gap-2 justify-end items-center pr-4 sm:pr-8 md:pr-10 lg:pr-12 h-15">
-          <div className="flex-1 relative text-right text-white text-[9px] font-semibold font-['Unbounded']">
-            Movie: Tham Tu Kien<br />
-            Monday, 23th May, 2025, 07:00<br />
-            Cinema: 123 NVC St, D3, HCM
-          </div>
-          <BackNaviButton />
-          <NextNaviButton text="SEATINGS" />
-        </div>
+            <div className="fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm md:hidden">
+                <BackNaviButton onClick={onBack} />
+                <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
+                    Movie: Tham Tu Kien
+                    <br />
+                    Monday, 23th May, 2025, 07:00
+                    <br />
+                    Cinema: 123 NVC St, D3, HCM
+                </div>
+
+                <NextNaviButton text="SNACKS" onClick={onNext} />
+            </div>
       </div>
     </div>
   );

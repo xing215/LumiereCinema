@@ -32,7 +32,7 @@ const TimeGrid = ({ time }) => {
 const SliderButton = ({ date, day, opacity = 'opacity-100' }) => {
     return (
         <div className={`relative aspect-square h-full ${opacity} mix-blend-color-dodge`}>
-            <div className="absolute h-full w-full rounded-full bg-purple-600/70 outline-3 outline-white/70 md:outline-2" />
+            <div className="absolute h-full w-full rounded-full bg-purple-600/70 outline-3 outline-white/70 md:outline-2 xl:outline-3" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-0 -space-y-1 sm:pt-0.5">
                 <div className="font-['Unbounded'] text-[7px] font-bold text-white sm:text-[5.5px] lg:text-[7px]">{day}</div>
                 <div className="font-['Unbounded'] text-[17px] font-bold text-white">{date}</div>
@@ -71,11 +71,11 @@ const DateSlider = () => {
 const ChooseCinemaButton = () => (
     <button className="relative flex h-auto w-[80vw] items-center justify-center py-6 md:w-80 md:py-4 lg:w-[calc(100vw*0.24)]">
         <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge" />
-        <div className="md:text-md absolute h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white">CHOOSE CINEMA</div>
+        <div className="md:text-md absolute h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white pt-2">CHOOSE CINEMA</div>
     </button>
 );
 
-const MenuSelectScreen = () => (
+const MenuSelectScreen = ({ onNext, onBack }) => (
     <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
         <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
             {/* Background layer with blend mode */}
@@ -103,12 +103,12 @@ const MenuSelectScreen = () => (
                         <br />
                         Cinema: 123 NVC St, D3, HCM
                     </div>
-                    <BackNaviButton />
-                    <NextNaviButton text="SEATINGS" />
+                    <BackNaviButton onClick={onBack} />
+                    <NextNaviButton text="SEATINGS" onClick={onNext} />
                 </div>
             </div>
             <div className="fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm md:hidden">
-                <BackNaviButton />
+                <BackNaviButton onClick={onBack} />
                 <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
                     Movie: Tham Tu Kien
                     <br />
@@ -117,7 +117,7 @@ const MenuSelectScreen = () => (
                     Cinema: 123 NVC St, D3, HCM
                 </div>
 
-                <NextNaviButton text="SEATINGS" />
+                <NextNaviButton text="SEATINGS" onClick={onNext} />
             </div>
         </div>
     </div>

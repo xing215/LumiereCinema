@@ -15,7 +15,7 @@ const InputField = ({ label, name, type = "text" }) => (
   </div>
 );
 
-const MenuInfo = () => (
+const MenuInfo = ({ onNext, onBack }) => (
   <div className="relative flex items-center justify-center w-screen pt-3 md:pt-7">
     <div className="relative flex flex-row justify-start w-full h-full md:min-h-[470px] md:w-screen lg:w-[75vw] lg:h-auto rounded-xl">
       {/* Background layer */}
@@ -41,8 +41,8 @@ const MenuInfo = () => (
         </div>
 
         <div className="w-[80vw] lg:w-[30vw] md:w-[35vw] flex flex-row gap-2 justify-center items-center px-4 sm:px-8 md:px-10 lg:px-12 pb-10.5 md:pb-6 pt-8">
-          <BackNaviButton />
-          <NextNaviButton text="SEATINGS" />
+          <BackNaviButton onClick={onBack} />
+          <NextNaviButton text="PAYMENT" onClick={onNext} />
           <div className="bottom-0 pb-4 md:pb-0.5 absolute text-center justify-start">
             <span className="text-white text-[13px] md:text-[12px] lg:text-[13px] font-normal font-['Libre_Franklin']">
               Join our lunar point system?{" "}
