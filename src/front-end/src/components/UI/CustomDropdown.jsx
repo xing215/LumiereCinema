@@ -15,6 +15,8 @@
         bgOpacity="bg-opacity-70"
         height="h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14"
         textAlign="center" // 'left', 'center', 'right'
+        inputTextSize="text-sm sm:text-base md:text-lg" // Custom text size for input
+        optionTextSize="text-sm sm:text-base md:text-lg" // Custom text size for options
         options={[
             { value: 'Male', label: 'Male' },
             { value: 'Female', label: 'Female' },
@@ -41,6 +43,8 @@ const CustomDropdown = ({
     variant,
     height = 'h-10 sm:h-11 md:h-12 lg:h-13 xl:h-11',
     textAlign = 'center', // 'left', 'center', 'right'
+    inputTextSize = 'text-sm sm:text-base md:text-lg', // Custom text size for input
+    optionTextSize = 'text-sm sm:text-base md:text-lg', // Custom text size for options
 }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -93,7 +97,7 @@ const CustomDropdown = ({
                     ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'}
                 `}
             >
-                <span className={`text-sm sm:text-base md:text-lg ${getSpanClass(textAlign)}`}>{value || placeholder}</span>
+                <span className={`${inputTextSize} ${getSpanClass(textAlign)}`}>{value || placeholder}</span>
                 {textAlign !== 'right' && (
                     <svg className={`h-4 w-4 transition-transform ${
                         openDirection === 'up' 
@@ -114,7 +118,7 @@ const CustomDropdown = ({
                             key={option.value}
                             type="button"
                             onClick={() => handleSelect(option.value)}
-                            className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${textColor} font-['Unbounded'] text-sm sm:text-base md:text-lg hover:bg-${hoverColor} transition-colors ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
+                            className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${textColor} font-['Unbounded'] ${optionTextSize} hover:bg-${hoverColor} transition-colors ${index !== options.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
                         >
                             {option.label}
                         </button>
