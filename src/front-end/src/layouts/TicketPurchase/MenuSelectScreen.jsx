@@ -71,7 +71,7 @@ const DateSlider = () => {
 const ChooseCinemaButton = () => (
     <button className="relative flex h-auto w-[80vw] items-center justify-center py-6 md:w-80 md:py-4 lg:w-[calc(100vw*0.24)]">
         <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge" />
-        <div className="md:text-md absolute h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white pt-2">CHOOSE CINEMA</div>
+        <div className="md:text-md absolute h-auto items-center justify-center pt-2 font-['Unbounded'] text-base font-black text-white">CHOOSE CINEMA</div>
     </button>
 );
 

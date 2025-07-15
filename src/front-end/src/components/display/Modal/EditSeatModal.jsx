@@ -240,13 +240,16 @@ const EditSeatModal = (props) => {
                         <ScreenInformation data={props.screenData} />
                         <SeatInformation />
                     </div>
-                    <div className="w-[10%]" />
+
+                    <div className="relative h-full w-[10%]" />
+
                     <div className="relative mr-[2%] w-[60%]">
                         <SeatLayout data={seatRows} />
                     </div>
                 </div>
 
                 <div className="h-[10%] w-full" />
+
                 <div className="relative flex items-center gap-4">
                     <CancelButton onclick={props.onClose} />
                     <ConfirmButton />

@@ -4,13 +4,12 @@ import CoupleSeat from '../UI/CoupleSeat.jsx';
 
 const SeatLayout = (props) => {
     return (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-5 xl:gap-10">
-            <img src={ScreenIcon} alt="Screen w-full" />
-
-            <div className="flex flex-col items-center gap-2 xl:gap-3">
+        <div className="relative flex h-full flex-col items-center justify-center gap-5 lg:gap-5">
+            <img src={ScreenIcon} alt="Screen" className="relative object-contain" />
+            <div className="relative flex flex-col items-start gap-1.5 lg:gap-2 xl:gap-3">
                 {props.data.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex items-center gap-2 xl:gap-3">
-                        <p className="font-unbounded w-9 justify-start self-stretch text-center text-[18px] font-bold text-white xl:text-xl">{row[0]?.row}</p>
+                    <div key={rowIndex} className="flex items-center gap-2 lg:gap-2 xl:gap-3">
+                        <p className="font-unbounded w-9 justify-start self-stretch text-center text-sm font-bold text-white md:text-[18px] xl:text-xl">{row[0]?.row}</p>
                         {(() => {
                             const seats = [];
                             for (let i = 0; i < row.length; i++) {

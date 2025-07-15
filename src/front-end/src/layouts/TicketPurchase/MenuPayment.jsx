@@ -1,23 +1,19 @@
-import TicketDetail from "../../components/UI/TicketDetail";
-import NextNaviButton, { BackNaviButton } from "../../components/buttons/NaviButton";
-import CustomDropdown from "../../components/UI/customdropdown";
-import { useState } from "react";
+import TicketDetail from '../../components/UI/TicketDetail';
+import NextNaviButton, { BackNaviButton } from '../../components/buttons/NaviButton';
+import CustomDropdown from '../../components/UI/customdropdown';
+import { useState } from 'react';
 
 const PaymentButton = ({ text }) => (
-    <div className="h-auto w-[80vw] lg:w-[30vw] md:w-[35vw] relative rounded-xl">
-        <div className="w-full h-full left-0 top-0 absolute mix-blend-color-dodge bg-zinc-300/60 rounded-xl" />
-        <div className="relative text-center text-white text-base font-black font-['Unbounded'] py-3">
-            {text}
-        </div>
+    <div className="relative h-auto w-[80vw] rounded-xl md:w-[35vw] lg:w-[30vw]">
+        <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge" />
+        <div className="relative py-3 text-center font-['Unbounded'] text-base font-black text-white">{text}</div>
     </div>
 );
 
-const DiscountDropdown = ({ className = "", labelClass = "", direction="up", value, onChange }) => (
-    <div className={`md:max-w-[350px] min-w-0 md:min-w-[250px] w-[80vw] flex-row gap-2 justify-center items-center h-auto ${className}`}>
-        <div className={`w-auto h-auto justify-start text-white font-bold font-['Unbounded'] ${labelClass}`}>
-            DISCOUNT:
-        </div>
-        <div className="flex-1 h-auto z-3">
+const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange }) => (
+    <div className={`h-auto w-[80vw] min-w-0 flex-row items-center justify-center gap-2 md:max-w-[350px] md:min-w-[250px] ${className}`}>
+        <div className={`h-auto w-auto justify-start font-['Unbounded'] font-bold text-white ${labelClass}`}>DISCOUNT:</div>
+        <div className="z-3 h-auto flex-1">
             <CustomDropdown
                 name="discount"
                 placeholder=""
@@ -38,7 +34,7 @@ const DiscountDropdown = ({ className = "", labelClass = "", direction="up", val
                 options={[
                     { value: 'DDAY', label: 'Ngày đôi' },
                     { value: 'Female', label: 'Female' },
-                    { value: 'Other', label: 'Other' }
+                    { value: 'Other', label: 'Other' },
                 ]}
             />
         </div>
@@ -53,10 +49,10 @@ const MenuPayment = ({ onNext, onBack }) => {
     };
 
     return (
-        <div className="relative flex items-center justify-center w-screen pt-3 md:pt-7">
-            <div className="relative flex flex-row justify-start w-full h-full md:min-h-[470px] md:w-screen lg:w-[75vw] lg:h-auto rounded-xl">
+        <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
+            <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[75vw]">
                 {/* Background layer */}
-                <div className="absolute inset-0 mix-blend-color-dodge bg-zinc-300/30 rounded-xl pointer-events-none z-0" />
+                <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge" />
 
                 {/* Poster */}
                 <div className="hidden md:block">
@@ -64,34 +60,20 @@ const MenuPayment = ({ onNext, onBack }) => {
                 </div>
 
                 {/* Main content */}
-                <div className="relative flex flex-col justify-between items-center flex-1 min-w-[55vw]">
-                    <div className="block md:hidden pt-5">
+                <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
+                    <div className="block pt-5 md:hidden">
                         <TicketDetail />
                     </div>
-                    <div className="relative flex flex-col justify-start items-center gap-4">
-                        <div className="w-auto text-center text-white text-base md:text-lg xl:text-2xl font-black font-['Unbounded'] pt-8">
-                            PAYMENT OPTION
-                        </div>
-                        <DiscountDropdown 
-                            className="flex md:hidden" 
-                            labelClass="text-sm" 
-                            direction="down"
-                            value={discountValue}
-                            onChange={handleDiscountChange}
-                        />
+                    <div className="relative flex flex-col items-center justify-start gap-4">
+                        <div className="w-auto pt-8 text-center font-['Unbounded'] text-base font-black text-white md:text-lg xl:text-2xl">PAYMENT OPTION</div>
+                        <DiscountDropdown className="flex md:hidden" labelClass="text-sm" direction="down" value={discountValue} onChange={handleDiscountChange} />
                         <PaymentButton text="MOMO" />
                         <PaymentButton text="ZALOPAY" />
                     </div>
 
-                    <div className="w-[80vw] lg:w-[30vw] md:w-[35vw] flex flex-col justify-center items-center px-4 sm:px-8 md:px-10 lg:px-12 pb-10.5 md:pb-6 pt-8 gap-2">
-                        <DiscountDropdown 
-                            className="hidden md:flex" 
-                            labelClass="text-base" 
-                            direction="up"
-                            value={discountValue}
-                            onChange={handleDiscountChange}
-                        />
-                        <div className="flex flex-row justify-center items-center w-full gap-2">
+                    <div className="flex w-[80vw] flex-col items-center justify-center gap-2 px-4 pt-8 pb-10.5 sm:px-8 md:w-[35vw] md:px-10 md:pb-6 lg:w-[30vw] lg:px-12">
+                        <DiscountDropdown className="hidden md:flex" labelClass="text-base" direction="up" value={discountValue} onChange={handleDiscountChange} />
+                        <div className="flex w-full flex-row items-center justify-center gap-2">
                             <BackNaviButton onClick={onBack} />
                             <NextNaviButton text="COMPLETE" onClick={onNext} showTextOnMobile={true} />
                         </div>

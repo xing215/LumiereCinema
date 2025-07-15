@@ -55,13 +55,10 @@ const CustomDropdown = ({
     const dropdownRef = useRef(null);
 
     // Filter options based on search input
-    const filteredOptions = options.filter(option => {
+    const filteredOptions = options.filter((option) => {
         if (!value || !allowOtherInput) return true;
         const searchTerm = value.toLowerCase();
-        return (
-            option.value.toLowerCase().includes(searchTerm) ||
-            option.label.toLowerCase().includes(searchTerm)
-        );
+        return option.value.toLowerCase().includes(searchTerm) || option.label.toLowerCase().includes(searchTerm);
     });
 
     // Close dropdown when clicking outside
@@ -101,39 +98,46 @@ const CustomDropdown = ({
 
     const backgroundClass = bgOpacity ? `bg-${bgColor} ${bgOpacity}` : `bg-${bgColor}`;
     const dropdownBackgroundClass = bgOpacity ? `bg-${bgColor} ${bgOpacity}` : `bg-${bgColor}`;
-    
+
     // New: Separate background class for input
-    const inputBackgroundClass = inputBgColor 
-        ? (bgOpacity ? `bg-${inputBgColor} ${bgOpacity}` : `bg-${inputBgColor}`)
-        : backgroundClass; // Default to same as bgColor when inputBgColor is not specified
-    
+    const inputBackgroundClass = inputBgColor ? (bgOpacity ? `bg-${inputBgColor} ${bgOpacity}` : `bg-${inputBgColor}`) : backgroundClass; // Default to same as bgColor when inputBgColor is not specified
+
     // Dropdown text color - if dropdownTextColor is provided, use it; otherwise use textColor
     const dropdownTextColorClass = dropdownTextColor || textColor;
-    
+
     const isFigmaVariant = variant === 'figma';
-    
+
     // Text alignment classes
     const getTextAlignClass = (align) => {
         switch (align) {
-            case 'center': return 'text-center';
-            case 'right': return 'text-right';
-            default: return 'text-left';
+            case 'center':
+                return 'text-center';
+            case 'right':
+                return 'text-right';
+            default:
+                return 'text-left';
         }
     };
-    
+
     const getJustifyClass = (align) => {
         switch (align) {
-            case 'center': return 'justify-center';
-            case 'right': return 'justify-end';
-            default: return 'justify-between';
+            case 'center':
+                return 'justify-center';
+            case 'right':
+                return 'justify-end';
+            default:
+                return 'justify-between';
         }
     };
-    
+
     const getSpanClass = (align) => {
         switch (align) {
-            case 'center': return 'flex-1 text-center';
-            case 'right': return 'text-right';
-            default: return 'text-left';
+            case 'center':
+                return 'flex-1 text-center';
+            case 'right':
+                return 'text-right';
+            default:
+                return 'text-left';
         }
     };
 
@@ -148,25 +152,15 @@ const CustomDropdown = ({
                         onKeyDown={handleInputKeyDown}
                         onFocus={() => setIsOpen(true)}
                         placeholder={placeholder}
-                        className={`
-                            ${height} w-full rounded-lg px-3 sm:px-4 pr-10
-                            ${inputBackgroundClass} text-${textColor} border border-${borderColor}
-                            font-['Unbounded'] ${inputTextSize} ${getTextAlignClass(textAlign)}
-                            transition-shadow duration-200 hover:shadow-md 
-                            focus:ring-2 focus:ring-purple-500 focus:outline-none
-                            ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'}
-                        `}
+                        className={` ${height} w-full rounded-lg px-3 pr-10 sm:px-4 ${inputBackgroundClass} text-${textColor} border border-${borderColor} font-['Unbounded'] ${inputTextSize} ${getTextAlignClass(textAlign)} transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'} `}
                     />
-                    <button
-                        type="button"
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    >
-                        <svg className={`h-4 w-4 transition-transform text-${textColor} ${
-                            openDirection === 'up' 
-                                ? (isOpen ? '' : 'rotate-180') 
-                                : (isOpen ? 'rotate-180' : '')
-                        }`} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" onClick={() => setIsOpen(!isOpen)} className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                        <svg
+                            className={`h-4 w-4 transition-transform text-${textColor} ${openDirection === 'up' ? (isOpen ? '' : 'rotate-180') : isOpen ? 'rotate-180' : ''}`}
+                            fill="currentColor"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -175,22 +169,16 @@ const CustomDropdown = ({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`
-                        ${height} w-full rounded-lg px-3 sm:px-4 
-                        ${backgroundClass} text-${textColor} border border-${borderColor}
-                        flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] 
-                        transition-shadow duration-200 hover:shadow-md 
-                        focus:ring-2 focus:ring-purple-500 focus:outline-none
-                        ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'}
-                    `}
+                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${backgroundClass} text-${textColor} border border-${borderColor} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'} `}
                 >
                     <span className={`${inputTextSize} ${getSpanClass(textAlign)}`}>{value || placeholder}</span>
                     {textAlign !== 'right' && (
-                        <svg className={`h-4 w-4 transition-transform ${
-                            openDirection === 'up' 
-                                ? (isOpen ? '' : 'rotate-180') 
-                                : (isOpen ? 'rotate-180' : '')
-                        }`} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                            className={`h-4 w-4 transition-transform ${openDirection === 'up' ? (isOpen ? '' : 'rotate-180') : isOpen ? 'rotate-180' : ''}`}
+                            fill="currentColor"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     )}

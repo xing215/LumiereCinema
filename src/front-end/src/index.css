@@ -33,7 +33,7 @@
             /* sky-400/60 */ rgba(244, 114, 182, 0.6) /* pink-400/60 */
         );
     }
-    
+
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
         width: 6px;

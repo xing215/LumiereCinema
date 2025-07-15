@@ -1,7 +1,7 @@
 // src/pages/TicketPurchase.jsx
 import React, { useState } from 'react';
-import Header from "../layouts/LandingPage/Header.jsx";
-import {Title} from '../components/UI/label.jsx';
+import Header from '../layouts/LandingPage/Header.jsx';
+import { Title } from '../components/UI/label.jsx';
 import MenuSelectScreen from '../layouts/TicketPurchase/MenuSelectScreen.jsx';
 import MenuSelectSeats from '../layouts/TicketPurchase/MenuSelectSeats.jsx';
 import MenuSelectSnack from '../layouts/TicketPurchase/MenuSelectSnack.jsx';
@@ -14,7 +14,7 @@ const MENU_STEPS = {
     SEATS: 1,
     SNACK: 2,
     INFO: 3,
-    PAYMENT: 4
+    PAYMENT: 4,
 };
 
 const TicketPurchase = () => {
@@ -58,11 +58,11 @@ const TicketPurchase = () => {
 
     return (
         <div className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden bg-slate-950">
-            <Header/>
-            <Title text="BUY TICKET"/>
+            <Header />
+            <Title text="BUY TICKET" />
             {renderCurrentMenu()}
             <div className="h-10 w-screen lg:h-20" />
-            <Footer/>
+            <Footer />
         </div>
     );
 };

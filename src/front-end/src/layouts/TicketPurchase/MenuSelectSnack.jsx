@@ -30,18 +30,18 @@ const MenuSelectSnack = ({ onNext, onBack }) => (
             </div>
         </div>
         {/* Mobile footer */}
-            <div className="fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm md:hidden">
-                <BackNaviButton onClick={onBack} />
-                <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
-                    Movie: Tham Tu Kien
-                    <br />
-                    Monday, 23th May, 2025, 07:00
-                    <br />
-                    Cinema: 123 NVC St, D3, HCM
-                </div>
-
-                <NextNaviButton text="INFO" onClick={onNext} />
+        <div className="fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm md:hidden">
+            <BackNaviButton onClick={onBack} />
+            <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
+                Movie: Tham Tu Kien
+                <br />
+                Monday, 23th May, 2025, 07:00
+                <br />
+                Cinema: 123 NVC St, D3, HCM
             </div>
+
+            <NextNaviButton text="INFO" onClick={onNext} />
+        </div>
     </div>
 );
 
