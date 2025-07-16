@@ -17,6 +17,7 @@ import ReportPage from './pages/staff/ReportPage';
 import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 import BranchManagePage from './pages/staff/BranchManagePage.jsx';
 import AccountManagePage from './pages/staff/AccountManagePage.jsx';
+import ResetPwdEmail from './pages/ResetPwdEmail.jsx';
 
 const App = () => {
     return (
@@ -39,6 +40,7 @@ const App = () => {
                     <Route path="/staff/screen" element={<ScreenManagePage />} />
                     <Route path="/staff/branch" element={<BranchManagePage />} />
                     <Route path="/staff/account" element={<AccountManagePage />} />
+                    <Route path="/reset-password/confirm" element={<ResetPwdEmail />} />
                 </Routes>
             </Router>
         </UserProvider>

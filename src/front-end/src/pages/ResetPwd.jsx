@@ -4,6 +4,7 @@ import ResetPwdForm from '../layouts/ResetPwd/ResetPwdForm.jsx';
 import ChatBot from '../components/display/ChatBot.jsx';
 import BackwardButton from '../components/buttons/backwardButton.jsx';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../layouts/LandingPage/Footer.jsx';
 
 const ResetPwd = () => {
     const navigate = useNavigate();
@@ -24,6 +25,8 @@ const ResetPwd = () => {
                 <ResetPwdForm />
             </div>
             <ChatBot />
+            <div className="w-screen lg:h-15" />
+            <Footer />
         </section>
     );
 };

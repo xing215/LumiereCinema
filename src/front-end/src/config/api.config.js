@@ -186,7 +186,7 @@ export const getBranchSnackApiUrl = (branchId, snackId = '') => {
 
 /**
  * Helper function to build URLs for ticket operations
- * @param {string} [ticketCode=''] - Optional ticket code for specific ticket operations
+ * @param {string} ticketCode - The ticket code (optional)
  * @returns {string} Full URL for ticket endpoint
  * @example
  * getApiUrl('getAllTickets') // → 'http://localhost:5000/api/tickets/snacks/admin/all'
@@ -198,6 +198,54 @@ export const getTicketApiUrl = (ticketCode = '') => {
     return `${baseUrl}/${ticketCode}`;
   }
   return baseUrl;
+};
+
+/**
+ * Generic API request function
+ * @param {string} method - HTTP method (GET, POST, PUT, DELETE, etc.)
+ * @param {string} endpoint - API endpoint path
+ * @param {object} data - Request body data (optional)
+ * @param {object} headers - Additional headers (optional)
+ * @returns {Promise<any>} Response data
+ * @example
+ * await apiRequest('POST', '/api/auth/login', { email, password })
+ * await apiRequest('GET', '/api/movies')
+ */
+export const apiRequest = async (method, endpoint, data = null, headers = {}) => {
+  const url = `${API_CONFIG.baseURL}${endpoint}`;
+  
+  const config = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+  };
+
+  // Add authorization token if available
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Add body for POST/PUT/PATCH requests
+  if (data && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+    config.body = JSON.stringify(data);
+  }
+
+  try {
+    const response = await fetch(url, config);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('API Request Error:', error);
+    throw error;
+  }
 };
 
 export default API_CONFIG;
