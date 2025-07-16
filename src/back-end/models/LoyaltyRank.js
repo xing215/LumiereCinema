@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const loyaltyRankSchema = new mongoose.Schema({
-  // Tên hạng (đóng vai trò là Primary Key), ví dụ: 'BRONZE', 'SILVER'
+  // Rank name (acts as Primary Key), example: 'BRONZE', 'SILVER'
   rankName: {
     type: String,
     required: true,
@@ -10,32 +10,32 @@ const loyaltyRankSchema = new mongoose.Schema({
     trim: true
   },
 
-  // Tên hiển thị thân thiện với người dùng
+  // User-friendly display name
   displayName: {
     type: String,
     required: true,
     trim: true,
   },
 
-  // Số điểm tối thiểu mà người dùng cần đạt được để lên hạng này
+  // Minimum points required for user to reach this tier
   minimumPoints: {
       type: Number,
       required: true,
       default: 0
   },
 
-  // Mô tả ngắn về các quyền lợi của hạng này
+  // Short description of benefits for this tier
   description: {
       type: String,
       default: ''
   },
   
-  // Tham chiếu đến một mã khuyến mãi mặc định cho hạng này
-  // Ví dụ: Hạng Vàng được giảm 10% cho mọi vé
+  // Reference to a default promotion code for this tier
+  // Example: Gold tier gets 10% discount on all tickets
   defaultPromotion: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Promotion'
   }
-}, { timestamps: false }); // Dữ liệu cấu hình, không cần timestamps
+}, { timestamps: false }); // Configuration data, no timestamps needed
 
 module.exports = mongoose.model('LoyaltyRank', loyaltyRankSchema);

@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-// Import thêm hàm `changePassword`
+// Import the `changePassword` function
 const { register, login, logout, changePassword } = require('../controllers/auth.controller.js');
 const { protect } = require('../middlewares/auth.middleware.js');
 
-// Route công khai
+// Public routes
 router.post('/register', register);
 router.post('/login', login);
 
-// Route cần đăng nhập (được bảo vệ bởi `protect`)
+// Routes requiring login (protected by `protect`)
 router.post('/logout', protect, logout);
 router.post('/change-password', protect, changePassword);
 
