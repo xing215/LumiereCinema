@@ -169,7 +169,7 @@ const CustomDropdown = ({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${backgroundClass} text-${textColor} border border-${borderColor} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'} `}
+                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${inputBackgroundClass} text-${textColor} border border-${borderColor} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'} `}
                 >
                     <span className={`${inputTextSize} ${getSpanClass(textAlign)}`}>{value || placeholder}</span>
                     {textAlign !== 'right' && (
