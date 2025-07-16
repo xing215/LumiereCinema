@@ -1,11 +1,11 @@
 import React from 'react';
 import { UserProvider } from './contexts/UserContext.jsx';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import LandingPage from './pages/LandingPage';
 import Registration from './pages/Registration';
 import Login from './pages/Login';
 import StaffLogin from './pages/staff/Login';
-import ResetPwd from './pages/ResetPwd';
 import StaffResetPwd from './pages/staff/ResetPwd';
 import ChangePwd from './pages/ChangePwd';
 import StaffChangePwd from './pages/staff/ChangePwd';
@@ -18,29 +18,71 @@ import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 import BranchManagePage from './pages/staff/BranchManagePage.jsx';
 import AccountManagePage from './pages/staff/AccountManagePage.jsx';
 import ResetPwdEmail from './pages/ResetPwdEmail.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 
 const App = () => {
     return (
         <UserProvider>
             <Router>
                 <Routes>
+                    {/* Public routes */}
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/register" element={<Registration />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/staff/login" element={<StaffLogin />} />
-                    <Route path="/reset-password" element={<ResetPwd />} />
-                    <Route path="/staff/reset-password" element={<StaffResetPwd />} />
-                    <Route path="/change-password" element={<ChangePwd />} />
-                    <Route path="/staff/change-password" element={<StaffChangePwd />} />
-                    <Route path="/movies" element={<MovieListPage />} />
-                    <Route path="/staff/checkin" element={<CheckInCounterPage />} />
-                    <Route path="/staff/schedule" element={<ScheduleManagePage />} />
-                    <Route path="/staff/promotion" element={<PromotionManagePage />} />
-                    <Route path="/staff/report" element={<ReportPage />} />
-                    <Route path="/staff/screen" element={<ScreenManagePage />} />
-                    <Route path="/staff/branch" element={<BranchManagePage />} />
-                    <Route path="/staff/account" element={<AccountManagePage />} />
+                    <Route path="/reset-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/confirm" element={<ResetPwdEmail />} />
+                    <Route path="/movies" element={<MovieListPage />} />
+                    
+                    {/* Protected routes - require authentication */}
+                    <Route path="/change-password" element={
+                        <ProtectedRoute>
+                            <ChangePwd />
+                        </ProtectedRoute>
+                    } />
+                    
+                    {/* Staff routes - require staff roles */}
+                    <Route path="/staff/reset-password" element={<StaffResetPwd />} />
+                    <Route path="/staff/change-password" element={
+                        <ProtectedRoute requiredRoles={['cashier', 'checkincounter', 'branchmanager', 'administrator']}>
+                            <StaffChangePwd />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/checkin" element={
+                        <ProtectedRoute requiredRoles={['checkincounter', 'branchmanager', 'administrator']}>
+                            <CheckInCounterPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/schedule" element={
+                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                            <ScheduleManagePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/promotion" element={
+                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                            <PromotionManagePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/report" element={
+                        <ProtectedRoute requiredRoles={['cashier', 'checkincounter', 'branchmanager', 'administrator']}>
+                            <ReportPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/screen" element={
+                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                            <ScreenManagePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/branch" element={
+                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                            <BranchManagePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/account" element={
+                        <ProtectedRoute requiredRoles={['administrator']}>
+                            <AccountManagePage />
+                        </ProtectedRoute>
+                    } />
                 </Routes>
             </Router>
         </UserProvider>

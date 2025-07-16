@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiRequest } from '../../config/api.config.js';
+import { authAPI } from '../../utils/auth.utils.js';
 
 const ResetPwdForm = () => {
     const [formData, setFormData] = useState({
@@ -67,11 +67,12 @@ const ResetPwdForm = () => {
         }
 
         try {
-            const response = await apiRequest('POST', '/api/auth/forgot-password', formData);
+            const response = await authAPI.forgotPassword(formData.email);
             setMessage(response.message);
             setIsSuccess(true);
         } catch (error) {
-            setMessage(error.message || 'An error occurred. Please try again.');
+            console.error('Forgot password error:', error);
+            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
             setIsSuccess(false);
         } finally {
             setIsLoading(false);

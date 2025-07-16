@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiRequest } from '../../config/api.config.js';
+import { authAPI, validatePassword, formatPasswordErrors } from '../../utils/auth.utils.js';
 import ShowIcon from '../../assets/icons/show.svg';
 import HideIcon from '../../assets/icons/hide.svg';
 
@@ -32,8 +32,9 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                 }
                 break;
             case 'newPassword':
-                if (value.length < 6) {
-                    error = 'Password must be at least 6 characters long';
+                const passwordErrors = validatePassword(value);
+                if (passwordErrors.length > 0) {
+                    error = formatPasswordErrors(passwordErrors);
                 } else if (!ResetToken && value === formData.currentPassword) {
                     error = 'New password must be different from current password';
                 }
@@ -56,6 +57,10 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             ...prev,
             [name]: value,
         }));
+
+        // Clear any previous messages
+        setMessage('');
+        setIsSuccess(false);
 
         // Real-time validation
         const error = validateField(name, value);
@@ -106,14 +111,14 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             let response;
             if (ResetToken) {
                 // Reset password with token
-                response = await apiRequest('POST', '/api/auth/reset-password', {
+                response = await authAPI.resetPassword({
                     token: ResetToken,
                     newPassword: formData.newPassword,
                     retypeNewPassword: formData.retypeNewPassword
                 });
             } else {
                 // Regular password change
-                response = await apiRequest('POST', '/api/auth/change-password', formData);
+                response = await authAPI.changePassword(formData);
             }
 
             setMessage(response.message);
@@ -124,7 +129,8 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                 navigate('/login');
             }, 2000);
         } catch (error) {
-            setMessage(error.message || 'An error occurred. Please try again.');
+            console.error('Password change error:', error);
+            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
             setIsSuccess(false);
         } finally {
             setIsLoading(false);
