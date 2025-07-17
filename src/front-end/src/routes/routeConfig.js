@@ -18,6 +18,7 @@ import ResetPwdEmail from '../pages/ResetPwdEmail.jsx';
 import ForgotPassword from '../pages/ForgotPassword.jsx';
 import StaffRoot from '../pages/staff/StaffRoot.jsx';
 import MovieManagePage from '../pages/staff/MovieManagePage.jsx';
+import SnackManagePage from '../pages/staff/SnackManagePage.jsx';
 
 // Route configuration
 export const routeConfig = [
@@ -154,7 +155,14 @@ export const routeConfig = [
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['administrator']
-    }
+    },
+    {
+        path: '/staff/snack',
+        component: SnackManagePage,
+        type: 'staff',
+        requiresAuth: true,
+        allowedRoles: ['branchmanager']
+    },
 ];
 
 // Helper function to check if user has required roles
