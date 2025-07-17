@@ -22,14 +22,21 @@ const ScreenManagePage = () => {
     };
 
     const header = ['TickButton', 'ID', 'Name', 'Row', 'Column', 'ActiveButton', 'EditSeatButton'];
-
+    const Button = () => {
+        return (
+            <div className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl hover:cursor-pointer">
+                {tickedScreens.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)}/> : <AddButton text="Add Screen"/>}
+            </div>
+        )
+    }
+    const screenColumnConfig = null
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton />
-                {tickedScreens.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)} /> : <AddButton />}
+                <Button/>
                 {showConfirmDeleteScreen && <ConfirmationModal item={tickedScreens.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteScreen(false)} />}
-                <ManageTable data={screenRows} anyTicked={tickedScreens} setTickedRows={setTickedScreens} onEditSeat={setEditedScreenIndex} header={header} />
+                <ManageTable data={screenRows} anyTicked={tickedScreens} setTickedRows={setTickedScreens} onEditSeat={setEditedScreenIndex} header={header} columnConfig={screenColumnConfig}/>
                 {editedScreenIndex !== null && <EditSeatModal screenData={screenRows[editedScreenIndex]} onClose={() => setEditedScreenIndex(null)} />}
                 <SelectBranchButton />
             </MobileNotSupported>
@@ -42,4 +49,4 @@ const ScreenManagePage = () => {
     );
 };
 
-export default ScreenManagePage;
+export default ScreenManagePage

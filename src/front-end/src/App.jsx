@@ -20,6 +20,7 @@ import AccountManagePage from './pages/staff/AccountManagePage.jsx';
 import ResetPwdEmail from './pages/ResetPwdEmail.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import StaffRoot from './pages/staff/StaffRoot.jsx';
+import MovieManagePage from './pages/staff/MovieManagePage.jsx';
 
 const App = () => {
     return (
@@ -46,7 +47,7 @@ const App = () => {
                     {/* Staff routes - require staff roles */}
                     <Route path="/staff/reset-password" element={<StaffResetPwd />} />
                     <Route path="/staff/change-password" element={
-                        <ProtectedRoute requiredRoles={['   cashier', 'checkincounter', 'branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['cashier', 'checkincounter', 'branchmanager', 'administrator']}>
                             <StaffChangePwd />
                         </ProtectedRoute>
                     } />
@@ -83,6 +84,11 @@ const App = () => {
                     <Route path="/staff/account" element={
                         <ProtectedRoute requiredRoles={['administrator']}>
                             <AccountManagePage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/staff/movie" element={
+                        <ProtectedRoute requiredRoles={['administrator']}>
+                            <MovieManagePage />
                         </ProtectedRoute>
                     } />
                 </Routes>
