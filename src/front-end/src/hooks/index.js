@@ -91,3 +91,6 @@ export {
   useUpdateBranch,
   useRemoveBranch
 } from './useAdmin';
+
+// Export inline editing hook
+export { useInlineEdit } from './useInlineEdit';

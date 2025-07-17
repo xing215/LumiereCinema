@@ -8,7 +8,8 @@ import DeleteButton from '@components/buttons/Staff/DeleteButton';
 import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton';
 import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton';
 import AddButton from '@components/buttons/Staff/AddButton';
-import { useGetMovies, useRemoveMovie } from '@hooks/useAdmin';
+import { useGetMovies, useRemoveMovie, useUpdateMovie } from '@hooks/useAdmin';
+import { useInlineEdit } from '@hooks/useInlineEdit';
 
 const IntegratedButton = () => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-1/20">
@@ -23,33 +24,102 @@ const IntegratedButton = () => (
 const MovieManagePage = () => {
     const { getMovies, movies, loading } = useGetMovies();
     const { removeMovie, loading: removeLoading } = useRemoveMovie();
+    const { updateMovie } = useUpdateMovie();
     
     const [tickedMovies, setTickedMovies] = useState(new Set());
     const [showConfirmDeletePromotion, setShowConfirmDeletePromotion] = useState(false);
+
+    // Initialize inline editing hook
+    const {
+        editingCell,
+        startEdit,
+        saveEdit,
+        cancelEdit,
+        isUpdating
+    } = useInlineEdit(updateMovie, getMovies);
 
     // Load movies on component mount
     useEffect(() => {
         getMovies();
     }, []);
 
-    // Transform movies data to table format
-    const movieRows = movies?.map(movie => [
+    // Define which columns are editable (by index) and their corresponding field names
+    const editableColumns = [1, 2, 3, 4, 5, 6, 7, 8]; // Movie Title, Description, Release Date, Genre, Duration, Age Rating, Trailer, Poster (removing Status since it uses ActiveButton)
+    const columnFieldMapping = {
+        1: 'title',
+        2: 'description', 
+        3: 'releaseDate',
+        4: 'genre',
+        5: 'duration',
+        6: 'ageRating',
+        7: 'trailerURL',
+        8: 'posterURL',
+        9: 'status' // Add status field mapping
+    };
+
+    // Handle starting inline edit
+    const handleStartEdit = (rowIndex, columnIndex, currentValue) => {
+        // Allow editing without expansion requirement and if not already updating and column is editable
+        if (editableColumns.includes(columnIndex) && !isUpdating) {
+            startEdit(rowIndex, columnIndex, currentValue);
+        }
+    };
+
+    // Handle saving inline edit
+    const handleSaveEdit = async (rowIndex, columnIndex, newValue) => {
+        const movie = movies[rowIndex];
+        const fieldName = columnFieldMapping[columnIndex];
+        
+        if (movie && fieldName) {
+            const movieId = movie.id || movie._id;
+            
+            // Special handling for genre field (convert comma-separated string to array)
+            let processedValue = newValue;
+            if (fieldName === 'genre') {
+                processedValue = newValue.split(',').map(g => g.trim()).filter(Boolean);
+            }
+            
+            try {
+                await saveEdit(movieId, fieldName, processedValue);
+            } catch (error) {
+                console.error('Failed to save edit:', error);
+                // Could add toast notification here for user feedback
+            }
+        }
+    };
+
+    // Handle status change from ActiveButton
+    const handleStatusChange = async (rowIndex, newStatus) => {
+        const movie = movies[rowIndex];
+        if (movie) {
+            const movieId = movie.id || movie._id;
+            try {
+                await saveEdit(movieId, 'status', newStatus);
+            } catch (error) {
+                console.error('Failed to save status:', error);
+            }
+        }
+    };
+
+    const movieRows = movies?.map((movie, index) => [
         'TickButton',
-        movie.id,
-        movie.title || movie.name,
-        movie.description,
-        movie.releaseDate || movie.showing,
-        movie.genre,
-        movie.duration,
-        movie.audienceType || movie.audience,
-        movie.trailerUrl || 'trailer',
-        movie.posterUrl || 'poster',
-        'ActiveButton',
+        movie.title || movie.name || '',
+        movie.description || '',
+        movie.releaseDate || '',
+        Array.isArray(movie.genre) ? movie.genre.join(', ') : (movie.genre || ''), // Format genre array as comma-separated string
+        movie.duration || '',
+        movie.ageRating || '', // Use ageRating instead of audienceType
+        movie.trailerURL || '', // Use trailerURL (capital URL)
+        movie.posterURL || '', // Use posterURL (capital URL)
+        { type: 'ActiveButton', status: movie.status, rowIndex: index }, // Pass actual status and row index
         'PreviewButton'
     ]) || [];
 
     const handleDelete = async () => {
-        const selectedMovieIds = Array.from(tickedMovies).map(index => movieRows[index][1]);
+        // Get actual movie IDs from the movies array using the selected indices
+        const selectedMovieIds = Array.from(tickedMovies).map(index => {
+            return movies[index]?.id || movies[index]?._id;
+        }).filter(Boolean);
         
         try {
             // Delete each selected movie
@@ -66,22 +136,21 @@ const MovieManagePage = () => {
         }
     };
 
-    const header = ['TickButton', 'ID', 'Name', 'Description', 'Showing', 'Genre', 'Duration', 'Audience', 'Trailer', 'Poster', 'ActiveButton', 'PreviewButton'];
+    const header = ['', 'Movie Title', 'Description', 'Release Date', 'Genre', 'Duration (min)', 'Age Rating', 'Trailer', 'Poster', 'Status', 'Preview'];
 
-    // Configuration cho từng cột của Movie table
+    // Configuration for Movie table columns without ID column
     const movieColumnConfig = [
-        { width: 'w-10', truncate: false },    // TickButton
-        { width: 'w-10', truncate: false },    // ID
-        { width: 'w-45', truncate: true },     // Name - cắt text nếu dài
-        { width: 'w-60', truncate: true },     // Description - cột rộng nhất, cắt text
-        { width: 'w-40', truncate: true },    // Showing
-        { width: 'w-30', truncate: true },     // Genre - cắt text nếu dài
-        { width: 'w-20', truncate: false },    // Duration
-        { width: 'w-20', truncate: false },    // Audience
-        { width: 'w-16', truncate: false },    // Trailer
-        { width: 'w-16', truncate: false },    // Poster
-        { width: 'w-20', truncate: false },    // ActiveButton
-        { width: 'w-20', truncate: false }     // Preview
+        { width: 'w-12', truncate: false },    // TickButton - checkbox column
+        { width: 'w-52', truncate: true },     // Movie Title - wider since no ID column
+        { width: 'w-80', truncate: true },     // Description - largest column, truncated
+        { width: 'w-32', truncate: false },    // Release Date - date column
+        { width: 'w-32', truncate: true },     // Genre - wider for comma-separated genres
+        { width: 'w-20', truncate: false },    // Duration - small column for numbers
+        { width: 'w-24', truncate: false },    // Age Rating - moderate width
+        { width: 'w-20', truncate: true },    // Trailer - button column
+        { width: 'w-20', truncate: true },    // Poster - button column
+        { width: 'w-20', truncate: false },    // ActiveButton - action column
+        { width: 'w-24', truncate: false }     // Preview - action column
     ];
 
     return (
@@ -115,6 +184,13 @@ const MovieManagePage = () => {
                         setTickedRows={setTickedMovies}
                         header={header}
                         columnConfig={movieColumnConfig}
+                        editableFields={editableColumns}
+                        editingCell={editingCell}
+                        onStartEdit={handleStartEdit}
+                        onSaveEdit={handleSaveEdit}
+                        onCancelEdit={cancelEdit}
+                        isUpdating={isUpdating}
+                        onStatusChange={handleStatusChange}
                     />
                 )}
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Movies</div>
