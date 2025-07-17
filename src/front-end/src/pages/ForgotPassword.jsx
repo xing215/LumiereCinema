@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext.jsx';
 import { authAPI } from '../utils/auth.utils.js';
 import Header from '../layouts/LandingPage/Header.jsx';
 import ChatBot from '../components/display/ChatBot.jsx';
@@ -8,11 +9,33 @@ import Footer from '../layouts/LandingPage/Footer.jsx';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
+    const { isAuthenticated, isLoading: authLoading } = useUser();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
     const [errors, setErrors] = useState({});
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, authLoading, navigate]);
+
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    // Don't render form if authenticated (will redirect)
+    if (isAuthenticated) {
+        return null;
+    }
 
     const validateEmail = (email) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

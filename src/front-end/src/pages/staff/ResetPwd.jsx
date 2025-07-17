@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../contexts/UserContext.jsx';
 import ResetPwdForm from '../../layouts/ResetPwd/ResetPwdForm.jsx';
 import BackwardButton from '../../components/buttons/backwardButton2.jsx';
-import { useNavigate } from 'react-router-dom';
 
 const StaffResetPwd = () => {
     const navigate = useNavigate();
+    const { isAuthenticated, isLoading } = useUser();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, isLoading, navigate]);
+
+    // Show loading while checking authentication
+    if (isLoading) {
+        return (
+            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    // Don't render form if authenticated (will redirect)
+    if (isAuthenticated) {
+        return null;
+    }
 
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden overflow-y-hidden bg-slate-950">
