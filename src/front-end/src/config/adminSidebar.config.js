@@ -95,7 +95,7 @@ export const sidebarConfig = {
             id: 'manage-movie',
             label: 'Manage movie',
             icon: Film,
-            path: '#',
+            path: '/staff/movie',
             description: 'Manage movie catalog',
             permissions: ['movies'],
             badge: null,
