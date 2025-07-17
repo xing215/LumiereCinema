@@ -8,7 +8,6 @@ import CustomDropdown from '../../components/UI/CustomDropdown';
 import ByDateRevenueChart from '../../layouts/ReportPage/ByDateRevenueChart';
 import EmployeeRevenueList from '../../layouts/ReportPage/EmployeeRevenueList';
 import MovieRevenueChart from '../../layouts/ReportPage/MovieRevenueChart';
-import { getApiUrl } from '../../config/api.config';
 
 const getInitialDates = () => {
   const date = new Date();
@@ -30,7 +29,7 @@ const ReportPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await axios.get(getApiUrl('branches'));
+        const response = await axios.get('http://localhost:5000/api/reports/branches');
         const apiBranches = response.data.map(branch => ({
           id: branch._id,
           name: branch.name
@@ -56,7 +55,7 @@ const ReportPage = () => {
           if (selectedBranch.id !== 'All branches') {
             params.branchId = selectedBranch.id;
           }
-          const response = await axios.get(getApiUrl('revenueSummary'), { params });
+          const response = await axios.get('http://localhost:5000/api/reports/revenue-summary', { params });
           setReportData(response.data);
         } catch (err) {
           setError('Failed to fetch data. Please try again.');
@@ -78,12 +77,12 @@ const ReportPage = () => {
     <StaffLayout backgroundClass="bg-gray-300">
       <div className="relative bg-gray-300 w-full min-h-screen lg:h-screen font-mina lg:overflow-hidden">
         <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute bottom-40 left-0 w-44 h-44 mix-blend-hard-light bg-yellow-300 rounded-full blur-[150px]" />
-          <div className="absolute -bottom-10 -right-15 w-44 h-44 mix-blend-hard-light bg-purple-400 rounded-full blur-[100px]" />
-          <div className="absolute -top-50 left-100 w-52 h-52 mix-blend-hard-light bg-sky-400 rounded-full blur-[120px]" />
-          <div className="absolute bottom-50 right-0 w-20 h-44 mix-blend-hard-light bg-yellow-400 rounded-full blur-[80px]" />
-          <div className="absolute bottom-100 left-0 w-24 h-24 mix-blend-hard-light bg-pink-400 rounded-full blur-[150px]" />
-          <div className="absolute top-20 right-20 w-44 h-44 mix-blend-hard-light bg-pink-400 rounded-full blur-[180px]" />
+          <div className="absolute bottom-40 left-0 w-44 h-44 mix-blend-hard-light bg-yellow-300 rounded-full blur-[150px]"></div>
+          <div className="absolute -bottom-10 -right-15 w-44 h-44 mix-blend-hard-light bg-purple-400 rounded-full blur-[100px]"></div>
+          <div className="absolute -top-50 left-100 w-52 h-52 mix-blend-hard-light bg-sky-400 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-50 right-0 w-20 h-44 mix-blend-hard-light bg-yellow-400 rounded-full blur-[80px]"></div>
+          <div className="absolute bottom-100 left-0 w-24 h-24 mix-blend-hard-light bg-pink-400 rounded-full blur-[150px]"></div>
+          <div className="absolute top-20 right-20 w-44 h-44 mix-blend-hard-light bg-pink-400 rounded-full blur-[180px]"></div>
         </div>
 
         <div className="relative z-10 w-full h-full lg:flex lg:flex-col p-4 sm:p-6">
@@ -94,9 +93,8 @@ const ReportPage = () => {
               endDate={endDate}
               setEndDate={setEndDate}
             />
-          </div>
-            <div className="lg:flex-1 mt-6 lg:min-h-0 flex items-start justify-center">
-            <div className="w-[90%] h-[90%] overflow-auto md:overflow-visible max-h-[95vh] md:max-h-none pb-56 sm:pb-40 md:pb-40 lg:pb-0">
+          </div>            <div className="lg:flex-1 mt-6 lg:min-h-0 flex items-start justify-center">
+            <div className="w-[90%] h-[90%] overflow-auto max-h-[95vh] md:max-h-[90vh] lg:overflow-visible lg:max-h-none pb-56 sm:pb-40 md:pb-30 lg:pb-0">
               <div className="h-full grid grid-cols-1 grid-rows-4 md:grid-cols-6 md:grid-rows-2 lg:grid-cols-10 gap-4 md:gap-6">
                 <TotalRevenueCard
                   data={reportData}
@@ -135,10 +133,7 @@ const ReportPage = () => {
                 </ChartCard>
               </div>
             </div>
-          </div>
-          {error && <p className="text-center text-red-500 mt-4 flex-shrink-0">{error}</p>}
-        </div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 w-110 origin-center">
+          </div>          {error && <p className="text-center text-red-500 mt-4 flex-shrink-0">{error}</p>}        </div>        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-10 w-[90%] sm:w-110 lg:absolute lg:origin-center">
             <CustomDropdown
               options={dropdownOptions}
               value={selectedBranch.name}
@@ -150,12 +145,14 @@ const ReportPage = () => {
               }}
               placeholder="Select a branch"
               variant="figma"
-              bgColor="pink-400"
+              bgColor="indigo-700 backdrop-blur-[50px]"
+              inputBgColor="purple-400 backdrop-blur-[10px]"
               hoverColor="pink-500"
               borderColor="purple-500"
               textColor="white"
               openDirection="up"
-              textAlign="center"
+              height="h-6 sm:h-7 md:h-8 lg:h-9"
+              dropdownTextColor="black"
             />
         </div>
       </div>
