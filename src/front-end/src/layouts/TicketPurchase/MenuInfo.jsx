@@ -87,17 +87,6 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
                         value={customerInfo.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                     />
-                    <div>
-                        <label className="text-md mb-1 block font-['Libre_Franklin'] font-bold text-white md:text-base lg:text-lg">Promotion Code (Optional)</label>
-                        <input
-                            type="text"
-                            name="promotionCode"
-                            value={promotionCode}
-                            onChange={handlePromotionChange}
-                            placeholder="Enter promotion code"
-                            className="bg-opacity-70 focus:bg-opacity-90 h-10 w-[80vw] rounded-lg bg-zinc-300 px-3 font-['Unbounded'] text-sm text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:text-base md:h-9 md:w-[35vw] md:text-lg lg:h-10 lg:w-[30vw]"
-                        />
-                    </div>
                 </div>
 
                 <div className="flex w-[80vw] flex-row items-center justify-center gap-2 px-4 pt-8 pb-10.5 sm:px-8 md:w-[35vw] md:px-10 md:pb-6 lg:w-[30vw] lg:px-12">
