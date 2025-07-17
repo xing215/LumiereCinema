@@ -455,11 +455,20 @@ const TicketPurchase = () => {
     });
 
     // Utility functions to update ticket data
+
+    // When updating movie ticket, if branch is updated, also update snack ticket branch
     const updateMovieTicket = (updates) => {
-        setMovieTicketData(prev => ({ ...prev, ...updates }));
+        setMovieTicketData(prev => {
+            // If branch is being updated, also update snack ticket
+            if (updates.branch) {
+                setSnackTicketData(sPrev => ({ ...sPrev, branch: updates.branch }));
+            }
+            return { ...prev, ...updates };
+        });
         console.log('Updated Movie Ticket Data:', { ...movieTicketData, ...updates });
     };
 
+    // When updating snack ticket, do not overwrite branch unless explicitly provided
     const updateSnackTicket = (updates) => {
         setSnackTicketData(prev => ({ ...prev, ...updates }));
         console.log('Updated Snack Ticket Data:', { ...snackTicketData, ...updates });  
@@ -499,11 +508,22 @@ const TicketPurchase = () => {
         }
     };
 
+    // For resetting viewing date in MenuSelectScreen
+    const [screenViewingDateKey, setScreenViewingDateKey] = useState(0);
+
+    // Callback to reset date (force remount MenuSelectScreen)
+    const handleCinemaChangeReset = () => {
+        // Reset selected schedule in movie ticket
+        updateMovieTicket({ schedule: null });
+        setScreenViewingDateKey(prev => prev + 1); // force remount to reset date state
+    };
+
     const renderCurrentMenu = () => {
         switch (currentStep) {
             case MENU_STEPS.SCREEN:
                 return (
                     <MenuSelectScreen 
+                        key={screenViewingDateKey}
                         onNext={goToNextStep} 
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
@@ -511,6 +531,7 @@ const TicketPurchase = () => {
                         updateSnackTicket={updateSnackTicket}
                         mockSchedules={mockSchedules}
                         cinemas={cinemas}
+                        onCinemaChangeReset={handleCinemaChangeReset}
                     />
                 );
             case MENU_STEPS.SEATS:

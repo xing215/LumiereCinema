@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import NextNaviButton, {BackNaviButton} from '../buttons/NaviButton';
 
 const SliderButton = ({ date, day, isSelected, onClick, opacity = 'opacity-100', hasSelectedSchedule = false, 
     onTouchStart, onTouchMove, onTouchEnd }) => {
@@ -100,7 +101,8 @@ const DateSlider = ({ selectedDate, onDateSelect, mockSchedules, selectedSchedul
     };
 
 
-    // Desktop (mouse) drag handlers
+
+    // Desktop (mouse) drag handlers only
     const handleDesktopDragStart = (e) => {
         if (window.innerWidth < 768) return;
         setIsMouseDown(true);
@@ -146,95 +148,46 @@ const DateSlider = ({ selectedDate, onDateSelect, mockSchedules, selectedSchedul
         setPreviewIndex(null);
     };
 
-    // Mobile (touch) drag handlers
-    const handleMobileDragStart = (e) => {
-        if (window.innerWidth >= 768) return;
-        setIsMouseDown(true);
-        setDragStart(e.touches[0].clientX);
-        setDragOffset(0);
-    };
 
-    const handleMobileDragMove = (e) => {
-        if (window.innerWidth >= 768) return;
-        if (!isMouseDown && !isDragging) return;
-        e.preventDefault();
-        const currentX = e.touches[0].clientX;
-        const diff = currentX - dragStart;
-        if (!isDragging && Math.abs(diff) > 5) setIsDragging(true);
-        if (isDragging) {
-            setDragOffset(diff);
-            const buttonWidth = 40;
-            const gap = 16;
-            const buttonWithGap = buttonWidth + gap;
-            const draggedPositions = Math.round(-diff / buttonWithGap);
-            const newPreviewIndex = Math.max(0, Math.min(allDates.length - 1, selectedIndex + draggedPositions));
-            setPreviewIndex(newPreviewIndex);
-        }
-    };
-
-    const handleMobileDragEnd = () => {
-        if (window.innerWidth >= 768) return;
-        if (!isMouseDown && !isDragging) return;
-        if (isDragging) {
-            const buttonWidth = 40;
-            const gap = 16;
-            const buttonWithGap = buttonWidth + gap;
-            const draggedPositions = Math.round(-dragOffset / buttonWithGap);
-            const newIndex = Math.max(0, Math.min(allDates.length - 1, selectedIndex + draggedPositions));
-            if (newIndex !== selectedIndex && allDates[newIndex]) {
-                const newDate = allDates[newIndex];
-                onDateSelect(newDate.fullDate, newDate.displayDate);
-            }
-        }
-        setIsMouseDown(false);
-        setIsDragging(false);
-        setDragOffset(0);
-        setPreviewIndex(null);
-    };
-
-
-    // Add event listeners for mouse/touch events
+    // Add event listeners for mouse events only (desktop)
     useEffect(() => {
-        // Desktop
         const handleMouseMove = (e) => handleDesktopDragMove(e);
         const handleMouseUp = () => handleDesktopDragEnd();
-        // Mobile
-        const handleTouchMove = (e) => handleMobileDragMove(e);
-        const handleTouchEnd = () => handleMobileDragEnd();
 
-        if (isMouseDown || isDragging) {
-            if (window.innerWidth >= 768) {
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
-            } else {
-                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                document.addEventListener('touchend', handleTouchEnd);
-            }
+        if ((isMouseDown || isDragging) && window.innerWidth >= 768) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
         }
 
         return () => {
             if (window.innerWidth >= 768) {
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
-            } else {
-                document.removeEventListener('touchmove', handleTouchMove);
-                document.removeEventListener('touchend', handleTouchEnd);
             }
         };
     }, [isMouseDown, isDragging, dragStart, selectedIndex, allDates, onDateSelect]);
 
     return (
         <div className="flex h-auto w-auto flex-col items-center justify-center">
+            <div className="flex flex-row items-center justify-center gap-2">
+                <div className={`relative scale-90 md:hidden ${selectedIndex > 0 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
+                    <BackNaviButton
+                        onClick={() => {
+                            if (selectedIndex > 0) {
+                                const prevDate = allDates[selectedIndex - 1];
+                                onDateSelect(prevDate.fullDate, prevDate.displayDate);
+                            }
+                        }}
+                    />
+                </div>
             <div className="relative flex h-16 flex-row items-center justify-center gap-4 md:h-16 py-2 overflow-hidden w-[calc(5*56px)] md:w-[calc(5*64px)]">
                 <div 
                     className={`absolute left-2 md:left-1 flex flex-row items-center gap-4 transition-transform duration-500 ease-in-out ${isDragging ? 'transition-none' : ''}`}
                     style={{
                         transform: `translateX(${getTransformOffset()}px)`,
-                        touchAction: window.innerWidth < 768 ? 'none' : 'none' // Always prevent default for drag
+                        touchAction: 'none'
                     }}
-                    // Only attach mouse events on desktop
-                    {...(window.innerWidth >= 768 ? { onMouseDown: handleDesktopDragStart } : {})}
-                    onTouchStart={handleMobileDragStart}
+                    onMouseDown={handleDesktopDragStart}
                 >
                     {allDates.map((dateObj, index) => {
                         // Calculate distance from original selected date for opacity
@@ -281,6 +234,17 @@ const DateSlider = ({ selectedDate, onDateSelect, mockSchedules, selectedSchedul
                         );
                     })}
                 </div>
+            </div>
+            <div className={`relative rotate-180 md:hidden scale-90 ${selectedIndex < allDates.length - 1 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
+                <BackNaviButton
+                    onClick={() => {
+                        if (selectedIndex < allDates.length - 1) {
+                            const nextDate = allDates[selectedIndex + 1];
+                            onDateSelect(nextDate.fullDate, nextDate.displayDate);
+                        }
+                    }}
+                />
+            </div>
             </div>
             <div className="hidden flex-row items-center justify-center gap-3 pt-3 md:flex md:gap-2 md:pt-2 transition-all duration-300">
                 <div className="h-[3px] w-3 bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />

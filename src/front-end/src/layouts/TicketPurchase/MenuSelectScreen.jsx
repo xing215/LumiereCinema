@@ -10,6 +10,7 @@ const TimeButton = ({ time, seats, scheduleId, isSelected, onSelect}) => {
         <button 
             className={`group relative flex w-[38vw] flex-col items-center justify-center -space-y-1 rounded-xl md:w-[calc(100vw*0.12)] lg:w-[calc(100vw*0.10)] ${isSelected ? 'outline-2 outline-white' : ''}`}
             onClick={() => onSelect(scheduleId)}
+            style={{ cursor: 'pointer' }}
         >
             <div className={`absolute top-0 left-0 h-full w-full rounded-xl mix-blend-color-dodge group-hover:bg-zinc-300/70 lg:[transform:translate3d(0,0,0)] ${isSelected ? 'bg-zinc-300/80' : 'bg-zinc-300/60'}`} />
             <div className="pt-2 font-['Unbounded'] text-[18px] font-bold text-white md:pt-1 md:text-[15px] lg:text-[17px]">{time}</div>
@@ -63,7 +64,8 @@ const TimeGrid = ({ selectedSchedule, onScheduleSelect, mockSchedules, selectedD
 
 const ChooseCinemaButton = ({ onClick, label }) => (
     <button 
-        className="group relative flex h-auto w-[80vw] items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px]"
+        className="group relative flex h-auto w-[80vw] items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
+        style={{ cursor: 'pointer' }}
         onClick={onClick}
     >
         <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)] group-hover:bg-zinc-300/70" />
@@ -73,7 +75,7 @@ const ChooseCinemaButton = ({ onClick, label }) => (
     </button>
 );
 
-const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, mockSchedules, cinemas }) => {
+const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, updateSnackTicket, mockSchedules, cinemas, onCinemaChangeReset }) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [selectedBranch, setSelectedBranch] = useState(movieTicketData.branch || null);
@@ -130,16 +132,26 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
 
     const selectedDateInfo = getSelectedDate();
 
-    // Handle branch selection
+
+    // Handle branch selection (not used directly, but keep for completeness)
     const handleBranchSelect = (branchId) => {
         setSelectedBranch(branchId);
         updateMovieTicket({ branch: branchId });
+        if (typeof updateSnackTicket === 'function') {
+            updateSnackTicket({ branch: branchId });
+        }
     };
 
     // Handle cinema selection from popup
     const handleCinemaSelect = (cinema) => {
-        setSelectedBranch(cinema.name);
-        updateMovieTicket({ branch: cinema._id }); // Use _id for backend compatibility
+        setSelectedBranch(cinema._id);
+        updateMovieTicket({ branch: cinema._id, schedule: null }); // reset schedule
+        if (typeof updateSnackTicket === 'function') {
+            updateSnackTicket({ branch: cinema._id });
+        }
+        if (typeof onCinemaChangeReset === 'function') {
+            onCinemaChangeReset(); // parent will reset date by remounting
+        }
         console.log('Selected cinema:', cinema);
     };
 

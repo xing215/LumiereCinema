@@ -138,9 +138,16 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
                     {/* Desktop footer */}
                     <div className="hidden h-auto w-full flex-row items-center justify-end gap-2 px-4 pb-6 sm:px-8 md:flex md:px-10 lg:px-12">
                         <div className="bottom-0 w-80 text-right font-['Unbounded'] text-[10px] font-semibold text-white">
-                            Monday, 23rd May, 2025, 07:00
-                            <br />
-                            Cinema: 123 NVC St, D3, HCM
+                            {/* TODO: Replace with actual selected movie/schedule info if available */}
+                            {/* You can pass these as props if needed */}
+                            {snackTicketData && snackTicketData.branch ? (
+                                <>
+                                    {/* Optionally display date/time if available */}
+                                    Cinema: {snackTicketData.branch}
+                                </>
+                            ) : (
+                                <>Cinema: Not selected</>
+                            )}
                         </div>
                         <BackNaviButton onClick={onBack} />
                         <NextNaviButton text="INFO" onClick={handleNext} />
@@ -154,13 +161,15 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
             >
                 <BackNaviButton onClick={onBack} />
                 <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
-                    Movie: Tham Tu Kien
-                    <br />
-                    Monday, 23th May, 2025, 07:00
-                    <br />
-                    Cinema: 123 NVC St, D3, HCM
+                    {/* TODO: Replace with actual selected movie/schedule info if available */}
+                    {snackTicketData && snackTicketData.branch ? (
+                        <>
+                            Cinema: {snackTicketData.branch}
+                        </>
+                    ) : (
+                        <>Cinema: Not selected</>
+                    )}
                 </div>
-
                 <NextNaviButton text="INFO" onClick={handleNext} />
             </div>
         </div>
