@@ -31,8 +31,8 @@ const promotionSchema = new mongoose.Schema({
   },
 
   appliedProduct: {
-    type: String, // Store 'productType' (example: 'Movie', 'Snack')
-    enum: ['Movie', 'Snack'], // Only applies to this product type
+    type: String, // Store 'productType' (example: 'Movie', 'Snack', 'All')
+    enum: ['Movie', 'Snack', 'All'], // Only applies to this product type
     required: true,
   },
 
@@ -58,11 +58,13 @@ const promotionSchema = new mongoose.Schema({
   // Start and end dates
   startDate: {
     type: Date,
-    required: true,
+    //required: true,
+    default: null
   },
   endDate: {
     type: Date,
-    required: true,
+    //required: true,
+    default: null
   },
 
   // Active status

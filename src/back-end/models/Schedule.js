@@ -31,8 +31,17 @@ const scheduleSchema = new mongoose.Schema({
   OccupiedSeat: [
     {
       _id: false,
-      seatNumber: { type: String, required: true },
-      ticket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }
+      //seatNumber: { type: String, required: true },
+      seat: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Seat',
+        required: true
+      },
+      ticket: { 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Ticket',
+        required: true
+      }
     }
   ],
 

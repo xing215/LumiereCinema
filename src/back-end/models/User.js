@@ -32,8 +32,6 @@ const userSchema = new mongoose.Schema({
     },
 
     lunarPoints: { type: Number, default: 0 },
-
-    defaultDiscountRate: { type: Number, default: 0 }, // Default discount rate for this tier
   },
 
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],

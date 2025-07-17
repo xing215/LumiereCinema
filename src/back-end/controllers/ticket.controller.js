@@ -75,17 +75,39 @@ const applyDiscounts = async ({ user, promotionCode, total }) => {
   let updatedTotal = total;
   let appliedPromotion = null;
 
-  if (user && user.loyaltyRank?.defaultDiscountRate) {
-    updatedTotal -= user.loyaltyRank.defaultDiscountRate / 100 * updatedTotal;
-  }
+  // if (user && user.loyaltyRank?.defaultDiscountRate) {
+  //   updatedTotal -= user.loyaltyRank.defaultDiscountRate / 100 * updatedTotal;
+  // }
 
   if (promotionCode) {
+
     const promo = await Promotion.findOne({ promotionCode: promotionCode, isActive: true });
     const now = new Date();
 
+    if (!promo) {
+      throw { status: 400, message: 'Promotion not found or inactive.' };
+    }
+
+    switch (promo.promotionCode) {
+      case 'GOLD' :
+        if (user && user.loyaltyRank.rank === 'GOLD') {
+          updatedTotal -= 0.05 * updatedTotal; // Giảm 5% cho Gold
+          return { total: updatedTotal, appliedPromotion: promo._id };
+        } else {
+            throw { status: 400, message: 'Promotion GOLD is only for GOLD members.' };
+          }
+      case 'PLATINUM' :
+        if (user && user.loyaltyRank.rank === 'PLATINUM') {
+          updatedTotal -= 0.1 * updatedTotal; // Giảm 10% cho Platinum
+          return { total: updatedTotal, appliedPromotion: promo._id };
+        } else {
+            throw { status: 400, message: 'Promotion PLATINUM is only for PLATINUM members.' };
+          }
+    }
+
     if (
-      !promo || promo.startDate > now || promo.endDate < now ||
-      promo.appliedProduct !== 'Snack' || updatedTotal < promo.minimumSpend
+      promo.startDate > now || promo.endDate < now ||
+      promo.appliedProduct === 'Movie' || updatedTotal < promo.minimumSpend
     ) {
       throw { status: 400, message: 'Invalid or inapplicable promotion.' };
     }
