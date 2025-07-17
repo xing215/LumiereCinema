@@ -12,8 +12,7 @@ const ticketSchema = new mongoose.Schema({
   // Customer (FK): Tham chiếu đến người dùng mua vé
   customer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
+    ref: 'User'
   },
 
   // SellerId: Tham chiếu đến nhân viên bán vé (nếu mua tại quầy)
