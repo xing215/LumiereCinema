@@ -56,9 +56,24 @@ const snackSchema = new mongoose.Schema({
   isHidden: {
     type: Boolean,
     default: false,
+  },
+
+  // Cần thêm field để track stock đang được reserve:
+  reserved: {
+    type: Number,
+    default: 0,
+    validate: {
+      validator: function(value) {
+        return value <= this.stock; // Reserved không được > stock
+      }
+    }
   }
 
 }, { timestamps: true }); // Tự động quản lý CreateDate (createdAt) và LastUpdate (updatedAt)
+
+// Indexes cho performance:
+snackSchema.index({ branch: 1, isHidden: 1 }); // Query snacks theo branch
+snackSchema.index({ branch: 1, stock: 1 }); // Check availability
 
 
 module.exports = mongoose.model('Snack', snackSchema);
