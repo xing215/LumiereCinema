@@ -19,6 +19,7 @@ import BranchManagePage from './pages/staff/BranchManagePage.jsx';
 import AccountManagePage from './pages/staff/AccountManagePage.jsx';
 import ResetPwdEmail from './pages/ResetPwdEmail.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
+import StaffRoot from './pages/staff/StaffRoot.jsx';
 
 const App = () => {
     return (
@@ -33,6 +34,7 @@ const App = () => {
                     <Route path="/reset-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/confirm" element={<ResetPwdEmail />} />
                     <Route path="/movies" element={<MovieListPage />} />
+                    <Route path="/staff" element={<StaffRoot />} />
                     
                     {/* Protected routes - require authentication */}
                     <Route path="/change-password" element={
