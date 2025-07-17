@@ -8,7 +8,7 @@ const Ticket = require('../models/Ticket');
 
 // ======= SUB FUNCTIONS =======
 
-// Kiểm tra dữ liệu đầu vào
+// Validate input data
 const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList, seller }) => {
   let user = null;
 
@@ -146,16 +146,16 @@ const createTicket = async (req, res) => {
     if (isSnack) {
       const { branch, customer, noLoginCustomerInfo, snackList, promotionCode, seller } = req.body;
 
-      // ===== Kiểm tra dữ liệu =====
+      // ===== Validate data =====
       const { user, branchData } = await validateRequestData({ customer, noLoginCustomerInfo, branch, snackList, seller });
 
-      // ===== Tính tổng tiền và cập nhật kho =====
+      // ===== Calculate total and update stock =====
       const { total: baseTotal, validatedSnackList } = await calculateTotalAndUpdateStock(snackList, branchData._id);
 
-      // ===== Giảm giá =====
+      // ===== Apply discounts =====
       const { total: finalTotal, appliedPromotion } = await applyDiscounts({ user, promotionCode: promotionCode, total: baseTotal });
 
-      // ===== Cộng điểm nếu có login =====
+      // ===== Add points if logged in =====
       if (user) {
         user.addLunarPointsFromPurchase(finalTotal);
         await user.save();

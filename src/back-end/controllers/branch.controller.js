@@ -5,7 +5,7 @@ const Seat = require('../models/Seat.js');// để hàm getOccupiedSeats dùng .
 const Ticket = require('../models/Ticket.js'); // để hàm getOccupiedSeats dùng .populate('OccupiedSeat.ticket')
 const { redisClient } = require('../config/redis.config.js');
 
-const DEFAULT_EXPIRATION = 600; // Cache 10 phút
+const DEFAULT_EXPIRATION = 600; // Cache 10 minutes
 
 /**
  * @desc    Thêm snack mới cho một rạp 
@@ -17,13 +17,13 @@ const createSnack = async (req, res) => {
     const { branchId } = req.params;
     const snackData = req.body;
 
-    // 1. Kiểm tra rạp tồn tại
+    // 1. Check if branch exists
     const branch = await Branch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ message: 'Branch not found.' });
     }
 
-    // 2. Kiểm tra snack cùng shortname đã tồn tại trong rạp chưa
+    // 2. Check if snack with same shortname already exists in branch
     const existingSnack = await Snack.findOne({
       branch: branchId,
       shortname: snackData.shortname?.toUpperCase()
@@ -35,16 +35,16 @@ const createSnack = async (req, res) => {
       });
     }
 
-    // 3. Tạo snack mới
+    // 3. Create new snack
     const newSnack = new Snack({
       ...snackData,
       branch: branchId,
-      shortname: snackData.shortname?.toUpperCase(), // đảm bảo viết hoa
+      shortname: snackData.shortname?.toUpperCase(), // ensure uppercase
     });
 
     await newSnack.save();
 
-    // 4. Xoá cache danh sách snack của rạp này
+    // 4. Clear snack list cache for this branch
     await redisClient.del(`snacks:branch:${branchId}`);
 
     res.status(201).json({
@@ -77,7 +77,7 @@ const editSnack = async (req, res) => {
       return res.status(404).json({ message: 'Snack not found for update.' });
     }
 
-    // Xoá cache danh sách snack của rạp này
+    // Clear snack list cache for this branch
     await redisClient.del(`snacks:branch:${branchId}`);
 
     res.status(200).json({
@@ -91,7 +91,7 @@ const editSnack = async (req, res) => {
 };
 
 /**
- * @desc    Xoá snack
+ * @desc    Delete snack
  * @route   DELETE /api/branches/:branchId/snacks/:snackId
  * @access  Administrator
  */
@@ -99,10 +99,10 @@ const deleteSnack = async (req, res) => {
   try {
     const { branchId, snackId } = req.params;
 
-    // Thử xóa trước
+    // Try deleting first
     const snack = await Snack.findOneAndDelete({ _id: snackId, branch: branchId });
     if (snack) {
-      // Nếu xóa được thì xóa cache và trả về kết quả
+      // If deletion successful, clear cache and return result
       await redisClient.del(`snacks:branch:${branchId}`);
       return res.status(200).json({
         message: 'Snack deleted successfully.',
@@ -110,7 +110,7 @@ const deleteSnack = async (req, res) => {
       });
     }
 
-    // Nếu không xóa được, thử set isHidden = true
+    // If deletion failed, try setting isHidden = true
     const hiddenSnack = await Snack.findOneAndUpdate(
       { _id: snackId, branch: branchId },
       { isHidden: true },
@@ -125,7 +125,7 @@ const deleteSnack = async (req, res) => {
       });
     }
 
-    // Nếu không tìm thấy để ẩn, báo lỗi
+    // If not found for hiding, return error
     res.status(404).json({ message: 'Snack not found for deletion or hiding.' });
   } catch (error) {
     console.error('Delete Snack Error:', error);
@@ -135,7 +135,7 @@ const deleteSnack = async (req, res) => {
 
 
 /**
- * @desc    Lấy danh sách snack theo rạp
+ * @desc    Get snack list by branch
  * @route   GET /api/branches/:branchId/snacks
  * @access  Public
  */
@@ -145,14 +145,14 @@ const getSnackList = async (req, res) => {
     const { branchId } = req.params;
     const cacheKey = `snacks:branch:${branchId}`;
 
-    // 1. Kiểm tra cache
+    // 1. Check cache
     const cachedSnacks = await redisClient.get(cacheKey);
     if (cachedSnacks) {
       console.log(`Cache HIT for snacks of branch ${branchId}`);
       return res.status(200).json(JSON.parse(cachedSnacks));
     }
 
-    // 2. Nếu cache miss → query DB
+    // 2. If cache miss → query DB
     console.log(`Cache MISS for snacks of branch ${branchId}`);
     const branch = await Branch.findById(branchId);
     if (!branch) {
@@ -167,7 +167,7 @@ const getSnackList = async (req, res) => {
       return res.status(404).json({ message: 'No snacks found for this branch.' });
     }
 
-    // 3. Lưu vào cache
+    // 3. Save to cache
     await redisClient.set(cacheKey, JSON.stringify(snacks), { EX: DEFAULT_EXPIRATION });
 
     res.status(200).json(snacks);

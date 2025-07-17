@@ -1,11 +1,38 @@
 // src/pages/Registration.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext.jsx';
+import { ROUTES } from '../routes/routeConfig.js';
 import Header from '../layouts/LandingPage/Header.jsx';
 import RegistrationForm from '../layouts/Registration/RegistrationForm.jsx';
 import ChatBot from '../components/display/ChatBot.jsx';
 import Footer from '../layouts/LandingPage/Footer.jsx';
 
 const Registration = () => {
+    const navigate = useNavigate();
+    const { isAuthenticated, isLoading } = useUser();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            navigate(ROUTES.HOME);
+        }
+    }, [isAuthenticated, isLoading, navigate]);
+
+    // Show loading while checking authentication
+    if (isLoading) {
+        return (
+            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    // Don't render registration form if authenticated (will redirect)
+    if (isAuthenticated) {
+        return null;
+    }
+
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden bg-slate-950">
             <Header />

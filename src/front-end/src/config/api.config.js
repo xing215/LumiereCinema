@@ -47,6 +47,10 @@
  * - getTicketApiUrl(ticketCode): Helper for ticket endpoints
  * - buildApiUrl(endpoint): Build full URL from endpoint path
  * - getEndpoint(name): Get endpoint path by name
+ * 
+ * AUTHENTICATION:
+ * For authentication-related API calls, use the authAPI from utils/auth.utils.js
+ * which provides a centralized way to handle authentication with proper error handling.
  */
 
 // API configuration
@@ -61,6 +65,12 @@ const API_CONFIG = {
     register: '/api/auth/register',
     logout: '/api/auth/logout',
     changePassword: '/api/auth/change-password',
+    forgotPassword: '/api/auth/forgot-password',
+    resetPassword: '/api/auth/reset-password',
+    
+    // Staff auth endpoints
+    staffLogin: '/api/auth/staff/login',
+    staffForgotPassword: '/api/auth/staff/forgot-password',
     
     // Movie endpoints
     nowShowingMovies: '/api/movies/now-showing',
@@ -186,7 +196,7 @@ export const getBranchSnackApiUrl = (branchId, snackId = '') => {
 
 /**
  * Helper function to build URLs for ticket operations
- * @param {string} [ticketCode=''] - Optional ticket code for specific ticket operations
+ * @param {string} ticketCode - The ticket code (optional)
  * @returns {string} Full URL for ticket endpoint
  * @example
  * getApiUrl('getAllTickets') // → 'http://localhost:5000/api/tickets/snacks/admin/all'
