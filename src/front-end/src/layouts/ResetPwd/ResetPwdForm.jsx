@@ -67,11 +67,11 @@ const ResetPwdForm = () => {
         }
 
         try {
-            const response = await authAPI.forgotPassword(formData.email);
+            const response = await authAPI.staffForgotPassword(formData.email);
             setMessage(response.message);
             setIsSuccess(true);
         } catch (error) {
-            console.error('Forgot password error:', error);
+            console.error('Staff forgot password error:', error);
             setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
             setIsSuccess(false);
         } finally {

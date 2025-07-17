@@ -82,6 +82,12 @@ export const routeConfig = [
         type: 'staff-public',
         requiresAuth: false
     },
+    {
+        path: '/staff/reset-password/confirm',
+        component: ResetPwdEmail,
+        type: 'staff-public',
+        requiresAuth: false
+    },
     
     // Staff dashboard root
     {

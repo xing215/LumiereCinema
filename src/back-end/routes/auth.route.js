@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Import the `changePassword` function
-const { register, login, logout, changePassword, forgotPassword, resetPassword } = require('../controllers/auth.controller.js');
+const { register, login, staffLogin, logout, changePassword, forgotPassword, staffForgotPassword, resetPassword } = require('../controllers/auth.controller.js');
 const { protect } = require('../middlewares/auth.middleware.js');
 
 // Public routes
@@ -10,6 +10,10 @@ router.post('/register', register);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+
+// Staff authentication routes
+router.post('/staff/login', staffLogin);
+router.post('/staff/forgot-password', staffForgotPassword);
 
 // Routes requiring login (protected by `protect`)
 router.post('/logout', protect, logout);

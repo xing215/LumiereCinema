@@ -68,6 +68,10 @@ const API_CONFIG = {
     forgotPassword: '/api/auth/forgot-password',
     resetPassword: '/api/auth/reset-password',
     
+    // Staff auth endpoints
+    staffLogin: '/api/auth/staff/login',
+    staffForgotPassword: '/api/auth/staff/forgot-password',
+    
     // Movie endpoints
     nowShowingMovies: '/api/movies/now-showing',
     upcomingMovies: '/api/movies/upcoming',

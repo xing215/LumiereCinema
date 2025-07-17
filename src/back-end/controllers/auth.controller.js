@@ -76,7 +76,7 @@ const register = async (req, res) => {
 };
 
 /**
- * @desc    User login
+ * @desc    Customer login
  * @route   POST /api/auth/login
  */
 const login = async (req, res) => {
@@ -90,6 +90,11 @@ const login = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user || !(await bcrypt.compare(password, user.hashedPassword))) {
+            return res.status(401).json({ message: 'Email or password is incorrect.' });
+        }
+
+        // Check if user is a customer (only customers can login through /login)
+        if (!user.roles.includes('customer')) {
             return res.status(401).json({ message: 'Email or password is incorrect.' });
         }
 
@@ -110,6 +115,53 @@ const login = async (req, res) => {
 
     } catch (error) {
         console.error('Login Error:', error);
+        res.status(500).json({ message: 'A server error occurred.' });
+    }
+};
+
+/**
+ * @desc    Staff login
+ * @route   POST /api/auth/staff/login
+ */
+const staffLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please enter email and password.' });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user || !(await bcrypt.compare(password, user.hashedPassword))) {
+            return res.status(401).json({ message: 'Email or password is incorrect.' });
+        }
+
+        // Check if user has any staff role
+        const staffRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
+        const hasStaffRole = user.roles.some(role => staffRoles.includes(role));
+        
+        if (!hasStaffRole) {
+            return res.status(401).json({ message: 'Email or password is incorrect.' });
+        }
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '1d',
+        });
+
+        res.status(200).json({
+            message: 'Login successful!',
+            token: token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                roles: user.roles
+            }
+        });
+
+    } catch (error) {
+        console.error('Staff Login Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
     }
 };
@@ -166,7 +218,7 @@ const changePassword = async (req, res) => {
 };
 
 /**
- * @desc    Forgot password - send reset email
+ * @desc    Customer forgot password - send reset email
  * @route   POST /api/auth/forgot-password
  */
 const forgotPassword = async (req, res) => {
@@ -180,6 +232,13 @@ const forgotPassword = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) {
             // Don't reveal if user exists or not for security
+            return res.status(200).json({ 
+                message: 'If the email exists in our system, a password reset link has been sent.' 
+            });
+        }
+
+        // Check if user is a customer (only customers can use /forgot-password)
+        if (!user.roles.includes('customer')) {
             return res.status(200).json({ 
                 message: 'If the email exists in our system, a password reset link has been sent.' 
             });
@@ -228,6 +287,83 @@ const forgotPassword = async (req, res) => {
 
     } catch (error) {
         console.error('Forgot Password Error:', error);
+        res.status(500).json({ message: 'A server error occurred.' });
+    }
+};
+
+/**
+ * @desc    Staff forgot password - send reset email
+ * @route   POST /api/auth/staff/forgot-password
+ */
+const staffForgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required.' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            // Don't reveal if user exists or not for security
+            return res.status(200).json({ 
+                message: 'If the email exists in our system, a password reset link has been sent.' 
+            });
+        }
+
+        // Check if user has any staff role
+        const staffRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
+        const hasStaffRole = user.roles.some(role => staffRoles.includes(role));
+        
+        if (!hasStaffRole) {
+            return res.status(200).json({ 
+                message: 'If the email exists in our system, a password reset link has been sent.' 
+            });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = Date.now() + 3600000; // 1 hour from now
+
+        // Save token to user
+        user.passwordResetToken = resetToken;
+        user.passwordResetExpires = resetTokenExpiry;
+        await user.save();
+
+        // Create reset URL for staff
+        const resetUrl = `${process.env.FRONTEND_URL}/staff/reset-password/confirm?token=${resetToken}`;
+
+        // Email configuration
+        const transporter = nodemailer.createTransporter({
+            service: 'gmail', // or your email service
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password Reset Request - Lumiere Cinema Staff',
+            html: `
+                <h2>Staff Password Reset Request</h2>
+                <p>You requested a password reset for your Lumiere Cinema staff account.</p>
+                <p>Click the link below to reset your password:</p>
+                <a href="${resetUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({ 
+            message: 'If the email exists in our system, a password reset link has been sent.' 
+        });
+
+    } catch (error) {
+        console.error('Staff Forgot Password Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
     }
 };
@@ -287,8 +423,10 @@ const resetPassword = async (req, res) => {
 module.exports = {
     register,
     login,
+    staffLogin,
     logout,
     changePassword,
     forgotPassword,
+    staffForgotPassword,
     resetPassword,
 };

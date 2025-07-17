@@ -82,7 +82,9 @@ const LoginForm = ({ isCustomer = true }) => {
         }
 
         try {
-            const response = await authAPI.login(formData);
+            const response = isCustomer 
+                ? await authAPI.login(formData)
+                : await authAPI.staffLogin(formData);
             
             // Save user data and token to context
             login(response.user, response.token);

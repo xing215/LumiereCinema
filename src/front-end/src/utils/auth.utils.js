@@ -45,6 +45,11 @@ export const authAPI = {
         return response.data;
     },
 
+    staffLogin: async (credentials) => {
+        const response = await api.post(API_CONFIG.endpoints.staffLogin, credentials);
+        return response.data;
+    },
+
     register: async (userData) => {
         const response = await api.post(API_CONFIG.endpoints.register, userData);
         return response.data;
@@ -62,6 +67,11 @@ export const authAPI = {
 
     forgotPassword: async (email) => {
         const response = await api.post(API_CONFIG.endpoints.forgotPassword, { email });
+        return response.data;
+    },
+
+    staffForgotPassword: async (email) => {
+        const response = await api.post(API_CONFIG.endpoints.staffForgotPassword, { email });
         return response.data;
     },
 
