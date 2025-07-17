@@ -14,7 +14,6 @@ import CheckInCounterPage from './pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from './pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from './pages/staff/PromotionManagePage.jsx';
 import ReportPage from './pages/staff/ReportPage';
-import ReportPage from './pages/staff/ReportPage';
 import ScreenManagePage from './pages/staff/ScreenManagePage.jsx';
 import BranchManagePage from './pages/staff/BranchManagePage.jsx';
 import TicketPurchase from './pages/TicketPurchase';
