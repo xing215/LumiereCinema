@@ -94,18 +94,7 @@ const LoginForm = ({ isCustomer = true }) => {
             );
             
             if (hasStaffRole) {
-                // Navigate to appropriate staff dashboard based on role
-                if (userRoles.includes('administrator')) {
-                    navigate('/staff/account');
-                } else if (userRoles.includes('branchmanager')) {
-                    navigate('/staff/report');
-                } else if (userRoles.includes('checkincounter')) {
-                    navigate('/staff/checkin');
-                } else if (userRoles.includes('cashier')) {
-                    navigate('/staff/report');
-                } else {
-                    navigate('/staff/report'); // default staff page
-                }
+                navigate('/staff');
             } else {
                 navigate('/');
             }

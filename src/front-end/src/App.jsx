@@ -46,37 +46,37 @@ const App = () => {
                     {/* Staff routes - require staff roles */}
                     <Route path="/staff/reset-password" element={<StaffResetPwd />} />
                     <Route path="/staff/change-password" element={
-                        <ProtectedRoute requiredRoles={['cashier', 'checkincounter', 'branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['   cashier', 'checkincounter', 'branchmanager', 'administrator']}>
                             <StaffChangePwd />
                         </ProtectedRoute>
                     } />
                     <Route path="/staff/checkin" element={
-                        <ProtectedRoute requiredRoles={['checkincounter', 'branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['checkincounter']}>
                             <CheckInCounterPage />
                         </ProtectedRoute>
                     } />
                     <Route path="/staff/schedule" element={
-                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['branchmanager']}>
                             <ScheduleManagePage />
                         </ProtectedRoute>
                     } />
                     <Route path="/staff/promotion" element={
-                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['administrator']}>
                             <PromotionManagePage />
                         </ProtectedRoute>
                     } />
                     <Route path="/staff/report" element={
-                        <ProtectedRoute requiredRoles={['cashier', 'checkincounter', 'branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
                             <ReportPage />
                         </ProtectedRoute>
                     } />
                     <Route path="/staff/screen" element={
-                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['branchmanager']}>
                             <ScreenManagePage />
                         </ProtectedRoute>
                     } />
                     <Route path="/staff/branch" element={
-                        <ProtectedRoute requiredRoles={['branchmanager', 'administrator']}>
+                        <ProtectedRoute requiredRoles={['administrator']}>
                             <BranchManagePage />
                         </ProtectedRoute>
                     } />

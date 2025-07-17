@@ -5,14 +5,23 @@ import LoginForm from '../../layouts/Login/LoginForm.jsx';
 
 const StaffLogin = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, isLoading } = useUser();
+    const { user, isAuthenticated, isLoading } = useUser();
 
     // Redirect if already logged in
     useEffect(() => {
-        if (!isLoading && isAuthenticated) {
-            navigate('/');
+        if (!isLoading && isAuthenticated && user) {
+            const userRoles = user.roles || [];
+            const hasStaffRole = userRoles.some(role => 
+                ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role)
+            );
+            
+            if (hasStaffRole) {
+                navigate('/staff');
+            } else {
+                navigate('/');
+            }
         }
-    }, [isAuthenticated, isLoading, navigate]);
+    }, [isAuthenticated, isLoading, user, navigate]);
 
     // Show loading while checking authentication
     if (isLoading) {

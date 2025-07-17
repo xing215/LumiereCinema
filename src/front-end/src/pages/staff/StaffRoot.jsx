@@ -27,7 +27,9 @@ const StaffRoot = () => {
             navigate('/staff/report');
         } else if (userRoles.includes('checkincounter')) {
             navigate('/staff/checkin');
-        } else if (userRoles.includes('customer') || userRoles.includes('cashier')) {
+        } else if (userRoles.includes('cashier')) {
+            navigate('/404');
+        } else if (userRoles.includes('customer')) {
             navigate('/');
         } else {
             // Default case for unknown roles
