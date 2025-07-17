@@ -88,7 +88,7 @@ export const sidebarConfig = {
             icon: Coffee,
             path: '#',
             description: 'Sell snacks and beverages',
-            permissions: ['snacks'],
+            permissions: ['tickets'],
             badge: null,
         },
         {
