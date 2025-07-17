@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext.jsx';
+import { ROUTES } from '../../routes/routeConfig.js';
 import LoginForm from '../../layouts/Login/LoginForm.jsx';
 
 const StaffLogin = () => {
@@ -16,9 +17,9 @@ const StaffLogin = () => {
             );
             
             if (hasStaffRole) {
-                navigate('/staff');
+                navigate(ROUTES.STAFF_ROOT);
             } else {
-                navigate('/');
+                navigate(ROUTES.HOME);
             }
         }
     }, [isAuthenticated, isLoading, user, navigate]);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext.jsx';
+import { ROUTES } from '../routes/routeConfig.js';
 import { authAPI } from '../utils/auth.utils.js';
 import Header from '../layouts/LandingPage/Header.jsx';
 import ChatBot from '../components/display/ChatBot.jsx';
@@ -19,7 +20,7 @@ const ForgotPassword = () => {
     // Redirect if already logged in
     useEffect(() => {
         if (!authLoading && isAuthenticated) {
-            navigate('/');
+            navigate(ROUTES.HOME);
         }
     }, [isAuthenticated, authLoading, navigate]);
 
@@ -130,7 +131,7 @@ const ForgotPassword = () => {
                         {/* Back to Login */}
                         <div className="text-center">
                             <span
-                                onClick={() => !isLoading && navigate('/login')}
+                                onClick={() => !isLoading && navigate(ROUTES.LOGIN)}
                                 className={`font-['Libre_Franklin'] text-sm font-normal text-white hover:text-purple-300 sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                             >
                                 Back to Login

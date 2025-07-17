@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../routes/routeConfig.js';
 import { authAPI, validatePassword, formatPasswordErrors } from '../../utils/auth.utils.js';
 import ShowIcon from '../../assets/icons/show.svg';
 import HideIcon from '../../assets/icons/hide.svg';
@@ -126,7 +127,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             
             // Redirect to login page after successful password change/reset
             setTimeout(() => {
-                navigate('/login');
+                navigate(ROUTES.LOGIN);
             }, 2000);
         } catch (error) {
             console.error('Password change error:', error);

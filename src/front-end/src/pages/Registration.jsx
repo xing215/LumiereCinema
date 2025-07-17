@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext.jsx';
+import { ROUTES } from '../routes/routeConfig.js';
 import Header from '../layouts/LandingPage/Header.jsx';
 import RegistrationForm from '../layouts/Registration/RegistrationForm.jsx';
 import ChatBot from '../components/display/ChatBot.jsx';
@@ -14,7 +15,7 @@ const Registration = () => {
     // Redirect if already logged in
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            navigate('/');
+            navigate(ROUTES.HOME);
         }
     }, [isAuthenticated, isLoading, navigate]);
 

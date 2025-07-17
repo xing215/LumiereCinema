@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Menu, Film } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext.jsx';
+import { ROUTES } from '../../routes/routeConfig.js';
 import sidebarConfig, { hasRole, filterMenuItems, getUserRoleInfo, getUserPermissions, hasPermission } from '../../config/adminSidebar.config.js';
 
 const StaffSidebar = ({
@@ -68,7 +69,7 @@ const StaffSidebar = ({
                 // Use the UserContext logout function
                 logout();
                 // Redirect to root path
-                navigate('/');
+                navigate(ROUTES.HOME);
             }
             return;
         }

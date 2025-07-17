@@ -4,6 +4,7 @@ import ChangePwdForm from '../layouts/ChangePwd/ChangePwdForm.jsx';
 import ChatBot from '../components/display/ChatBot.jsx';
 import BackwardButton from '../components/buttons/backwardButton.jsx';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ROUTES } from '../routes/routeConfig.js';
 import Footer from '../layouts/LandingPage/Footer.jsx';
 
 const ResetPwdEmail = () => {
@@ -38,7 +39,7 @@ const ResetPwdEmail = () => {
                     <p className="mb-6 font-['Libre_Franklin'] text-sm font-normal text-white sm:mb-8 sm:text-base md:text-lg">The reset link is invalid or has expired.</p>
                     <div className="flex justify-center">
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate(ROUTES.HOME)}
                             className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl`}
                         >
                             RETURN TO HOMEPAGE

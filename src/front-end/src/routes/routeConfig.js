@@ -20,41 +20,72 @@ import StaffRoot from '../pages/staff/StaffRoot.jsx';
 import MovieManagePage from '../pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '../pages/staff/SnackManagePage.jsx';
 
+// Route aliases for better portability
+export const ROUTES = {
+    // Public routes
+    HOME: '/',
+    REGISTER: '/register',
+    LOGIN: '/login',
+    RESET_PASSWORD: '/reset-password',
+    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
+    MOVIES: '/movies',
+    NOT_FOUND: '/404',
+    
+    // Customer routes
+    CHANGE_PASSWORD: '/change-password',
+    
+    // Staff routes
+    STAFF_ROOT: '/staff',
+    STAFF_LOGIN: '/staff/login',
+    STAFF_RESET_PASSWORD: '/staff/reset-password',
+    STAFF_RESET_PASSWORD_CONFIRM: '/staff/reset-password/confirm',
+    STAFF_CHANGE_PASSWORD: '/staff/change-password',
+    STAFF_CHECKIN: '/staff/checkin',
+    STAFF_SCHEDULE: '/staff/schedule',
+    STAFF_PROMOTION: '/staff/promotion',
+    STAFF_REPORT: '/staff/report',
+    STAFF_SCREEN: '/staff/screen',
+    STAFF_BRANCH: '/staff/branch',
+    STAFF_ACCOUNT: '/staff/account',
+    STAFF_MOVIE: '/staff/movie',
+    STAFF_SNACK: '/staff/snack',
+};
+
 // Route configuration
 export const routeConfig = [
     // Public routes - accessible to all users
     {
-        path: '/',
+        path: ROUTES.HOME,
         component: LandingPage,
         type: 'public',
         requiresAuth: false
     },
     {
-        path: '/register',
+        path: ROUTES.REGISTER,
         component: Registration,
         type: 'public',
         requiresAuth: false
     },
     {
-        path: '/login',
+        path: ROUTES.LOGIN,
         component: Login,
         type: 'public',
         requiresAuth: false
     },
     {
-        path: '/reset-password',
+        path: ROUTES.RESET_PASSWORD,
         component: ForgotPassword,
         type: 'public',
         requiresAuth: false
     },
     {
-        path: '/reset-password/confirm',
+        path: ROUTES.RESET_PASSWORD_CONFIRM,
         component: ResetPwdEmail,
         type: 'public',
         requiresAuth: false
     },
     {
-        path: '/movies',
+        path: ROUTES.MOVIES,
         component: MovieListPage,
         type: 'public',
         requiresAuth: false
@@ -62,7 +93,7 @@ export const routeConfig = [
     
     // Customer protected routes - require authentication but not staff roles
     {
-        path: '/change-password',
+        path: ROUTES.CHANGE_PASSWORD,
         component: ChangePwd,
         type: 'customer',
         requiresAuth: true,
@@ -71,19 +102,19 @@ export const routeConfig = [
     
     // Staff public routes - accessible to all staff without authentication
     {
-        path: '/staff/login',
+        path: ROUTES.STAFF_LOGIN,
         component: StaffLogin,
         type: 'staff-public',
         requiresAuth: false
     },
     {
-        path: '/staff/reset-password',
+        path: ROUTES.STAFF_RESET_PASSWORD,
         component: StaffResetPwd,
         type: 'staff-public',
         requiresAuth: false
     },
     {
-        path: '/staff/reset-password/confirm',
+        path: ROUTES.STAFF_RESET_PASSWORD_CONFIRM,
         component: ResetPwdEmail,
         type: 'staff-public',
         requiresAuth: false
@@ -91,7 +122,7 @@ export const routeConfig = [
     
     // Staff dashboard root
     {
-        path: '/staff',
+        path: ROUTES.STAFF_ROOT,
         component: StaffRoot,
         type: 'staff',
         requiresAuth: true,
@@ -100,70 +131,70 @@ export const routeConfig = [
     
     // Staff protected routes - require staff roles
     {
-        path: '/staff/change-password',
+        path: ROUTES.STAFF_CHANGE_PASSWORD,
         component: StaffChangePwd,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['cashier', 'checkincounter', 'branchmanager', 'administrator']
     },
     {
-        path: '/staff/checkin',
+        path: ROUTES.STAFF_CHECKIN,
         component: CheckInCounterPage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['checkincounter']
     },
     {
-        path: '/staff/schedule',
+        path: ROUTES.STAFF_SCHEDULE,
         component: ScheduleManagePage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['branchmanager']
     },
     {
-        path: '/staff/promotion',
+        path: ROUTES.STAFF_PROMOTION,
         component: PromotionManagePage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['administrator']
     },
     {
-        path: '/staff/report',
+        path: ROUTES.STAFF_REPORT,
         component: ReportPage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['branchmanager', 'administrator']
     },
     {
-        path: '/staff/screen',
+        path: ROUTES.STAFF_SCREEN,
         component: ScreenManagePage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['branchmanager']
     },
     {
-        path: '/staff/branch',
+        path: ROUTES.STAFF_BRANCH,
         component: BranchManagePage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['administrator']
     },
     {
-        path: '/staff/account',
+        path: ROUTES.STAFF_ACCOUNT,
         component: AccountManagePage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['administrator']
     },
     {
-        path: '/staff/movie',
+        path: ROUTES.STAFF_MOVIE,
         component: MovieManagePage,
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['administrator']
     },
     {
-        path: '/staff/snack',
+        path: ROUTES.STAFF_SNACK,
         component: SnackManagePage,
         type: 'staff',
         requiresAuth: true,
@@ -203,28 +234,28 @@ export const shouldRedirectCustomer = (isAuthenticated, userRoles, routeType) =>
 export const shouldRedirectUnauthenticatedFromStaff = (isAuthenticated, routeType, routePath) => {
     if (isAuthenticated || (routeType !== 'staff' && routeType !== 'staff-public')) return false;
     // Allow access to staff login and reset password
-    return routePath !== '/staff/login' && routePath !== '/staff/reset-password';
+    return routePath !== ROUTES.STAFF_LOGIN && routePath !== ROUTES.STAFF_RESET_PASSWORD;
 };
 
 export const getRedirectPath = (isAuthenticated, userRoles, route) => {
     // Staff accessing non-staff routes
     if (shouldRedirectStaff(isAuthenticated, userRoles, route.type)) {
-        return '/staff';
+        return ROUTES.STAFF_ROOT;
     }
     
     // Customer accessing staff routes
     if (shouldRedirectCustomer(isAuthenticated, userRoles, route.type)) {
-        return '/';
+        return ROUTES.HOME;
     }
     
     // Unauthenticated users trying to access staff routes
     if (shouldRedirectUnauthenticatedFromStaff(isAuthenticated, route.type, route.path)) {
-        return '/staff/login';
+        return ROUTES.STAFF_LOGIN;
     }
     
     // Protected routes without required roles
     if (route.requiresAuth && !hasRequiredRole(userRoles, route.allowedRoles)) {
-        return isStaff(userRoles) ? '/staff' : '/';
+        return isStaff(userRoles) ? ROUTES.STAFF_ROOT : ROUTES.HOME;
     }
     
     return null; // No redirect needed

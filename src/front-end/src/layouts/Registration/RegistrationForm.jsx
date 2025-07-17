@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext.jsx';
+import { ROUTES } from '../../routes/routeConfig.js';
 import { authAPI, validatePassword, formatPasswordErrors } from '../../utils/auth.utils.js';
 import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
 import ShowIcon from '../../assets/icons/show.svg';
@@ -149,7 +150,7 @@ const RegistrationForm = () => {
             login(response.user, response.token);
             
             // Navigate to homepage or profile
-            navigate('/');
+            navigate(ROUTES.HOME);
             
         } catch (error) {
             console.error('Registration error:', error);
@@ -167,7 +168,7 @@ const RegistrationForm = () => {
             {/* Login Link */}
             <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
                 Already have an account?
-                <span onClick={() => !isLoading && navigate('/login')} className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                <span onClick={() => !isLoading && navigate(ROUTES.LOGIN)} className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     Login
                 </span>
             </p>

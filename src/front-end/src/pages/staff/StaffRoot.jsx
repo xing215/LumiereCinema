@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext.jsx';
+import { ROUTES } from '../../routes/routeConfig.js';
 
 const StaffRoot = () => {
     const navigate = useNavigate();
@@ -13,7 +14,7 @@ const StaffRoot = () => {
 
         if (!isAuthenticated || !user) {
             // Not authenticated, redirect to login
-            navigate('/login');
+            navigate(ROUTES.LOGIN);
             return;
         }
 
@@ -22,18 +23,18 @@ const StaffRoot = () => {
         
         // Check roles in order of priority
         if (userRoles.includes('administrator')) {
-            navigate('/staff/report');
+            navigate(ROUTES.STAFF_REPORT);
         } else if (userRoles.includes('branchmanager')) {
-            navigate('/staff/report');
+            navigate(ROUTES.STAFF_REPORT);
         } else if (userRoles.includes('checkincounter')) {
-            navigate('/staff/checkin');
+            navigate(ROUTES.STAFF_CHECKIN);
         } else if (userRoles.includes('cashier')) {
-            navigate('/404');
+            navigate(ROUTES.NOT_FOUND);
         } else if (userRoles.includes('customer')) {
-            navigate('/');
+            navigate(ROUTES.HOME);
         } else {
             // Default case for unknown roles
-            navigate('/');
+            navigate(ROUTES.HOME);
         }
     }, [isAuthenticated, isLoading, user, navigate]);
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext.jsx';
+import { ROUTES } from '../../routes/routeConfig.js';
 import { authAPI } from '../../utils/auth.utils.js';
 import NavButton from '../../components/buttons/header/navButton.jsx';
 import SearchButton from '../../components/buttons/searchButton.jsx';
@@ -18,7 +19,7 @@ const Header = () => {
             console.error('Logout error:', error);
         } finally {
             logout();
-            navigate('/');
+            navigate(ROUTES.HOME);
         }
     };
 
@@ -27,7 +28,7 @@ const Header = () => {
             // Temporarily navigate to '#' as requested
             navigate('#');
         } else {
-            navigate('/login');
+            navigate(ROUTES.LOGIN);
         }
     };
 

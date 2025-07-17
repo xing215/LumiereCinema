@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext.jsx';
+import { ROUTES } from '../../routes/routeConfig.js';
 import { authAPI } from '../../utils/auth.utils.js';
 import ShowIcon from '../../assets/icons/show.svg';
 import HideIcon from '../../assets/icons/hide.svg';
@@ -96,9 +97,9 @@ const LoginForm = ({ isCustomer = true }) => {
             );
             
             if (hasStaffRole) {
-                navigate('/staff');
+                navigate(ROUTES.STAFF_ROOT);
             } else {
-                navigate('/');
+                navigate(ROUTES.HOME);
             }
             
         } catch (error) {
@@ -118,7 +119,7 @@ const LoginForm = ({ isCustomer = true }) => {
             {isCustomer && (
                 <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
                     Don't have an account?
-                    <span onClick={() => navigate('/register')} className="ml-1 cursor-pointer font-['Libre_Franklin'] text-purple-400 hover:text-purple-300">
+                    <span onClick={() => navigate(ROUTES.REGISTER)} className="ml-1 cursor-pointer font-['Libre_Franklin'] text-purple-400 hover:text-purple-300">
                         Register
                     </span>
                 </p>
@@ -175,7 +176,7 @@ const LoginForm = ({ isCustomer = true }) => {
                     {/* Forget Password Link */}
                     <div className="mt-2 text-right">
                         <span
-                            onClick={() => !isLoading && navigate(isCustomer ? '/reset-password' : '/staff/reset-password')}
+                            onClick={() => !isLoading && navigate(isCustomer ? ROUTES.RESET_PASSWORD : ROUTES.STAFF_RESET_PASSWORD)}
                             className={`font-['Libre_Franklin'] text-sm font-normal text-white hover:text-purple-300 sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                         >
                             Forget password?
