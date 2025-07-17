@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const promotionSchema = new mongoose.Schema({
-  // PromotionCode (PK): Mã khuyến mãi mà người dùng sẽ nhập
+  // PromotionCode (PK): Promotion code that users will enter
   promotionCode: {
     type: String,
     required: true,
@@ -10,14 +10,14 @@ const promotionSchema = new mongoose.Schema({
     trim: true,
   },
 
-  // Name: Tên hoặc mô tả ngắn gọn của chương trình
+  // Name: Name or short description of the program
   name: {
     type: String,
     required: true,
     trim: true,
   },
 
-  // DiscountRate: Tỷ lệ hoặc số tiền giảm giá
+  // DiscountRate: Discount rate or discount amount
   discountRate: {
     type: Number,
     required: true,
@@ -26,36 +26,36 @@ const promotionSchema = new mongoose.Schema({
 
   maximumDiscount: {
     type: Number,
-    default: null, // Không giới hạn nếu không có giá trị
+    default: null, // No limit if no value
     min: 0
   },
 
   appliedProduct: {
-    type: String, // Lưu 'productType' (ví dụ: 'Movie', 'Snack')
-    enum: ['Movie', 'Snack'], // Chỉ áp dụng cho loại sản phẩm này
+    type: String, // Store 'productType' (example: 'Movie', 'Snack')
+    enum: ['Movie', 'Snack'], // Only applies to this product type
     required: true,
   },
 
   appliedLoyaltyRank: {
-    type: String, // Lưu 'rankName' của LoyaltyRank
-    enum: ['SILVER', 'GOLD', 'PLATINUM'], // Chỉ áp dụng cho hạng khách hàng này
-    default: null, // Không giới hạn nếu không có giá trị
+    type: String, // Store 'rankName' from LoyaltyRank
+    enum: ['SILVER', 'GOLD', 'PLATINUM'], // Only applies to this customer tier
+    default: null, // No limit if no value
   },
   
-  // RemainingUse: Số lượt sử dụng còn lại
+  // RemainingUse: Number of uses remaining
   remainingUse: {
       type: Number,
       default: null
   },
 
-  // MinimumSpend: Điều kiện chi tiêu tối thiểu để được áp dụng
+  // MinimumSpend: Minimum spending requirement to apply
   minimumSpend: {
     type: Number,
     required: true,
     default: 0
   },
 
-  // Ngày bắt đầu và kết thúc
+  // Start and end dates
   startDate: {
     type: Date,
     required: true,
@@ -65,7 +65,7 @@ const promotionSchema = new mongoose.Schema({
     required: true,
   },
 
-  // Trạng thái hoạt động
+  // Active status
   isActive: {
     type: Boolean,
     default: true
@@ -73,12 +73,12 @@ const promotionSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// Middleware để kiểm tra ngày tháng
+// Middleware to validate dates
 promotionSchema.pre('save', function(next) {
     if (this.endDate < this.startDate) {
         return next(new Error('The end date must be after the start date.'));
     }
-    // Logic kiểm tra discountRate dựa trên discountType
+    // Logic to validate discountRate based on discountType
     if (this.discountRate < 0 || this.discountRate > 100) {
         return next(new Error('The discount percentage must be between 0 and 100.'));
     }

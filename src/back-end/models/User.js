@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
 
     lunarPoints: { type: Number, default: 0 },
 
-    defaultDiscountRate: { type: Number, default: 0 }, // Giảm giá mặc định cho hạng này
+    defaultDiscountRate: { type: Number, default: 0 }, // Default discount rate for this tier
   },
 
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
@@ -69,7 +69,7 @@ userSchema.methods.addLunarPointsFromPurchase = function (amountInVND) {
   const pointsToAdd = Math.floor(amountInVND / 10000) * pointPer10k;
   this.loyaltyRank.lunarPoints += pointsToAdd;
 
-  // Cập nhật hạng nếu đủ điều kiện
+  // Update tier if qualified
   const newPoints = this.loyaltyRank.lunarPoints;
   if (newPoints >= 1500) {
     this.loyaltyRank.rank = 'PLATINUM';

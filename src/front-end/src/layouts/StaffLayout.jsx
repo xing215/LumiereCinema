@@ -19,14 +19,23 @@
  * </StaffLayout>
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StaffSidebar from '../components/display/staffSidebar.jsx';
 import { useUser } from '../contexts/UserContext.jsx';
 
 const StaffLayout = ({ children, theme = 'dark', showQuickActions = true, onItemClick = (item) => console.log('Clicked:', item.label), className = '', backgroundClass = 'bg-slate-950' }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    // Initialize sidebar state from localStorage or default to true (collapsed)
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        const savedState = localStorage.getItem('staffSidebarCollapsed');
+        return savedState !== null ? JSON.parse(savedState) : true;
+    });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { userRoles, userName } = useUser();
+
+    // Save sidebar state to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('staffSidebarCollapsed', JSON.stringify(isCollapsed));
+    }, [isCollapsed]);
 
     return (
         <div className={`flex h-screen w-screen ${backgroundClass}`}>
