@@ -10,7 +10,6 @@ const StaffSidebar = ({
     onItemClick = () => {},
     userRoles = ['none'], // Default to all roles
     currentUser = null,
-    showQuickActions = true,
     onMobileToggle = () => {},
 }) => {
     const navigate = useNavigate();

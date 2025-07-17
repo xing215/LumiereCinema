@@ -1,45 +1,45 @@
 /**
  * API Configuration for Lumiere Cinema
- *
+ * 
  * This module provides centralized API configuration and helper functions
  * for making HTTP requests to the backend API.
- *
+ * 
  * SETUP:
  * 1. Create a .env file in the root of your frontend project
  * 2. Add: VITE_API_BASE_URL=http://localhost:5000 (or your API domain)
  * 3. For production: VITE_API_BASE_URL=https://your-production-domain.com
- *
+ * 
  * BASIC USAGE:
- *
+ * 
  * import { getApiUrl } from '../config/api.config';
  * import axios from 'axios';
- *
+ * 
  * // Simple endpoint
  * axios.get(getApiUrl('branches'))
  * // → GET http://localhost:5000/api/reports/branches
- *
+ * 
  * // With parameters
  * axios.get(getApiUrl('revenueSummary'), { params: { startDate, endDate } })
  * // → GET http://localhost:5000/api/reports/revenue-summary?startDate=...&endDate=...
- *
+ * 
  * ADVANCED USAGE:
- *
+ * 
  * // Movie operations
  * axios.get(getMovieApiUrl('123')) // Get movie details
  * axios.get(getMovieApiUrl('123', 'showscreen')) // Get movie showtimes
  * axios.get(getMovieApiUrl('123', 'get-ratings')) // Get movie ratings
- *
+ * 
  * // Branch snack operations
  * axios.get(getBranchSnackApiUrl('branch123')) // Get all snacks for branch
  * axios.post(getBranchSnackApiUrl('branch123')) // Create snack for branch
  * axios.patch(getBranchSnackApiUrl('branch123', 'snack456')) // Update specific snack
- *
+ * 
  * // Ticket operations
  * axios.get(getApiUrl('getAllTickets')) // Get all tickets
  * axios.get(getTicketApiUrl('ABC123')) // Get specific ticket
- *
+ * 
  * EXPORTED FUNCTIONS:
- *
+ * 
  * - getApiUrl(endpointName): Get full URL for a simple endpoint
  * - getApiUrlWithParams(endpointName, params): Get URL with parameter replacement
  * - getMovieApiUrl(movieId, operation): Helper for movie-related endpoints
@@ -51,46 +51,46 @@
 
 // API configuration
 const API_CONFIG = {
-    // Base URL for the API - can be overridden by environment variables
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
-
-    // API endpoints
-    endpoints: {
-        // Auth endpoints
-        login: '/api/auth/login',
-        register: '/api/auth/register',
-        logout: '/api/auth/logout',
-        changePassword: '/api/auth/change-password',
-
-        // Movie endpoints
-        nowShowingMovies: '/api/movies/now-showing',
-        upcomingMovies: '/api/movies/upcoming',
-        searchMovies: '/api/movies/search',
-        allMovies: '/api/movies/all', // Admin only
-        movieDetails: '/api/movies', // + /:movieId
-        movieShowtimes: '/api/movies', // + /:movieId/showscreen
-        movieRatings: '/api/movies', // + /:movieId/get-ratings
-        addMovie: '/api/movies', // POST
-        updateMovie: '/api/movies', // PUT/PATCH + /:movieId
-        deleteMovie: '/api/movies', // DELETE + /:movieId
-
-        // Report endpoints
-        branches: '/api/reports/branches',
-        revenueSummary: '/api/reports/revenue-summary',
-
-        // Branch endpoints (snack management)
-        getSnacks: '/api/branches', // + /:branchId/snacks
-        createSnack: '/api/branches', // POST + /:branchId/snacks
-        editSnack: '/api/branches', // PATCH + /:branchId/snacks/:snackId
-        deleteSnack: '/api/branches', // DELETE + /:branchId/snacks/:snackId
-
-        // Ticket endpoints
-        createTicket: '/api/tickets/snacks',
-        getAllTickets: '/api/tickets/snacks/admin/all',
-        getTicketByCode: '/api/tickets/snacks/admin', // + /:ticketCode
-        updateTicket: '/api/tickets/snacks/admin', // PATCH + /:ticketCode
-        deleteTicket: '/api/tickets/snacks/admin', // DELETE + /:ticketCode
-    },
+  // Base URL for the API - can be overridden by environment variables
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  
+  // API endpoints
+  endpoints: {
+    // Auth endpoints
+    login: '/api/auth/login',
+    register: '/api/auth/register',
+    logout: '/api/auth/logout',
+    changePassword: '/api/auth/change-password',
+    
+    // Movie endpoints
+    nowShowingMovies: '/api/movies/now-showing',
+    upcomingMovies: '/api/movies/upcoming',
+    searchMovies: '/api/movies/search',
+    allMovies: '/api/movies/all', // Admin only
+    movieDetails: '/api/movies', // + /:movieId
+    movieShowtimes: '/api/movies', // + /:movieId/showscreen
+    movieRatings: '/api/movies', // + /:movieId/get-ratings
+    addMovie: '/api/movies', // POST
+    updateMovie: '/api/movies', // PUT/PATCH + /:movieId
+    deleteMovie: '/api/movies', // DELETE + /:movieId
+    
+    // Report endpoints
+    branches: '/api/reports/branches',
+    revenueSummary: '/api/reports/revenue-summary',
+    
+    // Branch endpoints (snack management)
+    getSnacks: '/api/branches', // + /:branchId/snacks
+    createSnack: '/api/branches', // POST + /:branchId/snacks
+    editSnack: '/api/branches', // PATCH + /:branchId/snacks/:snackId
+    deleteSnack: '/api/branches', // DELETE + /:branchId/snacks/:snackId
+    
+    // Ticket endpoints
+    createTicket: '/api/tickets/snacks',
+    getAllTickets: '/api/tickets/snacks/admin/all',
+    getTicketByCode: '/api/tickets/snacks/admin', // + /:ticketCode
+    updateTicket: '/api/tickets/snacks/admin', // PATCH + /:ticketCode
+    deleteTicket: '/api/tickets/snacks/admin', // DELETE + /:ticketCode
+  }
 };
 
 /**
@@ -101,7 +101,7 @@ const API_CONFIG = {
  * buildApiUrl('/api/movies') // → 'http://localhost:5000/api/movies'
  */
 export const buildApiUrl = (endpoint) => {
-    return `${API_CONFIG.baseURL}${endpoint}`;
+  return `${API_CONFIG.baseURL}${endpoint}`;
 };
 
 /**
@@ -112,7 +112,7 @@ export const buildApiUrl = (endpoint) => {
  * getEndpoint('branches') // → '/api/reports/branches'
  */
 export const getEndpoint = (name) => {
-    return API_CONFIG.endpoints[name] || '';
+  return API_CONFIG.endpoints[name] || '';
 };
 
 /**
@@ -124,8 +124,8 @@ export const getEndpoint = (name) => {
  * getApiUrl('login') // → 'http://localhost:5000/api/auth/login'
  */
 export const getApiUrl = (endpointName) => {
-    const endpoint = getEndpoint(endpointName);
-    return buildApiUrl(endpoint);
+  const endpoint = getEndpoint(endpointName);
+  return buildApiUrl(endpoint);
 };
 
 /**
@@ -134,19 +134,19 @@ export const getApiUrl = (endpointName) => {
  * @param {Object} params - Key-value pairs to replace in URL (e.g., {movieId: '123'})
  * @returns {string} Full URL with parameters replaced
  * @example
- * getApiUrlWithParams('movieDetails', {movieId: '123'})
+ * getApiUrlWithParams('movieDetails', {movieId: '123'}) 
  * // → 'http://localhost:5000/api/movies/123'
  */
 export const getApiUrlWithParams = (endpointName, params = {}) => {
-    const endpoint = getEndpoint(endpointName);
-    let url = buildApiUrl(endpoint);
-
-    // Replace parameters in URL
-    Object.entries(params).forEach(([key, value]) => {
-        url = url.replace(`:${key}`, value);
-    });
-
-    return url;
+  const endpoint = getEndpoint(endpointName);
+  let url = buildApiUrl(endpoint);
+  
+  // Replace parameters in URL
+  Object.entries(params).forEach(([key, value]) => {
+    url = url.replace(`:${key}`, value);
+  });
+  
+  return url;
 };
 
 /**
@@ -160,11 +160,11 @@ export const getApiUrlWithParams = (endpointName, params = {}) => {
  * getMovieApiUrl('123', 'get-ratings') // → 'http://localhost:5000/api/movies/123/get-ratings'
  */
 export const getMovieApiUrl = (movieId, operation = '') => {
-    const baseUrl = getApiUrl('movieDetails');
-    if (operation) {
-        return `${baseUrl}/${movieId}/${operation}`;
-    }
-    return `${baseUrl}/${movieId}`;
+  const baseUrl = getApiUrl('movieDetails');
+  if (operation) {
+    return `${baseUrl}/${movieId}/${operation}`;
+  }
+  return `${baseUrl}/${movieId}`;
 };
 
 /**
@@ -177,11 +177,11 @@ export const getMovieApiUrl = (movieId, operation = '') => {
  * getBranchSnackApiUrl('branch123', 'snack456') // → 'http://localhost:5000/api/branches/branch123/snacks/snack456'
  */
 export const getBranchSnackApiUrl = (branchId, snackId = '') => {
-    const baseUrl = getApiUrl('getSnacks');
-    if (snackId) {
-        return `${baseUrl}/${branchId}/snacks/${snackId}`;
-    }
-    return `${baseUrl}/${branchId}/snacks`;
+  const baseUrl = getApiUrl('getSnacks');
+  if (snackId) {
+    return `${baseUrl}/${branchId}/snacks/${snackId}`;
+  }
+  return `${baseUrl}/${branchId}/snacks`;
 };
 
 /**
@@ -193,11 +193,11 @@ export const getBranchSnackApiUrl = (branchId, snackId = '') => {
  * getTicketApiUrl('ABC123') // → 'http://localhost:5000/api/tickets/snacks/admin/ABC123'
  */
 export const getTicketApiUrl = (ticketCode = '') => {
-    const baseUrl = getApiUrl('getTicketByCode');
-    if (ticketCode) {
-        return `${baseUrl}/${ticketCode}`;
-    }
-    return baseUrl;
+  const baseUrl = getApiUrl('getTicketByCode');
+  if (ticketCode) {
+    return `${baseUrl}/${ticketCode}`;
+  }
+  return baseUrl;
 };
 
 export default API_CONFIG;
