@@ -53,7 +53,8 @@ scheduleSchema.pre('save', async function(next) {
 // Indexes để đảm bảo không trùng lịch và tăng tốc truy vấn
 scheduleSchema.index({ screen: 1, startTime: 1 }, { unique: true });
 scheduleSchema.index({ movie: 1, startTime: 1 });
-
+// Index để query seat availability nhanh
+scheduleSchema.index({ 'OccupiedSeat.seatNumber': 1 });
 
 // Tên model được đổi thành "Schedule" để đồng bộ
 module.exports = mongoose.model('Schedule', scheduleSchema);
