@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SearchButton from '../../components/buttons/Staff/SearchButton.jsx';
-import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
-import ManageTable from '../../components/UI/ManageTable.jsx';
-import DeleteButton from '../../components/buttons/Staff/DeleteButton.jsx';
-import DownloadTemplateButton from "../../components/buttons/Staff/DownloadTemplateButton.jsx";
-import UploadCSVButton from "../../components/buttons/Staff/uploadCsvButton.jsx";
-import AddButton from "../../components/buttons/Staff/AddButton.jsx";
+import React, { useState, useEffect } from 'react';
+import StaffLayout from '@layouts/StaffLayout';
+import MobileNotSupported from '@components/display/MobileNotSupported';
+import SearchButton from '@components/buttons/Staff/SearchButton';
+import ConfirmationModal from '@components/display/Modal/Confirmation';
+import ManageTable from '@components/UI/ManageTable';
+import DeleteButton from '@components/buttons/Staff/DeleteButton';
+import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton';
+import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton';
+import AddButton from '@components/buttons/Staff/AddButton';
+import { useGetMovies, useRemoveMovie } from '@hooks/useAdmin';
 
 const IntegratedButton = () => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-1/20">
@@ -20,14 +21,49 @@ const IntegratedButton = () => (
 )
 
 const MovieManagePage = () => {
+    const { getMovies, movies, loading } = useGetMovies();
+    const { removeMovie, loading: removeLoading } = useRemoveMovie();
+    
     const [tickedMovies, setTickedMovies] = useState(new Set());
-    const [movieRows, setMovieRows] = useState(Array.from({ length: 10 }, () => ['TickButton', '001', 'Thám tử lừng danh Conan', 'Thám Tử Lừng Danh Conan (Detective Conan) là bộ manga trinh thám nổi tiếng của tác giả Gosho Aoyama, lần đầu ra mắt vào năm 1994.', '06/05/2025', 'Detective', '120', '5000', '12', '100', 'ActiveButton', 'PreviewButton']));
     const [showConfirmDeletePromotion, setShowConfirmDeletePromotion] = useState(false);
 
-    const handleDelete = () => {
-        setMovieRows((prev) => prev.filter((_, index) => !tickedMovies.has(index)));
-        setTickedMovies(new Set());
-        setShowConfirmDeletePromotion(false);
+    // Load movies on component mount
+    useEffect(() => {
+        getMovies();
+    }, []);
+
+    // Transform movies data to table format
+    const movieRows = movies?.map(movie => [
+        'TickButton',
+        movie.id,
+        movie.title || movie.name,
+        movie.description,
+        movie.releaseDate || movie.showing,
+        movie.genre,
+        movie.duration,
+        movie.audienceType || movie.audience,
+        movie.trailerUrl || 'trailer',
+        movie.posterUrl || 'poster',
+        'ActiveButton',
+        'PreviewButton'
+    ]) || [];
+
+    const handleDelete = async () => {
+        const selectedMovieIds = Array.from(tickedMovies).map(index => movieRows[index][1]);
+        
+        try {
+            // Delete each selected movie
+            for (const movieId of selectedMovieIds) {
+                await removeMovie(movieId);
+            }
+            
+            // Refresh the movie list
+            await getMovies();
+            setTickedMovies(new Set());
+            setShowConfirmDeletePromotion(false);
+        } catch (error) {
+            console.error('Failed to delete movies:', error);
+        }
     };
 
     const header = ['TickButton', 'ID', 'Name', 'Description', 'Showing', 'Genre', 'Duration', 'Audience', 'Trailer', 'Poster', 'ActiveButton', 'PreviewButton'];
@@ -52,15 +88,35 @@ const MovieManagePage = () => {
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton />
-                {tickedMovies.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeletePromotion(true)} /> : <IntegratedButton />}
-                {showConfirmDeletePromotion && <ConfirmationModal item={tickedMovies.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeletePromotion(false)} />}
-                <ManageTable
-                    data={movieRows}
-                    anyTicked={tickedMovies}
-                    setTickedRows={setTickedMovies}
-                    header={header}
-                    columnConfig={movieColumnConfig}
-                />
+                {tickedMovies.size > 0 ? (
+                    <DeleteButton 
+                        onClicked={() => setShowConfirmDeletePromotion(true)} 
+                        disabled={removeLoading}
+                    />
+                ) : (
+                    <IntegratedButton />
+                )}
+                {showConfirmDeletePromotion && (
+                    <ConfirmationModal 
+                        item={tickedMovies.size} 
+                        handleDelete={handleDelete} 
+                        onClose={() => setShowConfirmDeletePromotion(false)}
+                        loading={removeLoading}
+                    />
+                )}
+                {loading ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-2xl font-['Unbounded'] text-black">Loading movies...</div>
+                    </div>
+                ) : (
+                    <ManageTable
+                        data={movieRows}
+                        anyTicked={tickedMovies}
+                        setTickedRows={setTickedMovies}
+                        header={header}
+                        columnConfig={movieColumnConfig}
+                    />
+                )}
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Movies</div>
                 <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
                 <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />

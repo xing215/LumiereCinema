@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext.jsx';
-import { ROUTES } from '../../routes/routeConfig.js';
-import { authAPI, validatePassword, formatPasswordErrors } from '../../utils/auth.utils.js';
-import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
-import ShowIcon from '../../assets/icons/show.svg';
-import HideIcon from '../../assets/icons/hide.svg';
+import { useUser } from '@contexts/UserContext';
+import { useRegister } from '@hooks/useAuth';
+import { ROUTES } from '@routes/routeConfig';
+import { validatePassword, formatPasswordErrors } from '@/utils/auth.utils';
+import CustomDropdown from '@components/UI/CustomDropdown';
+import ShowIcon from '@assets/icons/show.svg';
+import HideIcon from '@assets/icons/hide.svg';
 
 const RegistrationForm = () => {
     const navigate = useNavigate();
     const { login } = useUser();
+    const { registerUser, loading, error } = useRegister();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -24,8 +26,6 @@ const RegistrationForm = () => {
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
     const [showRetypePassword, setShowRetypePassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState('');
 
     // Validation patterns
     const patterns = {
@@ -94,9 +94,6 @@ const RegistrationForm = () => {
             [name]: value,
         }));
 
-        // Clear any previous error message
-        setMessage('');
-
         // Real-time validation
         const error = validateField(name, value);
         setErrors((prev) => ({
@@ -116,8 +113,6 @@ const RegistrationForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        setMessage('');
 
         // Validate all fields before submit
         const newErrors = {};
@@ -128,36 +123,27 @@ const RegistrationForm = () => {
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            setIsLoading(false);
             return;
         }
 
-        try {
-            // Prepare data for API (match backend field names)
-            const registrationData = {
-                name: formData.name,
-                email: formData.email,
-                password: formData.password,
-                retypePassword: formData.retypePassword,
-                phone: formData.phone,
-                birthday: formData.birthday,
-                gender: formData.gender,
-            };
+        // Prepare data for API (match backend field names)
+        const registrationData = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            retypePassword: formData.retypePassword,
+            phone: formData.phone,
+            birthday: formData.birthday,
+            gender: formData.gender,
+        };
 
-            const response = await authAPI.register(registrationData);
-            
-            // Auto-login user after successful registration
-            login(response.user, response.token);
-            
-            // Navigate to homepage or profile
-            navigate(ROUTES.HOME);
-            
-        } catch (error) {
-            console.error('Registration error:', error);
-            setMessage(error.response?.data?.message || 'Registration failed. Please try again.');
-        } finally {
-            setIsLoading(false);
+        const result = await registerUser(registrationData);
+        
+        if (result.success) {
+            // Navigate to login page or homepage
+            navigate(ROUTES.LOGIN);
         }
+        // Error is handled by the hook and displayed below
     };
 
     return (
@@ -168,7 +154,7 @@ const RegistrationForm = () => {
             {/* Login Link */}
             <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
                 Already have an account?
-                <span onClick={() => !isLoading && navigate(ROUTES.LOGIN)} className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                <span onClick={() => !loading && navigate(ROUTES.LOGIN)} className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     Login
                 </span>
             </p>
@@ -176,9 +162,9 @@ const RegistrationForm = () => {
             {/* Registration Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
                 {/* Error Message */}
-                {message && (
+                {error && (
                     <div className="rounded-md bg-red-100 p-3 text-center">
-                        <p className="font-['Libre_Franklin'] text-sm text-red-800">{message}</p>
+                        <p className="font-['Libre_Franklin'] text-sm text-red-800">{error}</p>
                     </div>
                 )}
                 {/* Name */}
@@ -311,10 +297,10 @@ const RegistrationForm = () => {
                 <div className="flex justify-center pt-4 sm:pt-6">
                     <button
                         type="submit"
-                        disabled={isLoading}
-                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+                        disabled={loading}
+                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
-                        {isLoading ? 'REGISTERING...' : 'REGISTER'}
+                        {loading ? 'REGISTERING...' : 'REGISTER'}
                     </button>
                 </div>
             </form>
