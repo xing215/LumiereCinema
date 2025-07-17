@@ -1,5 +1,8 @@
 const Branch = require('../models/Branch.js');
 const Snack = require('../models/Snack.js');
+const Schedule = require('../models/Schedule.js');
+const Seat = require('../models/Seat.js');// để hàm getOccupiedSeats dùng .populate('OccupiedSeat.seat')
+const Ticket = require('../models/Ticket.js'); // để hàm getOccupiedSeats dùng .populate('OccupiedSeat.ticket')
 const { redisClient } = require('../config/redis.config.js');
 
 const DEFAULT_EXPIRATION = 600; // Cache 10 phút
@@ -174,9 +177,34 @@ const getSnackList = async (req, res) => {
     }
 };
 
+// Lấy danh sách các ghế đã được đặt của 1 schedule
+const getOccupiedSeats = async (req, res) => {
+  try {
+    const {branchId, scheduleId } = req.params;
+
+    // Kiểm tra xem branchId có hợp lệ không
+    const branch = await Branch.findById(branchId);
+    if (!branch) { 
+      return res.status(404).json({ message: 'Branch not found.' });
+    }
+
+    // Tìm lịch chiếu theo ID
+    const schedule = await Schedule.findById(scheduleId).populate('OccupiedSeat.seat').populate('OccupiedSeat.ticket');
+    if (!schedule) {
+      return res.status(404).json({ message: 'Schedule not found.' });
+    }
+    // Trả về danh sách ghế đã đặt
+    res.status(200).json(schedule.OccupiedSeat);
+  } catch (error) {
+    console.error('Get Occupied Seats Error:', error);
+    res.status(500).json({ message: 'Failed to fetch occupied seats.' });
+  }
+};
+
 module.exports = {
   createSnack,
   editSnack,
   deleteSnack,
-  getSnackList
+  getSnackList,
+  getOccupiedSeats,
 };

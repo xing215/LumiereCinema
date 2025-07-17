@@ -31,8 +31,8 @@ const promotionSchema = new mongoose.Schema({
   },
 
   appliedProduct: {
-    type: String, // Lưu 'productType' (ví dụ: 'Movie', 'Snack')
-    enum: ['Movie', 'Snack'], // Chỉ áp dụng cho loại sản phẩm này
+    type: String, // Lưu 'productType' (ví dụ: 'Movie', 'Snack', 'All')
+    enum: ['Movie', 'Snack', 'All'], // Chỉ áp dụng cho loại sản phẩm này
     required: true,
   },
 
@@ -58,11 +58,13 @@ const promotionSchema = new mongoose.Schema({
   // Ngày bắt đầu và kết thúc
   startDate: {
     type: Date,
-    required: true,
+    //required: true,
+    default: null
   },
   endDate: {
     type: Date,
-    required: true,
+    //required: true,
+    default: null
   },
 
   // Trạng thái hoạt động
