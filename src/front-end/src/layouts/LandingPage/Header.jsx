@@ -5,6 +5,7 @@ import { authAPI } from '../../utils/auth.utils.js';
 import NavButton from '../../components/buttons/header/navButton.jsx';
 import SearchButton from '../../components/buttons/searchButton.jsx';
 import Logo from '../../components/buttons/logoButton.jsx';
+import { LogOut } from 'lucide-react';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -21,13 +22,27 @@ const Header = () => {
         }
     };
 
-    const handleAuthClick = () => {
+    const handleAccountClick = () => {
         if (isAuthenticated) {
-            handleLogout();
+            // Temporarily navigate to '#' as requested
+            navigate('#');
         } else {
             navigate('/login');
         }
     };
+
+    const LogoutButton = () => (
+        <div className="z-50 flex h-[36px] w-auto -translate-y-1 items-center">
+            <div className="h-full w-[5px] md:w-[10px] lg:w-[15px]" />
+            <button 
+                className="h-[25px] w-[12px] hover:cursor-pointer md:h-[30px] md:w-[15px] lg:h-[40px] lg:w-[25px] xl:h-[45px] xl:w-[30px]" 
+                aria-label="Logout"
+                onClick={handleLogout}
+            >
+                <LogOut className="h-full w-full text-white" strokeWidth={4} />
+            </button>
+        </div>
+    );
 
     return (
         <header className="bg-opacity-100 no-scrollbar fixed top-0 z-100 w-screen overflow-y-visible bg-transparent">
@@ -38,10 +53,11 @@ const Header = () => {
                 <NavButton name="Buy Tickets" />
                 <NavButton name="Buy Snacks" />
                 <NavButton 
-                    name={isAuthenticated ? `${user?.name || 'User'} | Logout` : 'Login/Register'} 
-                    onClick={handleAuthClick}
+                    name={isAuthenticated ? 'Account' : 'Login/Register'} 
+                    onClick={handleAccountClick}
                 />
                 <SearchButton />
+                {isAuthenticated && <LogoutButton />}
             </div>
         </header>
     );
