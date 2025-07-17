@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext.jsx';
-import { ROUTES } from '../routes/routeConfig.js';
-import Header from '../layouts/LandingPage/Header.jsx';
-import LoginForm from '../layouts/Login/LoginForm.jsx';
-import ChatBot from '../components/display/ChatBot.jsx';
-import Footer from '../layouts/LandingPage/Footer.jsx';
+import { useUser } from '@contexts/UserContext';
+import { ROUTES } from '@/routes/routeConfig';
+import Header from '@layouts/LandingPage/Header';
+import LoginForm from '@layouts/Login/LoginForm';
+import ChatBot from '@components/display/ChatBot';
+import Footer from '@layouts/LandingPage/Footer';
 
 const Login = () => {
     const navigate = useNavigate();

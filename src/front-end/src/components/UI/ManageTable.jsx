@@ -1,7 +1,24 @@
 import { useRef, useEffect, useState } from 'react';
 import RowTemplate from './ManageTable/RowTemplate.jsx';
 
-const ManageTable = ({ data, anyTicked, setTickedRows, onEdit, onEditSeat, header, columnConfig }) => {
+const ManageTable = ({ 
+    data, 
+    anyTicked, 
+    setTickedRows, 
+    onEdit, 
+    onEditSeat, 
+    header, 
+    columnConfig,
+    // Inline editing props
+    editableFields,
+    editingCell,
+    onStartEdit,
+    onSaveEdit,
+    onCancelEdit,
+    isUpdating,
+    // Status change prop
+    onStatusChange
+}) => {
     const headerScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
     const [expandedRow, setExpandedRow] = useState(null); // Track row nào đang expanded
@@ -92,6 +109,15 @@ const ManageTable = ({ data, anyTicked, setTickedRows, onEdit, onEditSeat, heade
                             columnConfig={columnConfig}
                             isExpanded={expandedRow === index}
                             onRowClick={() => handleRowClick(index)}
+                            // Inline editing props
+                            editableFields={editableFields}
+                            editingCell={editingCell}
+                            onStartEdit={onStartEdit}
+                            onSaveEdit={onSaveEdit}
+                            onCancelEdit={onCancelEdit}
+                            isUpdating={isUpdating}
+                            // Status change prop
+                            onStatusChange={onStatusChange}
                         />
                     ))}
                 </div>
