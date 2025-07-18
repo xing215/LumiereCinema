@@ -39,5 +39,10 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server đang chạy tại cổng ${PORT}`));
+// Uncomment the following lines if you want to run the server locally
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`Server đang chạy tại cổng ${PORT}`));
+
+// For Vercel deployment, we need to export the app
+// Comment this line if you want to run the server locally
+module.exports = app;
