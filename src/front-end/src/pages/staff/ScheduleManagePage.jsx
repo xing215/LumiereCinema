@@ -1,10 +1,10 @@
-import UploadCSVButton from '../../components/buttons/Staff/uploadCsvButton.jsx';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SelectBranchButton from '../../components/buttons/Staff/SelectBranch.jsx';
-import DownloadTemplateButton from '../../components/buttons/Staff/DownloadTemplateButton.jsx';
-import DateChosenButton from "../../components/buttons/Staff/DateChosenButton.jsx";
-import AddButton from "../../components/buttons/Staff/AddButton.jsx";
+import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
+import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
+import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
+import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton.jsx';
+import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
+import AddButton from "@components/buttons/Staff/AddButton.jsx";
 
 const Schedule = () => {
     return (

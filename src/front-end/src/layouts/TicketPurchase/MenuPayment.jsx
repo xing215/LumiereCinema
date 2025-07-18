@@ -1,6 +1,6 @@
-import TicketDetail from '../../components/UI/TicketDetail';
-import NextNaviButton, { BackNaviButton } from '../../components/buttons/NaviButton';
-import CustomDropdown from '../../components/UI/customdropdown';
+import TicketDetail from '@components/UI/TicketDetail';
+import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
+import CustomDropdown from '@components/UI/CustomDropdown.jsx';
 import { useState } from 'react';
 
 const PaymentButton = ({ text, onClick }) => (

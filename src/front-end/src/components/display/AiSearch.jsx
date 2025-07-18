@@ -1,4 +1,4 @@
-import ChatbotIcon from '../../assets/img/Chatbot-Icon.svg';
+import ChatbotIcon from '@assets/img/Chatbot-Icon.svg';
 
 const Icon = () => {
     return (

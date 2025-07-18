@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext.jsx';
-import { ROUTES } from '../../routes/routeConfig.js';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
 
 const StaffRoot = () => {
     const navigate = useNavigate();

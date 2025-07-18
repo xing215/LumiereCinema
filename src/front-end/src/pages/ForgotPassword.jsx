@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext.jsx';
-import { ROUTES } from '../routes/routeConfig.js';
-import { authAPI } from '../utils/auth.utils.js';
-import Header from '../layouts/LandingPage/Header.jsx';
-import ChatBot from '../components/display/ChatBot.jsx';
-import BackwardButton from '../components/buttons/backwardButton.jsx';
-import Footer from '../layouts/LandingPage/Footer.jsx';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
+import { authAPI } from '@utils/auth.utils.js';
+import Header from '@layouts/LandingPage/Header.jsx';
+import ChatBot from '@components/display/ChatBot.jsx';
+import BackwardButton from '@components/buttons/backwardButton.jsx';
+import Footer from '@layouts/LandingPage/Footer.jsx';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import NowShowingMovieFrame from './NowShowingFrame/NowShowingMovieFrame.jsx';
-import SeeMoreButton from '../../components/buttons/seeMoreButton.jsx';
+import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 
 const Label = () => {
     return (

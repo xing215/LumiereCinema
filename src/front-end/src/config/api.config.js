@@ -11,7 +11,7 @@
  * 
  * BASIC USAGE:
  * 
- * import { getApiUrl } from '../config/api.config';
+ * import { getApiUrl } from '@config/api.config';
  * import axios from 'axios';
  * 
  * // Simple endpoint

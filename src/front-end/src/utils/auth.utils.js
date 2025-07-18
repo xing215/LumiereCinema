@@ -1,6 +1,3 @@
-
-
-
 // Helper functions for password validation
 export const validatePassword = (password) => {
     const errors = [];

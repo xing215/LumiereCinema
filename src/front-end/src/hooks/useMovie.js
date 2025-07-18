@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { getApiUrl, getMovieApiUrl } from '@config/api.config';
-import { useUser } from '@contexts/UserContext';
 
 /**
  * Movie logic hooks for handling movie-related operations

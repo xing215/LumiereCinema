@@ -1,9 +1,9 @@
 import React from 'react';
-import TickButton from '../../buttons/Staff/TickButton.jsx';
-import ActiveButton from '../../buttons/Staff/ActiveButton.jsx';
-import EditButton from '../../buttons/Staff/EditButton.jsx';
-import PreviewButton from "../../buttons/Staff/PreviewButton.jsx";
-import EditableCell from '../EditableCell.jsx';
+import TickButton from '@components/buttons/Staff/TickButton.jsx';
+import ActiveButton from '@components/buttons/Staff/ActiveButton.jsx';
+import EditButton from '@components/buttons/Staff/EditButton.jsx';
+import PreviewButton from "@components/buttons/Staff/PreviewButton.jsx";
+import EditableCell from '@components/UI/EditableCell.jsx';
 
 const RowTemplate = (props) => {
     // Check nếu có columnConfig hay không

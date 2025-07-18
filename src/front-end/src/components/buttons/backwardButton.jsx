@@ -1,5 +1,5 @@
-import backAndForwardButton from '../../assets/img/backAndForwardButton.png';
-import ArrowBackwardButton from '../../assets/img/backwardButton.svg';
+import backAndForwardButton from '@assets/img/backAndForwardButton.png';
+import ArrowBackwardButton from '@assets/img/backwardButton.svg';
 
 const backwardButton = ({ onClick, position = 'absolute' }) => {
     const positionClass = position === 'absolute' ? 'absolute z-50 xl:left-8 lg:left-6 sm:left-3 left-0 top-1/2 -translate-y-1/2' : 'relative z-50';

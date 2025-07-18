@@ -1,8 +1,7 @@
-import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext.jsx';
-import ProtectedRoute from '../components/ProtectedRoute.jsx';
-import { hasRequiredRole, isStaff, isCustomer } from './routeConfig.js';
+import { useUser } from '@contexts/UserContext.jsx';
+import ProtectedRoute from '@components/ProtectedRoute.jsx';
+import { hasRequiredRole, isStaff, isCustomer } from '@routes/routeConfig.js';
 
 const SmartRoute = ({ route, children }) => {
     const { isAuthenticated, isLoading, user } = useUser();

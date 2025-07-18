@@ -1,5 +1,5 @@
-import backAndForwardButton from '../../assets/img/backAndForwardButton.png';
-import ArrowForwardButton from '../../assets/img/forwardButton.svg';
+import backAndForwardButton from '@assets/img/backAndForwardButton.png';
+import ArrowForwardButton from '@assets/img/forwardButton.svg';
 
 const forwardButton = () => {
     return (

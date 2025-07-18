@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { authAPI } from '../../utils/auth.utils.js';
+import { authAPI } from '@utils/auth.utils.js';
 
 const ResetPwdForm = () => {
     const [formData, setFormData] = useState({

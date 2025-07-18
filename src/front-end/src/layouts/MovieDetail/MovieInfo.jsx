@@ -1,7 +1,7 @@
-import BuyATicketButton from '../../components/buttons/buyATicketButton.jsx';
-import Poster from '../../assets/sample/ThamTuKien.jpg';
-import Rating from '../../components/display/Rating.jsx';
-import WishlistButton from '../../components/buttons/wishlistButton.jsx';
+import BuyATicketButton from '@components/buttons/buyATicketButton.jsx';
+import Poster from '@assets/sample/ThamTuKien.jpg';
+import Rating from '@components/display/Rating.jsx';
+import WishlistButton from '@components/buttons/wishlistButton.jsx';
 
 const Description = ({ scripts }) => {
     return (

@@ -1,4 +1,4 @@
-import IntegratedMap from '../../components/display/IntegratedMap.jsx';
+import IntegratedMap from '@components/display/IntegratedMap.jsx';
 
 const Label = () => {
     return (

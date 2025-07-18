@@ -1,4 +1,4 @@
-import DropdownArrow from '../../assets/img/DropdownArrow.svg';
+import DropdownArrow from '@assets/img/DropdownArrow.svg';
 
 const movieStatusButton = () => {
     return (

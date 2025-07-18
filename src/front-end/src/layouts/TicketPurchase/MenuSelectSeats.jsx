@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import BPoster from '../../components/UI/BPoster';
-import NextNaviButton, { BackNaviButton } from '../../components/buttons/NaviButton';
-import TicketSelect from '../../components/UI/TicketSelect';
-import Seat from '../../components/UI/Seat';
-import SeatLayout from '../../components/display/Seats';
+import BPoster from '@components/UI/BPoster';
+import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
+import TicketSelect from '@components/UI/TicketSelect';
+import Seat from '@components/UI/Seat';
+import SeatLayout from '@components/display/Seats';
 
 const SeatName = ({ type, text }) => (
     <div className="flex w-auto flex-row items-center justify-start gap-3">

@@ -1,6 +1,6 @@
-import ScreenIcon from '../../assets/img/Screen.svg';
-import Seat from '../UI/Seat.jsx';
-import CoupleSeat from '../UI/CoupleSeat.jsx';
+import ScreenIcon from '@assets/img/Screen.svg';
+import Seat from '@components/UI/Seat.jsx';
+import CoupleSeat from '@components/UI/CoupleSeat.jsx';
 
 const SeatLayout = (props) => {
     return (

@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SearchButton from '../../components/buttons/Staff/SearchButton.jsx';
-import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
-import ManageTable from '../../components/UI/ManageTable.jsx';
-import EditAccountInformationModal from '../../components/display/Modal/EditAccountInformationModal.jsx';
-import DeleteButton from '../../components/buttons/Staff/DeleteButton.jsx';
-import AddButton from '../../components/buttons/Staff/AddButton.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
+import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
+import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
+import ConfirmationModal from '@components/display/Modal/Confirmation.jsx';
+import ManageTable from '@components/UI/ManageTable.jsx';
+import EditAccountInformationModal from '@components/display/Modal/EditAccountInformationModal.jsx';
+import DeleteButton from '@components/buttons/Staff/DeleteButton.jsx';
+import AddButton from '@components/buttons/Staff/AddButton.jsx';
 
 const AccountManagePage = () => {
     const [tickedAccounts, setTickedAccounts] = useState(new Set());

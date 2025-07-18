@@ -1,4 +1,4 @@
-import logo from '../../assets/img/Logo.svg';
+import logo from '@assets/img/Logo.svg';
 const Logo = () => {
     return (
         <div className="relative z-100 flex h-auto w-auto -translate-y-1">

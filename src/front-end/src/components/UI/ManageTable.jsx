@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import RowTemplate from './ManageTable/RowTemplate.jsx';
+import RowTemplate from '@components/UI/ManageTable/RowTemplate.jsx';
 
 const ManageTable = ({ 
     data, 
