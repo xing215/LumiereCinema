@@ -82,6 +82,7 @@ export const useLogout = () => {
   return { logoutUser, loading };
 };
 
+
 export const useResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -91,13 +92,37 @@ export const useResetPassword = () => {
     setLoading(true);
     setError(null);
     setSuccess(false);
-    
     try {
       const response = await axios.post(getApiUrl('forgotPassword'), { email });
       setSuccess(true);
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Password reset request failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { resetPassword, loading, error, success };
+};
+
+export const useStaffResetPassword = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const resetPassword = async (email) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const response = await axios.post(getApiUrl('staffForgotPassword'), { email });
+      setSuccess(true);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Staff password reset request failed';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
