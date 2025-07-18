@@ -25,7 +25,11 @@ connectRedis();
 const app = express();
 
 // 4. Use common middleware
-app.use(cors());
+const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+app.use(cors({
+  origin: allowedOrigin,
+  credentials: true
+}));
 app.use(express.json());
 
 // 5. Sử dụng các router
