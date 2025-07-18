@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
-import { authAPI } from '@utils/auth.utils.js';
+import { useResetPassword } from '@hooks/useAuth';
 import Header from '@layouts/LandingPage/Header.jsx';
 import ChatBot from '@components/display/ChatBot.jsx';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
@@ -13,6 +13,7 @@ const ForgotPassword = () => {
     const { isAuthenticated, isLoading: authLoading } = useUser();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const { resetPassword } = useResetPassword();
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
     const [errors, setErrors] = useState({});
@@ -56,12 +57,12 @@ const ForgotPassword = () => {
         }
 
         try {
-            const response = await authAPI.forgotPassword(email);
-            setMessage(response.message);
-            setIsSuccess(true);
+            const response = await resetPassword(email);
+            setMessage(response.data?.message || 'Email sent successfully.');
+            setIsSuccess(response.success);
         } catch (error) {
             console.error('Forgot password error:', error);
-            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+            setMessage(error?.error || 'An error occurred. Please try again.');
             setIsSuccess(false);
         } finally {
             setIsLoading(false);

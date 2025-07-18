@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
-import { authAPI } from '@hooks/useAuth.js';
+import { useLogout } from '@hooks/useAuth';
 import NavButton from '@components/buttons/header/navButton.jsx';
 import SearchButton from '@components/buttons/searchButton.jsx';
 import Logo from '@components/buttons/logoButton.jsx';
@@ -11,10 +11,11 @@ import { LogOut } from 'lucide-react';
 const Header = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useUser();
+    const { logoutUser, loading } = useLogout();
 
     const handleLogout = async () => {
         try {
-            await authAPI.logout();
+            await logoutUser();
         } catch (error) {
             console.error('Logout error:', error);
         } finally {

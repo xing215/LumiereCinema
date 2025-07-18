@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { authAPI } from '@utils/auth.utils.js';
+import { useResetPassword } from '@hooks/useAuth';
 
 const ResetPwdForm = () => {
     const [formData, setFormData] = useState({
@@ -10,6 +10,7 @@ const ResetPwdForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
+    const { resetPassword, loading, error, success } = useResetPassword();
 
     // Validation patterns
     const patterns = {
@@ -67,12 +68,12 @@ const ResetPwdForm = () => {
         }
 
         try {
-            const response = await authAPI.staffForgotPassword(formData.email);
-            setMessage(response.message);
-            setIsSuccess(true);
+            const response = await resetPassword(formData.email);
+            setMessage(response.data?.message || 'Email sent successfully.');
+            setIsSuccess(response.success);
         } catch (error) {
             console.error('Staff forgot password error:', error);
-            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+            setMessage(error?.error || 'An error occurred. Please try again.');
             setIsSuccess(false);
         } finally {
             setIsLoading(false);
