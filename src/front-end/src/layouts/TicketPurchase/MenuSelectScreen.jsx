@@ -5,11 +5,66 @@ import { BackNaviButton } from '../../components/buttons/NaviButton';
 import DateSlider from '../../components/UI/Dateslider';
 import CinemaPopUp from '../../components/UI/CinemaPopUp';
 
-const TimeButton = ({ time, seats, scheduleId, isSelected, onSelect}) => {
+
+const schedules = [
+    { 
+        _id: 'sid',
+        movie: {_id: 'mid', name: 'Movie 1', poster: 'poster1.jpg'},
+        screen: {_id:'ssid', name: 'Screen 1', totalSeats: 80},
+        startTime: '2025-07-14T08:00:00.000',
+        endTime: '2025-07-14T10:30:00.000',
+        OccupiedSeats: [
+            { row: 'A', no: 1 },
+            { row: 'A', no: 2 }
+        ],
+    },
+    { 
+        _id: 'sid2',
+        movie: {_id: 'mid2', name: 'Movie 2', poster: 'poster2.jpg'},
+        screen: {_id:'ssid2', name: 'Screen 2', totalSeats: 100},
+        startTime: '2025-07-16T11:00:00.000',
+        endTime: '2025-07-14T13:30:00.000',
+        OccupiedSeats: [
+            { row: 'B', no: 1 },
+            { row: 'B', no: 2 }
+        ],
+    },
+    {
+        _id: 'sid3',
+        movie: {_id: 'mid3', name: 'Movie 3', poster: 'poster3.jpg'},
+        screen: {_id:'ssid3', name: 'Screen 3', totalSeats: 120},
+        startTime: '2025-07-15T14:00:00.000',
+        endTime: '2025-07-14T16:30:00.000',
+        OccupiedSeats: [
+            { row: 'C', no: 1 },
+            { row: 'C', no: 2 }
+        ],
+    }
+];
+
+const cinemas = [
+    {
+    "_id": "66b8a1c4f2e8d5a1b3c4d5c1",
+    "name": "Lumiere Cao Thắng",
+    "address": "379-381 Cao Thắng St, Ward 12",
+    "city": "Ho Chi Minh City",
+    "location": {
+        "type": "Point",
+        "coordinates": [106.6917, 10.7769]
+    },
+    "isActive": true,
+    "showings": "7"
+    }        
+];
+
+// =============================== TIME GRID =============================== 
+
+
+const TimeButton = ({ time, seats, schedule, isSelected, onSelect}) => {
     return (
         <button 
             className={`group relative flex w-[38vw] flex-col items-center justify-center -space-y-1 rounded-xl md:w-[calc(100vw*0.12)] lg:w-[calc(100vw*0.10)] ${isSelected ? 'outline-2 outline-white' : ''}`}
-            onClick={() => onSelect(scheduleId)}
+            onClick={() => onSelect(schedule)}
             style={{ cursor: 'pointer' }}
         >
             <div className={`absolute top-0 left-0 h-full w-full rounded-xl mix-blend-color-dodge group-hover:bg-zinc-300/70 lg:[transform:translate3d(0,0,0)] ${isSelected ? 'bg-zinc-300/80' : 'bg-zinc-300/60'}`} />
@@ -19,8 +74,7 @@ const TimeButton = ({ time, seats, scheduleId, isSelected, onSelect}) => {
     );
 };
 
-const TimeGrid = ({ selectedSchedule, onScheduleSelect, mockSchedules, selectedDate }) => {
-    // Helper function to format time from ISO string
+const TimeGrid = ({selectedSchedule, onScheduleSelect, schedules, viewingDate }) => {
     const formatTime = (isoString) => {
         const date = new Date(isoString);
         return date.toLocaleTimeString('en-US', { 
@@ -29,14 +83,12 @@ const TimeGrid = ({ selectedSchedule, onScheduleSelect, mockSchedules, selectedD
             hour12: false 
         });
     };
-
-    // Filter schedules by selected date and sort by full startTime
-    const filteredSchedules = selectedDate 
-        ? mockSchedules.filter(schedule => {
+    const filteredSchedules = viewingDate ? schedules.filter(schedule => {
             const scheduleDate = new Date(schedule.startTime).toISOString().split('T')[0];
-            return scheduleDate === selectedDate;
+            return scheduleDate === viewingDate;
           }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
         : [];
+
 
     return (
         <div className="inline-flex w-[80vw] flex-wrap content-start items-start justify-start md:justify-center gap-3.5 md:w-[55vw] lg:w-[calc(100vw*0.45)]">
@@ -45,22 +97,24 @@ const TimeGrid = ({ selectedSchedule, onScheduleSelect, mockSchedules, selectedD
                     <TimeButton 
                         key={schedule._id}
                         time={formatTime(schedule.startTime)} 
-                        seats={schedule.availableSeats}
-                        scheduleId={schedule._id}
-                        isSelected={selectedSchedule === schedule._id}
+                        seats={schedule.screen.totalSeats - schedule.OccupiedSeats.length}
+                        isSelected={selectedSchedule === schedule}
                         onSelect={onScheduleSelect}
+                        schedule={schedule}
                     />
                 ))
             ) : (
                 <div className="flex w-full items-center justify-center py-8">
                     <div className="font-['Unbounded'] text-sm font-semibold text-white/60">
-                        {selectedDate ? 'No showtimes available for this date' : 'Please select a date to view showtimes'}
+                        {viewingDate ? 'No showtimes available for this date' : 'Please select a date to view showtimes'}
                     </div>
                 </div>
             )}
         </div>
     );
 };
+
+// =============================== CHOOSE CINEMA =============================== 
 
 const ChooseCinemaButton = ({ onClick, label }) => (
     <button 
@@ -75,56 +129,35 @@ const ChooseCinemaButton = ({ onClick, label }) => (
     </button>
 );
 
-const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, updateSnackTicket, mockSchedules, cinemas, onCinemaChangeReset }) => {
+const MenuSelectScreen = ({onNext, onBack, movieTicketData, updateMovieTicket}) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
-    const [selectedBranch, setSelectedBranch] = useState(movieTicketData.branch || null);
+    const [selectedBranch, setSelectedBranch] = useState(movieTicketData.branch);
     const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
     
-    // Get the first available date from mock schedules
+const uniqueDates = [...new Set(schedules.map(schedule => {
+    return new Date(schedule.startTime).toISOString().split('T')[0];
+}))]
+    .sort()
+    .map(dateStr => ({
+        date: dateStr,
+    }));
+
     const getFirstAvailableDate = () => {
-        const uniqueDates = [...new Set(mockSchedules.map(schedule => {
-            return new Date(schedule.startTime).toISOString().split('T')[0];
-        }))].sort();
-        
         if (uniqueDates.length > 0) {
-            const firstDate = uniqueDates[0];
-            const dateObj = new Date(firstDate + 'T00:00:00.000Z');
-            return {
-                date: firstDate,
-                display: dateObj.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                })
-            };
+            return uniqueDates[0]
         }
-        return { date: '2025-07-16', display: 'Wednesday, 16 July, 2025' }; // fallback
+        return null;
     };
     
-    const firstDate = getFirstAvailableDate();
+const firstDate = getFirstAvailableDate();
+const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
     
-    // Separate viewing date (what date's showtimes we're looking at) from selected date (date of selected schedule)
-    const [viewingDate, setViewingDate] = useState(firstDate.date); // Date we're currently viewing showtimes for
-    const [viewingDateDisplay, setViewingDateDisplay] = useState(firstDate.display);
-    
-    // Get the actual selected date from the selected schedule
     const getSelectedDate = () => {
-        if (movieTicketData.schedule) {
-            const schedule = mockSchedules.find(s => s._id === movieTicketData.schedule);
-            if (schedule) {
-                const selectedDate = new Date(schedule.startTime).toISOString().split('T')[0];
-                const selectedDateObj = new Date(selectedDate + 'T00:00:00.000Z');
+        if (movieTicketData.schedule?._id) {
+                const selectedDate = new Date(movieTicketData.schedule.startTime).toISOString().split('T')[0];
                 return {
                     date: selectedDate,
-                    display: selectedDateObj.toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    })
-                };
             }
         }
         return null;
@@ -132,54 +165,39 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
 
     const selectedDateInfo = getSelectedDate();
 
+// =============================== HANDLE SELECT =============================== 
 
-    // Handle branch selection (not used directly, but keep for completeness)
-    const handleBranchSelect = (branchId) => {
-        setSelectedBranch(branchId);
-        updateMovieTicket({ branch: branchId });
-        if (typeof updateSnackTicket === 'function') {
-            updateSnackTicket({ branch: branchId });
-        }
+
+    const handleBranchSelect = (branch) => {
+        console.log('Selected branch:', branch);
+        console.log('Current movie ticket data:', movieTicketData);
+        updateMovieTicket({ branch: branch});
     };
 
-    // Handle cinema selection from popup
-    const handleCinemaSelect = (cinema) => {
-        setSelectedBranch(cinema._id);
-        updateMovieTicket({ branch: cinema._id, schedule: null }); // reset schedule
-        if (typeof updateSnackTicket === 'function') {
-            updateSnackTicket({ branch: cinema._id });
-        }
-        if (typeof onCinemaChangeReset === 'function') {
-            onCinemaChangeReset(); // parent will reset date by remounting
-        }
-        console.log('Selected cinema:', cinema);
+    const handleScheduleSelect = (schedule) => {
+        console.log('Selected schedule:', schedule);
+        console.log('Current movie ticket data:', movieTicketData);
+        updateMovieTicket({ schedule: schedule });
     };
 
-    // Handle schedule selection
-    const handleScheduleSelect = (scheduleId) => {
-        updateMovieTicket({ schedule: scheduleId });
-        // Note: We do NOT update the viewing date here
-        // This allows users to select a schedule and still browse other dates freely
-    };
-
-    // Handle date selection - this ONLY changes what date's showtimes we're viewing
-    // It does NOT clear the selected schedule - that only happens when clicking time buttons
-    const handleDateSelect = (date, displayDate) => {
+    const handleDateSelect = (date) => {
+        console.log('Selected date:', date);
+        console.log('Current movie ticket data:', movieTicketData);
+        console.log('Current viewing date:', viewingDate);
         setViewingDate(date);
-        setViewingDateDisplay(displayDate);
-        // Note: We keep the selected schedule intact - it persists across date browsing
-    };
+  };
 
-    // Check if user can proceed to next step - schedule persists across date changes
-    const canProceed = movieTicketData.branch && movieTicketData.schedule;
+// =============================== MOVE NEXT =============================== 
+
+    const canProceed = movieTicketData.branch._id && movieTicketData.schedule._id;
 
     const handleNext = () => {
         if (canProceed) {
             onNext();
         } else {
-            if (!movieTicketData.branch) {
+            if (!movieTicketData.branch._id) {
                 alert('Please select a cinema first.');
-            } else if (!movieTicketData.schedule) {
+            } else if (!movieTicketData.schedule._id) {
                 alert('Please select a showtime.');
             } else {
                 alert('Please select both cinema and showtime before proceeding.');
@@ -187,9 +205,8 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
         }
     };
 
-    // Get selected schedule details for display - show regardless of current date
-    const selectedScheduleDetails = movieTicketData.schedule ? 
-        mockSchedules.find(schedule => schedule._id === movieTicketData.schedule) : null;
+// =============================== FORMAT =============================== 
+
     const formatTimeForDisplay = (isoString) => {
         if (!isoString) return '';
         const date = new Date(isoString);
@@ -199,6 +216,7 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
             hour12: false 
         });
     };
+// =============================== COLLAPSIBLE BOTTOM BAR =============================== 
 
     useEffect(() => {
         const controlBottomBar = () => {
@@ -230,16 +248,14 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                     <BPoster Pics="src/assets/sample/ThamTuKien.jpg" />
                 </div>
                 <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
-                    <div className={`relative flex flex-col h-full items-center ${!selectedBranch ? 'justify-center' : 'justify-start'}`}>
+                    <div className={`relative flex flex-col h-full items-center ${!movieTicketData.branch._id ? 'justify-center' : 'justify-start'}`}>
                         <div className="h-5 md:h-7" />
-                        
-                        {/* Only show date slider and schedule content when branch is selected */}
-                        {selectedBranch && (
+                        {movieTicketData.branch._id && (
                             <>
                                 <DateSlider 
-                                    selectedDate={viewingDate}
+                                    viewingDate={viewingDate}
                                     onDateSelect={handleDateSelect}
-                                    mockSchedules={mockSchedules}
+                                    uniqueDates={uniqueDates}
                                     selectedScheduleDate={selectedDateInfo?.date}
                                 />
                                 
@@ -251,18 +267,17 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                                 <div className="h-5 md:h-7" />
                         <ChooseCinemaButton 
                             onClick={() => setIsCinemaPopupOpen(true)} 
-                            label={selectedBranch}
+                            label={movieTicketData.branch?.name}
                         />
                         
-                        {/* Only show time grid when branch is selected */}
-                        {selectedBranch && (
+                        {movieTicketData.branch._id  && (
                             <>
                                 <div className="h-3 md:h-5" />
                                 <TimeGrid 
                                     selectedSchedule={movieTicketData.schedule}
                                     onScheduleSelect={handleScheduleSelect}
-                                    mockSchedules={mockSchedules}
-                                    selectedDate={viewingDate}
+                                    schedules={schedules}
+                                    viewingDate={viewingDate}
                                 />
                             </>
                         )}
@@ -271,23 +286,31 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                     </div>
                     <div className="hidden h-auto w-full flex-row items-center justify-end gap-2 px-4 pb-6 sm:px-8 md:flex md:px-10 lg:px-12">
                         <div className="w-80 justify-start text-right font-['Unbounded'] text-[10px] font-semibold text-white">
-                            {!selectedBranch ? (
+                            {!movieTicketData.branch._id ? (
                                 <>
                                     Please select a cinema
                                     <br />
                                     to view available showtimes
                                 </>
-                            ) : selectedScheduleDetails ? (
+                            ) : movieTicketData.schedule._id ? (
                                 <>
-                                    {selectedDateInfo?.display}, {formatTimeForDisplay(selectedScheduleDetails.startTime)}
+                                    {movieTicketData.schedule?.startTime
+    ? new Date(movieTicketData.schedule.startTime).toLocaleDateString('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    })
+    : ''
+}, {formatTimeForDisplay(movieTicketData.schedule?.startTime)}
                                     <br />
-                                    Cinema: {selectedBranch}
+                                    Cinema: {movieTicketData.branch.name}
                                 </>
                             ) : (
                                 <>
                                     Select a time
                                     <br />
-                                    Cinema: {selectedBranch}
+                                    Cinema: {movieTicketData.branch.name}
                                 </>
                             )}
                         </div>
@@ -299,33 +322,43 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                         />
                     </div>
                 </div>
+{/* =============================== BOTTOM BAR ===============================  */}
+
                 <div
                     className={`fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out md:hidden ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}
                     style={{ bottom: 'max(0px, env(safe-area-inset-bottom))' }}
                 >
                     <BackNaviButton onClick={onBack} />
                     <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
-                        Movie: Tham Tu Kien
+                        Movie: {movieTicketData?.movie?.name || 'Tham Tu Kien'}
                         <br />
-                        {!selectedBranch ? (
-                            <>
-                                Please select a cinema
-                                <br />
-                                to view available showtimes
-                            </>
-                        ) : selectedScheduleDetails ? (
-                            <>
-                                {selectedDateInfo?.display}, {formatTimeForDisplay(selectedScheduleDetails.startTime)}
-                                <br />
-                                Cinema: {selectedBranch}
-                            </>
-                        ) : (
-                            <>
-                                Select a time
-                                <br />
-                                Cinema: {selectedBranch}
-                            </>
-                        )}
+                          {!movieTicketData.branch._id ? (
+                                <>
+                                    Please select a cinema
+                                    <br />
+                                    to view available showtimes
+                                </>
+                            ) : movieTicketData.schedule._id ? (
+                                <>
+                                    {movieTicketData.schedule?.startTime
+    ? new Date(movieTicketData.schedule.startTime).toLocaleDateString('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    })
+    : ''
+}, {formatTimeForDisplay(movieTicketData.schedule?.startTime)}
+                                    <br />
+                                    Cinema: {movieTicketData.branch.name}
+                                </>
+                            ) : (
+                                <>
+                                    Select a time
+                                    <br />
+                                    Cinema: {movieTicketData.branch.name}
+                                </>
+                            )}
                     </div>
 
                     <NextNaviButton 
@@ -335,12 +368,13 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                     />
                 </div>
             </div>
-            
+{/* =============================== CINEMA POPUP ===============================  */}
             <CinemaPopUp 
                 isOpen={isCinemaPopupOpen} 
                 onClose={() => setIsCinemaPopupOpen(false)} 
-                onCinemaSelect={handleCinemaSelect}
+                onCinemaSelect={handleBranchSelect}
                 cinemas={cinemas}
+                selectedCinema={movieTicketData.branch}
             />
         </div>
     );

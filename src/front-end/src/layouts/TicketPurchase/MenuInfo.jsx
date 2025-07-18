@@ -23,8 +23,6 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
         email: movieTicketData.noLoginCustomerInfo.email || snackTicketData.noLoginCustomerInfo.email || '',
     });
 
-    const [promotionCode, setPromotionCode] = useState(snackTicketData.promotionCode || '');
-
     const handleInputChange = (field, value) => {
         const newInfo = { ...customerInfo, [field]: value };
         setCustomerInfo(newInfo);
@@ -32,12 +30,6 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
         // Update both ticket types with customer info
         updateMovieTicket({ noLoginCustomerInfo: newInfo });
         updateSnackTicket({ noLoginCustomerInfo: newInfo });
-    };
-
-    const handlePromotionChange = (e) => {
-        const code = e.target.value;
-        setPromotionCode(code);
-        updateSnackTicket({ promotionCode: code });
     };
 
     const canProceed = customerInfo.name && customerInfo.phone && customerInfo.email;
@@ -58,13 +50,13 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
 
             {/* Poster */}
             <div className="hidden md:block">
-                <TicketDetail />
+                <TicketDetail movieTicketData={movieTicketData} snackTicketData={snackTicketData} />
             </div>
 
             {/* Main content */}
             <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
                 <div className="block pt-5 md:hidden">
-                    <TicketDetail />
+                    <TicketDetail movieTicketData={movieTicketData} snackTicketData={snackTicketData} />
                 </div>
                 <div className="relative flex flex-col items-center justify-start gap-4">
                     <div className="w-auto justify-start pt-8 text-center font-['Unbounded'] text-base font-black text-white md:text-lg xl:text-2xl">CUSTOMER INFORMATION</div>

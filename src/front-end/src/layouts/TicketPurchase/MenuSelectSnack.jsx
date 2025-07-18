@@ -84,7 +84,7 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 {/* Main content */}
                 <div className="relative flex flex-1 flex-col items-center justify-between">
-                    <div className="inline-flex w-[90vw] flex-wrap items-start justify-start gap-5 pt-5 pl-2.5 md:pt-7 lg:w-[calc(70vw)]">
+                    <div className="inline-flex w-[90vw] h-auto flex-wrap items-start justify-start gap-5 pt-5 pl-2.5 md:pt-7 lg:w-[calc(70vw)]">
                         <SnackSelect 
                             snack_type="Combo 1 - 1 popcorn + 1 drink" 
                             snackId="snack1"
@@ -143,7 +143,7 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
                             {snackTicketData && snackTicketData.branch ? (
                                 <>
                                     {/* Optionally display date/time if available */}
-                                    Cinema: {snackTicketData.branch}
+                                    Cinema: {snackTicketData.branch?.name}
                                 </>
                             ) : (
                                 <>Cinema: Not selected</>
@@ -164,7 +164,7 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
                     {/* TODO: Replace with actual selected movie/schedule info if available */}
                     {snackTicketData && snackTicketData.branch ? (
                         <>
-                            Cinema: {snackTicketData.branch}
+                            Cinema: {snackTicketData.branch?.name}
                         </>
                     ) : (
                         <>Cinema: Not selected</>

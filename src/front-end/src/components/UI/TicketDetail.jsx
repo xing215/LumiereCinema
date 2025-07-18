@@ -1,10 +1,10 @@
 
-const TicketDetail = ({ movieTicket, snackTicket }) => {
+const TicketDetail = ({ movieTicketData, snackTicketData }) => {
     // Fallbacks for missing data
-    const movieTitle = movieTicket?.movieData?.title || 'N/A';
-    const address = movieTicket?.branchData?.address || 'N/A';
-    const date = movieTicket?.scheduleData
-        ? new Date(movieTicket.scheduleData.startTime).toLocaleDateString('en-US', {
+    const movieTitle = movieTicketData?.movie?.name || 'N/A';
+    const address = movieTicketData?.branchData?.address || 'N/A';
+    const date = movieTicketData?.scheduleData
+        ? new Date(movieTicketData.scheduleData.startTime).toLocaleDateString('en-US', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -12,18 +12,18 @@ const TicketDetail = ({ movieTicket, snackTicket }) => {
         })
         : 'N/A';
     const time =
-        movieTicket?.scheduleData
-            ? `${new Date(movieTicket.scheduleData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(movieTicket.scheduleData.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        movieTicketData?.scheduleData
+            ? `${new Date(movieTicketData.scheduleData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(movieTicketData.scheduleData.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
             : 'N/A';
-    const cinema = movieTicket?.branchData?.name || 'N/A';
-    const seats = Array.isArray(movieTicket?.seats)
-        ? movieTicket.seats.map(s => s.seatNumber || s).join(', ')
+    const cinema = movieTicketData?.branchData?.name || 'N/A';
+    const seats = Array.isArray(movieTicketData?.seats)
+        ? movieTicketData.seats.map(s => s.seatNumber || s).join(', ')
         : 'N/A';
-    const tickets = movieTicket?.ticketTypes
-        ? movieTicket.ticketTypes.map(t => `${t.count} ${t.type}`).join(', ')
+    const tickets = movieTicketData?.ticketTypes
+        ? movieTicketData.ticketTypes.map(t => `${t.count} ${t.type}`).join(', ')
         : 'N/A';
-    const snackCombos = snackTicket?.combos
-        ? snackTicket.combos.map(c => `${c.count} ${c.name}`).join(', ')
+    const snackCombos = snackTicketData?.combos
+        ? snackTicketData.combos.map(c => `${c.count} ${c.name}`).join(', ')
         : 'N/A';
 
     return (

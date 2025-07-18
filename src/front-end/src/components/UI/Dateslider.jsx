@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react';
-import NextNaviButton, {BackNaviButton} from '../buttons/NaviButton';
+import { useState, useEffect, useCallback } from 'react';
+import {BackNaviButton} from '../buttons/NaviButton';
 
-const SliderButton = ({ date, day, isSelected, onClick, opacity = 'opacity-100', hasSelectedSchedule = false, 
-    onTouchStart, onTouchMove, onTouchEnd }) => {
+const SliderButton = ({ date, isSelected, onClick, opacity = 'opacity-100', hasSelectedSchedule = false }) => {
+    // Utility to get day abbreviation (Mon, Tue, etc.)
+    const getDayAbbr = (dateStr) => {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    };
+    // Utility to get date number (16, etc.)
+    const getDateNum = (dateStr) => {
+        const d = new Date(dateStr);
+        return d.getDate();
+    };
     return (
         <button 
             className={`relative w-10 h-10 md:w-12 md:h-12 ${opacity} transition-all duration-300 ease-in-out lg:[transform:translate3d(0,0,0)]`}
-            onClick={(e) => {
-                // Prevent default behavior on mobile
-                if (window.innerWidth < 768) {
-                    e.preventDefault();
-                }
-                onClick();
-            }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+            onClick={onClick}
         >
             <div className={`absolute top-0 h-full w-full rounded-full transition-all duration-300 ease-in-out ${
                 isSelected 
@@ -25,8 +25,8 @@ const SliderButton = ({ date, day, isSelected, onClick, opacity = 'opacity-100',
                         : 'bg-blue-700/70 hover:scale-100'
             } outline-3 outline-white/70 md:outline-2 xl:outline-3`} />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-0 -space-y-1 transition-all duration-300 z-10">
-                <div className="font-['Unbounded'] text-[7px] font-bold text-white sm:text-[5.5px] lg:text-[7px]">{day}</div>
-                <div className="font-['Unbounded'] text-[17px] font-bold text-white">{date}</div>
+                <div className="font-['Unbounded'] text-[7px] font-bold text-white sm:text-[5.5px] lg:text-[7px]">{getDayAbbr(date)}</div>
+                <div className="font-['Unbounded'] text-[17px] font-bold text-white">{getDateNum(date)}</div>
             </div>
         </button>
     );
@@ -40,132 +40,114 @@ const SliderButtonInactive2 = (props) => {
     return <SliderButton {...props} opacity="opacity-30" />;
 };
 
-const DateSlider = ({ selectedDate, onDateSelect, mockSchedules, selectedScheduleDate = null }) => {
-    const VISIBLE_DATES = 5; // Number of dates to show in the slider
+const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDate = null }) => {
+    console.log('Rendering DateSlider with uniqueDates:', uniqueDates);
+    console.log('Selected viewingDate:', viewingDate);
+    console.log('Selected schedule date:', selectedScheduleDate);
+
+    const VISIBLE_DATES = 5; 
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState(0);
     const [dragOffset, setDragOffset] = useState(0);
-    const [previewIndex, setPreviewIndex] = useState(null); // For real-time preview
-    const [isMouseDown, setIsMouseDown] = useState(false); // Track if mouse is down but not yet dragging
+    const [previewIndex, setPreviewIndex] = useState(null); 
+    const [isMouseDown, setIsMouseDown] = useState(false); 
     
-    // Generate all available dates based on schedule data
-    const generateAllDates = () => {
-        // Extract unique dates from schedule data (only dates that have schedules)
-        const uniqueDates = [...new Set(mockSchedules.map(schedule => {
-            return new Date(schedule.startTime).toISOString().split('T')[0];
-        }))].sort();
-
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        
-        return uniqueDates.map(dateString => {
-            const currentDate = new Date(dateString + 'T00:00:00.000Z');
-            
-            return {
-                date: currentDate.getDate(),
-                day: dayNames[currentDate.getDay()],
-                fullDate: dateString, // YYYY-MM-DD format
-                displayDate: currentDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                }),
-                scheduleCount: mockSchedules.filter(schedule => 
-                    new Date(schedule.startTime).toISOString().split('T')[0] === dateString
-                ).length
-            };
-        });
-    };
-
-    const allDates = generateAllDates();
+    const selectedIndex = uniqueDates.findIndex(date => date.date === viewingDate);
     
-    // Find the index of the selected date
-    const selectedIndex = allDates.findIndex(date => date.fullDate === selectedDate);
-    
-    // Calculate transform offset to center the selected date
-    const getTransformOffset = () => {
-        // Responsive button width calculations
-        const isMobile = window.innerWidth < 768; // md breakpoint
-        const buttonWidth = isMobile ? 40 : 48; // w-10 = 40px for mobile, md:w-12 = 48px for desktop
-        const gap = 16; // gap-4 = 16px
+    const getTransformOffset = useCallback(() => {
+        const isMobile = window.innerWidth < 768; 
+        const buttonWidth = isMobile ? 40 : 48; 
+        const gap = 16;
         const buttonWithGap = buttonWidth + gap;
         
-        // Calculate the center position of the container (in button positions)
-        const containerCenter = Math.floor(VISIBLE_DATES / 2); // This should be 2 for 5 buttons (0,1,2,3,4)
-        
-        // Calculate offset needed to move selected date to center
-        // This will work even when there aren't enough buttons on either side
+        const containerCenter = Math.floor(VISIBLE_DATES / 2); 
         const offset = (selectedIndex - containerCenter) * buttonWithGap;
         
-        return -offset + dragOffset; // Add drag offset for real-time feedback
-    };
+        return -offset + dragOffset; 
+    }, [selectedIndex, dragOffset]);
 
+    // =============================== HANDLE DRAGGING =============================== 
 
-
-    // Desktop (mouse) drag handlers only
-    const handleDesktopDragStart = (e) => {
+    const handleDesktopDragStart = useCallback((e) => {
         if (window.innerWidth < 768) return;
+        
         setIsMouseDown(true);
+        setIsDragging(false); // Reset dragging state
         setDragStart(e.clientX);
         setDragOffset(0);
-    };
+        setPreviewIndex(null);
+        
+        // Prevent text selection
+        e.preventDefault();
+    }, []);
 
-    const handleDesktopDragMove = (e) => {
-        if (window.innerWidth < 768) return;
-        if (!isMouseDown && !isDragging) return;
+    const handleDesktopDragMove = useCallback((e) => {
+        if (window.innerWidth < 768 || !isMouseDown) return;
+        
         e.preventDefault();
         const currentX = e.clientX;
         const diff = currentX - dragStart;
-        if (!isDragging && Math.abs(diff) > 5) setIsDragging(true);
-        if (isDragging) {
+        
+        // Start dragging if moved more than 5px
+        if (!isDragging && Math.abs(diff) > 5) {
+            setIsDragging(true);
+        }
+        
+        if (isDragging || Math.abs(diff) > 5) {
             setDragOffset(diff);
+            
+            // Calculate preview index
             const buttonWidth = 48;
             const gap = 16;
             const buttonWithGap = buttonWidth + gap;
             const draggedPositions = Math.round(-diff / buttonWithGap);
-            const newPreviewIndex = Math.max(0, Math.min(allDates.length - 1, selectedIndex + draggedPositions));
+            const newPreviewIndex = Math.max(0, Math.min(uniqueDates.length - 1, selectedIndex + draggedPositions));
+            
             setPreviewIndex(newPreviewIndex);
         }
-    };
+    }, [isMouseDown, isDragging, dragStart, selectedIndex, uniqueDates.length]);
 
-    const handleDesktopDragEnd = () => {
+    const handleDesktopDragEnd = useCallback(() => {
         if (window.innerWidth < 768) return;
-        if (!isMouseDown && !isDragging) return;
-        if (isDragging) {
-            const buttonWidth = 48;
-            const gap = 16;
-            const buttonWithGap = buttonWidth + gap;
-            const draggedPositions = Math.round(-dragOffset / buttonWithGap);
-            const newIndex = Math.max(0, Math.min(allDates.length - 1, selectedIndex + draggedPositions));
-            if (newIndex !== selectedIndex && allDates[newIndex]) {
-                const newDate = allDates[newIndex];
-                onDateSelect(newDate.fullDate, newDate.displayDate);
+        
+        if (isDragging && previewIndex !== null && previewIndex !== selectedIndex) {
+            const newDate = uniqueDates[previewIndex];
+            if (newDate) {
+                onDateSelect(newDate.date);
             }
         }
+        
+        // Reset all drag states
         setIsMouseDown(false);
         setIsDragging(false);
         setDragOffset(0);
         setPreviewIndex(null);
-    };
+    }, [isDragging, previewIndex, selectedIndex, uniqueDates, onDateSelect]);
 
-
-    // Add event listeners for mouse events only (desktop)
+    // Handle mouse events globally when dragging
     useEffect(() => {
         const handleMouseMove = (e) => handleDesktopDragMove(e);
         const handleMouseUp = () => handleDesktopDragEnd();
 
-        if ((isMouseDown || isDragging) && window.innerWidth >= 768) {
-            document.addEventListener('mousemove', handleMouseMove);
+        if (isMouseDown && window.innerWidth >= 768) {
+            document.addEventListener('mousemove', handleMouseMove, { passive: false });
             document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('mouseleave', handleMouseUp); // Handle mouse leaving window
         }
 
         return () => {
-            if (window.innerWidth >= 768) {
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-            }
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mouseleave', handleMouseUp);
         };
-    }, [isMouseDown, isDragging, dragStart, selectedIndex, allDates, onDateSelect]);
+    }, [isMouseDown, handleDesktopDragMove, handleDesktopDragEnd]);
+
+    // Handle button clicks - prevent click when dragging
+    const handleButtonClick = useCallback((dateObj) => {
+        if (!isDragging) {
+            onDateSelect(dateObj.date);
+        }
+    }, [isDragging, onDateSelect]);
 
     return (
         <div className="flex h-auto w-auto flex-col items-center justify-center">
@@ -174,82 +156,86 @@ const DateSlider = ({ selectedDate, onDateSelect, mockSchedules, selectedSchedul
                     <BackNaviButton
                         onClick={() => {
                             if (selectedIndex > 0) {
-                                const prevDate = allDates[selectedIndex - 1];
-                                onDateSelect(prevDate.fullDate, prevDate.displayDate);
+                                const prevDate = uniqueDates[selectedIndex - 1];
+                                onDateSelect(prevDate.date);
                             }
                         }}
                     />
                 </div>
-            <div className="relative flex h-16 flex-row items-center justify-center gap-4 md:h-16 py-2 overflow-hidden w-[calc(5*56px)] md:w-[calc(5*64px)]">
-                <div 
-                    className={`absolute left-2 md:left-1 flex flex-row items-center gap-4 transition-transform duration-500 ease-in-out ${isDragging ? 'transition-none' : ''}`}
-                    style={{
-                        transform: `translateX(${getTransformOffset()}px)`,
-                        touchAction: 'none'
-                    }}
-                    onMouseDown={handleDesktopDragStart}
-                >
-                    {allDates.map((dateObj, index) => {
-                        // Calculate distance from original selected date for opacity
-                        const distanceFromSelected = Math.abs(index - selectedIndex);
-                        
-                        // Check if this is the preview date during drag
-                        const isPreviewDate = isDragging && previewIndex === index;
-                        const isCurrentSelected = dateObj.fullDate === selectedDate;
-                        
-                        // Check if this is a neighbor of the preview date during drag
-                        const isPreviewNeighbor = isDragging && previewIndex !== null && Math.abs(index - previewIndex) === 1;
-                                            
-                        let ButtonComponent;
-                        if (isPreviewDate || (isCurrentSelected && !isDragging)) {
-                            ButtonComponent = SliderButton; // Preview or selected date always full opacity
-                        } else if (isCurrentSelected && isDragging) {
-                            ButtonComponent = SliderButtonInactive1; // Selected date becomes second lightest when dragging
-                        } else if (isPreviewNeighbor && !isCurrentSelected) {
-                            ButtonComponent = SliderButtonInactive1; // Neighbors of preview date
-                        } else if (distanceFromSelected === 1 && !isDragging) {
-                            ButtonComponent = SliderButtonInactive1; // Adjacent to selected when not dragging
-                        } else {
-                            ButtonComponent = SliderButtonInactive2; // All other dates (including selected neighbors when dragging)
-                        }
-                        
-                        return (
-                            <div
-                                key={dateObj.fullDate}
-                                className="flex-shrink-0 transition-all duration-300 ease-in-out"
-                            >
-                                <ButtonComponent
-                                    date={dateObj.date.toString()}
-                                    day={dateObj.day}
-                                    isSelected={isPreviewDate || (isCurrentSelected && !isDragging)}
-                                    onClick={() => {
-                                        // Only allow clicks if not currently dragging
-                                        if (!isDragging) {
-                                            onDateSelect(dateObj.fullDate, dateObj.displayDate);
-                                        }
-                                    }}
-                                    hasSelectedSchedule={selectedScheduleDate === dateObj.fullDate}
-                                />
-                            </div>
-                        );
-                    })}
+                
+                <div className="relative flex h-16 flex-row items-center justify-center gap-4 md:h-16 py-2 overflow-hidden w-[calc(5*56px)] md:w-[calc(5*64px)]">
+                    <div 
+                        className={`absolute left-2 md:left-1 flex flex-row items-center gap-4 transition-transform duration-500 ease-in-out ${isDragging ? 'transition-none' : ''}`}
+                        style={{
+                            transform: `translateX(${getTransformOffset()}px)`,
+                            cursor: isDragging ? 'grabbing' : 'grab'
+                        }}
+                        onMouseDown={handleDesktopDragStart}
+                    >
+                        {uniqueDates.map((dateObj, index) => {
+                            // Calculate distance from original selected date for opacity
+                            const distanceFromSelected = Math.abs(index - selectedIndex);
+                            
+                            // Check if this is the preview date during drag
+                            const isPreviewDate = isDragging && previewIndex === index;
+                            const isCurrentSelected = dateObj.date === viewingDate;
+                            
+                            // Check if this is a neighbor of the preview date during drag
+                            const isPreviewNeighbor = isDragging && previewIndex !== null && Math.abs(index - previewIndex) === 1;
+                                                
+                            let ButtonComponent;
+                            if (isPreviewDate || (isCurrentSelected && !isDragging)) {
+                                ButtonComponent = SliderButton; // Preview or selected date always full opacity
+                            } else if (isCurrentSelected && isDragging) {
+                                ButtonComponent = SliderButtonInactive1; // Selected date becomes second lightest when dragging
+                            } else if (isPreviewNeighbor && !isCurrentSelected) {
+                                ButtonComponent = SliderButtonInactive1; // Neighbors of preview date
+                            } else if (distanceFromSelected === 1 && !isDragging) {
+                                ButtonComponent = SliderButtonInactive1; // Adjacent to selected when not dragging
+                            } else {
+                                ButtonComponent = SliderButtonInactive2; // All other dates (including selected neighbors when dragging)
+                            }
+                            
+                            return (
+                                <div
+                                    key={dateObj.date}
+                                    className="flex-shrink-0 transition-all duration-300 ease-in-out"
+                                    style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
+                                >
+                                    <ButtonComponent
+                                        date={dateObj.date.toString()}
+                                        day={dateObj.day}
+                                        isSelected={isPreviewDate || (isCurrentSelected && !isDragging)}
+                                        onClick={() => handleButtonClick(dateObj)}
+                                        hasSelectedSchedule={selectedScheduleDate === dateObj.date}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+                
+                <div className={`relative rotate-180 md:hidden scale-90 ${selectedIndex < uniqueDates.length - 1 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
+                    <BackNaviButton
+                        onClick={() => {
+                            if (selectedIndex < uniqueDates.length - 1) {
+                                const nextDate = uniqueDates[selectedIndex + 1];
+                                onDateSelect(nextDate.date);
+                            }
+                        }}
+                    />
                 </div>
             </div>
-            <div className={`relative rotate-180 md:hidden scale-90 ${selectedIndex < allDates.length - 1 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
-                <BackNaviButton
-                    onClick={() => {
-                        if (selectedIndex < allDates.length - 1) {
-                            const nextDate = allDates[selectedIndex + 1];
-                            onDateSelect(nextDate.fullDate, nextDate.displayDate);
-                        }
-                    }}
-                />
-            </div>
-            </div>
+            
             <div className="hidden flex-row items-center justify-center gap-3 pt-3 md:flex md:gap-2 md:pt-2 transition-all duration-300">
                 <div className="h-[3px] w-3 bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 <div className="justify-start text-center font-['Unbounded'] text-[10px] font-semibold text-white sm:text-[12px]">
-                    {selectedDate ? allDates.find(d => d.fullDate === selectedDate)?.displayDate || 'Viewing showtimes' : 'Viewing showtimes'}
+                    {viewingDate ? new Date(uniqueDates.find(d => d.date === viewingDate)?.date + 'T00:00:00.000Z')?.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    }) || 'Viewing showtimes' : 'Viewing showtimes'}
                 </div>
                 <div className="h-[3px] w-3 bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
             </div>
