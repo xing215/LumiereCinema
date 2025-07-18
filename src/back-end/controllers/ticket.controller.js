@@ -21,7 +21,7 @@ const CacheManager = require('../utils/cacheManager');
 const getSchedulesByBranch = async (req, res) => {
   try {
     const { branchId } = req.params;
-    const { date, movieId } = req.body;
+    const { date, movieId } = req.query; // ✅ Đổi từ req.body sang req.query
 
     // Validate branchId format
     if (!mongoose.Types.ObjectId.isValid(branchId)) {
@@ -33,7 +33,7 @@ const getSchedulesByBranch = async (req, res) => {
     // Validate required date
     if (!date) {
       return res.status(400).json({
-        error: 'Date is required in request body'
+        error: 'Date is required as query parameter'
       });
     }
 
@@ -59,11 +59,11 @@ const getSchedulesByBranch = async (req, res) => {
     const targetMonth = targetDate.getMonth();
     const targetDay = targetDate.getDate();
     const startOfDay = new Date(targetYear, targetMonth, targetDay, 0, 0, 0, 0);
-    const endOfDay = new Date(targetYear, targetMonth, targetDay, 23, 59, 59, 999);
-
-    // Try to get branch info from cache first
+    const endOfDay = new Date(targetYear, targetMonth, targetDay, 23, 59, 59, 999);    // Try to get branch info from cache first
     let branch = await CacheManager.getCachedBranchInfo(branchId);
-    if (!branch) {
+    if (branch) {
+      // Branch found in cache
+    } else {
       branch = await Branch.findById(branchId).lean();
       if (!branch) {
         return res.status(404).json({
@@ -211,9 +211,7 @@ const getSchedulesByBranch = async (req, res) => {
           schedules: { $push: '$schedule' }
         }
       }
-    ];
-
-    // Execute aggregation pipeline
+    ];    // Execute aggregation pipeline
     const result = await Screen.aggregate(pipeline);
 
     // Format response
@@ -223,21 +221,11 @@ const getSchedulesByBranch = async (req, res) => {
     }));
 
     return res.status(200).json({
-      branch: {
-        _id: branch._id,
-        name: branch.name,
-        address: branch.address
-      },
       date: targetDate.toISOString().split('T')[0],
       movieFilter: movieId || null,
       totalScreens: screens.length,
       totalSchedules: screens.reduce((sum, screen) => sum + screen.schedules.length, 0),
-      screens: screens,
-      metadata: {
-        generatedAt: new Date(),
-        usedAggregationPipeline: true,
-        cacheHit: branch.fromCache || false
-      }
+      screens: screens
     });
 
   } catch (error) {
@@ -425,17 +413,10 @@ const getSeatMapBySchedule = async (req, res) => {
           columns,
           totalSeats
         }
-      },
-      seatMap: {
+      },      seatMap: {
         allSeats: seatMap,
         seatsByRow,
         statistics: stats
-      },
-      metadata: {
-        generatedAt: new Date(),
-        includeExpired: includeExpired === 'true',
-        usedRedisCache: true,
-        hasActiveHolds
       }
     });
 
@@ -502,10 +483,10 @@ const holdSeats = async (req, res) => {
           error: `Invalid seat number format: ${seatNumber}`
         });
       }
-    }
-
-    // CRITICAL: Use transaction to prevent race conditions
-    const result = await session.withTransaction(async () => {
+    }    // CRITICAL: Use transaction to prevent race conditions
+    let transactionResult;
+    
+    await session.withTransaction(async () => {
       // Check if schedule exists and get screen info
       const schedule = await Schedule.findById(scheduleId)
         .populate('screen', 'size')
@@ -608,16 +589,30 @@ const holdSeats = async (req, res) => {
       }));
 
       // OPTIMIZATION: Use insertMany with ordered:false for better performance
-      const createdHolds = await SeatHold.insertMany(seatHoldDocuments, { 
+      await SeatHold.insertMany(seatHoldDocuments, { 
         session,
         ordered: false // Continue if some fail due to unique constraint
-      });      return {
-        holds: createdHolds,
+      });
+
+      // Store result in outer scope variable
+      transactionResult = {
+        holds: seatHoldDocuments,
         expiresAt,
         holdDurationMinutes: holdMinutes
       };
     });
-
+      // Use the stored result
+    const result = transactionResult;
+    
+    // Defensive programming: Validate result structure
+    if (!result || !result.holds || !Array.isArray(result.holds)) {
+      console.error('ERROR: Invalid transaction result structure:', result);
+      return res.status(500).json({
+        error: 'Transaction completed but returned invalid result structure',
+        details: process.env.NODE_ENV === 'development' ? { result } : undefined
+      });
+    }
+    
     // OPTIMIZATION: Invalidate cache for this schedule since seat holds changed
     await CacheManager.invalidateScheduleCache(scheduleId);
 
@@ -627,7 +622,6 @@ const holdSeats = async (req, res) => {
       data: {
         holdCount: result.holds.length,
         holds: result.holds.map(hold => ({
-          _id: hold._id,
           seatNumber: hold.seatNumber,
           expiresAt: hold.expiresAt,
           holdReason: hold.holdReason
@@ -1176,7 +1170,7 @@ const getSnacksByBranch = async (req, res) => {
     // Get available snacks for this branch
     const snacks = await Snack.find({
       branch: branchId,
-      isActive: true,
+      isHidden: false, // Only active snacks
       stock: { $gt: 0 } // Only snacks with stock > 0
     }).lean();
 
@@ -1370,11 +1364,9 @@ const cleanupExpiredHolds = async (req, res) => {
 const getCacheStats = async (req, res) => {
   try {
     const stats = await CacheManager.getCacheStats();
-    
-    return res.status(200).json({
+      return res.status(200).json({
       success: true,
-      data: stats,
-      timestamp: new Date()
+      data: stats
     });
   } catch (error) {
     console.error('Error getting cache stats:', error);
