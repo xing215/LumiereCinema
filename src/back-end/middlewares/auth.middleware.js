@@ -1,57 +1,57 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User.js'); // Đảm bảo đường dẫn đến model là chính xác
+const User = require('../models/User.js'); // Ensure correct path to model
 
 /**
- * Middleware để bảo vệ các route yêu cầu xác thực.
- * Nó sẽ kiểm tra token trong header của request.
+ * Middleware to protect routes that require authentication.
+ * It will check the token in the request header.
  */
 const protect = async (req, res, next) => {
     let token;
 
-    // 1. Kiểm tra xem header 'Authorization' có tồn tại và bắt đầu bằng 'Bearer' không
+    // 1. Check if 'Authorization' header exists and starts with 'Bearer'
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
-            // 2. Tách lấy token từ header (loại bỏ chữ 'Bearer ')
+            // 2. Extract token from header (remove 'Bearer ')
             token = req.headers.authorization.split(' ')[1];
 
-            // 3. Xác thực token bằng secret key
+            // 3. Verify token with secret key
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // 4. Lấy thông tin người dùng từ ID trong token và gắn vào request
-            // Chúng ta loại bỏ trường hashedPassword để đảm bảo an toàn
+            // 4. Get user information from ID in token and attach to request
+            // We exclude hashedPassword field for security
             req.user = await User.findById(decoded.id).select('-hashedPassword');
 
-            // 5. Nếu mọi thứ hợp lệ, cho phép request đi tiếp
+            // 5. If everything is valid, allow request to proceed
             next();
         } catch (error) {
-            // Nếu token không hợp lệ (hết hạn, sai chữ ký,...)
-            return res.status(401).json({ message: 'Xác thực không thành công, token không hợp lệ.' });
+            // If token is invalid (expired, wrong signature, etc.)
+            return res.status(401).json({ message: 'Authentication failed, invalid token.' });
         }
     }
 
-    // Nếu không tìm thấy token trong header
+    // If no token found in header
     if (!token) {
-        return res.status(401).json({ message: 'Xác thực không thành công, không tìm thấy token.' });
+        return res.status(401).json({ message: 'Authentication failed, no token found.' });
     }
 };
 
 /**
- * Middleware để kiểm tra vai trò của người dùng
- * @param {...string} roles - Các vai trò được phép truy cập
+ * Middleware to check user roles
+ * @param {...string} roles - Roles allowed to access
  */
 const restrictTo = (...roles) => {
     return (req, res, next) => {
-        // Kiểm tra xem user có tồn tại không (từ middleware protect)
+        // Check if user exists (from protect middleware)
         if (!req.user) {
-            return res.status(401).json({ message: 'Vui lòng đăng nhập để truy cập.' });
+            return res.status(401).json({ message: 'Please log in to access.' });
         }
 
-        // Kiểm tra xem user có ít nhất một vai trò được phép không
+        // Check if user has at least one allowed role
         const hasPermission = req.user.roles.some(role => roles.includes(role));
         
         if (!hasPermission) {
             return res.status(403).json({ 
-                message: 'Bạn không có quyền truy cập vào tài nguyên này.' 
+                message: 'You do not have permission to access this resource.' 
             });
         }
 

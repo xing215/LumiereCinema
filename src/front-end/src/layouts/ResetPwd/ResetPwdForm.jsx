@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { authAPI } from '../../utils/auth.utils.js';
 
 const ResetPwdForm = () => {
     const [formData, setFormData] = useState({
@@ -6,6 +7,9 @@ const ResetPwdForm = () => {
     });
 
     const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
 
     // Validation patterns
     const patterns = {
@@ -43,8 +47,11 @@ const ResetPwdForm = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+        setMessage('');
+        setIsSuccess(false);
 
         // Validate all fields before submit
         const newErrors = {};
@@ -55,11 +62,21 @@ const ResetPwdForm = () => {
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
+            setIsLoading(false);
             return;
         }
 
-        // Handle reset password logic here
-        console.log('Reset password data:', formData);
+        try {
+            const response = await authAPI.staffForgotPassword(formData.email);
+            setMessage(response.message);
+            setIsSuccess(true);
+        } catch (error) {
+            console.error('Staff forgot password error:', error);
+            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+            setIsSuccess(false);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -71,6 +88,13 @@ const ResetPwdForm = () => {
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
+                {/* Success/Error Message */}
+                {message && (
+                    <div className={`p-3 rounded-lg text-center ${isSuccess ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <p className="font-['Libre_Franklin'] text-sm">{message}</p>
+                    </div>
+                )}
+
                 {/* Email */}
                 <div>
                     <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Email</label>
@@ -79,7 +103,8 @@ const ResetPwdForm = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.email ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                        disabled={isLoading}
+                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.email ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         required
                     />
                     {errors.email && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.email}</p>}
@@ -89,9 +114,10 @@ const ResetPwdForm = () => {
                 <div className="flex justify-center pt-4 sm:pt-6">
                     <button
                         type="submit"
-                        className="flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl"
+                        disabled={isLoading}
+                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        SEND EMAIL
+                        {isLoading ? 'SENDING...' : 'SEND EMAIL'}
                     </button>
                 </div>
             </form>

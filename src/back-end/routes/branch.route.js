@@ -8,6 +8,7 @@ const {
   editSnack,
   deleteSnack,
   getSnackList,
+  getOccupiedSeats,
 } = require('../controllers/branch.controller.js');
 
 router.get('/:branchId/snacks', getSnackList);
@@ -17,4 +18,5 @@ router.post('/:branchId/snacks', protect, restrictTo('administrator'), createSna
 router.patch('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), editSnack);
 router.delete('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), deleteSnack);
 
+router.get('/:branchId/schedules/:scheduleId/occupied-seats', getOccupiedSeats);
 module.exports = router;

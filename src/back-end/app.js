@@ -13,18 +13,18 @@ const authRoutes = require('./routes/auth.route.js');
 const movieRoutes = require('./routes/movie.route.js'); 
 const reportRoutes = require('./routes/report.route.js'); 
 const branchRoutes = require('./routes/branch.route.js');
-const snackTicketRoute = require('./routes/snackTicket.route.js');
+const ticketRoute = require('./routes/ticket.route.js');
 
-// 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
+// 2. Load environment variables (ALWAYS PLACE AT THE TOP)
 dotenv.config();
 
-// 3. Thực hiện kết nối tới các cơ sở dữ liệu
+// 3. Connect to databases
 connectDB();
 connectRedis();
 
 const app = express();
 
-// 4. Sử dụng các middleware chung
+// 4. Use common middleware
 app.use(cors());
 app.use(express.json());
 
@@ -33,7 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes); 
 app.use('/api/reports', reportRoutes);
 app.use('/api/branches', branchRoutes);
-app.use('/api/tickets/snacks', snackTicketRoute);
+app.use('/api/tickets', ticketRoute);
 // Route mặc định để kiểm tra server
 app.get('/', (req, res) => {
   res.send('API is running...');

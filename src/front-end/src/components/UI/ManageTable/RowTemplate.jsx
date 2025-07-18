@@ -1,11 +1,17 @@
+import React from 'react';
 import TickButton from '../../buttons/Staff/TickButton.jsx';
 import ActiveButton from '../../buttons/Staff/ActiveButton.jsx';
 import EditButton from '../../buttons/Staff/EditButton.jsx';
 import PreviewButton from "../../buttons/Staff/PreviewButton.jsx";
+import EditableCell from '../EditableCell.jsx';
 
 const RowTemplate = (props) => {
     // Check nếu có columnConfig hay không
     const hasColumnConfig = props.columnConfig && props.columnConfig.length > 0;
+
+    // State for handling delayed expansion
+    const [expandTimeout, setExpandTimeout] = React.useState(null);
+    const [isDoubleClick, setIsDoubleClick] = React.useState(false);
 
     // Sử dụng columnConfig được truyền từ component cha
     const getColumnWidth = (index) => {
@@ -33,22 +39,71 @@ const RowTemplate = (props) => {
         return undefined;
     };
 
-    // Handle click - nhưng không trigger khi click vào button
+    // Handle click - use timeout to detect single vs double click
     const handleRowClick = (e) => {
-        // Không expand khi click vào button, checkbox, etc.
+        // Don't expand when clicking on buttons, checkboxes, or editable cells
         if (e.target.tagName === 'BUTTON' ||
             e.target.type === 'checkbox' ||
             e.target.closest('button') ||
             e.target.closest('[role="button"]') ||
             e.target.closest('.tick-button') ||
-            e.target.closest('.action-button')) {
+            e.target.closest('.action-button') ||
+            e.target.closest('input')) {
+            return;
+        }
+
+        // If this is part of a double-click sequence, ignore the single click
+        if (isDoubleClick) {
             return;
         }
 
         if (props.onRowClick && !props.isHeader) {
-            props.onRowClick();
+            // Clear any existing timeout
+            if (expandTimeout) {
+                clearTimeout(expandTimeout);
+                setExpandTimeout(null);
+            }
+            
+            // Set a timeout to execute single-click action only if no double-click occurs
+            const timeout = setTimeout(() => {
+                // Check again if it's still not a double-click before executing
+                if (!isDoubleClick) {
+                    props.onRowClick();
+                }
+                setExpandTimeout(null);
+            }, 300);
+            
+            setExpandTimeout(timeout);
         }
     };
+
+    // Handle double-click - cancel single-click action and let EditableCell handle editing
+    const handleDoubleClick = (e) => {
+        // Set the double-click flag immediately
+        setIsDoubleClick(true);
+        
+        // Cancel the pending single-click action
+        if (expandTimeout) {
+            clearTimeout(expandTimeout);
+            setExpandTimeout(null);
+        }
+        
+        // Reset the double-click flag after a short delay
+        setTimeout(() => {
+            setIsDoubleClick(false);
+        }, 100);
+        
+        // Don't call onRowClick for double-click - this allows EditableCell to handle editing
+    };
+
+    // Clear timeout on component unmount
+    React.useEffect(() => {
+        return () => {
+            if (expandTimeout) {
+                clearTimeout(expandTimeout);
+            }
+        };
+    }, [expandTimeout]);
 
     return (
         <div className="z-10 flex flex-col">
@@ -57,8 +112,10 @@ const RowTemplate = (props) => {
                     ${props.checked ? 'bg-zinc-400' : ''} 
                     ${props.isExpanded ? 'bg-zinc-300 shadow-md' : ''} 
                     ${!props.isHeader ? 'hover:bg-gray-50 cursor-pointer' : ''}
-                    ${!hasColumnConfig ? 'justify-between' : ''}`} // Thêm justify-between khi không có config
+                    ${!hasColumnConfig ? 'justify-between' : ''}
+                    ${hasColumnConfig ? 'min-w-max' : 'w-full'}`}
                 onClick={handleRowClick}
+                onDoubleClick={handleDoubleClick}
                 style={{
                     minHeight: props.isExpanded ? 'auto' : 'inherit'
                 }}
@@ -72,9 +129,9 @@ const RowTemplate = (props) => {
                     return (
                         <div
                             key={index}
-                            className={`${columnWidth} ${hasColumnConfig ? 'flex-shrink-0' : ''} flex ${props.isExpanded ? 'items-start' : 'items-center'} justify-center`}
+                            className={`${columnWidth} ${hasColumnConfig ? 'flex-shrink-0' : ''} flex ${props.isExpanded ? 'items-start' : 'items-center'} ${index === 1 ? 'justify-start' : 'justify-center'}`}
                         >
-                            <div className={`font-libre-franklin w-full lg:text-lg xl:text-xl text-center justify-center
+                            <div className={`font-libre-franklin w-full lg:text-lg xl:text-xl ${index === 1 ? 'text-left' : 'text-center'} justify-center
                                 ${props.isHeader ? 'font-bold' : 'font-medium'} 
                                 ${shouldTruncateText ? 'truncate' : ''} 
                                 ${props.isExpanded && !props.isHeader ? 'whitespace-normal break-words py-2' : ''}`}>
@@ -92,6 +149,18 @@ const RowTemplate = (props) => {
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
                                             <ActiveButton />
+                                        </div>
+                                    )
+                                ) : value && typeof value === 'object' && value.type === 'ActiveButton' ? (
+                                    props.isHeader ? (
+                                        <span>Status</span>
+                                    ) : (
+                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                            <ActiveButton 
+                                                status={value.status}
+                                                onStatusChange={(newStatus) => props.onStatusChange?.(value.rowIndex, newStatus)}
+                                                disabled={props.isUpdating}
+                                            />
                                         </div>
                                     )
                                 ) : value === 'EditButton' ? (
@@ -119,16 +188,31 @@ const RowTemplate = (props) => {
                                         </div>
                                     )
                                 ) : (
-                                    <span title={tooltipText} className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}>
-                                        {value}
-                                    </span>
+                                    // Check if this cell should be editable
+                                    props.editableFields && props.editableFields.includes(index) && !props.isHeader ? (
+                                        <EditableCell
+                                            value={value}
+                                            isEditing={props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
+                                            onStartEdit={() => props.onStartEdit?.(props.rowIndex, index, value)}
+                                            onSave={(newValue) => props.onSaveEdit?.(props.rowIndex, index, newValue)}
+                                            onCancel={props.onCancelEdit}
+                                            disabled={props.isUpdating}
+                                            isUpdating={props.isUpdating && props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
+                                            className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
+                                        />
+                                    ) : (
+                                        <span title={tooltipText} className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}>
+                                            {value}
+                                        </span>
+                                    )
                                 )}
                             </div>
                         </div>
                     );
                 })}
+                {/* Separator line as absolute positioned element within the row */}
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-950" />
             </div>
-            <div className="relative h-[3px] min-w-[105%] bg-slate-950" />
         </div>
     );
 };
