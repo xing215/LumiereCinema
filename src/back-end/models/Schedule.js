@@ -14,25 +14,34 @@ const scheduleSchema = new mongoose.Schema({
     ref: 'Screen',
     required: true,
   },
-  
-  // Thời gian bắt đầu
+    // Thời gian bắt đầu (datetime)
   startTime: {
     type: Date,
     required: true,
+    validate: {
+      validator: function(value) {
+        return value instanceof Date && !isNaN(value.getTime());
+      },
+      message: 'startTime must be a valid datetime'
+    }
   },
 
-  // Thời gian kết thúc (được tính toán tự động)
+  // Thời gian kết thúc (datetime - được tính toán tự động)
   endTime: {
     type: Date,
     required: true,
+    validate: {
+      validator: function(value) {
+        return value instanceof Date && !isNaN(value.getTime());
+      },
+      message: 'endTime must be a valid datetime'
+    }
   },
-
-  // Danh sách các ghế đã được đặt 
+  // Danh sách các ghế đã được đặt (chỉ lưu tên ghế)
   OccupiedSeat: [
     {
-      _id: false,
-      seatNumber: { type: String, required: true },
-      ticket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }
+      type: String,
+      required: true
     }
   ],
 
@@ -54,7 +63,6 @@ scheduleSchema.pre('save', async function(next) {
 scheduleSchema.index({ screen: 1, startTime: 1 }, { unique: true });
 scheduleSchema.index({ movie: 1, startTime: 1 });
 // Index để query seat availability nhanh
-scheduleSchema.index({ 'OccupiedSeat.seatNumber': 1 });
+scheduleSchema.index({ OccupiedSeat: 1 });
 
-// Tên model được đổi thành "Schedule" để đồng bộ
 module.exports = mongoose.model('Schedule', scheduleSchema);
