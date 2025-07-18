@@ -73,7 +73,7 @@ const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedloca
 const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMaxDistance, cinemas, onClick}) => {
 
     return (
-        <div className="relative flex h-full w-[15vw] flex-col items-center overflow-hidden rounded-xl bg-slate-950 md:min-w-[300px]">
+        <div className="relative flex h-full w-full md:w-[15vw] flex-col items-center overflow-hidden rounded-xl bg-slate-950 md:min-w-[300px]">
             <div className="absolute top-7 left-[-10px] h-20 w-20 rounded-full bg-pink-400/100 mix-blend-lighten blur-[100px] sm:top-1/4 sm:-translate-y-1/2 sm:transform md:left-[-20px] md:h-25 md:w-25 lg:left-[-40%] lg:h-30 lg:w-30 xl:left-[-80px] xl:h-44 xl:w-44 xl:bg-pink-400/50" />
 
             <div className="absolute top-1/2 left-1/3 h-15 w-15 -translate-x-1/2 transform rounded-full bg-purple-600/100 mix-blend-lighten blur-[100px] md:h-20 md:w-20 lg:h-30 lg:w-30 xl:h-44 xl:w-44 xl:bg-purple-600/50" />

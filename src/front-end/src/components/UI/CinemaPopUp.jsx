@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import IntegratedMap from '@components/display/IntegratedMap';
+import IntegratedMap from '../display/IntegratedMap';
 
 const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedCinema = null}) => {
 
@@ -33,7 +33,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
 
     return (
         <div 
-            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
+            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
             onClick={handleBackdropClick}
         >
             <div className="relative w-auto h-auto bg-white rounded-xl shadow-xl flex flex-col items-center justify-center">
@@ -43,7 +43,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
                         e.stopPropagation();
                         onClose();
                     }}
-                    className="absolute -top-12 -right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
+                    className="absolute -top-12 -right-2 md:-right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
                 >
                     ×
                 </button>
