@@ -85,11 +85,11 @@ exports.getBranches = async (req, res) => {
   try {
     const cachedBranches = await redisClient.get('branches');
     if (cachedBranches) {
-      console.log('Cache Hit: Branches');
+      // Cache hit
       return res.status(200).json(JSON.parse(cachedBranches));
     }
 
-    console.log('Cache Miss: Fetching branches from DB...');
+    // Cache miss - fetch from database
     const branches = await Branch.find({ isActive: true }).select('name').lean();
 
     await redisClient.set('branches', JSON.stringify(branches), {

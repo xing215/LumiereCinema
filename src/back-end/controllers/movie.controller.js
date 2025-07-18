@@ -19,12 +19,12 @@ const getNowShowingMovies = async (req, res) => {
         // 1. KIỂM TRA TRONG CACHE TRƯỚC
         const cachedMovies = await redisClient.get(cacheKey);
         if (cachedMovies) {
-            console.log('Cache Hit for now-showing movies!');
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
         }
 
         // 2. NẾU KHÔNG CÓ TRONG CACHE (CACHE MISS) -> TRUY VẤN DATABASE
-        console.log('Cache Miss! Fetching from DB...');
+        // Cache miss - fetch from database
         // Dùng .select() để chỉ lấy các trường cần thiết, giảm lượng dữ liệu truyền tải
         const movies = await Movie.find({ status: 'Now Showing' })
             .sort({ releaseDate: -1 })
@@ -57,7 +57,7 @@ const getUpcomingMovies = async (req, res) => {
         // 1. Kiểm tra cache trước
         const cachedMovies = await redisClient.get(cacheKey);
         if (cachedMovies) {
-            console.log('Cache Hit for upcoming movies!');
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
         }
 
