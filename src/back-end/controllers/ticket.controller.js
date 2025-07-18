@@ -140,8 +140,8 @@ const applyDiscounts = async ({ user, promotionCode, total }) => {
 
 const createTicket = async (req, res) => {
   try {
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
 
     if (isSnack) {
       const { branch, customer, noLoginCustomerInfo, snackList, promotionCode, seller } = req.body;
@@ -193,12 +193,12 @@ const createTicket = async (req, res) => {
 // ======= GET TICKET BY CODE =======
 const getTicketByCode = async (req, res) => {
   try {
-    const { code } = req.params;
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const { ticketCode } = req.params;
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
 
     if (isSnack) {
-      const ticket = await SnackTicket.findOne({ snackTicketCode: code })
+      const ticket = await SnackTicket.findOne({ snackTicketCode: ticketCode })
         .populate('customer')
         .populate('branch')
         .populate('snackList.snack')
@@ -226,8 +226,8 @@ const getTicketByCode = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const { ticketCode } = req.params;
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
     const updateData = req.body;
 
     if (isSnack) {
@@ -278,8 +278,8 @@ const updateTicket = async (req, res) => {
 const deleteTicket = async (req, res) => {
   try {
     const { ticketCode } = req.params;
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
 
     let ticket;
 
@@ -315,8 +315,8 @@ const deleteTicket = async (req, res) => {
 // ======= GET ALL TICKET =======
 const getAllTickets = async (req, res) => {
   try {
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
     if (isSnack) {
       const tickets = await SnackTicket.find()
         .populate('customer')
@@ -338,59 +338,80 @@ const getAllTickets = async (req, res) => {
 };
 
 
-// // ======= CHECK-IN TICKET =======
-// const checkInTicket = async (req, res) => {
-//   try {
-//     const { ticketId } = req.params;
+// ======= CHECK-IN TICKET =======
+const checkInTicket = async (req, res) => {
+  try {
+    const { ticketCode } = req.params;
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
 
-//     const ticket = await SnackTicket.findById(ticketId);
-//     if (!ticket || ticket.ticketType !== 'Snack') {
-//       // TODO: Check in MovieTicket
-//       return res.status(404).json({ message: 'Snack ticket not found.' });
-//     }
+    let ticket;
 
-//     if (ticket.status === 'CheckedIn') {
-//       return res.status(400).json({ message: 'Ticket already checked in.' });
-//     }
+    if (isSnack) {
+      ticket = await SnackTicket.findOne({ snackTicketCode: ticketCode });
+    } else if (isMovie) {
+      ticket = await Ticket.findOne({ ticketCode: ticketCode });
+    } else {
+      return res.status(400).json({ message: 'Unknown ticket type in URL.' });
+    }
 
-//     if (ticket.status === 'Cancelled') {
-//       return res.status(400).json({ message: 'Cannot check-in a cancelled ticket.' });
-//     }
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found.' });
+    }
 
-//     ticket.status = 'CheckedIn';
-//     await ticket.save();
+    if (ticket.status === 'CheckedIn') {
+      return res.status(400).json({ message: 'Ticket already checked in.' });
+    }
 
-//     return res.status(200).json({ message: 'Ticket checked in successfully.', ticket });
-//   } catch (error) {
-//     console.error('Check-in Error:', error);
-//     return res.status(500).json({ message: 'Failed to check-in ticket.' });
-//   }
-// };
+    if (ticket.status === 'Cancelled') {
+      return res.status(400).json({ message: 'Cannot check-in a cancelled ticket.' });
+    }
+
+    ticket.status = 'CheckedIn';
+    await ticket.save();
+
+    return res.status(200).json({ message: 'Ticket checked in successfully.', ticket });
+  } catch (error) {
+    console.error('Check-in Error:', error);
+    return res.status(500).json({ message: 'Failed to check-in ticket.' });
+  }
+};
 
 
-// // ======= MAKE TICKET VALID AGAIN =======
-// const makeTicketValid = async (req, res) => {
-//   try {
-//     const { ticketId } = req.params;
+// ======= MAKE TICKET VALID AGAIN =======
+const makeTicketValid = async (req, res) => {
+  try {
+    const { ticketCode } = req.params;
+    const isSnack = req.path.includes('/snacks');
+    const isMovie = req.path.includes('/movies');
 
-//     const ticket = await SnackTicket.findById(ticketId);
-//     if (!ticket || ticket.ticketType !== 'Snack') {
-//       return res.status(404).json({ message: 'Snack ticket not found.' });
-//     }
+    let ticket;
 
-//     if (ticket.status !== 'Cancelled') {
-//       return res.status(400).json({ message: 'Only cancelled tickets can be made valid.' });
-//     }
+    if (isSnack) {
+      ticket = await SnackTicket.findOne({ snackTicketCode: ticketCode });
+    } else if (isMovie) {
+      ticket = await Ticket.findOne({ ticketCode: ticketCode });
+    } else {
+      return res.status(400).json({ message: 'Unknown ticket type in URL.' });
+    }
 
-//     ticket.status = 'Confirmed';
-//     await ticket.save();
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found.' });
+    }
 
-//     return res.status(200).json({ message: 'Ticket revalidated successfully.', ticket });
-//   } catch (error) {
-//     console.error('Make Valid Error:', error);
-//     return res.status(500).json({ message: 'Failed to revalidate ticket.' });
-//   }
-// };
+    if (ticket.status !== 'Cancelled') {
+      return res.status(400).json({ message: 'Only cancelled tickets can be made valid.' });
+    }
+
+    ticket.status = 'Confirmed';
+    await ticket.save();
+
+    return res.status(200).json({ message: 'Ticket revalidated successfully.', ticket });
+  } catch (error) {
+    console.error('Make Valid Error:', error);
+    return res.status(500).json({ message: 'Failed to revalidate ticket.' });
+  }
+};
 
 
 module.exports = {
@@ -400,7 +421,6 @@ module.exports = {
   updateTicket,
   deleteTicket,
   // getTicketListByTime,
-  // checkInTicket,
-  // makeTicketValid,
-  // updateTicket
+  checkInTicket,
+  makeTicketValid,
 };
