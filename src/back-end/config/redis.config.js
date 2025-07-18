@@ -2,7 +2,7 @@ const redis = require('redis');
 
 // Tạo một client Redis
 const redisClient = redis.createClient({
-    // url: 'redis://your_remote_redis_url' // Nếu dùng Redis trên server khác
+    url: process.env.REDIS_URL || 'redis://127.0.0.1:6379' // Use .env or fallback to localhost
 });
 
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
