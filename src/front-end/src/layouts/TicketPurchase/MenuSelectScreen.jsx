@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import BPoster from '../../components/UI/BPoster';
-import NextNaviButton from '../../components/buttons/NaviButton';
-import { BackNaviButton } from '../../components/buttons/NaviButton';
-import DateSlider from '../../components/UI/Dateslider';
-import CinemaPopUp from '../../components/UI/CinemaPopUp';
+import BPoster from '@components/UI/BPoster';
+import NextNaviButton from '@components/buttons/NaviButton';
+import { BackNaviButton } from '@components/buttons/NaviButton';
+import DateSlider from '@components/UI/Dateslider';
+import CinemaPopUp from '@components/UI/CinemaPopUp';
 
 
 const schedules = [

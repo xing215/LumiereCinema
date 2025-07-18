@@ -1,14 +1,14 @@
 // src/pages/TicketPurchase.jsx
 import React, { useState, useEffect } from 'react';
 import {useNavigate, useSearchParams, useLocation} from 'react-router-dom';
-import Header from '../layouts/LandingPage/Header.jsx';
-import { Title } from '../components/UI/label.jsx';
-import MenuSelectScreen from '../layouts/TicketPurchase/MenuSelectScreen.jsx';
-import MenuSelectSeats from '../layouts/TicketPurchase/MenuSelectSeats.jsx';
-import MenuSelectSnack from '../layouts/TicketPurchase/MenuSelectSnack.jsx';
-import MenuInfo from '../layouts/TicketPurchase/MenuInfo.jsx';
-import MenuPayment from '../layouts/TicketPurchase/MenuPayment.jsx';
-import Footer from '../layouts/LandingPage/Footer.jsx';
+import Header from '@layouts/LandingPage/Header.jsx';
+import { Title } from '@components/UI/label.jsx';
+import MenuSelectScreen from '@layouts/TicketPurchase/MenuSelectScreen.jsx';
+import MenuSelectSeats from '@layouts/TicketPurchase/MenuSelectSeats.jsx';
+import MenuSelectSnack from '@layouts/TicketPurchase/MenuSelectSnack.jsx';
+import MenuInfo from '@layouts/TicketPurchase/MenuInfo.jsx';
+import MenuPayment from '@layouts/TicketPurchase/MenuPayment.jsx';
+import Footer from '@layouts/LandingPage/Footer.jsx';
 
 const MENU_STEPS = {
     SCREEN: 0,

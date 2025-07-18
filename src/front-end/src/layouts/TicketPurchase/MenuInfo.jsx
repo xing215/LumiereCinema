@@ -1,5 +1,5 @@
-import TicketDetail from '../../components/UI/TicketDetail';
-import NextNaviButton, { BackNaviButton } from '../../components/buttons/NaviButton';
+import TicketDetail from '@components/UI/TicketDetail';
+import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import { useState } from 'react';
 
 const InputField = ({ label, name, type = 'text', value, onChange, required = true }) => (

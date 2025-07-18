@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import IntegratedMap from '../display/IntegratedMap';
+import IntegratedMap from '@components/display/IntegratedMap';
 
 const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedCinema = null}) => {
 

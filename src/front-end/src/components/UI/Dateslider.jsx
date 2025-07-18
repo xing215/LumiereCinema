@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {BackNaviButton} from '../buttons/NaviButton';
+import {BackNaviButton} from '@components/buttons/NaviButton';
 
 const SliderButton = ({ date, isSelected, onClick, opacity = 'opacity-100', hasSelectedSchedule = false }) => {
     // Utility to get day abbreviation (Mon, Tue, etc.)

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import NextNaviButton, { BackNaviButton } from '../../components/buttons/NaviButton';
-import SnackSelect from '../../components/UI/SnackSelect';
+import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
+import SnackSelect from '@components/UI/SnackSelect';
 
 const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket }) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);

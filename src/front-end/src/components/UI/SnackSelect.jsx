@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import Combo1 from '../../assets/img/combo1.png';
+import Combo1 from '@assets/img/combo1.png';
 
 const SnackSelect = ({ snack_type }) => {
     const [hovered, setHovered] = useState(false);
