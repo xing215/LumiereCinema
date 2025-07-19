@@ -1,5 +1,5 @@
 import React, { use, useEffect, useRef, useState } from "react";
-import LocationTable from "./LocationTable.jsx";
+import LocationTable from "@components/display/LocationTable.jsx";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
