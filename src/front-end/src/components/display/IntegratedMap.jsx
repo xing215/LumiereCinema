@@ -71,7 +71,7 @@ const IntegratedMap = ({
                 minZoom: 6,
                 maxBounds: DEFAULT_BOUNDS,
                 maxBoundsViscosity: 0.6,
-                scrollWheelZoom: false,
+                scrollWheelZoom: true,
             
             });
 
@@ -91,12 +91,6 @@ const IntegratedMap = ({
                 }
             ).addTo(leafletMapRef.current);
 
-            leafletMapRef.current.on("mouseenter", () => {
-                leafletMapRef.current.scrollWheelZoom.enable();
-            });
-            leafletMapRef.current.on("mouseleave", () => {
-                leafletMapRef.current.scrollWheelZoom.disable();
-            });
         }
 
         if (leafletMapRef.current) {
@@ -211,8 +205,8 @@ const IntegratedMap = ({
     }, []);
 
     return (
-        <div className="relative w-screen xl:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[600px]">
-            <div className="ml-2 md:ml-5 mt-[1%] relative z-3 w-[95%] md:w-[15vw] h-[30%] md:h-[95%]">
+        <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
+            <div className="ml-2 mt-[1%] relative z-3 w-[95%] md:w-[18vw] h-[30%] md:h-[95%]">
                 <LocationTable
                     cinemas={cinemas}
                     curlocation={userLocation}
