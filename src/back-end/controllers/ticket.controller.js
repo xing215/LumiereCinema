@@ -842,10 +842,122 @@ const reserveSnacks = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Create standalone snack ticket
+ * @route   POST /tickets/snacks/create
+ * @access  Public
+ * @body    {
+ *            customer?: ObjectId,
+ *            noLoginCustomerInfo?: { name, email, phone },
+ *            branch: ObjectId,
+ *            seller?: ObjectId,
+ *            promotionCode?: string,
+ *            snackList: [{ snack: ObjectId, quantity: number }]
+ *          }
+ */
+const createSnackTicket = async (req, res) => {
+  const session = await mongoose.startSession();
+  
+  try {
+    const { 
+      customer, 
+      noLoginCustomerInfo, 
+      branch, 
+      seller, 
+      promotionCode,
+      snackList 
+    } = req.body;
+
+    // Validate snackList is provided
+    if (!snackList || !Array.isArray(snackList) || snackList.length === 0) {
+      return res.status(400).json({ 
+        error: 'snackList array is required and cannot be empty' 
+      });
+    }
+
+    let transactionResult;
+
+    await session.withTransaction(async () => {
+      // ===== Validate data =====
+      const { user, branchData } = await validateRequestData({ 
+        customer, 
+        noLoginCustomerInfo, 
+        branch, 
+        snackList, 
+        seller 
+      });
+
+      // ===== Calculate total and update stock =====
+      const { total: baseTotal, validatedSnackList } = await calculateTotalAndUpdateStock(
+        snackList, 
+        branchData._id, 
+        session
+      );
+
+      // ===== Apply discounts =====
+      const { total: finalTotal, appliedPromotion } = await applyDiscounts({ 
+        user, 
+        promotionCode, 
+        total: baseTotal,
+        session 
+      });
+
+      // ===== Add loyalty points if user is logged in =====
+      let pointsAdded = 0;
+      if (user && finalTotal > 0) {
+        pointsAdded = Math.floor(finalTotal / 10000); // 1 point per 10,000 VND
+        user.loyaltyPoints = (user.loyaltyPoints || 0) + pointsAdded;
+        await user.save({ session });
+      }
+
+      // ===== Create snack ticket =====
+      const snackTicket = new SnackTicket({
+        branch,
+        snackList: validatedSnackList,
+        promotion: appliedPromotion,
+        total: finalTotal,
+        seller: seller || null,
+        ...(customer ? { customer } : { noLoginCustomerInfo })
+      });
+
+      await snackTicket.save({ session });
+
+      // Store result for response
+      transactionResult = {
+        snackTicket,
+        totalAmount: finalTotal,
+        appliedPromotion,
+        pointsAdded
+      };
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Snack ticket created successfully',
+      data: {
+        snackTicket: transactionResult.snackTicket,
+        totalAmount: transactionResult.totalAmount,
+        appliedPromotion: transactionResult.appliedPromotion,
+        pointsAdded: transactionResult.pointsAdded
+      }
+    });
+
+  } catch (error) {
+    console.error('Create Snack Ticket Error:', error);
+    const status = error.status || 500;
+    const message = error.message || 'Failed to create snack ticket.';
+    return res.status(status).json({ 
+      error: message 
+    });
+  } finally {
+    await session.endSession();
+  }
+};
+
 // ======= EXISTING SUB FUNCTIONS =======
 
 // Kiểm tra dữ liệu đầu vào
-const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList, seller }) => {
+const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList = [], seller }) => {
   let user = null;
 
   if (customer) {
@@ -858,8 +970,8 @@ const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snac
     throw { status: 400, message: 'Customer information is required.' };
   }
 
-  if (!branch || !snackList || snackList.length === 0) {
-    throw { status: 400, message: 'Missing required fields.' };
+  if (!branch) {
+    throw { status: 400, message: 'Branch is required.' };
   }
 
   const branchData = await Branch.findById(branch);
@@ -876,12 +988,12 @@ const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snac
 };
 
 // Tính tổng tiền và cập nhật tồn kho
-const calculateTotalAndUpdateStock = async (snackList, branchId) => {
+const calculateTotalAndUpdateStock = async (snackList, branchId, session = null) => {
   let total = 0;
   const validatedSnackList = [];
 
   for (const item of snackList) {
-    const snack = await Snack.findOne({ _id: item.snack, branch: branchId });
+    const snack = await Snack.findOne({ _id: item.snack, branch: branchId }).session(session);
     if (!snack || snack.isHidden) {
       throw { status: 404, message: `Snack ${item.snack} not found or hidden.` };
     }
@@ -900,14 +1012,14 @@ const calculateTotalAndUpdateStock = async (snackList, branchId) => {
     });
 
     snack.stock -= item.quantity;
-    await snack.save();
+    await snack.save({ session });
   }
 
   return { total, validatedSnackList };
 };
 
 // Áp dụng khuyến mãi và điểm thành viên
-const applyDiscounts = async ({ user, promotionCode, total }) => {
+const applyDiscounts = async ({ user, promotionCode, total, session = null }) => {
   let updatedTotal = total;
   let appliedPromotion = null;
 
@@ -916,7 +1028,7 @@ const applyDiscounts = async ({ user, promotionCode, total }) => {
   }
 
   if (promotionCode) {
-    const promo = await Promotion.findOne({ promotionCode: promotionCode, isActive: true });
+    const promo = await Promotion.findOne({ promotionCode: promotionCode, isActive: true }).session(session);
     const now = new Date();
 
     if (
@@ -943,7 +1055,7 @@ const applyDiscounts = async ({ user, promotionCode, total }) => {
 
     if (promo.remainingUse !== null) {
       promo.remainingUse -= 1;
-      await promo.save();
+      await promo.save({ session });
     }
 
     appliedPromotion = promo._id;
@@ -952,53 +1064,232 @@ const applyDiscounts = async ({ user, promotionCode, total }) => {
   return { total: updatedTotal, appliedPromotion };
 };
 
+/**
+ * @desc    Create unified ticket (movie, snack, or both)
+ * @route   POST /tickets/create
+ * @access  Public
+ * @body    {
+ *            customer?: ObjectId,
+ *            noLoginCustomerInfo?: { name, email, phone },
+ *            branch: ObjectId,
+ *            seller?: ObjectId,
+ *            promotionCode?: string,
+ *            movieTicket?: {
+ *              schedule: ObjectId,
+ *              seats: [string]
+ *            },
+ *            snackTicket?: {
+ *              snackList: [{ snack: ObjectId, quantity: number }]
+ *            }
+ *          }
+ */
 const createTicket = async (req, res) => {
+  const session = await mongoose.startSession();
+  
   try {
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const { 
+      customer, 
+      noLoginCustomerInfo, 
+      branch, 
+      seller, 
+      promotionCode,
+      movieTicket,
+      snackTicket 
+    } = req.body;
 
-    if (isSnack) {
-      const { branch, customer, noLoginCustomerInfo, snackList, promotionCode, seller } = req.body;
+    // Validate that at least one ticket type is requested
+    if (!movieTicket && !snackTicket) {
+      return res.status(400).json({ 
+        error: 'At least one ticket type (movieTicket or snackTicket) must be provided' 
+      });
+    }
 
-      // ===== Kiểm tra dữ liệu =====
-      const { user, branchData } = await validateRequestData({ customer, noLoginCustomerInfo, branch, snackList, seller });
+    let transactionResult;
 
-      // ===== Tính tổng tiền và cập nhật kho =====
-      const { total: baseTotal, validatedSnackList } = await calculateTotalAndUpdateStock(snackList, branchData._id);
-
-      // ===== Giảm giá =====
-      const { total: finalTotal, appliedPromotion } = await applyDiscounts({ user, promotionCode: promotionCode, total: baseTotal });
-
-      // ===== Cộng điểm nếu có login =====
-      if (user) {
-        user.addLunarPointsFromPurchase(finalTotal);
-        await user.save();
-      }
-
-      // ===== Lưu vé =====
-      const ticket = new SnackTicket({
-        branch,
-        snackList: validatedSnackList,
-        promotion: appliedPromotion,
-        total: finalTotal,
-        ...(seller && { seller }),
-        ...(customer ? { customer } : { noLoginCustomerInfo }),
+    await session.withTransaction(async () => {
+      // ===== Validate common data =====
+      const { user, branchData } = await validateRequestData({ 
+        customer, 
+        noLoginCustomerInfo, 
+        branch, 
+        snackList: snackTicket?.snackList || [], 
+        seller 
       });
 
-      await ticket.save();
-      return res.status(201).json({ message: 'Snack ticket created successfully.', ticket });
+      let createdMovieTicket = null;
+      let createdSnackTicket = null;
+      let totalAmount = 0;
+
+      // ===== Process Movie Ticket =====
+      if (movieTicket) {
+        const { schedule, seats } = movieTicket;
+        
+        // Validate movie ticket data
+        if (!schedule || !seats || !Array.isArray(seats) || seats.length === 0) {
+          throw { status: 400, message: 'Movie ticket requires schedule and seats array' };
+        }
+
+        // Validate schedule exists and get movie pricing
+        const scheduleData = await Schedule.findById(schedule)
+          .populate('movie')
+          .populate('screen')
+          .session(session);
+        
+        if (!scheduleData) {
+          throw { status: 404, message: 'Schedule not found' };
+        }
+
+        if (scheduleData.movie.isHidden) {
+          throw { status: 400, message: 'Movie is not available' };
+        }
+
+        // Check seat availability
+        const existingTickets = await Ticket.find({
+          schedule: schedule,
+          seats: { $in: seats },
+          status: { $in: ['Confirmed', 'CheckedIn'] }
+        }).session(session);
+
+        if (existingTickets.length > 0) {
+          const occupiedSeats = existingTickets.flatMap(ticket => ticket.seats);
+          const conflictSeats = seats.filter(seat => occupiedSeats.includes(seat));
+          throw { 
+            status: 409, 
+            message: 'Some seats are already booked',
+            conflictSeats 
+          };
+        }
+
+        // Calculate movie ticket price (you might want to implement seat pricing logic)
+        const basePrice = 100000; // Base price per seat, adjust as needed
+        const movieTicketTotal = basePrice * seats.length;
+
+        // Create movie ticket
+        createdMovieTicket = new Ticket({
+          customer: customer || null,
+          seller: seller || null,
+          branch,
+          schedule,
+          seats,
+          total: movieTicketTotal,
+          status: 'Confirmed'
+        });
+
+        await createdMovieTicket.save({ session });
+        totalAmount += movieTicketTotal;
+
+        // Clear seat holds for these seats
+        await SeatHold.deleteMany({
+          schedule: schedule,
+          seatNumber: { $in: seats },
+          $or: [
+            { user: customer },
+            { sessionId: req.sessionID }
+          ]
+        }).session(session);
+      }
+
+      // ===== Process Snack Ticket =====
+      if (snackTicket) {
+        const { snackList } = snackTicket;
+        
+        if (!snackList || !Array.isArray(snackList) || snackList.length === 0) {
+          throw { status: 400, message: 'Snack ticket requires snackList array' };
+        }
+
+        // Calculate snack total and update stock
+        const { total: snackTotal, validatedSnackList } = await calculateTotalAndUpdateStock(
+          snackList, 
+          branchData._id, 
+          session
+        );
+
+        // Create snack ticket
+        createdSnackTicket = new SnackTicket({
+          branch,
+          snackList: validatedSnackList,
+          total: snackTotal,
+          seller: seller || null,
+          ...(customer ? { customer } : { noLoginCustomerInfo })
+        });
+
+        await createdSnackTicket.save({ session });
+        totalAmount += snackTotal;
+      }
+
+      // ===== Apply promotions and discounts =====
+      let finalTotal = totalAmount;
+      let appliedPromotion = null;
+
+      if (user || promotionCode) {
+        const discountResult = await applyDiscounts({ 
+          user, 
+          promotionCode, 
+          total: totalAmount,
+          session 
+        });
+        finalTotal = discountResult.total;
+        appliedPromotion = discountResult.appliedPromotion;
+
+        // Update promotion reference in tickets
+        if (appliedPromotion) {
+          if (createdMovieTicket) {
+            createdMovieTicket.promotion = appliedPromotion;
+            createdMovieTicket.total = createdMovieTicket.total * (finalTotal / totalAmount);
+            await createdMovieTicket.save({ session });
+          }
+          if (createdSnackTicket) {
+            createdSnackTicket.promotion = appliedPromotion;
+            createdSnackTicket.total = createdSnackTicket.total * (finalTotal / totalAmount);
+            await createdSnackTicket.save({ session });
+          }
+        }
+      }
+
+      // ===== Add loyalty points if user is logged in =====
+      if (user && finalTotal > 0) {
+        const pointsToAdd = Math.floor(finalTotal / 10000); // 1 point per 10,000 VND
+        user.loyaltyPoints = (user.loyaltyPoints || 0) + pointsToAdd;
+        await user.save({ session });
+      }
+
+      // Store result for response
+      transactionResult = {
+        movieTicket: createdMovieTicket,
+        snackTicket: createdSnackTicket,
+        totalAmount: finalTotal,
+        appliedPromotion,
+        pointsAdded: user ? Math.floor(finalTotal / 10000) : 0
+      };
+    });
+
+    // Invalidate relevant caches
+    if (movieTicket) {
+      await CacheManager.invalidateScheduleCache(movieTicket.schedule);
     }
 
-    if (isMovie) {
-      return res.status(501).json({ message: 'MovieTicket creation not implemented yet.' });
-    }
+    return res.status(201).json({
+      success: true,
+      message: 'Ticket(s) created successfully',
+      data: {
+        movieTicket: transactionResult.movieTicket,
+        snackTicket: transactionResult.snackTicket,
+        totalAmount: transactionResult.totalAmount,
+        appliedPromotion: transactionResult.appliedPromotion,
+        pointsAdded: transactionResult.pointsAdded
+      }
+    });
 
-    return res.status(400).json({ message: 'Unknown ticket type in URL.' });
   } catch (error) {
     console.error('Create Ticket Error:', error);
     const status = error.status || 500;
     const message = error.message || 'Failed to create ticket.';
-    return res.status(status).json({ message });
+    return res.status(status).json({ 
+      error: message,
+      ...(error.conflictSeats && { conflictSeats: error.conflictSeats })
+    });
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -1446,7 +1737,8 @@ module.exports = {
   cleanupExpiredHolds,
   getCacheStats,
   cleanupCache,
-  preloadCache
+  preloadCache,
+  createSnackTicket
   // getTicketListByTime,
   // checkInTicket,
   // makeTicketValid,

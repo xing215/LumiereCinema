@@ -4,6 +4,8 @@ const router = express.Router();
 const { 
   getSchedulesByBranch, 
   getSeatMapBySchedule,
+  createTicket,
+  createSnackTicket,
   holdSeats,
   manageSeatHold,
   releaseBulkHolds,
@@ -68,6 +70,20 @@ router.get('/:branchId/snacks', getSnacksByBranch);
  * Body: { branchId, snackItems[], userId?, sessionId?, reserveDurationMinutes? }
  */
 router.post('/snacks/reserve', reserveSnacks);
+
+/**
+ * POST /create
+ * Tạo vé thống nhất (có thể tạo movie ticket, snack ticket, hoặc cả hai)
+ * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, movieTicket?, snackTicket? }
+ */
+router.post('/create', createTicket);
+
+/**
+ * POST /snacks/create
+ * Tạo vé snack riêng biệt
+ * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, snackList }
+ */
+router.post('/snacks/create', createSnackTicket);
 
 /**
  * Cache Management APIs
