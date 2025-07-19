@@ -12,7 +12,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden'; // Prevent background scroll
+            // document.body.style.overflow = 'hidden'; // Prevent background scroll
         } else {
             // Reset overflow when popup closes
             document.body.style.overflow = '';
@@ -54,7 +54,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
                     ×
                 </button>
                 {/* Cinema Map */}
-                <div className="w-auto h-auto flex items-center justify-center">
+                <div className="w-auto h-auto flex items-center justify-center overflow-hidden">
                     <IntegratedMap onClick={handleBranchSelect} selectedCinema={selectedCinema} isOpen={isOpen} />
                 </div>
             </div>

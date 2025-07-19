@@ -71,7 +71,7 @@ const IntegratedMap = ({
                 minZoom: 6,
                 maxBounds: DEFAULT_BOUNDS,
                 maxBoundsViscosity: 0.6,
-                scrollWheelZoom: false,
+                scrollWheelZoom: true,
             
             });
 
@@ -91,12 +91,6 @@ const IntegratedMap = ({
                 }
             ).addTo(leafletMapRef.current);
 
-            leafletMapRef.current.on("mouseenter", () => {
-                leafletMapRef.current.scrollWheelZoom.enable();
-            });
-            leafletMapRef.current.on("mouseleave", () => {
-                leafletMapRef.current.scrollWheelZoom.disable();
-            });
         }
 
         if (leafletMapRef.current) {
@@ -181,34 +175,34 @@ const IntegratedMap = ({
         };
     }, []);
 
-    // useEffect(() => {
-    //     let scrollTimeout = null;
+    useEffect(() => {
+        let scrollTimeout = null;
 
-    //     const handleScroll = () => {
-    //         if (leafletMapRef.current) {
-    //             leafletMapRef.current.scrollWheelZoom.disable();
-    //             leafletMapRef.current.dragging.disable();
-    //         }
-    //         if (scrollTimeout) clearTimeout(scrollTimeout);
-    //         scrollTimeout = setTimeout(handleScrollEnd, 300);
-    //     };
+        const handleScroll = () => {
+            if (leafletMapRef.current) {
+                leafletMapRef.current.scrollWheelZoom.disable();
+                leafletMapRef.current.dragging.disable();
+            }
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(handleScrollEnd, 300);
+        };
 
-    //     const handleScrollEnd = () => {
-    //         if (leafletMapRef.current) {
-    //             leafletMapRef.current.scrollWheelZoom.enable();
-    //             leafletMapRef.current.dragging.enable();
-    //         }
-    //     };
+        const handleScrollEnd = () => {
+            if (leafletMapRef.current) {
+                leafletMapRef.current.scrollWheelZoom.enable();
+                leafletMapRef.current.dragging.enable();
+            }
+        };
 
-    //     document.addEventListener("scroll", handleScroll, { passive: true });
-    //     document.addEventListener("touchend", handleScrollEnd, { passive: true });
+        document.addEventListener("scroll", handleScroll, { passive: true });
+        document.addEventListener("touchend", handleScrollEnd, { passive: true });
 
-    //     return () => {
-    //         document.removeEventListener("scroll", handleScroll);
-    //         document.removeEventListener("touchend", handleScrollEnd);
-    //         if (scrollTimeout) clearTimeout(scrollTimeout);
-    //     };
-    // }, []);
+        return () => {
+            document.removeEventListener("scroll", handleScroll);
+            document.removeEventListener("touchend", handleScrollEnd);
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+        };
+    }, []);
 
     return (
         <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
