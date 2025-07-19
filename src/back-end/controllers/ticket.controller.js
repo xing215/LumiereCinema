@@ -21,7 +21,7 @@ const CacheManager = require('../utils/cacheManager');
 const getSchedulesByBranch = async (req, res) => {
   try {
     const { branchId } = req.params;
-    const { date, movieId } = req.query; // ✅ Đổi từ req.body sang req.query
+    const { date, movieId } = req.query; 
 
     // Validate branchId format
     if (!mongoose.Types.ObjectId.isValid(branchId)) {
@@ -122,10 +122,15 @@ const getSchedulesByBranch = async (req, res) => {
           foreignField: '_id',
           as: 'movieData'
         }
-      },
-      // Stage 6: Unwind movie data
+      },      // Stage 6: Unwind movie data
       {
         $unwind: '$movieData'
+      },
+      // Stage 6.5: Filter out hidden movies
+      {
+        $match: {
+          'movieData.isHidden': false
+        }
       },
       // Stage 7: Lookup active seat holds for each schedule
       {
@@ -277,9 +282,13 @@ const getSeatMapBySchedule = async (req, res) => {
       },
       {
         $unwind: '$screenData'
+      },      {
+        $unwind: '$movieData'
       },
       {
-        $unwind: '$movieData'
+        $match: {
+          'movieData.isHidden': false // Only show schedules for non-hidden movies
+        }
       },
       {
         $project: {

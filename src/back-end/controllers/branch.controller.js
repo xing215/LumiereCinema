@@ -232,13 +232,17 @@ const getAvailableBranches = async (req, res) => {
                 startTime: { $gte: new Date() } // Only future schedules
               }
             },
-            {
-              $lookup: {
+            {              $lookup: {
                 from: 'movies',
                 localField: 'movie',
                 foreignField: '_id',
                 pipeline: [
-                  { $match: { status: 'Now Showing' } }
+                  { 
+                    $match: { 
+                      isHidden: false,
+                      releaseDate: { $lte: new Date() } // Only movies that are currently showing
+                    } 
+                  }
                 ],
                 as: 'movieData'
               }

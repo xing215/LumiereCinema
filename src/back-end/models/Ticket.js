@@ -2,26 +2,26 @@ const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
 
 const ticketSchema = new mongoose.Schema({
-  // TicketCode (PK): Mã vé duy nhất, ngắn gọn, tự động tạo
+  // Unique ticket code, auto-generated
   ticketCode: {
     type: String,
     required: true,
     unique: true,
     immutable: true,
   },
-  // Customer (FK): Tham chiếu đến người dùng mua vé
+  // Customer reference
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
 
-  // SellerId: Tham chiếu đến nhân viên bán vé (nếu mua tại quầy)
+  // Staff member who sold the ticket (for counter sales)
   seller: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', 
   },
 
-  // Lưu lại để truy vấn nhanh không cần populate
+  // Branch reference for quick queries without populate
   branch: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Branch',
@@ -35,32 +35,29 @@ const ticketSchema = new mongoose.Schema({
     required: true,
   },
 
-
-  // --------------------------------------------------------
-
-  // SeatNameList: Danh sách các ghế được đặt trong vé này
+  // List of seat names booked in this ticket
   seats: {
-    type: [String], // Mảng các tên ghế, ví dụ: ["A1", "A2", "A3"]
+    type: [String], // Array of seat names, e.g., ["A1", "A2", "A3"]
     required: true,
   },
 
-  // PromotionCode (FK): Tham chiếu đến mã khuyến mãi đã áp dụng
+  // Applied promotion reference
   promotion: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Promotion', 
   },
 
-  // Total: Tổng số tiền cuối cùng của vé
+  // Final total amount
   total: {
     type: Number,
     required: true,
     min: 0
   },
 
-  // IsValid: Trạng thái của vé
+  // Ticket status
   status: {
       type: String,
-      enum: ['Confirmed', 'CheckedIn', 'Cancelled'], // 'Confirmed' & 'CheckedIn' là hợp lệ
+      enum: ['Confirmed', 'CheckedIn', 'Cancelled'], // 'Confirmed' & 'CheckedIn' are valid
       default: 'Confirmed',
   },
 
@@ -71,10 +68,10 @@ const ticketSchema = new mongoose.Schema({
     immutable: true
   }
 
-}, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
+}, { timestamps: true }); // Use timestamps for CreatedDate (createdAt) and LastAccess (updatedAt)
 
 
-// Tự động tạo ticketCode
+// Auto-generate ticketCode
 ticketSchema.pre('validate', function(next) {
     if (this.isNew) {
         this.ticketCode = nanoid(10).toUpperCase();
