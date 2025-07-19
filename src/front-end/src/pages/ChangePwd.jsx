@@ -1,10 +1,10 @@
 import React from 'react';
-import Header from '../layouts/LandingPage/Header.jsx';
-import ChangePwdForm from '../layouts/ChangePwd/ChangePwdForm.jsx';
-import ChatBot from '../components/display/ChatBot.jsx';
-import BackwardButton from '../components/buttons/backwardButton.jsx';
+import Header from '@layouts/LandingPage/Header.jsx';
+import ChangePwdForm from '@layouts/ChangePwd/ChangePwdForm.jsx';
+import ChatBot from '@components/display/ChatBot.jsx';
+import BackwardButton from '@components/buttons/backwardButton.jsx';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../layouts/LandingPage/Footer.jsx';
+import Footer from '@layouts/LandingPage/Footer.jsx';
 
 const ChangePwd = () => {
     const navigate = useNavigate();

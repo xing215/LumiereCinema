@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../../routes/routeConfig.js';
-import { authAPI, validatePassword, formatPasswordErrors } from '../../utils/auth.utils.js';
-import ShowIcon from '../../assets/icons/show.svg';
-import HideIcon from '../../assets/icons/hide.svg';
+import { ROUTES } from '@routes/routeConfig.js';
+import { useChangePassword, useResetPassword } from '@hooks/useAuth';
+import { validatePassword, formatPasswordErrors } from '@utils/auth.utils.js';
+import ShowIcon from '@assets/icons/show.svg';
+import HideIcon from '@assets/icons/hide.svg';
 
 const ChangePwdForm = ({ ResetToken = null }) => {
     const navigate = useNavigate();
@@ -22,6 +23,8 @@ const ChangePwdForm = ({ ResetToken = null }) => {
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
 
+    const { changePassword } = useChangePassword();
+    const { resetPassword } = useResetPassword();
     const validateField = (name, value) => {
         let error = '';
 
@@ -112,18 +115,18 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             let response;
             if (ResetToken) {
                 // Reset password with token
-                response = await authAPI.resetPassword({
+                response = await resetPassword({
                     token: ResetToken,
                     newPassword: formData.newPassword,
                     retypeNewPassword: formData.retypeNewPassword
                 });
             } else {
                 // Regular password change
-                response = await authAPI.changePassword(formData);
+                response = await changePassword(formData);
             }
 
-            setMessage(response.message);
-            setIsSuccess(true);
+            setMessage(response.data?.message || 'Password updated successfully.');
+            setIsSuccess(response.success);
             
             // Redirect to login page after successful password change/reset
             setTimeout(() => {

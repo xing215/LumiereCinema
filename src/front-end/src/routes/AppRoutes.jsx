@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext.jsx';
-import ProtectedRoute from '../components/ProtectedRoute.jsx';
-import { routeConfig, getRedirectPath } from './routeConfig.js';
+import { useUser } from '@contexts/UserContext.jsx';
+import ProtectedRoute from '@components/ProtectedRoute.jsx';
+import { routeConfig, getRedirectPath } from '@routes/routeConfig.js';
 
 // Loading component
 const LoadingSpinner = () => (

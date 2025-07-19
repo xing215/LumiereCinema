@@ -1,4 +1,4 @@
-import { authAPI, isStaff } from './auth.utils.js';
+import { authAPI } from '@hooks/useAuth.js';
 
 export const handleLogout = async (userContext, navigate) => {
     try {

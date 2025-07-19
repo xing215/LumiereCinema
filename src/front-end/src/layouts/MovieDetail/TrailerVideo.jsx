@@ -1,4 +1,4 @@
-import trailerVideo from '../../assets/sample/Video/TrailerVideo.mp4';
+import trailerVideo from '@assets/sample/Video/TrailerVideo.mp4';
 export const TrailerVideo = () => {
     return (
         <div className="relative z-15 flex w-full items-center justify-center">

@@ -1,7 +1,6 @@
-import SeatLayout from '../Seats.jsx';
-import Seat from '../../UI/Seat.jsx';
-import CoupleSeat from '../../UI/CoupleSeat.jsx';
-import { Disc } from 'lucide-react';
+import SeatLayout from '@components/display/Seats.jsx';
+import Seat from '@components/UI/Seat.jsx';
+import CoupleSeat from '@components/UI/CoupleSeat.jsx';
 
 const DisplayButton = ({ data }) => {
     return <div className="font-unbounded relative h-7 w-[25%] rounded-xl bg-zinc-300/70 text-center font-bold text-black">{data}</div>;
@@ -240,13 +239,16 @@ const EditSeatModal = (props) => {
                         <ScreenInformation data={props.screenData} />
                         <SeatInformation />
                     </div>
-                    <div className="w-[10%]" />
+
+                    <div className="relative h-full w-[10%]" />
+
                     <div className="relative mr-[2%] w-[60%]">
                         <SeatLayout data={seatRows} />
                     </div>
                 </div>
 
                 <div className="h-[10%] w-full" />
+
                 <div className="relative flex items-center gap-4">
                     <CancelButton onclick={props.onClose} />
                     <ConfirmButton />

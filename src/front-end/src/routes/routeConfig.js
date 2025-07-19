@@ -1,24 +1,24 @@
-// Page imports
-import LandingPage from '../pages/LandingPage';
-import Registration from '../pages/Registration';
-import Login from '../pages/Login';
-import StaffLogin from '../pages/staff/Login';
-import StaffResetPwd from '../pages/staff/ResetPwd';
-import ChangePwd from '../pages/ChangePwd';
-import StaffChangePwd from '../pages/staff/ChangePwd';
-import MovieListPage from '../pages/MovieList.jsx';
-import CheckInCounterPage from '../pages/staff/CheckInCounterPage.jsx';
-import ScheduleManagePage from '../pages/staff/ScheduleManagePage.jsx';
-import PromotionManagePage from '../pages/staff/PromotionManagePage.jsx';
-import ReportPage from '../pages/staff/ReportPage';
-import ScreenManagePage from '../pages/staff/ScreenManagePage.jsx';
-import BranchManagePage from '../pages/staff/BranchManagePage.jsx';
-import AccountManagePage from '../pages/staff/AccountManagePage.jsx';
-import ResetPwdEmail from '../pages/ResetPwdEmail.jsx';
-import ForgotPassword from '../pages/ForgotPassword.jsx';
-import StaffRoot from '../pages/staff/StaffRoot.jsx';
-import MovieManagePage from '../pages/staff/MovieManagePage.jsx';
-import SnackManagePage from '../pages/staff/SnackManagePage.jsx';
+import LandingPage from '@pages/LandingPage';
+import Registration from '@pages/Registration';
+import Login from '@pages/Login';
+import StaffLogin from '@pages/staff/Login';
+import StaffResetPwd from '@pages/staff/ResetPwd';
+import ChangePwd from '@pages/ChangePwd';
+import StaffChangePwd from '@pages/staff/ChangePwd';
+import MovieListPage from '@pages/MovieList.jsx';
+import CheckInCounterPage from '@pages/staff/CheckInCounterPage.jsx';
+import ScheduleManagePage from '@pages/staff/ScheduleManagePage.jsx';
+import PromotionManagePage from '@pages/staff/PromotionManagePage.jsx';
+import ReportPage from '@pages/staff/ReportPage';
+import ScreenManagePage from '@pages/staff/ScreenManagePage.jsx';
+import BranchManagePage from '@pages/staff/BranchManagePage.jsx';
+import AccountManagePage from '@pages/staff/AccountManagePage.jsx';
+import ResetPwdEmail from '@pages/ResetPwdEmail.jsx';
+import ForgotPassword from '@pages/ForgotPassword.jsx';
+import StaffRoot from '@pages/staff/StaffRoot.jsx';
+import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
+import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
+import TicketPurchase from '@pages/TicketPurchase';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -30,7 +30,8 @@ export const ROUTES = {
     RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
     NOT_FOUND: '/404',
-    
+    BUY_TICKET: '/buy-ticket',
+
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
     
@@ -87,6 +88,12 @@ export const routeConfig = [
     {
         path: ROUTES.MOVIES,
         component: MovieListPage,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.BUY_TICKET,
+        component: TicketPurchase,
         type: 'public',
         requiresAuth: false
     },

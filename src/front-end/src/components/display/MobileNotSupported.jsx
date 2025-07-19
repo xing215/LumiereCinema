@@ -6,7 +6,7 @@
  *
  * @example
  * // Import the component
- * import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
+ * import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
  *
  * // Usage as Wrapper Component
  * <MobileNotSupported>

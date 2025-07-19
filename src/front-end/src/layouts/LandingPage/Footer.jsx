@@ -1,7 +1,7 @@
-import LogoImg from '../../assets/img/Logo.svg';
-import NavButton from '../../components/buttons/footer/navButton.jsx';
-import Star from '../../assets/img/Star.png';
-import Moon from '../../assets/img/Moon.png';
+import LogoImg from '@assets/img/Logo.svg';
+import NavButton from '@components/buttons/footer/navButton.jsx';
+import Star from '@assets/img/Star.png';
+import Moon from '@assets/img/Moon.png';
 
 const SpaceH = () => {
     return <div className="h-[3px] w-full md:h-[5px] lg:h-[6px] xl:h-[10px]" />;

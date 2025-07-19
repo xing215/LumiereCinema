@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SearchButton from '../../components/buttons/Staff/SearchButton.jsx';
-import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
-import ManageTable from '../../components/UI/ManageTable.jsx';
-import DeleteButton from '../../components/buttons/Staff/DeleteButton.jsx';
-import AddButton from '../../components/buttons/Staff/AddButton.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
+import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
+import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
+import ConfirmationModal from '@components/display/Modal/Confirmation.jsx';
+import ManageTable from '@components/UI/ManageTable.jsx';
+import DeleteButton from '@components/buttons/Staff/DeleteButton.jsx';
+import AddButton from '@components/buttons/Staff/AddButton.jsx';
 
 const PromotionManagePage = () => {
     const [tickedPromotions, setTickedPromotions] = useState(new Set());

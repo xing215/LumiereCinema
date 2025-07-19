@@ -6,7 +6,7 @@
  *
  * @example
  * // Import the component
- * import StaffLayout from '../../layouts/StaffLayout.jsx';
+ * import StaffLayout from '@layouts/StaffLayout.jsx';
  *
  * // Usage as Wrapper Component
  * <StaffLayout>
@@ -20,8 +20,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import StaffSidebar from '../components/display/staffSidebar.jsx';
-import { useUser } from '../contexts/UserContext.jsx';
+import StaffSidebar from '@components/display/staffSidebar.jsx';
+import { useUser } from '@contexts/UserContext.jsx';
 
 const StaffLayout = ({ children, theme = 'dark', showQuickActions = true, onItemClick = (item) => console.log('Clicked:', item.label), className = '', backgroundClass = 'bg-slate-950' }) => {
     // Initialize sidebar state from localStorage or default to true (collapsed)

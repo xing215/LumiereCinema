@@ -1,4 +1,4 @@
-import backward from '../../assets/img/backward2.svg';
+import backward from '@assets/img/backward2.svg';
 
 const backwardButton = ({ onClick, position = 'absolute' }) => {
     const positionClass = position === 'absolute' ? 'absolute z-50 xl:left-8 lg:left-6 sm:left-3 left-0 top-1/2 -translate-y-1/2' : 'relative z-50';

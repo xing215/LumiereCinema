@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext.jsx';
-import { ROUTES } from '../../routes/routeConfig.js';
-import LoginForm from '../../layouts/Login/LoginForm.jsx';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
+import LoginForm from '@layouts/Login/LoginForm.jsx';
 
 const StaffLogin = () => {
     const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Camera } from 'lucide-react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
 
 const MainBody = () => {
     return (

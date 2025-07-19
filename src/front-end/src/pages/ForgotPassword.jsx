@@ -1,21 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext.jsx';
-import { ROUTES } from '../routes/routeConfig.js';
-import { authAPI } from '../utils/auth.utils.js';
-import Header from '../layouts/LandingPage/Header.jsx';
-import ChatBot from '../components/display/ChatBot.jsx';
-import BackwardButton from '../components/buttons/backwardButton.jsx';
-import Footer from '../layouts/LandingPage/Footer.jsx';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
+import { useResetPassword } from '@hooks/useAuth';
+import Header from '@layouts/LandingPage/Header.jsx';
+import ChatBot from '@components/display/ChatBot.jsx';
+import BackwardButton from '@components/buttons/backwardButton.jsx';
+import Footer from '@layouts/LandingPage/Footer.jsx';
+import ResetPwdForm from '@layouts/ResetPwd/ResetPwdForm.jsx';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
     const { isAuthenticated, isLoading: authLoading } = useUser();
-    const [email, setEmail] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState('');
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [errors, setErrors] = useState({});
 
     // Redirect if already logged in
     useEffect(() => {
@@ -38,42 +34,7 @@ const ForgotPassword = () => {
         return null;
     }
 
-    const validateEmail = (email) => {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailPattern.test(email);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setMessage('');
-        setErrors({});
-
-        if (!validateEmail(email)) {
-            setErrors({ email: 'Please enter a valid email address' });
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            const response = await authAPI.forgotPassword(email);
-            setMessage(response.message);
-            setIsSuccess(true);
-        } catch (error) {
-            console.error('Forgot password error:', error);
-            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
-            setIsSuccess(false);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleInputChange = (e) => {
-        setEmail(e.target.value);
-        setMessage('');
-        setErrors({});
-    };
-
+    const resetPwdHook = useResetPassword();
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden overflow-y-hidden bg-slate-950">
             <Header />
@@ -89,56 +50,7 @@ const ForgotPassword = () => {
             </div>
             
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
-                <div className="w-full max-w-xs px-4 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-lg xl:max-w-xl">
-                    {/* Title */}
-                    <h1 className="mb-4 text-center font-['Unbounded'] text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">FORGOT PASSWORD</h1>
-
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
-                        {/* Message */}
-                        {message && (
-                            <div className={`rounded-md p-3 text-center ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                <p className="font-['Libre_Franklin'] text-sm">{message}</p>
-                            </div>
-                        )}
-
-                        {/* Email Input */}
-                        <div>
-                            <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Email</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={handleInputChange}
-                                disabled={isLoading}
-                                className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.email ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
-                                placeholder="Enter your email address"
-                                required
-                            />
-                            {errors.email && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.email}</p>}
-                        </div>
-
-                        {/* Submit Button */}
-                        <div className="flex justify-center pt-4 sm:pt-6">
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
-                            >
-                                {isLoading ? 'SENDING...' : 'SEND RESET LINK'}
-                            </button>
-                        </div>
-
-                        {/* Back to Login */}
-                        <div className="text-center">
-                            <span
-                                onClick={() => !isLoading && navigate(ROUTES.LOGIN)}
-                                className={`font-['Libre_Franklin'] text-sm font-normal text-white hover:text-purple-300 sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                            >
-                                Back to Login
-                            </span>
-                        </div>
-                    </form>
-                </div>
+                <ResetPwdForm resetPwdHook={resetPwdHook} />
             </div>
 
             <ChatBot />
