@@ -22,7 +22,7 @@ let distance = null;
         <div className={`${maxdistance > distance || maxdistance === '' ? '' : 'hidden'} group relative z-10 mb-2 h-auto w-full rounded-xl p-2 pt-1 mix-blend-color-dodge ${isSelected ? 'bg-zinc-300/60 xl:p-4' : 'hover:bg-zinc-300/50 bg-zinc-300/30'} xl:py-4`}
 onClick={() => onClick(cinema)}
         style={{ cursor: 'pointer' }}>
-            <h2 className="font-libre-franklin text-[10px] pt-1 font-bold text-white sm:text-xs md:text-lg lg:text-xl xl:text-2xl">{branchName}</h2>
+            <h2 className="font-libre-franklin text-[10px] pt-1 font-bold text-white sm:text-xs md:text-md lg:text-[18px]">{branchName}</h2>
             <p className="font-libre-franklin text-[7px] font-light text-white md:text-[10px] lg:text-xs pb-1">
                 {' '}
                 {curlocation && distance ? distance + ' km •' : ''} {showings} now showing
@@ -33,12 +33,12 @@ onClick={() => onClick(cinema)}
 
 const HeaderTable = ({ maxdistance, setMaxDistance }) => {
     return (
-        <div className="relative flex h-auto flex-row items-center justify-center gap-1 pt-15 px-2">
-            <span className="font-unbounded text-[8px] w-auto font-normal text-right text-white sm:text-xs xl:text-sm">Farthest distance:</span>
+        <div className="relative flex h-auto flex-row items-center justify-center gap-1 pt-[5vh] min-h-[2px] px-2">
+            <span className="font-unbounded text-[8px] w-auto font-normal text-left pl-2 text-white sm:text-xs xl:text-sm">Farthest distance:</span>
             <span className=" pl-1 absolute right-5 font-unbounded text-[8px] font-normal text-right text-black sm:text-xs xl:text-sm bg-zinc-300 ">km</span>
             <input
             type="number"
-                className="h-auto lg:w-[6vw] md:w-[9vw] rounded-xl bg-zinc-300 px-3 font-['Unbounded'] text-sm text-black focus:ring-2 focus:ring-purple-600/100 focus:outline-none"
+                className="h-auto pr-1 lg:w-[6vw] md:w-[9vw] rounded-xl bg-zinc-300 px-3 font-['Unbounded'] text-sm text-black focus:ring-2 focus:ring-purple-600/100 focus:outline-none"
                 value={maxdistance}
                 onChange={e => {
                     setMaxDistance(e.target.value);
@@ -73,7 +73,7 @@ const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedloca
 const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMaxDistance, cinemas, onClick}) => {
 
     return (
-        <div className="relative flex h-full w-full md:w-[15vw] flex-col items-center overflow-hidden rounded-xl bg-slate-950 md:min-w-[300px]">
+        <div className="relative flex h-full w-full md:w-[18vw] flex-col items-center overflow-hidden rounded-xl bg-slate-950 md:min-w-[160px]">
             <div className="absolute top-7 left-[-10px] h-20 w-20 rounded-full bg-pink-400/100 mix-blend-lighten blur-[100px] sm:top-1/4 sm:-translate-y-1/2 sm:transform md:left-[-20px] md:h-25 md:w-25 lg:left-[-40%] lg:h-30 lg:w-30 xl:left-[-80px] xl:h-44 xl:w-44 xl:bg-pink-400/50" />
 
             <div className="absolute top-1/2 left-1/3 h-15 w-15 -translate-x-1/2 transform rounded-full bg-purple-600/100 mix-blend-lighten blur-[100px] md:h-20 md:w-20 lg:h-30 lg:w-30 xl:h-44 xl:w-44 xl:bg-purple-600/50" />

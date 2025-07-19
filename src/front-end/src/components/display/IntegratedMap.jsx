@@ -181,38 +181,38 @@ const IntegratedMap = ({
         };
     }, []);
 
-    useEffect(() => {
-        let scrollTimeout = null;
+    // useEffect(() => {
+    //     let scrollTimeout = null;
 
-        const handleScroll = () => {
-            if (leafletMapRef.current) {
-                leafletMapRef.current.scrollWheelZoom.disable();
-                leafletMapRef.current.dragging.disable();
-            }
-            if (scrollTimeout) clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(handleScrollEnd, 300);
-        };
+    //     const handleScroll = () => {
+    //         if (leafletMapRef.current) {
+    //             leafletMapRef.current.scrollWheelZoom.disable();
+    //             leafletMapRef.current.dragging.disable();
+    //         }
+    //         if (scrollTimeout) clearTimeout(scrollTimeout);
+    //         scrollTimeout = setTimeout(handleScrollEnd, 300);
+    //     };
 
-        const handleScrollEnd = () => {
-            if (leafletMapRef.current) {
-                leafletMapRef.current.scrollWheelZoom.enable();
-                leafletMapRef.current.dragging.enable();
-            }
-        };
+    //     const handleScrollEnd = () => {
+    //         if (leafletMapRef.current) {
+    //             leafletMapRef.current.scrollWheelZoom.enable();
+    //             leafletMapRef.current.dragging.enable();
+    //         }
+    //     };
 
-        document.addEventListener("scroll", handleScroll, { passive: true });
-        document.addEventListener("touchend", handleScrollEnd, { passive: true });
+    //     document.addEventListener("scroll", handleScroll, { passive: true });
+    //     document.addEventListener("touchend", handleScrollEnd, { passive: true });
 
-        return () => {
-            document.removeEventListener("scroll", handleScroll);
-            document.removeEventListener("touchend", handleScrollEnd);
-            if (scrollTimeout) clearTimeout(scrollTimeout);
-        };
-    }, []);
+    //     return () => {
+    //         document.removeEventListener("scroll", handleScroll);
+    //         document.removeEventListener("touchend", handleScrollEnd);
+    //         if (scrollTimeout) clearTimeout(scrollTimeout);
+    //     };
+    // }, []);
 
     return (
-        <div className="relative w-screen xl:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[600px]">
-            <div className="ml-2 md:ml-5 mt-[1%] relative z-3 w-[95%] md:w-[15vw] h-[30%] md:h-[95%]">
+        <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
+            <div className="ml-2 mt-[1%] relative z-3 w-[95%] md:w-[18vw] h-[30%] md:h-[95%]">
                 <LocationTable
                     cinemas={cinemas}
                     curlocation={userLocation}

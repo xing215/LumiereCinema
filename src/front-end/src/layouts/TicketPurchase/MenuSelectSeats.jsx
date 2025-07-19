@@ -4,6 +4,7 @@ import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
 import Seat from '@components/UI/Seat';
 import SeatLayout from '@components/display/Seats';
+import mockPoster from '@assets/sample/ThamTuKien.jpg';
 
 const SeatName = ({ type, text }) => (
     <div className="flex w-auto flex-row items-center justify-start gap-3">
@@ -219,7 +220,7 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket })
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 {/* Poster */}
                 <div className="relative hidden md:block">
-                    <BPoster Pics="src/assets/sample/ThamTuKien.jpg" />
+                    <BPoster Pics={mockPoster} />
                 </div>
                 {/* Main content */}
                 <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">

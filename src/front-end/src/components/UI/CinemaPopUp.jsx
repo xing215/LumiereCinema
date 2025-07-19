@@ -1,10 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import IntegratedMap from '@components/display/IntegratedMap';
 
 const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedCinema = null}) => {
-
-    const mapRef = useRef(null);
-    const leafletMapRef = useRef(null);
 
     useEffect(() => {
         const handleEscape = (e) => {
@@ -16,8 +13,17 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
             document.body.style.overflow = 'hidden'; // Prevent background scroll
+        } else {
+            // Reset overflow when popup closes
+            document.body.style.overflow = '';
         }
-    }, [isOpen, onClose, cinemas, onCinemaSelect]);
+
+        // Cleanup function to ensure overflow is reset
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = ''; // Reset overflow on unmount
+        };
+    }, [isOpen, onClose]);
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -33,7 +39,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
 
     return (
         <div 
-            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
+            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000000000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
             onClick={handleBackdropClick}
         >
             <div className="relative w-auto h-auto bg-white rounded-xl shadow-xl flex flex-col items-center justify-center">
@@ -47,8 +53,8 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
                 >
                     ×
                 </button>
-                {/* IntegratedMap replaces custom content */}
-                <div className="w-full h-full flex items-center justify-center">
+                {/* Cinema Map */}
+                <div className="w-auto h-auto flex items-center justify-center">
                     <IntegratedMap onClick={handleBranchSelect} selectedCinema={selectedCinema} isOpen={isOpen} />
                 </div>
             </div>

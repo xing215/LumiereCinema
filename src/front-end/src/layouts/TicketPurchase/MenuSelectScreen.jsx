@@ -4,6 +4,7 @@ import NextNaviButton from '@components/buttons/NaviButton';
 import { BackNaviButton } from '@components/buttons/NaviButton';
 import DateSlider from '@components/UI/Dateslider';
 import CinemaPopUp from '@components/UI/CinemaPopUp';
+import mockPoster from '@assets/sample/ThamTuKien.jpg';
 
 
 const schedules = [
@@ -239,13 +240,13 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
     }, [lastScrollY]);
 
     return (
-        <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
+        <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
             <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
                 {/* Background layer with blend mode */}
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 {/* Content layer */}
                 <div className="hidden md:block">
-                    <BPoster Pics="src/assets/sample/ThamTuKien.jpg" />
+                    <BPoster Pics={mockPoster} />
                 </div>
                 <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
                     <div className={`relative flex flex-col h-full items-center ${!movieTicketData.branch._id ? 'justify-center' : 'justify-start'}`}>
@@ -262,7 +263,7 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
                             </>
                         )}
                         <div className="w-[55vw] overflow-hidden rounded-xl pt-5 md:hidden">
-                                    <BPoster Pics="src/assets/sample/ThamTuKien.jpg" />
+                                    <BPoster Pics={mockPoster} />
                                 </div>
                                 <div className="h-5 md:h-7" />
                         <ChooseCinemaButton 

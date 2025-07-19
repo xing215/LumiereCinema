@@ -237,7 +237,7 @@ const TicketPurchase = () => {
 // =============================== RETURNS =============================== 
 
     return (
-        <div className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden bg-slate-950">
+        <div className="overflow-y-hidden relative flex flex-col h-auto min-h-screen w-screen overflow-x-hidden bg-slate-950">
             <Header />
             <Title text="BUY TICKET" />
             {renderCurrentMenu()}
