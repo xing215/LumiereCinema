@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
 
 const snackTicketSchema = new mongoose.Schema({
-  // SnackTicketCode (PK): Mã hóa đơn duy nhất, tự động tạo
+  // SnackTicketCode (PK): Unique invoice code, auto-generated
   snackTicketCode: {
     type: String,
     required: true,
     unique: true,
-    immutable: true, // Không cho phép sửa đổi sau khi tạo
+    immutable: true, // Not allowed to modify after creation
   },
 
   branch: {
@@ -16,7 +16,7 @@ const snackTicketSchema = new mongoose.Schema({
     required: true,
   },
 
-  // SnackList(SnackId, Amount) (FK): Danh sách các món đã mua
+  // SnackList(SnackId, Amount) (FK): List of purchased items
   snackList: [
     {
       _id: false,
@@ -25,50 +25,50 @@ const snackTicketSchema = new mongoose.Schema({
         ref: 'Snack',
         required: true 
       },
-      quantity: { // Tương ứng 'Amount'
+      quantity: { // Corresponds to 'Amount'
         type: Number, 
         required: true, 
         min: 1 
       },
-      priceAtPurchase: { type: Number, required: true } // Giá tại thời điểm mua
+      priceAtPurchase: { type: Number, required: true } // Price at time of purchase
     }
   ],
   
-  // Tham chiếu đến khách hàng (nếu khách hàng đã đăng nhập)
+  // Reference to customer (if customer is logged in)
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    // required: true, // Không bắt buộc, có thể là khách hàng không đăng nhập, cần kiểm tra có customer hoặc noLoginCustomerInfo (ở dưới)
+    // required: true, // Not required, can be guest customer, must check for either customer or noLoginCustomerInfo (below)
   },
 
-  // Thông tin khách hàng không đăng nhập
+  // Guest customer information
   noLoginCustomerInfo: {
     name: { type: String},
     phone: { type: String},
     email: { type: String},
   },
 
-  // SellerId: Tham chiếu đến nhân viên bán hàng (nếu mua tại quầy)
+  // SellerId: Reference to cashier (if purchased at counter)
   seller: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
 
-  // tham chiếu đến chương trình khuyến mãi (nếu có)
+  // Reference to promotion program (if any)
   promotion: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Promotion',
-    default: null, // Không bắt buộc, có thể không áp dụng khuyến mãi
+    default: null, // Not required, may not apply promotion
   },
 
-  // Total: Tổng số tiền cuối cùng của hóa đơn
+  // Total: Final total amount of invoice
   total: {
     type: Number,
     required: true,
     min: 0
   },
 
-  // IsValid: Trạng thái của hóa đơn
+  // IsValid: Invoice status
   status: {
     type: String,
     enum: ['Confirmed','CheckedIn', 'Cancelled'], 
@@ -78,13 +78,13 @@ const snackTicketSchema = new mongoose.Schema({
   ticketType: {
     type: String,
     enum: ['Snack'],
-    default: 'Snack', // Mặc định là Snack
-    immutable: true  // Tuỳ chọn: đảm bảo không ai sửa sau khi tạo
+    default: 'Snack', // Default is Snack
+    immutable: true  // Optional: ensure no one edits after creation
   }
 
-}, { timestamps: true }); // Dùng timestamps để có CreatedDate (createdAt) và LastAccess (updatedAt)
+}, { timestamps: true }); // Use timestamps for CreatedDate (createdAt) and LastAccess (updatedAt)
 
-// Custom validation: bắt buộc có customer hoặc đầy đủ thông tin không login
+// Custom validation: must have either customer or complete guest info
 snackTicketSchema.pre('validate', function (next) {
   const hasCustomer = !!this.customer;
   const info = this.noLoginCustomerInfo || {};
@@ -98,7 +98,7 @@ snackTicketSchema.pre('validate', function (next) {
   next();
 });
 
-// Tự động tạo snackTicketCode
+// Automatically generate snackTicketCode
 snackTicketSchema.pre('validate', function(next) {
     if (this.isNew) {
         this.snackTicketCode = `SNACK-${nanoid(8).toUpperCase()}`;
@@ -106,7 +106,7 @@ snackTicketSchema.pre('validate', function(next) {
     next();
 });
 
-// Tăng tốc độ tìm kiếm hóa đơn theo khách hàng
+// Speed up invoice search by customer
 snackTicketSchema.index({ customer: 1 });
 
 module.exports = mongoose.model('SnackTicket', snackTicketSchema);

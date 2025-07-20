@@ -7,27 +7,27 @@ const screenSchema = new mongoose.Schema({
     trim: true,
   },
 
-  // Tham chiếu đến cụm rạp
+  // Reference to cinema complex
   branch: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Branch',
     required: true,
   },
 
-  // Kích thước phòng chiếu (số hàng, số cột)
+  // Screening room size (number of rows, number of columns)
   size: {
     rows: { type: Number, required: true },
     columns: { type: Number, required: true },
   },
 
-  // Loại màn hình: 2D, 3D...
+  // Screen type: 2D, 3D, etc.
   screenType: {
     type: String,
     required: true,
     enum: ['2D', '3D', 'IMAX', '4DX'],
   },
 
-  // Trạng thái hoạt động
+  // Active status
   isActive: {
     type: Boolean,
     default: true,

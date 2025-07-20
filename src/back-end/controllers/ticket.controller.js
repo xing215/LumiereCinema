@@ -4,7 +4,7 @@ const Promotion = require('../models/Promotion');
 const User = require('../models/User'); 
 const Branch = require('../models/Branch'); 
 const Ticket = require('../models/Ticket'); 
-// Thêm imports cho getSchedulesByBranch
+// imports for getSchedulesByBranch
 const mongoose = require('mongoose');
 const Schedule = require('../models/Schedule');
 const Screen = require('../models/Screen');
@@ -16,7 +16,7 @@ const { redisClient } = require('../config/redis.config');
 const CacheManager = require('../utils/cacheManager');
 
 /**
- * @desc    Lấy danh sách lịch chiếu theo branch, ngày và phim - OPTIMIZED with Aggregation Pipeline
+ * @desc    Get list of schedules by branch, date, and movie
  * @route   GET /tickets/:branchId/schedule
  * @access  Public
  */
@@ -61,7 +61,8 @@ const getSchedulesByBranch = async (req, res) => {
     const targetMonth = targetDate.getMonth();
     const targetDay = targetDate.getDate();
     const startOfDay = new Date(targetYear, targetMonth, targetDay, 0, 0, 0, 0);
-    const endOfDay = new Date(targetYear, targetMonth, targetDay, 23, 59, 59, 999);    // Try to get branch info from cache first
+    const endOfDay = new Date(targetYear, targetMonth, targetDay, 23, 59, 59, 999);
+    // Try to get branch info from cache first
     let branch = await CacheManager.getCachedBranchInfo(branchId);
     if (branch) {
       // Branch found in cache
@@ -245,7 +246,7 @@ const getSchedulesByBranch = async (req, res) => {
 };
 
 /**
- * @desc    Lấy sơ đồ ghế với trạng thái (available, occupied, holding) - OPTIMIZED with Redis Cache
+ * @desc    Get seat map with status (available, occupied, holding)
  * @route   GET /tickets/screen/:scheduleId
  * @access  Public
  */
@@ -284,7 +285,8 @@ const getSeatMapBySchedule = async (req, res) => {
       },
       {
         $unwind: '$screenData'
-      },      {
+      },
+      {
         $unwind: '$movieData'
       },
       {
@@ -446,7 +448,7 @@ const getSeatMapBySchedule = async (req, res) => {
 };
 
 /**
- * @desc    Giữ ghế tạm thời (seat holding) - OPTIMIZED with race condition handling
+ * @desc    Temporarily hold seats (seat holding)
  * @route   POST /tickets/hold
  * @access  Public
  */
@@ -499,7 +501,8 @@ const holdSeats = async (req, res) => {
           error: `Invalid seat number format: ${seatNumber}`
         });
       }
-    }    // CRITICAL: Use transaction to prevent race conditions
+    }
+    // CRITICAL: Use transaction to prevent race conditions
     let transactionResult;
     
     await session.withTransaction(async () => {
@@ -677,7 +680,7 @@ const holdSeats = async (req, res) => {
 };
 
 /**
- * @desc    Đặt trước snacks tạm thời
+ * @desc    Temporarily reserve snacks
  * @route   POST /tickets/snacks/reserve
  * @access  Public
  * @body    { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
@@ -1369,7 +1372,7 @@ const getTicketByCode = async (req, res) => {
     }
 
     if (isMovie) {
-      // TODO: Thêm xử lý cho MovieTicket nếu có
+      // TODO: Add handling for MovieTicket if needed
       return res.status(501).json({ message: 'Movie ticket fetching not implemented yet.' });
     }
 
@@ -1421,7 +1424,7 @@ const updateTicket = async (req, res) => {
     }
 
     if (isMovie) {
-      // TODO: xử lý movie ticket sau
+      // TODO: Handle movie ticket update later
       return res.status(501).json({ message: 'Movie ticket update not implemented yet.' });
     }
 
@@ -1455,7 +1458,8 @@ const deleteTicket = async (req, res) => {
 
     if (ticket.status === 'Cancelled') {
       return res.status(400).json({ message: `${ticketCode} ticket already cancelled.` });
-    }    ticket.status = 'Cancelled';
+    }
+    ticket.status = 'Cancelled';
     await ticket.save();
 
     // CRITICAL: If movie ticket, release seats from Schedule.OccupiedSeat
@@ -1492,7 +1496,7 @@ const getAllTickets = async (req, res) => {
       return res.status(200).json(tickets);
     }
     if (isMovie) {
-      // TODO: Thêm xử lý cho MovieTicket nếu có
+      // TODO: Add handling for MovieTicket if needed
       return res.status(501).json({ message: 'Movie ticket fetching not implemented yet.' });
     }
     return res.status(400).json({ message: 'Unknown ticket type in URL.' });
@@ -1505,7 +1509,7 @@ const getAllTickets = async (req, res) => {
 
 
 /**
- * @desc    Lấy danh sách snacks có sẵn theo branch
+ * @desc    Get list of available snacks by branch
  * @route   GET /tickets/:branchId/snacks
  * @access  Public
  */
@@ -1569,7 +1573,7 @@ const getSnacksByBranch = async (req, res) => {
 };
 
 /**
- * @desc    Release seat holds hoặc extend hold time
+ * @desc    Release seat holds or extend hold time
  * @route   PATCH /tickets/hold/:holdId
  * @access  Public
  */

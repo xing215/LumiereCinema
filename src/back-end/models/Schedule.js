@@ -1,20 +1,20 @@
 const mongoose = require('mongoose');
 
 const scheduleSchema = new mongoose.Schema({
-  // Tham chiếu đến bộ phim được chiếu
+  // Reference to the movie being screened
   movie: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Movie',
     required: true,
   },
 
-  // Tham chiếu đến phòng chiếu
+  // Reference to the screening room
   screen: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Screen',
     required: true,
   },
-    // Thời gian bắt đầu (datetime)
+    // Start time (datetime)
   startTime: {
     type: Date,
     required: true,
@@ -26,7 +26,7 @@ const scheduleSchema = new mongoose.Schema({
     }
   },
 
-  // Thời gian kết thúc (datetime - được tính toán tự động)
+  // End time (datetime - automatically calculated)
   endTime: {
     type: Date,
     required: true,
@@ -37,7 +37,7 @@ const scheduleSchema = new mongoose.Schema({
       message: 'endTime must be a valid datetime'
     }
   },
-  // Danh sách các ghế đã được đặt (chỉ lưu tên ghế)
+  // List of booked seats (only stores seat names)
   OccupiedSeat: [
     {
       type: String,
@@ -47,10 +47,10 @@ const scheduleSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// Middleware để tự động tính endTime
+// Middleware to automatically calculate endTime
 scheduleSchema.pre('save', async function(next) {
   if (this.isModified('startTime') || this.isNew) {
-    const Movie = mongoose.model('Movie'); // Lấy Movie model một cách an toàn
+    const Movie = mongoose.model('Movie'); // Safely get Movie model
     const movie = await Movie.findById(this.movie);
     if (movie && movie.duration) {
       this.endTime = new Date(this.startTime.getTime() + movie.duration * 60 * 1000);
@@ -59,10 +59,10 @@ scheduleSchema.pre('save', async function(next) {
   next();
 });
 
-// Indexes để đảm bảo không trùng lịch và tăng tốc truy vấn
+// Indexes to ensure no schedule conflicts and speed up queries
 scheduleSchema.index({ screen: 1, startTime: 1 }, { unique: true });
 scheduleSchema.index({ movie: 1, startTime: 1 });
-// Index để query seat availability nhanh
+// Index for fast seat availability queries
 scheduleSchema.index({ OccupiedSeat: 1 });
 
 module.exports = mongoose.model('Schedule', scheduleSchema);

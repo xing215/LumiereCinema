@@ -30,7 +30,7 @@ const ReportPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/reports/branches');
+        const response = await axios.get(getApiUrl('branches'));
         const apiBranches = response.data.map(branch => ({
           id: branch._id,
           name: branch.name
@@ -56,7 +56,7 @@ const ReportPage = () => {
           if (selectedBranch.id !== 'All branches') {
             params.branchId = selectedBranch.id;
           }
-          const response = await axios.get('http://localhost:5000/api/reports/revenue-summary', { params });
+          const response = await axios.get(getApiUrl('revenueSummary'), { params });
           setReportData(response.data);
         } catch (err) {
           setError('Failed to fetch data. Please try again.');

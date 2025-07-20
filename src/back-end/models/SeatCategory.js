@@ -1,4 +1,3 @@
-// file: SeatCategory.js
 const mongoose = require('mongoose');
 
 const seatCategorySchema = new mongoose.Schema({
