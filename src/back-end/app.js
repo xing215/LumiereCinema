@@ -13,7 +13,7 @@ const authRoutes = require('./routes/auth.route.js');
 const movieRoutes = require('./routes/movie.route.js'); 
 const reportRoutes = require('./routes/report.route.js'); 
 const branchRoutes = require('./routes/branch.route.js');
-const snackTicketRoute = require('./routes/snackTicket.route.js');
+const ticketsRoutes = require('./routes/tickets.route.js');
 
 // 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
 dotenv.config();
@@ -33,7 +33,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes); 
 app.use('/api/reports', reportRoutes);
 app.use('/api/branches', branchRoutes);
-app.use('/api/tickets/snacks', snackTicketRoute);
+app.use('/api/tickets', ticketsRoutes);
+
 // Route mặc định để kiểm tra server
 app.get('/', (req, res) => {
   res.send('API is running...');

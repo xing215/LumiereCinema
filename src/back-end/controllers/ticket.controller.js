@@ -323,10 +323,38 @@ const getSeatMapBySchedule = async (req, res) => {
 
     const schedule = aggregationResult[0];
     const { rows, columns } = schedule.screen.size;
-    const totalSeats = rows * columns;
+    const totalSeats = rows * columns;    // OPTIMIZATION: Use Redis cache for seat layout generation via CacheManager
+    const allSeats = await CacheManager.getSeatLayout(rows, columns);    // NEW: Get seat information with types/categories from the database
+    const Seat = require('../models/Seat');
+    const SeatCategory = require('../models/SeatCategory');
+    
+    // First get all seats for the screen
+    const seatsWithTypes = await Seat.find({ screen: schedule.screen._id })
+      .select('seatNumber category isHidden location')
+      .lean();
 
-    // OPTIMIZATION: Use Redis cache for seat layout generation via CacheManager
-    const allSeats = await CacheManager.getSeatLayout(rows, columns);
+    // Get all seat categories separately (since category field is shortname string, not ObjectId reference)
+    const seatCategories = await SeatCategory.find({}).select('shortname name Fee FeeForSpecial').lean();
+    
+    // Create category lookup map
+    const categoryMap = new Map();
+    seatCategories.forEach(cat => {
+      categoryMap.set(cat.shortname, cat);
+    });
+
+    // Create seat type mapping for fast lookup
+    const seatTypeMap = new Map();
+    seatsWithTypes.forEach(seat => {
+      const category = categoryMap.get(seat.category) || { shortname: 'STANDARD', name: 'Standard', Fee: 0, FeeForSpecial: 0 };
+      seatTypeMap.set(seat.seatNumber, {
+        category: category.shortname,
+        categoryName: category.name,
+        price: category.Fee,
+        specialPrice: category.FeeForSpecial,
+        isHidden: seat.isHidden,
+        location: seat.location
+      });
+    });
 
     // OPTIMIZATION: Single query for seat holds with proper filtering
     const holdQuery = {
@@ -352,63 +380,43 @@ const getSeatMapBySchedule = async (req, res) => {
     });
 
     // OPTIMIZATION: Use Map for faster lookup
-    const occupiedSeatsSet = new Set(occupiedSeats);
-
-    // Create optimized seat map
-    const seatMap = allSeats.map(seatNumber => {
+    const occupiedSeatsSet = new Set(occupiedSeats);    // Create simplified seat map - only basic info needed
+    const seatsByRow = {};
+    
+    allSeats.forEach(seatNumber => {
+      const rowLetter = seatNumber.charAt(0);
+      if (!seatsByRow[rowLetter]) {
+        seatsByRow[rowLetter] = [];
+      }
+      
       const seatData = { seatNumber };
       
-      if (occupiedSeatsSet.has(seatNumber)) {
+      // Add basic seat category information
+      const seatInfo = seatTypeMap.get(seatNumber);
+      if (seatInfo) {
+        seatData.category = seatInfo.category;
+        seatData.categoryName = seatInfo.categoryName;
+        seatData.isHidden = seatInfo.isHidden;
+      } else {
+        seatData.category = 'STANDARD';
+        seatData.categoryName = 'Standard';
+        seatData.isHidden = false;
+      }
+      
+      // Determine seat status
+      if (seatData.isHidden) {
+        seatData.status = 'hidden';
+      } else if (occupiedSeatsSet.has(seatNumber)) {
         seatData.status = 'occupied';
       } else if (heldSeatsMap.has(seatNumber)) {
         const holdInfo = heldSeatsMap.get(seatNumber);
         seatData.status = holdInfo.isExpired ? 'expired_hold' : 'holding';
-        seatData.holdInfo = holdInfo;
       } else {
         seatData.status = 'available';
       }
 
-      return seatData;
-    });
-
-    // OPTIMIZATION: More efficient grouping
-    const seatsByRow = seatMap.reduce((acc, seat) => {
-      const rowLetter = seat.seatNumber.charAt(0);
-      if (!acc[rowLetter]) {
-        acc[rowLetter] = [];
-      }
-      acc[rowLetter].push(seat);
-      return acc;
-    }, {});
-
-    // Enhanced statistics
-    const statusCounts = seatMap.reduce((acc, seat) => {
-      acc[seat.status] = (acc[seat.status] || 0) + 1;
-      return acc;
-    }, {});
-
-    const stats = {
-      totalSeats,
-      availableSeats: statusCounts.available || 0,
-      occupiedSeats: statusCounts.occupied || 0,
-      heldSeats: statusCounts.holding || 0,
-      expiredHolds: statusCounts.expired_hold || 0,
-      occupancyRate: ((statusCounts.occupied || 0) / totalSeats * 100).toFixed(2)
-    };
-
-    // OPTIMIZATION: Cache seat map structure if no active holds (relatively stable data)
-    const hasActiveHolds = seatHolds.some(hold => hold.expiresAt > new Date());
-    if (!hasActiveHolds) {
-      const cacheData = {
-        seatMap,
-        seatsByRow,
-        statistics: stats,
-        generatedAt: new Date()
-      };
-      await CacheManager.cacheSeatMapStructure(scheduleId, cacheData);
-    }
-
-    return res.status(200).json({
+      seatsByRow[rowLetter].push(seatData);
+    });    return res.status(200).json({
       schedule: {
         _id: schedule._id,
         startTime: schedule.startTime,
@@ -424,11 +432,8 @@ const getSeatMapBySchedule = async (req, res) => {
           columns,
           totalSeats
         }
-      },      seatMap: {
-        allSeats: seatMap,
-        seatsByRow,
-        statistics: stats
-      }
+      },
+      seatsByRow
     });
 
   } catch (error) {
@@ -730,7 +735,7 @@ const reserveSnacks = async (req, res) => {
     const snacks = await Snack.find({
       shortname: { $in: shortnames },
       branch: branchId,
-      isActive: true
+      isHidden: false
     }).lean();    if (snacks.length !== shortnames.length) {
       const foundShortnames = snacks.map(snack => snack.shortname);
       const missingShortnames = shortnames.filter(shortname => !foundShortnames.includes(shortname));
@@ -987,7 +992,6 @@ const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snac
   return { user, branchData };
 };
 
-// Tính tổng tiền và cập nhật tồn kho
 const calculateTotalAndUpdateStock = async (snackList, branchId, session = null) => {
   let total = 0;
   const validatedSnackList = [];
@@ -1034,17 +1038,14 @@ const applyDiscounts = async ({ user, promotionCode, total, session = null }) =>
   let updatedTotal = total;
   let appliedPromotion = null;
 
-  if (user && user.loyaltyRank?.defaultDiscountRate) {
-    updatedTotal -= user.loyaltyRank.defaultDiscountRate / 100 * updatedTotal;
-  }
-
+  // Apply promotion FIRST, then loyalty discount
   if (promotionCode) {
     const promo = await Promotion.findOne({ promotionCode: promotionCode, isActive: true }).session(session);
     const now = new Date();
 
+    // Check promotion validity using ORIGINAL total (before any discounts)
     if (
-      !promo || promo.startDate > now || promo.endDate < now ||
-      promo.appliedProduct !== 'Snack' || updatedTotal < promo.minimumSpend
+      !promo || promo.startDate > now || promo.endDate < now || total < promo.minimumSpend
     ) {
       throw { status: 400, message: 'Invalid or inapplicable promotion.' };
     }
@@ -1071,6 +1072,15 @@ const applyDiscounts = async ({ user, promotionCode, total, session = null }) =>
 
     appliedPromotion = promo._id;
   }
+
+  // Apply loyalty discount AFTER promotion (if any)
+  if (user && user.loyaltyRank?.defaultDiscountRate) {
+    const loyaltyDiscount = updatedTotal * user.loyaltyRank.defaultDiscountRate / 100;
+    updatedTotal -= loyaltyDiscount;
+  }
+
+  // Ensure total cannot go below 0
+  updatedTotal = Math.max(0, updatedTotal);
 
   return { total: updatedTotal, appliedPromotion };
 };
@@ -1167,12 +1177,16 @@ const createTicket = async (req, res) => {
             message: 'Some seats are already booked',
             conflictSeats 
           };
-        }
-
-        // Calculate movie ticket price based on seat categories
+        }        // Calculate movie ticket price based on seat categories
         let movieTicketTotal = 0;
-          for (const seatNumber of seats) {
-          // Find seat information with category
+        
+        // Determine if customer qualifies for special pricing (elderly 60+, students with HSSV assumed based on age)
+        let useSpecialPricing = false;
+        if (user && user.birthday) {
+          const age = new Date().getFullYear() - new Date(user.birthday).getFullYear();
+          useSpecialPricing = age >= 60 || (age >= 16 && age <= 25); // Elderly (60+) or student age (16-25)
+        }        for (const seatNumber of seats) {
+          // Find seat information with category shortname (no populate needed since it's a string)
           const seat = await Seat.findOne({
             seatNumber: seatNumber,
             screen: scheduleData.screen._id
@@ -1181,16 +1195,20 @@ const createTicket = async (req, res) => {
           if (!seat) {
             throw { status: 400, message: `Seat ${seatNumber} not found in this screen` };
           }
-
-          // Get seat category pricing
-          const seatCategory = await SeatCategory.findById(seat.category).session(session);
+ 
+          // Get seat category using shortname lookup
+          const seatCategory = await SeatCategory.findOne({ shortname: seat.category }).session(session);
           
           if (!seatCategory) {
-            throw { status: 400, message: `Seat category not found for seat ${seatNumber}` };
+            throw { status: 400, message: `Seat category '${seat.category}' not found for seat ${seatNumber}` };
           }
 
-          // Use FeeForSpecial if > 0 (for HSSV, elderly), otherwise use base Fee
-          const seatPrice = seatCategory.FeeForSpecial > 0 ? seatCategory.FeeForSpecial : seatCategory.Fee;
+          // Apply special pricing logic
+          let seatPrice = seatCategory.Fee; // Default price
+          if (useSpecialPricing && seatCategory.FeeForSpecial > 0) {
+            seatPrice = seatCategory.FeeForSpecial; // Use special price for eligible customers
+          }
+          
           movieTicketTotal += seatPrice;
         }
 
@@ -1203,10 +1221,15 @@ const createTicket = async (req, res) => {
           seats,
           total: movieTicketTotal,
           status: 'Confirmed'
-        });
-
-        await createdMovieTicket.save({ session });
+        });        await createdMovieTicket.save({ session });
         totalAmount += movieTicketTotal;
+
+        // CRITICAL: Update Schedule.OccupiedSeat to mark seats as occupied
+        await Schedule.findByIdAndUpdate(
+          schedule,
+          { $addToSet: { OccupiedSeat: { $each: seats } } },
+          { session }
+        );
 
         // Clear seat holds for these seats
         await SeatHold.deleteMany({
@@ -1432,10 +1455,18 @@ const deleteTicket = async (req, res) => {
 
     if (ticket.status === 'Cancelled') {
       return res.status(400).json({ message: `${ticketCode} ticket already cancelled.` });
-    }
-
-    ticket.status = 'Cancelled';
+    }    ticket.status = 'Cancelled';
     await ticket.save();
+
+    // CRITICAL: If movie ticket, release seats from Schedule.OccupiedSeat
+    if (isMovie && ticket.seats && ticket.seats.length > 0) {
+      await Schedule.findByIdAndUpdate(
+        ticket.schedule,
+        { $pullAll: { OccupiedSeat: ticket.seats } }
+      );
+      // Invalidate cache for this schedule since seats are now available
+      await CacheManager.invalidateScheduleCache(ticket.schedule);
+    }
 
     return res.status(200).json({
       message: `${ticket.ticketType} ticket cancelled successfully.`,
@@ -1765,8 +1796,7 @@ module.exports = {
   manageSeatHold,
   releaseBulkHolds,
   cleanupExpiredHolds,
-  getCacheStats,
-  cleanupCache,
+  getCacheStats,  cleanupCache,
   preloadCache,
   createSnackTicket
   // getTicketListByTime,
