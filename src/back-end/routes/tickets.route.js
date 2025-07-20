@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
+
 const { 
   getSchedulesByBranch, 
   getSeatMapBySchedule,
@@ -14,8 +16,16 @@ const {
   reserveSnacks,
   getCacheStats,
   cleanupCache,
-  preloadCache
+  preloadCache,
+  getTicketByCode,
+  getAllTickets,
+  updateTicket,
+  deleteTicket
 } = require('../controllers/ticket.controller.js');
+
+// =============================================================================
+// GENERAL TICKET ROUTES (Both Movie and Snack)
+// =============================================================================
 
 /**
  * GET /:branchId/schedule
@@ -32,31 +42,72 @@ router.get('/:branchId/schedule', getSchedulesByBranch);
 router.get('/screen/:scheduleId', getSeatMapBySchedule);
 
 /**
- * POST /hold
+ * POST /create
+ * Tạo vé thống nhất (có thể tạo movie ticket, snack ticket, hoặc cả hai)
+ * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, 
+ *         movieTicket?: { schedule, seats }, 
+ *         snackTicket?: { snackList: [{ shortname, quantity }] } }
+ */
+router.post('/create', createTicket);
+
+// =============================================================================
+// MOVIE TICKET SPECIFIC ROUTES
+// =============================================================================
+
+/**
+ * POST /movie/hold
  * Giữ ghế tạm thời
  * Body: { scheduleId, seatNumbers[], userId?, sessionId?, holdDurationMinutes?, replaceExisting? }
  */
-router.post('/hold', holdSeats);
+router.post('/movie/hold', holdSeats);
 
 /**
- * PATCH /hold/:holdId
+ * PATCH /movie/hold/:holdId
  * Quản lý seat hold (release/extend)
  * Body: { action: 'release'|'extend', extendMinutes?, userId?, sessionId? }
  */
-router.patch('/hold/:holdId', manageSeatHold);
+router.patch('/movie/hold/:holdId', manageSeatHold);
 
 /**
- * DELETE /hold/bulk
+ * DELETE /movie/hold/bulk
  * Bulk release seat holds
  * Body: { scheduleId, userId?, sessionId?, seatNumbers? }
  */
-router.delete('/hold/bulk', releaseBulkHolds);
+router.delete('/movie/hold/bulk', releaseBulkHolds);
 
 /**
- * POST /hold/cleanup
+ * POST /movie/hold/cleanup
  * Cleanup expired holds (admin only)
  */
-router.post('/hold/cleanup', cleanupExpiredHolds);
+router.post('/movie/hold/cleanup', protect, restrictTo('administrator'), cleanupExpiredHolds);
+
+/**
+ * GET /movie/admin/all
+ * Lấy tất cả movie tickets (Admin only)
+ */
+router.get('/movie/admin/all', protect, restrictTo('administrator'), getAllTickets);
+
+/**
+ * GET /movie/admin/:ticketCode
+ * Lấy movie ticket theo code (Admin only)
+ */
+router.get('/movie/admin/:ticketCode', protect, restrictTo('administrator'), getTicketByCode);
+
+/**
+ * PATCH /movie/admin/:ticketCode
+ * Cập nhật movie ticket (Admin only)
+ */
+router.patch('/movie/admin/:ticketCode', protect, restrictTo('administrator'), updateTicket);
+
+/**
+ * DELETE /movie/admin/:ticketCode
+ * Hủy movie ticket (Admin only)
+ */
+router.delete('/movie/admin/:ticketCode', protect, restrictTo('administrator'), deleteTicket);
+
+// =============================================================================
+// SNACK TICKET SPECIFIC ROUTES  
+// =============================================================================
 
 /**
  * GET /:branchId/snacks
@@ -65,47 +116,65 @@ router.post('/hold/cleanup', cleanupExpiredHolds);
 router.get('/:branchId/snacks', getSnacksByBranch);
 
 /**
- * POST /snacks/reserve
+ * POST /snack/reserve
  * Đặt trước snacks tạm thời
- * Body: { branchId, snackItems[], userId?, sessionId?, reserveDurationMinutes? }
+ * Body: { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
  */
-router.post('/snacks/reserve', reserveSnacks);
+router.post('/snack/reserve', reserveSnacks);
 
 /**
- * POST /create
- * Tạo vé thống nhất (có thể tạo movie ticket, snack ticket, hoặc cả hai)
- * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, movieTicket?, snackTicket? }
- */
-router.post('/create', createTicket);
-
-/**
- * POST /snacks/create
+ * POST /snack/create
  * Tạo vé snack riêng biệt
- * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, snackList }
+ * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, 
+ *         snackList: [{ shortname, quantity }] }
  */
-router.post('/snacks/create', createSnackTicket);
+router.post('/snack/create', createSnackTicket);
 
 /**
- * Cache Management APIs
+ * GET /snack/admin/all
+ * Lấy tất cả snack tickets (Admin only)
  */
+router.get('/snack/admin/all', protect, restrictTo('administrator'), getAllTickets);
+
+/**
+ * GET /snack/admin/:ticketCode
+ * Lấy snack ticket theo code (Admin only)
+ */
+router.get('/snack/admin/:ticketCode', protect, restrictTo('administrator'), getTicketByCode);
+
+/**
+ * PATCH /snack/admin/:ticketCode
+ * Cập nhật snack ticket (Admin only)
+ */
+router.patch('/snack/admin/:ticketCode', protect, restrictTo('administrator'), updateTicket);
+
+/**
+ * DELETE /snack/admin/:ticketCode
+ * Hủy snack ticket (Admin only)
+ */
+router.delete('/snack/admin/:ticketCode', protect, restrictTo('administrator'), deleteTicket);
+
+// =============================================================================
+// CACHE MANAGEMENT ROUTES (Admin only)
+// =============================================================================
 
 /**
  * GET /cache/stats
  * Lấy thống kê cache (Admin only)
  */
-router.get('/cache/stats', getCacheStats);
+router.get('/cache/stats', protect, restrictTo('administrator'), getCacheStats);
 
 /**
  * POST /cache/cleanup
  * Dọn dẹp cache entries hết hạn (Admin only)
  */
-router.post('/cache/cleanup', cleanupCache);
+router.post('/cache/cleanup', protect, restrictTo('administrator'), cleanupCache);
 
 /**
  * POST /cache/preload
  * Preload cache cho popular routes (Admin only)
  * Body: { routes: [{ branchId, scheduleId }] }
  */
-router.post('/cache/preload', preloadCache);
+router.post('/cache/preload', protect, restrictTo('administrator'), preloadCache);
 
 module.exports = router;

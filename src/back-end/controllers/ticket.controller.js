@@ -10,6 +10,8 @@ const Schedule = require('../models/Schedule');
 const Screen = require('../models/Screen');
 const Movie = require('../models/Movie');
 const SeatHold = require('../models/SeatHold');
+const Seat = require('../models/Seat');
+const SeatCategory = require('../models/SeatCategory');
 const { redisClient } = require('../config/redis.config');
 const CacheManager = require('../utils/cacheManager');
 
@@ -673,6 +675,7 @@ const holdSeats = async (req, res) => {
  * @desc    Đặt trước snacks tạm thời
  * @route   POST /tickets/snacks/reserve
  * @access  Public
+ * @body    { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
  */
 const reserveSnacks = async (req, res) => {
   try {
@@ -696,19 +699,18 @@ const reserveSnacks = async (req, res) => {
       return res.status(400).json({
         error: 'Either userId or sessionId is required'
       });
-    }
-
-    // Validate snackItems format
+    }    // Validate snackItems format
     for (const item of snackItems) {
-      if (!item.snackId || !item.quantity || item.quantity <= 0) {
+      if (!item.shortname || !item.quantity || item.quantity <= 0) {
         return res.status(400).json({
-          error: 'Each snack item must have snackId and positive quantity'
+          error: 'Each snack item must have shortname and positive quantity'
         });
       }
 
-      if (!mongoose.Types.ObjectId.isValid(item.snackId)) {
+      // Validate shortname format (should be uppercase and trimmed)
+      if (typeof item.shortname !== 'string' || !item.shortname.trim()) {
         return res.status(400).json({
-          error: `Invalid snack ID format: ${item.snackId}`
+          error: `Invalid shortname format: ${item.shortname}`
         });
       }
     }
@@ -721,22 +723,20 @@ const reserveSnacks = async (req, res) => {
       });
     }
 
-    // Get snack IDs for checking
-    const snackIds = snackItems.map(item => item.snackId);
+    // Get shortnames for checking
+    const shortnames = snackItems.map(item => item.shortname.toUpperCase().trim());
     
     // Check if all snacks exist and belong to the branch
     const snacks = await Snack.find({
-      _id: { $in: snackIds },
+      shortname: { $in: shortnames },
       branch: branchId,
       isActive: true
-    }).lean();
-
-    if (snacks.length !== snackIds.length) {
-      const foundIds = snacks.map(snack => snack._id.toString());
-      const missingIds = snackIds.filter(id => !foundIds.includes(id));
+    }).lean();    if (snacks.length !== shortnames.length) {
+      const foundShortnames = snacks.map(snack => snack.shortname);
+      const missingShortnames = shortnames.filter(shortname => !foundShortnames.includes(shortname));
       return res.status(404).json({
         error: 'Some snacks not found or not available',
-        missingSnackIds: missingIds
+        missingShortnames: missingShortnames
       });
     }
 
@@ -745,19 +745,20 @@ const reserveSnacks = async (req, res) => {
     const reservationRequests = [];
 
     for (const item of snackItems) {
-      const snack = snacks.find(s => s._id.toString() === item.snackId);
+      const snack = snacks.find(s => s.shortname === item.shortname.toUpperCase().trim());
       const availableStock = snack.stock - (snack.reserved || 0);
       
       if (availableStock < item.quantity) {
         stockIssues.push({
-          snackId: item.snackId,
+          shortname: item.shortname,
           snackName: snack.name,
           requested: item.quantity,
           available: availableStock
         });
       } else {
         reservationRequests.push({
-          snackId: item.snackId,
+          snackId: snack._id,
+          shortname: snack.shortname,
           quantity: item.quantity,
           snack: snack
         });
@@ -796,9 +797,9 @@ const reserveSnacks = async (req, res) => {
         _id: new mongoose.Types.ObjectId(),
         branch: branchId,
         user: userId || null,
-        sessionId: sessionId || null,
-        items: reservationRequests.map(req => ({
+        sessionId: sessionId || null,        items: reservationRequests.map(req => ({
           snackId: req.snackId,
+          shortname: req.shortname,
           snackName: req.snack.name,
           quantity: req.quantity,
           pricePerUnit: req.snack.price,
@@ -852,7 +853,7 @@ const reserveSnacks = async (req, res) => {
  *            branch: ObjectId,
  *            seller?: ObjectId,
  *            promotionCode?: string,
- *            snackList: [{ snack: ObjectId, quantity: number }]
+ *            snackList: [{ shortname: string, quantity: number }]
  *          }
  */
 const createSnackTicket = async (req, res) => {
@@ -956,7 +957,6 @@ const createSnackTicket = async (req, res) => {
 
 // ======= EXISTING SUB FUNCTIONS =======
 
-// Kiểm tra dữ liệu đầu vào
 const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList = [], seller }) => {
   let user = null;
 
@@ -993,24 +993,35 @@ const calculateTotalAndUpdateStock = async (snackList, branchId, session = null)
   const validatedSnackList = [];
 
   for (const item of snackList) {
-    const snack = await Snack.findOne({ _id: item.snack, branch: branchId }).session(session);
+    // Use shortname instead of _id for snack identification
+    const snack = await Snack.findOne({ 
+      shortname: item.shortname, 
+      branch: branchId 
+    }).session(session);
+    
     if (!snack || snack.isHidden) {
-      throw { status: 404, message: `Snack ${item.snack} not found or hidden.` };
+      throw { status: 404, message: `Snack ${item.shortname} not found or hidden.` };
     }
 
-    if (snack.stock < item.quantity) {
-      throw { status: 400, message: `Not enough stock for snack: ${snack.name}` };
+    // Check if requested quantity is available (considering current stock)
+    const availableStock = snack.stock - (snack.reserved || 0);
+    if (availableStock < item.quantity) {
+      throw { 
+        status: 400, 
+        message: `Not enough stock for snack: ${snack.name}. Available: ${availableStock}, Requested: ${item.quantity}` 
+      };
     }
 
     const price = snack.discountedPrice || snack.price;
     total += price * item.quantity;
 
     validatedSnackList.push({
-      snack: snack._id,
+      snack: snack._id, // Store the actual ObjectId in the ticket
       quantity: item.quantity,
       priceAtPurchase: price,
     });
 
+    // Update stock by reducing available quantity
     snack.stock -= item.quantity;
     await snack.save({ session });
   }
@@ -1079,7 +1090,7 @@ const applyDiscounts = async ({ user, promotionCode, total, session = null }) =>
  *              seats: [string]
  *            },
  *            snackTicket?: {
- *              snackList: [{ snack: ObjectId, quantity: number }]
+ *              snackList: [{ shortname: string, quantity: number }]
  *            }
  *          }
  */
@@ -1141,9 +1152,7 @@ const createTicket = async (req, res) => {
 
         if (scheduleData.movie.isHidden) {
           throw { status: 400, message: 'Movie is not available' };
-        }
-
-        // Check seat availability
+        }        // Check seat availability
         const existingTickets = await Ticket.find({
           schedule: schedule,
           seats: { $in: seats },
@@ -1160,9 +1169,30 @@ const createTicket = async (req, res) => {
           };
         }
 
-        // Calculate movie ticket price (you might want to implement seat pricing logic)
-        const basePrice = 100000; // Base price per seat, adjust as needed
-        const movieTicketTotal = basePrice * seats.length;
+        // Calculate movie ticket price based on seat categories
+        let movieTicketTotal = 0;
+          for (const seatNumber of seats) {
+          // Find seat information with category
+          const seat = await Seat.findOne({
+            seatNumber: seatNumber,
+            screen: scheduleData.screen._id
+          }).session(session);
+
+          if (!seat) {
+            throw { status: 400, message: `Seat ${seatNumber} not found in this screen` };
+          }
+
+          // Get seat category pricing
+          const seatCategory = await SeatCategory.findById(seat.category).session(session);
+          
+          if (!seatCategory) {
+            throw { status: 400, message: `Seat category not found for seat ${seatNumber}` };
+          }
+
+          // Use FeeForSpecial if > 0 (for HSSV, elderly), otherwise use base Fee
+          const seatPrice = seatCategory.FeeForSpecial > 0 ? seatCategory.FeeForSpecial : seatCategory.Fee;
+          movieTicketTotal += seatPrice;
+        }
 
         // Create movie ticket
         createdMovieTicket = new Ticket({
@@ -1472,14 +1502,14 @@ const getSnacksByBranch = async (req, res) => {
       branch: branchId,
       isHidden: false, // Only active snacks
       stock: { $gt: 0 } // Only snacks with stock > 0
-    }).lean();
-
-    // Format response with availability info
+    }).lean();    // Format response with availability info
     const availableSnacks = snacks.map(snack => ({
       _id: snack._id,
+      shortname: snack.shortname, // Include shortname for frontend identification
       name: snack.name,
       description: snack.description,
       price: snack.price,
+      discountedPrice: snack.discountedPrice,
       imageURL: snack.imageURL,
       category: snack.category,
       stock: {
