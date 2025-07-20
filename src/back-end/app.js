@@ -13,23 +13,19 @@ const authRoutes = require('./routes/auth.route.js');
 const movieRoutes = require('./routes/movie.route.js'); 
 const reportRoutes = require('./routes/report.route.js'); 
 const branchRoutes = require('./routes/branch.route.js');
-const ticketRoute = require('./routes/ticket.route.js');
+const ticketsRoutes = require('./routes/tickets.route.js');
 
-// 2. Load environment variables (ALWAYS PLACE AT THE TOP)
+// 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
 dotenv.config();
 
-// 3. Connect to databases
+// 3. Thực hiện kết nối tới các cơ sở dữ liệu
 connectDB();
 connectRedis();
 
 const app = express();
 
-// 4. Use common middleware
-const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-app.use(cors({
-  origin: allowedOrigin,
-  credentials: true
-}));
+// 4. Sử dụng các middleware chung
+app.use(cors());
 app.use(express.json());
 
 // 5. Sử dụng các router
@@ -37,16 +33,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes); 
 app.use('/api/reports', reportRoutes);
 app.use('/api/branches', branchRoutes);
-app.use('/api/tickets', ticketRoute);
+app.use('/api/tickets', ticketsRoutes);
+
 // Route mặc định để kiểm tra server
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// Uncomment the following lines if you want to run the server locally
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server đang chạy tại cổng ${PORT}`));
-
-// For Vercel deployment, we need to export the app
-// Comment this line if you want to run the server locally
-module.exports = app;
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server is running at port ${PORT}`));

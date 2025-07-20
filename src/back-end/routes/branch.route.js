@@ -8,8 +8,14 @@ const {
   editSnack,
   deleteSnack,
   getSnackList,
-  getOccupiedSeats,
+  getAvailableBranches,
 } = require('../controllers/branch.controller.js');
+
+/**
+ * GET /available
+ * Lấy danh sách tất cả branches có sẵn với số phim đang chiếu
+ */
+router.get('/available', getAvailableBranches);
 
 router.get('/:branchId/snacks', getSnackList);
 
@@ -18,5 +24,4 @@ router.post('/:branchId/snacks', protect, restrictTo('administrator'), createSna
 router.patch('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), editSnack);
 router.delete('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), deleteSnack);
 
-router.get('/:branchId/schedules/:scheduleId/occupied-seats', getOccupiedSeats);
 module.exports = router;

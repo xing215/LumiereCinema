@@ -86,7 +86,7 @@ export const sidebarConfig = {
             id: 'sell-snack',
             label: 'Sell snack',
             icon: Coffee,
-            path: '#',
+            path: '/staff/snack',
             description: 'Sell snacks and beverages',
             permissions: ['tickets'],
             badge: null,

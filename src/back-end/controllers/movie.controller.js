@@ -1,81 +1,107 @@
 const Movie = require('../models/Movie.js');
 const Schedule = require('../models/Schedule.js');
 const MovieRating = require('../models/MovieRating.js');
-// Import redisClient already initialized from your config file
+// Import Redis client for caching
 const { redisClient } = require('../config/redis.config.js');
 
-// Default cache expiration time (in seconds), here is 10 minutes
+// Default cache expiration time (in seconds) - 10 minutes
 const DEFAULT_EXPIRATION = 600;
 const DETAIL_CACHE_EXPIRATION = 3600;
 
 /**
- * @desc    Get now showing movies list (optimized with Redis & Projection)
+ * @desc    Get list of now showing movies (optimized with Redis & Projection)
  * @route   GET /api/movies/now-showing
  */
 const getNowShowingMovies = async (req, res) => {
     const cacheKey = 'movies:now-showing';
 
     try {
-        // 1. CHECK CACHE FIRST
+        // 1. Check cache first
         const cachedMovies = await redisClient.get(cacheKey);
         if (cachedMovies) {
-            console.log('Cache Hit for now-showing movies!');
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }
-
-        // 2. IF NOT IN CACHE (CACHE MISS) -> QUERY DATABASE
-        console.log('Cache Miss! Fetching from DB...');
-        // Use .select() to only fetch required fields, reducing data transmission
-        const movies = await Movie.find({ status: 'Now Showing' })
-            .sort({ releaseDate: -1 })
-            .select('title posterURL duration genre ageRating ratingsAverage');
-
-        // 3. SAVE RESULT TO CACHE FOR NEXT USE
-        await redisClient.set(cacheKey, JSON.stringify(movies), {
+        }        // 2. Cache miss - fetch from database
+        // Use date-based query instead of status field
+        const now = new Date();
+        // Use the same logic as virtual property for consistency
+        const movies = await Movie.find({ 
+            isHidden: false
+        });
+        
+        // Filter in JavaScript to match virtual property logic exactly
+        const nowShowingMovies = movies.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return !movie.isHidden && releaseDate <= now;
+        })
+        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+        .map(movie => ({
+            _id: movie._id,
+            title: movie.title,
+            posterURL: movie.posterURL,
+            duration: movie.duration,
+            genre: movie.genre,
+            ageRating: movie.ageRating,
+            ratingsAverage: movie.ratingsAverage,
+            releaseDate: movie.releaseDate
+        }));        // 3. Save result to cache for next time
+        await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(movies);
+        res.status(200).json(nowShowingMovies);
 
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
-        res.status(500).json({ message: 'Internal server error.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Get upcoming movies list (optimized with Redis)
+ * @desc    Get list of upcoming movies (optimized with Redis)
  * @route   GET /api/movies/upcoming
  * @access  Public
  */
 
 const getUpcomingMovies = async (req, res) => {
-    // Define a separate cache key for "upcoming"
+    // Define unique cache key for "upcoming"
     const cacheKey = 'movies:upcoming';
 
     try {
         // 1. Check cache first
         const cachedMovies = await redisClient.get(cacheKey);
         if (cachedMovies) {
-            console.log('Cache Hit for upcoming movies!');
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }
-
-        // 2. If cache miss, query DB
-        console.log('Cache Miss! Fetching upcoming movies from DB...');
-        const movies = await Movie.find({ status: 'Upcoming' })
-            .sort({ releaseDate: 1 }) // Sort by nearest release date
-            .select('title posterURL releaseDate genre');
-
-        // 3. Save to cache
-        await redisClient.set(cacheKey, JSON.stringify(movies), {
+        }        // 2. Cache miss - fetch from database
+        // Use date-based query instead of status field
+        const now = new Date();
+        // Use the same logic as virtual property for consistency
+        const movies = await Movie.find({ 
+            isHidden: false
+        });
+        
+        // Filter in JavaScript to match virtual property logic exactly
+        const upcomingMovies = movies.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return !movie.isHidden && releaseDate > now;
+        })
+        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+        .map(movie => ({
+            _id: movie._id,
+            title: movie.title,
+            posterURL: movie.posterURL,
+            releaseDate: movie.releaseDate,
+            genre: movie.genre
+        }));        // 3. Save to cache
+        await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(movies);
+        res.status(200).json(upcomingMovies);
     } catch (error) {
         console.error('Get Upcoming Movies Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
@@ -85,24 +111,29 @@ const getUpcomingMovies = async (req, res) => {
  * @access  Public
  */
 const getMovieDetails = async (req, res) => {
-    // Cache key will be unique for each movie, example: 'movie:6860b11d3d13366261a33aca'
+    // Cache key will be unique for each movie, e.g., 'movie:6860b11d3d13366261a33aca'
     const cacheKey = `movie:${req.params.id}`;
 
     try {
         const cachedMovie = await redisClient.get(cacheKey);
         if (cachedMovie) {
-            console.log(`Cache Hit for movie ID: ${req.params.id}!`);
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovie));
         }
 
-        console.log(`Cache Miss! Fetching movie ID: ${req.params.id} from DB...`);
+        // Cache miss - fetch from database
         const movie = await Movie.findById(req.params.id);
 
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
 
-        // Save to cache with 1 hour expiration as backup
+        // Check if movie is hidden (soft deleted)
+        if (movie.isHidden) {
+            return res.status(404).json({ message: 'Movie not found.' });
+        }
+
+        // Save to cache with 1 hour expiration
         await redisClient.set(cacheKey, JSON.stringify(movie), {
             EX: DETAIL_CACHE_EXPIRATION,
         });
@@ -110,7 +141,7 @@ const getMovieDetails = async (req, res) => {
         res.status(200).json(movie);
     } catch (error) {
         console.error('Get Movie Details Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
@@ -124,23 +155,28 @@ const searchMovies = async (req, res) => {
     try {
         const keyword = req.query.q;
         if (!keyword) {
-            return res.status(400).json({ message: 'Please provide a search keyword.' });
+            return res.status(400).json({ message: 'Please provide search keyword.' });
         }
 
         // Use aggregation pipeline with $search stage
         const movies = await Movie.aggregate([
             {
                 $search: {
-                    index: 'movie_search_index', // Index name you created on MongoDB Atlas
+                    index: 'movie_search_index', // Index name created on MongoDB Atlas
                     text: {
                         query: keyword,
                         path: {
-                            'wildcard': '*' // Search on all indexed fields (title, description, cast, director)
+                            'wildcard': '*' // Search across all indexed fields (title, description, cast, director)
                         },
                         fuzzy: {
                             maxEdits: 1 // Allow 1 character difference (handle typos)
                         }
                     }
+                }
+            },
+            {
+                $match: {
+                    isHidden: false // Only show non-hidden movies
                 }
             },
             {
@@ -151,6 +187,8 @@ const searchMovies = async (req, res) => {
                     genre: 1,
                     ageRating: 1,
                     ratingsAverage: 1,
+                    releaseDate: 1,
+                    isHidden: 1,
                     score: { $meta: "searchScore" } // Get relevance score from Atlas Search
                 }
             },
@@ -158,7 +196,7 @@ const searchMovies = async (req, res) => {
                 $sort: { score: -1 } // Sort by highest relevance score
             },
             {
-                $limit: 5 // Limit results to avoid overload
+                $limit: 10 // Limit results to avoid overload
             },
         ]);
 
@@ -166,7 +204,7 @@ const searchMovies = async (req, res) => {
 
     } catch (error) {
         console.error('Search Movies Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
@@ -179,12 +217,12 @@ const getAllMovies = async (req, res) => {
     try {
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title posterURL duration genre status ageRating ratingsAverage createdAt');
+            .select('title posterURL duration genre isHidden ageRating ratingsAverage releaseDate createdAt');
         
         res.status(200).json(movies);
     } catch (error) {
         console.error('Get All Movies Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
@@ -200,7 +238,7 @@ const addMovie = async (req, res) => {
         // Check if movie already exists
         const existingMovie = await Movie.findOne({ title: movieData.title });
         if (existingMovie) {
-            return res.status(400).json({ message: 'A movie with this title already exists.' });
+            return res.status(400).json({ message: 'Movie with this title already exists.' });
         }
 
         const newMovie = new Movie(movieData);
@@ -218,14 +256,14 @@ const addMovie = async (req, res) => {
         console.error('Add Movie Error:', error);
         // MongoDB duplicate key error
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'A movie with this title already exists.' });
+            return res.status(400).json({ message: 'Movie with this title already exists.' });
         }
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Update movie (PUT/PATCH - full or partial)
+ * @desc    Update movie (PUT/PATCH - full or partial update)
  * @route   PUT /api/movies/:movieId
  * @route   PATCH /api/movies/:movieId
  * @access  Administrator
@@ -258,12 +296,12 @@ const updateMovie = async (req, res) => {
         });
     } catch (error) {
         console.error('Update Movie Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Delete movie
+ * @desc    Delete movie (soft delete by setting isHidden to true)
  * @route   DELETE /api/movies/:movieId
  * @access  Administrator
  */
@@ -274,21 +312,24 @@ const deleteMovie = async (req, res) => {
         // Check if movie has any schedules
         const hasSchedules = await Schedule.findOne({ movie: movieId });
         if (hasSchedules) {
-            // Before returning response, need to get movie information
+            // Get movie info before response
             const movie = await Movie.findById(movieId);
             if (!movie) {
                 return res.status(404).json({ message: 'Movie not found.' });
-            }
-            
-            // If has schedules, don't allow deletion - use status code 400 instead of 200
-            return res.status(400).json({
-                message: 'This movie has schedules, cannot be deleted.',
-                movie
+            }            
+            // If movie has schedules, soft delete by setting isHidden to true
+            return res.status(200).json({
+                message: 'Movie has active schedules. Performing soft delete by hiding movie.',
+                action: 'soft_delete'
             });
         }
         
-        // If no schedules, delete completely
-        const movie = await Movie.findByIdAndDelete(movieId);
+        // If no schedules, perform soft delete by setting isHidden to true
+        const movie = await Movie.findByIdAndUpdate(
+            movieId, 
+            { isHidden: true }, 
+            { new: true }
+        );
         
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
@@ -300,12 +341,12 @@ const deleteMovie = async (req, res) => {
         await redisClient.del(`movie:${movieId}`);
         
         res.status(200).json({
-            message: 'Movie has been deleted from the system.',
+            message: 'Movie has been soft deleted (hidden).',
             movie
         });
     } catch (error) {
         console.error('Delete Movie Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
@@ -319,9 +360,9 @@ const getMovieShowtimes = async (req, res) => {
         const { movieId } = req.params;
         const { date } = req.query;
         
-        // Check if movie exists
+        // Check if movie exists and is not hidden
         const movie = await Movie.findById(movieId);
-        if (!movie) {
+        if (!movie || movie.isHidden) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
         
@@ -350,7 +391,7 @@ const getMovieShowtimes = async (req, res) => {
         res.status(200).json(schedules);
     } catch (error) {
         console.error('Get Movie Showtimes Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
@@ -364,9 +405,9 @@ const getMovieRatingSummary = async (req, res) => {
         const { movieId } = req.params;
         const { page = 1, limit = 10 } = req.query;
         
-        // Check if movie exists
+        // Check if movie exists and is not hidden
         const movie = await Movie.findById(movieId);
-        if (!movie) {
+        if (!movie || movie.isHidden) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
         
@@ -376,8 +417,7 @@ const getMovieRatingSummary = async (req, res) => {
             .populate('user', 'name')
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(parseInt(limit));
-        
+            .limit(parseInt(limit));        
         const totalRatings = await MovieRating.countDocuments({ movie: movieId });
         
         res.status(200).json({
@@ -390,11 +430,11 @@ const getMovieRatingSummary = async (req, res) => {
         });
     } catch (error) {
         console.error('Get Movie Rating Summary Error:', error);
-        res.status(500).json({ message: 'A server error occurred.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
-// Update module.exports to include new functions
+// Export all movie controller functions
 module.exports = {
     getNowShowingMovies,
     getUpcomingMovies,
