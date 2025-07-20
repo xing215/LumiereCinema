@@ -16,14 +16,14 @@ const movieRatingSchema = new mongoose.Schema({
   },
 
   // UserId (FK): Tham chiếu đến người dùng đã đánh giá
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
   
   // MovieId (FK): Tham chiếu đến phim được đánh giá
-  movie: {
+  movieId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Movie',
     required: true,

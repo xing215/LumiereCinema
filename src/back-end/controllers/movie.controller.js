@@ -362,29 +362,20 @@ const getMovieShowtimes = async (req, res) => {
 const getMovieRatingSummary = async (req, res) => {
     try {
         const { movieId } = req.params;
-        const { page = 1, limit = 10 } = req.query;
         
         // Check if movie exists
         const movie = await Movie.findById(movieId);
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
-        
-        const skip = (page - 1) * limit;
-        
-        const ratings = await MovieRating.find({ movie: movieId })
-            .populate('user', 'name')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit));
-        
-        const totalRatings = await MovieRating.countDocuments({ movie: movieId });
+                
+        const ratings = await MovieRating.find({ movieId: movieId })
+            .populate('userId', 'name')
+            .sort({ createdAt: -1 });
         
         res.status(200).json({
             ratings,
             totalRatings,
-            currentPage: parseInt(page),
-            totalPages: Math.ceil(totalRatings / limit),
             ratingsAverage: movie.ratingsAverage,
             ratingsQuantity: movie.ratingsQuantity
         });
