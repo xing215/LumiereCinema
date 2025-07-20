@@ -1,0 +1,319 @@
+import { useState } from 'react';
+import axios from 'axios';
+import { getApiUrl, getBranchSnackApiUrl } from '@config/api.config';
+import { useUser } from '@contexts/UserContext';
+
+/**
+ * Branch logic hooks for handling branch-level data operations
+ */
+
+export const useFetchBranches = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const { token } = useUser();
+
+  const fetchBranches = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(getApiUrl('branches'), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBranches(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { fetchBranches, branches, loading, error };
+};
+
+export const useSetCurrentBranch = () => {
+  const [currentBranch, setCurrentBranchState] = useState(() => {
+    return localStorage.getItem('currentBranch') || null;
+  });
+
+  const setCurrentBranch = (branchId) => {
+    setCurrentBranchState(branchId);
+    localStorage.setItem('currentBranch', branchId);
+  };
+
+  const clearCurrentBranch = () => {
+    setCurrentBranchState(null);
+    localStorage.removeItem('currentBranch');
+  };
+
+  return { currentBranch, setCurrentBranch, clearCurrentBranch };
+};
+
+export const useGetScreens = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [screens, setScreens] = useState([]);
+  const { token } = useUser();
+  const { currentBranch } = useSetCurrentBranch();
+
+  const getScreens = async (branchId = currentBranch) => {
+    if (!branchId) {
+      setError('No branch selected');
+      return { success: false, error: 'No branch selected' };
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`/api/branches/${branchId}/screens`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setScreens(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch screens';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getScreens, screens, loading, error };
+};
+
+export const useUpdateScreen = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const updateScreen = async (branchId, screenId, screenData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.put(`/api/branches/${branchId}/screens/${screenId}`, screenData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to update screen';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateScreen, loading, error };
+};
+
+export const useRemoveScreen = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const removeScreen = async (branchId, screenId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.delete(`/api/branches/${branchId}/screens/${screenId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to remove screen';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { removeScreen, loading, error };
+};
+
+export const useGetSchedules = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const { token } = useUser();
+  const { currentBranch } = useSetCurrentBranch();
+
+  const getSchedules = async (date, branchId = currentBranch) => {
+    if (!branchId) {
+      setError('No branch selected');
+      return { success: false, error: 'No branch selected' };
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`/api/branches/${branchId}/schedules`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { date }
+      });
+      setSchedules(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch schedules';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getSchedules, schedules, loading, error };
+};
+
+export const useUpdateSchedule = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const updateSchedule = async (branchId, scheduleData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const url = scheduleData.id 
+        ? `/api/branches/${branchId}/schedules/${scheduleData.id}`
+        : `/api/branches/${branchId}/schedules`;
+      
+      const method = scheduleData.id ? 'put' : 'post';
+      const response = await axios[method](url, scheduleData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to update schedule';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateSchedule, loading, error };
+};
+
+export const useRemoveSchedule = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const removeSchedule = async (branchId, scheduleId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.delete(`/api/branches/${branchId}/schedules/${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to remove schedule';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { removeSchedule, loading, error };
+};
+
+export const useGetSnacks = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [snacks, setSnacks] = useState([]);
+  const { token } = useUser();
+  const { currentBranch } = useSetCurrentBranch();
+
+  const getSnacks = async (branchId = currentBranch) => {
+    if (!branchId) {
+      setError('No branch selected');
+      return { success: false, error: 'No branch selected' };
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(getBranchSnackApiUrl(branchId), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSnacks(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch snacks';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getSnacks, snacks, loading, error };
+};
+
+export const useUpdateSnack = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const updateSnack = async (branchId, snackId, snackData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.patch(getBranchSnackApiUrl(branchId, snackId), snackData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to update snack';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateSnack, loading, error };
+};
+
+export const useRemoveSnack = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const removeSnack = async (branchId, snackId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.delete(getBranchSnackApiUrl(branchId, snackId), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to remove snack';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { removeSnack, loading, error };
+};

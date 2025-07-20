@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import ConfirmationModal from '../../components/display/Modal/Confirmation.jsx';
-import EditSeatModal from '../../components/display/Modal/EditSeatModal.jsx';
-import ManageTable from '../../components/UI/ManageTable.jsx';
-import DeleteButton from '../../components/buttons/Staff/DeleteButton.jsx';
-import AddButton from '../../components/buttons/Staff/AddButton.jsx';
-import SearchButton from '../../components/buttons/Staff/SearchButton.jsx';
-import SelectBranchButton from '../../components/buttons/Staff/SelectBranch.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
+import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
+import ConfirmationModal from '@components/display/Modal/Confirmation.jsx';
+import EditSeatModal from '@components/display/Modal/EditSeatModal.jsx';
+import ManageTable from '@components/UI/ManageTable.jsx';
+import DeleteButton from '@components/buttons/Staff/DeleteButton.jsx';
+import AddButton from '@components/buttons/Staff/AddButton.jsx';
+import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
+import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 
 const ScreenManagePage = () => {
     const [tickedScreens, setTickedScreens] = useState(new Set());
@@ -22,14 +22,22 @@ const ScreenManagePage = () => {
     };
 
     const header = ['TickButton', 'ID', 'Name', 'Row', 'Column', 'ActiveButton', 'EditSeatButton'];
+    const Button = () => {
+        return (
+            <div className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl hover:cursor-pointer">
+                {tickedScreens.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)}/> : <AddButton text="Add Screen"/>}
+            </div>
+        )
+    }
+    const screenColumnConfig = null
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton />
-                {tickedScreens.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)} /> : <AddButton />}
+                <Button/>
                 {showConfirmDeleteScreen && <ConfirmationModal item={tickedScreens.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteScreen(false)} />}
-                <ManageTable data={screenRows} anyTicked={tickedScreens} setTickedRows={setTickedScreens} onEditSeat={setEditedScreenIndex} header={header} />
+                <ManageTable data={screenRows} anyTicked={tickedScreens} setTickedRows={setTickedScreens} onEditSeat={setEditedScreenIndex} header={header} columnConfig={screenColumnConfig}/>
                 {editedScreenIndex !== null && <EditSeatModal screenData={screenRows[editedScreenIndex]} onClose={() => setEditedScreenIndex(null)} />}
                 <SelectBranchButton />
             </MobileNotSupported>
@@ -42,4 +50,4 @@ const ScreenManagePage = () => {
     );
 };
 
-export default ScreenManagePage;
+export default ScreenManagePage

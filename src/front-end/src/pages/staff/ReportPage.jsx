@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import StaffLayout from '../../layouts/StaffLayout';
-import ReportHeader from '../../layouts/ReportPage/Header';
-import TotalRevenueCard from '../../layouts/ReportPage/TotalRevenueCard';
-import ChartCard from '../../layouts/ReportPage/ChartCard';
-import CustomDropdown from '../../components/UI/CustomDropdown';
-import ByDateRevenueChart from '../../layouts/ReportPage/ByDateRevenueChart';
-import EmployeeRevenueList from '../../layouts/ReportPage/EmployeeRevenueList';
-import MovieRevenueChart from '../../layouts/ReportPage/MovieRevenueChart';
+import StaffLayout from '@layouts/StaffLayout';
+import ReportHeader from '@layouts/ReportPage/Header';
+import TotalRevenueCard from '@layouts/ReportPage/TotalRevenueCard';
+import ChartCard from '@layouts/ReportPage/ChartCard';
+import CustomDropdown from '@components/UI/CustomDropdown';
+import ByDateRevenueChart from '@layouts/ReportPage/ByDateRevenueChart';
+import EmployeeRevenueList from '@layouts/ReportPage/EmployeeRevenueList';
+import MovieRevenueChart from '@layouts/ReportPage/MovieRevenueChart';
+import { getApiUrl } from '@config/api.config';
 
 const getInitialDates = () => {
   const date = new Date();

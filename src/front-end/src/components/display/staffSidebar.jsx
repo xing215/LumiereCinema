@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Menu, Film } from 'lucide-react';
-import sidebarConfig, { hasRole, filterMenuItems, getUserRoleInfo, getUserPermissions, hasPermission } from '../../config/adminSidebar.config.js';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
+import sidebarConfig, {filterMenuItems, getUserRoleInfo} from '@config/adminSidebar.config.js';
 
 const StaffSidebar = ({
     isCollapsed = false,
@@ -10,11 +12,11 @@ const StaffSidebar = ({
     onItemClick = () => {},
     userRoles = ['none'], // Default to all roles
     currentUser = null,
-    showQuickActions = true,
     onMobileToggle = () => {},
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useUser();
     const [expandedItems, setExpandedItems] = useState({});
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [filteredMainItems, setFilteredMainItems] = useState([]);
@@ -64,10 +66,10 @@ const StaffSidebar = ({
         if (item.action === 'logout') {
             // Add logout logic here
             if (window.confirm('Are you sure you want to logout?')) {
-                // Clear session/localStorage
-                localStorage.removeItem('staffToken');
-                localStorage.removeItem('staffUser');
-                navigate('/staff/login');
+                // Use the UserContext logout function
+                logout();
+                // Redirect to root path
+                navigate(ROUTES.HOME);
             }
             return;
         }

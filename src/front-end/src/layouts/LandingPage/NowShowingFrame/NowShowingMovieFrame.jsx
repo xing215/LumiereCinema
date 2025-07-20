@@ -1,8 +1,8 @@
-import Sample1 from '../../../assets/sample/ThamTuKien.jpg';
-import Sample2 from '../../../assets/sample/Divided.png';
-import MovieCard from '../../../components/UI/MovieCard.jsx';
-import BackwardButton from '../../../components/buttons/backwardButton.jsx';
-import ForwardButton from '../../../components/buttons/forwardButton.jsx';
+import Sample1 from '@assets/sample/ThamTuKien.jpg';
+import Sample2 from '@assets/sample/Divided.png';
+import MovieCard from '@components/UI/MovieCard.jsx';
+import BackwardButton from '@components/buttons/backwardButton.jsx';
+import ForwardButton from '@components/buttons/forwardButton.jsx';
 
 const NowShowingFrame = () => {
     return (

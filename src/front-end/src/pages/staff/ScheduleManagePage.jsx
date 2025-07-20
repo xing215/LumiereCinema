@@ -1,26 +1,10 @@
-import UploadCSVButton from '../../components/buttons/scheduleMange/uploadCsvButton.jsx';
-import AddScheduleButton from '../../components/buttons/scheduleMange/addScheduleButton.jsx';
-import { Download } from 'lucide-react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-import SelectBranchButton from '../../components/buttons/Staff/SelectBranch.jsx';
-
-const DownloadTemplateButton = () => {
-    return (
-        <button className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline hover:cursor-pointer">
-            Download template
-            <Download className="h-4 text-slate-950" />
-        </button>
-    );
-};
-
-const DateChosenButton = () => {
-    return (
-        <button className="relative z-20 flex h-8 items-center gap-2">
-            <button className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950 hover:cursor-pointer">07/10/2025</button>
-        </button>
-    );
-};
+import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
+import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
+import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
+import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton.jsx';
+import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
+import AddButton from "@components/buttons/Staff/AddButton.jsx";
 
 const Schedule = () => {
     return (
@@ -71,7 +55,7 @@ const ScheduleManagePage = () => {
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
 
                 <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/10 xl:top-1/20">
-                    <AddScheduleButton />
+                    <AddButton text="Add Schedule"/>
                     <div className="flex flex-col items-center">
                         <DownloadTemplateButton />
                         <UploadCSVButton />

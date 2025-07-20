@@ -8,10 +8,17 @@
 // - Users see items based on permissions granted by their roles
 // - Quick actions and bottom items still use role-based filtering for backward compatibility
 //
-// ROLE HIERARCHY: all > admin > manager > cashier/checkin
+// ROLE HIERARCHY: all > administrator > branchmanager > cashier/checkincounter > customer
+//
+// ROLE TO PERMISSION MAPPING:
+// - customer: [] (no staff permissions)
+// - cashier: ['tickets', 'snacks']
+// - checkincounter: ['checkin']
+// - branchmanager: ['schedules', 'screens', 'analytics', 'snacks', 'promotions']
+// - administrator: ['users', 'movies', 'branches', 'promotions', 'analytics', 'schedules', 'screens', 'snacks', 'tickets', 'checkin']
 
 import { Film, Users, Ticket, Calendar, MapPin, Gift, Settings, LogOut, BarChart3, Coffee, Monitor, UserCheck } from 'lucide-react';
-import LogoImage from '../assets/img/Logo.svg';
+import LogoImage from '@assets/img/Logo.svg';
 
 export const sidebarConfig = {
     // Application info
@@ -31,21 +38,25 @@ export const sidebarConfig = {
             name: 'All Permissions',
             permissions: ['all'],
         },
-        admin: {
-            name: 'Administrator',
-            permissions: ['users', 'movies', 'branches', 'promotions', 'analytics'],
-        },
-        manager: {
-            name: 'Branch Manager',
-            permissions: ['schedules', 'screens', 'analytics', 'snacks'],
+        customer: {
+            name: 'Customer',
+            permissions: [],
         },
         cashier: {
             name: 'Cashier',
             permissions: ['tickets'],
         },
-        checkin: {
-            name: 'Check-in counter',
+        checkincounter: {
+            name: 'Check-in Counter',
             permissions: ['checkin'],
+        },
+        branchmanager: {
+            name: 'Branch Manager',
+            permissions: ['schedules', 'screens', 'analytics', 'snacks'],
+        },
+        administrator: {
+            name: 'Administrator',
+            permissions: ['users', 'movies', 'branches', 'promotions', 'analytics'],
         },
     },
 
@@ -84,7 +95,7 @@ export const sidebarConfig = {
             id: 'manage-movie',
             label: 'Manage movie',
             icon: Film,
-            path: '#',
+            path: '/staff/movie',
             description: 'Manage movie catalog',
             permissions: ['movies'],
             badge: null,
@@ -163,7 +174,7 @@ export const sidebarConfig = {
             icon: Settings,
             path: '/staff/change-password',
             description: 'Change your password',
-            roles: null,
+            roles: ['cashier', 'checkincounter', 'branchmanager', 'administrator'],
             badge: null,
         },
         {
@@ -300,7 +311,7 @@ export const filterMenuItems = (items, userRoles, usePermissions = false) => {
 
 export const getUserRoleInfo = (userRoles) => {
     // Find the highest priority role
-    const rolePriority = ['all', 'admin', 'manager', 'cashier', 'checkin', 'none'];
+    const rolePriority = ['all', 'administrator', 'branchmanager', 'cashier', 'checkincounter', 'customer', 'none'];
 
     for (const role of rolePriority) {
         if (userRoles.includes(role)) {
@@ -312,8 +323,8 @@ export const getUserRoleInfo = (userRoles) => {
     }
 
     return {
-        key: 'checkin',
-        info: sidebarConfig.roles.checkin,
+        key: 'customer',
+        info: sidebarConfig.roles.customer,
     }; // Default role
 };
 
@@ -337,6 +348,13 @@ export const getUserDebugInfo = (userRoles) => {
             users: hasPermission(permissions, ['users']),
             branches: hasPermission(permissions, ['branches']),
             analytics: hasPermission(permissions, ['analytics']),
+        },
+        roleHierarchy: {
+            isAdministrator: userRoles.includes('administrator'),
+            isBranchManager: userRoles.includes('branchmanager'),
+            isCashier: userRoles.includes('cashier'),
+            isCheckInCounter: userRoles.includes('checkincounter'),
+            isCustomer: userRoles.includes('customer'),
         },
     };
 };

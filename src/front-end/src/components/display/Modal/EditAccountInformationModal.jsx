@@ -1,5 +1,5 @@
-import CancelButton from '../../buttons/Staff/CancelButton.jsx';
-import ConfirmButton from '../../buttons/Staff/ConfirmButton.jsx';
+import CancelButton from '@components/buttons/Staff/CancelButton.jsx';
+import ConfirmButton from '@components/buttons/Staff/ConfirmButton.jsx';
 import { Box, Square, SquareCheckBig } from 'lucide-react';
 import { useState } from 'react';
 

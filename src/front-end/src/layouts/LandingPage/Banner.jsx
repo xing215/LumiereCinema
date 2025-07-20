@@ -1,9 +1,9 @@
-import ForwardButton from '../../components/buttons/forwardButton.jsx';
-import BackwardButton from '../../components/buttons/backwardButton.jsx';
-import Poster from '../../components/UI/poster.jsx';
-import Decoration from '../../assets/img/Banner_Decoration.png';
-import AiSearch from '../../components/display/AiSearch.jsx';
-import PicsLink from '../../assets/sample/Poster.png';
+import ForwardButton from '@components/buttons/forwardButton.jsx';
+import BackwardButton from '@components/buttons/backwardButton.jsx';
+import Poster from '@components/UI/poster.jsx';
+import Decoration from '@assets/img/Banner_Decoration.png';
+import AiSearch from '@components/display/AiSearch.jsx';
+import PicsLink from '@assets/sample/Poster.png';
 
 const Decoration1 = () => {
     return (

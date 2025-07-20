@@ -1,12 +1,40 @@
-import React from 'react';
-import Header from '../layouts/LandingPage/Header.jsx';
-import ResetPwdForm from '../layouts/ResetPwd/ResetPwdForm.jsx';
-import ChatBot from '../components/display/ChatBot.jsx';
-import BackwardButton from '../components/buttons/backwardButton.jsx';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
+import { useResetPassword } from '@hooks/useAuth';
+import Header from '@layouts/LandingPage/Header.jsx';
+import ChatBot from '@components/display/ChatBot.jsx';
+import BackwardButton from '@components/buttons/backwardButton.jsx';
+import Footer from '@layouts/LandingPage/Footer.jsx';
+import ResetPwdForm from '@layouts/ResetPwd/ResetPwdForm.jsx';
 
-const ResetPwd = () => {
+const ForgotPassword = () => {
     const navigate = useNavigate();
+    const { isAuthenticated, isLoading: authLoading } = useUser();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate(ROUTES.HOME);
+        }
+    }, [isAuthenticated, authLoading, navigate]);
+
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    // Don't render form if authenticated (will redirect)
+    if (isAuthenticated) {
+        return null;
+    }
+
+    const resetPwdHook = useResetPassword();
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden overflow-y-hidden bg-slate-950">
             <Header />
@@ -20,12 +48,16 @@ const ResetPwd = () => {
             <div className="absolute top-10 left-5 flex items-center sm:top-15 sm:left-8 md:top-20 md:left-10 lg:top-25 lg:left-20">
                 <BackwardButton onClick={() => navigate(-1)} position="relative" />
             </div>
+            
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
-                <ResetPwdForm />
+                <ResetPwdForm resetPwdHook={resetPwdHook} />
             </div>
+
             <ChatBot />
+            <div className="w-screen lg:h-15" />
+            <Footer />
         </section>
     );
 };
 
-export default ResetPwd;
+export default ForgotPassword;
