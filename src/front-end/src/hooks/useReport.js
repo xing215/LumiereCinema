@@ -81,17 +81,24 @@ export const useGetAvailableBranches = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [branches, setBranches] = useState([]);
-  const { token } = useUser();
+  const { token, user } = useUser();
 
   const getAvailableBranches = async () => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.get(getApiUrl('branches'), {
+      // Simple role check: admin > branchmanager
+      const roles = user?.roles || (user?.role ? [user.role] : []);
+      let apiUrl;
+      if (roles.includes('administrator')) {
+        apiUrl = getApiUrl('branches');
+      } else if (roles.includes('branchmanager')) {
+        apiUrl = getApiUrl('branch');
+      }
+      const response = await axios.get(apiUrl, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBranches(response.data);
+      setBranches(Array.isArray(response.data) ? response.data : []);
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch branches';

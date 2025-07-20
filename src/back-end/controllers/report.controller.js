@@ -81,6 +81,7 @@ exports.getTotalRevenue = async (req, res) => {
   }
 };
 
+
 exports.getBranches = async (req, res) => {
   try {
     const cachedBranches = await redisClient.get('branches');
@@ -103,8 +104,30 @@ exports.getBranches = async (req, res) => {
   }
 };
 
+// Controller for branch manager to get their allocated branch
+exports.getBranch = async (req, res) => {
+  try {
+    // req.user is set by auth middleware
+    const user = req.user;
+    if (!user || !user.branch) {
+      return res.status(404).json({ message: 'No branch allocated to this user.' });
+    }
+    // Populate branch name
+    const branch = await Branch.findById(user.branch).select('name').lean();
+    if (!branch) {
+      return res.status(404).json({ message: 'Branch not found.' });
+    }
+    res.status(200).json([branch]);
+  } catch (error) {
+    console.error('Error fetching branch for manager:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 exports.getRevenueSummary = async (req, res) => {
-  const { startDate, endDate, branchId } = req.query;
+  const { startDate, endDate } = req.query;
+  let branchId = req.query.branchId || null;
+  const user = req.user;
 
   if (!startDate || !endDate) {
     return res.status(400).json({ message: 'Start date and end date are required.' });
@@ -112,6 +135,14 @@ exports.getRevenueSummary = async (req, res) => {
 
   if (isNaN(new Date(startDate)) || isNaN(new Date(endDate))) {
     return res.status(400).json({ message: 'Invalid date format.' });
+  }
+
+  if (!user || !user.roles) {
+    return res.status(401).json({ error: 'Unauthorized: user info missing' });
+  }
+
+  if (!user.roles.includes('administrator')) {
+    branchId = user.branch;
   }
 
   if (branchId && !mongoose.Types.ObjectId.isValid(branchId)) {
