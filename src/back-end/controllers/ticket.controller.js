@@ -1551,24 +1551,13 @@ const getSnacksByBranch = async (req, res) => {
       isAvailable: (snack.stock - (snack.reserved || 0)) > 0
     }));
 
-    // Group by category
-    const snacksByCategory = {};
-    availableSnacks.forEach(snack => {
-      const category = snack.category || 'Other';
-      if (!snacksByCategory[category]) {
-        snacksByCategory[category] = [];
-      }
-      snacksByCategory[category].push(snack);
-    });
-
     return res.status(200).json({
       branch: {
         _id: branch._id,
         name: branch.name
       },
       totalSnacks: availableSnacks.length,
-      snacks: availableSnacks,
-      snacksByCategory
+      snacks: availableSnacks
     });
 
   } catch (error) {

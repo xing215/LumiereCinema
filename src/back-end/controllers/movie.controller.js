@@ -21,24 +21,35 @@ const getNowShowingMovies = async (req, res) => {
         if (cachedMovies) {
             // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }
-
-        // 2. Cache miss - fetch from database
+        }        // 2. Cache miss - fetch from database
         // Use date-based query instead of status field
         const now = new Date();
+        // Use the same logic as virtual property for consistency
         const movies = await Movie.find({ 
-            isHidden: false,
-            releaseDate: { $lte: now }
+            isHidden: false
+        });
+        
+        // Filter in JavaScript to match virtual property logic exactly
+        const nowShowingMovies = movies.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return !movie.isHidden && releaseDate <= now;
         })
-            .sort({ releaseDate: -1 })
-            .select('title posterURL duration genre ageRating ratingsAverage releaseDate');
-
-        // 3. Save result to cache for next time
-        await redisClient.set(cacheKey, JSON.stringify(movies), {
+        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+        .map(movie => ({
+            _id: movie._id,
+            title: movie.title,
+            posterURL: movie.posterURL,
+            duration: movie.duration,
+            genre: movie.genre,
+            ageRating: movie.ageRating,
+            ratingsAverage: movie.ratingsAverage,
+            releaseDate: movie.releaseDate
+        }));        // 3. Save result to cache for next time
+        await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(movies);
+        res.status(200).json(nowShowingMovies);
 
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
@@ -62,24 +73,32 @@ const getUpcomingMovies = async (req, res) => {
         if (cachedMovies) {
             // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }
-
-        // 2. Cache miss - fetch from database
+        }        // 2. Cache miss - fetch from database
         // Use date-based query instead of status field
         const now = new Date();
+        // Use the same logic as virtual property for consistency
         const movies = await Movie.find({ 
-            isHidden: false,
-            releaseDate: { $gt: now }
+            isHidden: false
+        });
+        
+        // Filter in JavaScript to match virtual property logic exactly
+        const upcomingMovies = movies.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return !movie.isHidden && releaseDate > now;
         })
-            .sort({ releaseDate: 1 }) // Sort by nearest release date
-            .select('title posterURL releaseDate genre');
-
-        // 3. Save to cache
-        await redisClient.set(cacheKey, JSON.stringify(movies), {
+        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+        .map(movie => ({
+            _id: movie._id,
+            title: movie.title,
+            posterURL: movie.posterURL,
+            releaseDate: movie.releaseDate,
+            genre: movie.genre
+        }));        // 3. Save to cache
+        await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(movies);
+        res.status(200).json(upcomingMovies);
     } catch (error) {
         console.error('Get Upcoming Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
