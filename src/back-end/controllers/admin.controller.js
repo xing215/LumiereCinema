@@ -25,10 +25,16 @@ const getAllProfiles = async (req, res) => {
 
 const getDetailedProfile = async (req, res) => {
   try {
+    const cachedUser = await redisClient.get(`user:${req.params.userId}`);
+    if (cachedUser) {
+      return res.status(200).json(JSON.parse(cachedUser));
+    }
+
     const user = await User.findById(req.params.userId).select('-wishlist -watchHistory -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    await redisClient.set(`user:${req.params.userId}`, JSON.stringify(user), { EX: 120 }); // Cache user profile for 2 minutes
     res.status(200).json(user);
   } catch (error) {
     console.error('Error getting detailed profile:', error);
@@ -44,7 +50,7 @@ const updateUserDetails = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     await redisClient.del('userList');
-    await redisClient.del('userProfile');
+    await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
 
     if (req.body.updateData.email) {
       if (await User.findOne({ email: req.body.updateData.email })) {
@@ -94,7 +100,7 @@ const updateUserRoles = async (req, res) => {
       }
     }
     await redisClient.del('userList');
-    await redisClient.del('userProfile');
+    await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
     for (const field in req.body.updateData) {
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Field ${field} cannot be updated.` });
@@ -119,6 +125,8 @@ const updateUserStatus = async (req, res) => {
     if (req.body.updateData.isLocked !== undefined && typeof req.body.updateData.isLocked !== 'boolean') {
       return res.status(400).json({ message: 'isLocked must be a boolean.' });
     }
+    await redisClient.del('userList');
+    await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
     for (const field in req.body.updateData) {
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Field ${field} cannot be updated.` });
@@ -138,8 +146,8 @@ const deleteUser = async (req, res) => {
     const userId = req.params.userId;
     const user = await User.findById(userId);
     await redisClient.del('userList');
-    await redisClient.del('userProfile');
-  
+    await redisClient.del(`user:${userId}`);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
