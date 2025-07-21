@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-// (Tùy chọn) Một sub-schema để lưu trữ tọa độ địa lý (GeoJSON)
-// Rất hữu ích cho các tính năng như "Tìm rạp gần bạn"
+// (Optional) A sub-schema to store geographic coordinates (GeoJSON)
+// Very useful for features like "Find cinemas near you"
 const pointSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -9,7 +9,7 @@ const pointSchema = new mongoose.Schema({
     required: true
   },
   coordinates: {
-    type: [Number], // Định dạng: [kinh độ, vĩ độ]
+    type: [Number], // Format: [longitude, latitude]
     required: true
   }
 });
@@ -34,16 +34,16 @@ const branchSchema = new mongoose.Schema({
     trim: true
   },
   
-  // URL hình ảnh của rạp
+  // Cinema image URL
   imageURL: {
     type: String,
     default: ''
   },
   
-  // Tọa độ trên bản đồ để tích hợp Google Maps
+  // Coordinates on map for Google Maps integration
   location: {
     type: pointSchema,
-    // Tạo chỉ mục 2dsphere để tối ưu các truy vấn địa lý
+    // Create 2dsphere index to optimize geospatial queries
     index: '2dsphere'
   },
   isActive: { type: Boolean, default: true }

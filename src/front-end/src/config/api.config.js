@@ -86,6 +86,7 @@ const API_CONFIG = {
     
     // Report endpoints
     branches: '/api/reports/branches',
+    branch: '/api/reports/branch',
     revenueSummary: '/api/reports/revenue-summary',
     
     // Branch endpoints (snack management)

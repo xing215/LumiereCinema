@@ -1,29 +1,29 @@
 const mongoose = require('mongoose');
 
 const movieRatingSchema = new mongoose.Schema({
-  // Tên trường trong ERD là 'Star'
+  // Field name in ERD is 'Star'
   star: {
     type: Number,
-    required: [true, 'Số sao đánh giá không được để trống.'],
+    required: [true, 'Star rating cannot be empty.'],
     min: 1,
     max: 5,
   },
 
-  // Thêm trường bình luận để người dùng có thể viết nhận xét
+  // Add comment field so users can write reviews
   comment: {
     type: String,
     trim: true,
   },
 
-  // UserId (FK): Tham chiếu đến người dùng đã đánh giá
-  userId: {
+  // UserId (FK): Reference to the user who rated
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
   
-  // MovieId (FK): Tham chiếu đến phim được đánh giá
-  movieId: {
+  // MovieId (FK): Reference to the movie being rated
+  movie: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Movie',
     required: true,
@@ -33,10 +33,10 @@ const movieRatingSchema = new mongoose.Schema({
 
 /**
  * ==================================================================================
- * INDEXES (CHỈ MỤC)
+ * INDEXES
  * ==================================================================================
- * Tạo chỉ mục kết hợp để đảm bảo mỗi người dùng chỉ có thể đánh giá một bộ phim MỘT LẦN.
- * Đây là quy tắc nghiệp vụ quan trọng.
+ * Create a compound index to ensure each user can only rate a movie ONCE.
+ * This is an important business rule.
  */
 movieRatingSchema.index({ movie: 1, user: 1 }, { unique: true });
 
@@ -45,12 +45,12 @@ movieRatingSchema.index({ movie: 1, user: 1 }, { unique: true });
  * ==================================================================================
  * STATIC METHOD & MIDDLEWARE
  * ==================================================================================
- * Logic quan trọng: Tự động tính toán và cập nhật điểm trung bình (ratingsAverage)
- * và tổng số lượt đánh giá (ratingsQuantity) trong MovieModel mỗi khi có một
- * đánh giá mới được thêm, sửa, hoặc xóa.
+ * Important logic: Automatically calculate and update average rating (ratingsAverage)
+ * and total number of ratings (ratingsQuantity) in MovieModel whenever a rating
+ * is added, updated, or deleted.
  */
 
-// 1. Tạo một hàm static để tính toán
+// 1. Create a static function to calculate
 movieRatingSchema.statics.calculateAverageRatings = async function(movieId) {
   const stats = await this.aggregate([
     {
@@ -65,14 +65,14 @@ movieRatingSchema.statics.calculateAverageRatings = async function(movieId) {
     }
   ]);
 
-  // Cập nhật vào document Movie tương ứng
+  // Update the corresponding Movie document
   if (stats.length > 0) {
     await mongoose.model('Movie').findByIdAndUpdate(movieId, {
       ratingsQuantity: stats[0].numRatings,
       ratingsAverage: stats[0].avgRating
     });
   } else {
-    // Nếu không còn rating nào, trả về giá trị mặc định
+    // If there are no ratings left, return default values
     await mongoose.model('Movie').findByIdAndUpdate(movieId, {
       ratingsQuantity: 0,
       ratingsAverage: 0
@@ -80,14 +80,14 @@ movieRatingSchema.statics.calculateAverageRatings = async function(movieId) {
   }
 };
 
-// 2. Gọi hàm static đó sau khi một đánh giá được LƯU (tạo mới hoặc cập nhật)
+// 2. Call that static function after a rating is SAVED (created or updated)
 movieRatingSchema.post('save', function() {
-  // 'this.constructor' chính là MovieRatingModel
+  // 'this.constructor' is the MovieRatingModel
   this.constructor.calculateAverageRatings(this.movie);
 });
 
-// 3. Gọi hàm static đó sau khi một đánh giá bị XÓA
-// Dùng findOneAndDelete thay vì remove để có thể truy cập vào document đã xóa
+// 3. Call that static function after a rating is DELETED
+// Use findOneAndDelete instead of remove to access the deleted document
 movieRatingSchema.post('findOneAndDelete', async function(doc) {
     if (doc) {
         await doc.constructor.calculateAverageRatings(doc.movie);
