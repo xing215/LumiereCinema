@@ -4,17 +4,20 @@ const Ticket = require('../models/Ticket');
 const MovieRating = require('../models/MovieRating');
 const Movie = require('../models/Movie');
 const { redisClient } = require('../config/redis.config');
-const { generateKey } = require('crypto');
 
 const getProfile = async (req, res) => {
   try {
-    const userId = req.user.email;
-    const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude password
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const cachedUser = await redisClient.get(`userProfile`)
+    if (cachedUser) {
+      return res.status(200).json(JSON.parse(cachedUser));
     }
 
-    redisClient.set(`user:${userId}`, JSON.stringify(user), { EX: 3600 });
+      const userId = req.user.email;
+      const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude password
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+    await redisClient.set(`userProfile`, JSON.stringify(user), { EX: 3600 }); // Cache user profile for 1 hour
     res.status(200).json(user);
   } catch (error) {
     console.error('Error getting profile:', error);
@@ -30,7 +33,8 @@ const updateProfile = async (req, res) => {
     if (!user) {S
       return res.status(404).json({ message: 'User not found' });
     }
-    await redisClient.del(`user:${userId}`);
+    await redisClient.del(`userList`);
+    await redisClient.del(`userProfile`);
 
           const allowedFields = ['email', 'name', 'phone', 'birthday', 'gender'];
 
@@ -80,25 +84,14 @@ const rateMovie = async (req, res) => {
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found.' });
     }
+// mới kiếm dc cách tối ưu hơn
+const updatedRating = await MovieRating.findOneAndUpdate(
+  { movieId: movieId, userId: userId },
+  { star: rating },
+  { new: true, upsert: true }
+);
 
-    const existingRating = await MovieRating.findOne({ movieId: movieId, userId: userId });
-    if (existingRating) {
-      existingRating.star = rating;
-      await existingRating.save();
-    } else {
-      const newRating = new MovieRating({
-        userId: userId,
-        movieId: movieId,
-        star: rating
-      })
-      await newRating.save();
-    }
-
-    res.status(200).json({ message: 'Rating updated successfully.', rating: {
-        userId: userId,
-        movieId: movieId,
-        star: rating
-      } });
+    res.status(200).json({ message: 'Rating updated successfully.', rating: updatedRating });
   } catch (error) {
     console.error('Error rating movie:', error);
     res.status(500).json({ message: 'Server error', error });
