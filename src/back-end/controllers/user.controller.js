@@ -124,9 +124,154 @@ const getRatingMovie = async (req, res) => {
   }
 };
 
+const addToWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { movieId } = req.params;
+    const cacheKey = `wishlist:${userId}`;
+
+    if (!movieId) {
+      return res.status(400).json({ message: 'Movie ID is required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (user.wishlist.includes(movieId)) {
+      return res.status(400).json({ message: 'Movie already in wishlist.' });
+    }
+
+    user.wishlist.push(movieId);
+    await user.save();
+
+    await redisClient.del(cacheKey); // Xóa cache khi có thay đổi
+
+    res.status(200).json({ message: 'Movie added to wishlist successfully.', wishlist: user.wishlist });
+  } catch (error) {
+    console.error('Error adding to wishlist:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+}
+
+const removeFromWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { movieId } = req.params;
+    const cacheKey = `wishlist:${userId}`;
+
+    if (!movieId) {
+      return res.status(400).json({ message: 'Movie ID is required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (!user.wishlist.includes(movieId)) {
+      return res.status(400).json({ message: 'Movie not found in wishlist.' });
+    }
+
+    user.wishlist = user.wishlist.filter(id => id.toString() !== movieId);
+    await user.save();
+
+    await redisClient.del(cacheKey); // Xóa cache khi có thay đổi
+
+    res.status(200).json({ message: 'Movie removed from wishlist successfully.', wishlist: user.wishlist });
+  } catch (error) {
+    console.error('Error removing from wishlist:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+const getWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const cacheKey = `wishlist:${userId}`;
+    const cachedWishlist = await redisClient.get(cacheKey);
+
+    if (cachedWishlist) {
+      return res.status(200).json({ wishlist: JSON.parse(cachedWishlist) });
+    }
+
+    const user = await User.findById(userId).populate('wishlist');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    await redisClient.set(cacheKey, JSON.stringify(user.wishlist), { EX: 3600 }); // Cache for 1 hour
+    res.status(200).json({ wishlist: user.wishlist });
+  } catch (error) {
+    console.error('Error getting wishlist:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+const getWatchHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const cacheKey = `watchHistory:${userId}`;
+    const cachedHistory = await redisClient.get(cacheKey);
+
+    if (cachedHistory) {
+      return res.status(200).json({ watchHistory: JSON.parse(cachedHistory) });
+    }
+
+    const user = await User.findById(userId).populate('watchHistory');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    await redisClient.set(cacheKey, JSON.stringify(user.watchHistory), { EX: 3600 }); // Cache for 1 hour
+    res.status(200).json({ watchHistory: user.watchHistory });
+  } catch (error) {
+    console.error('Error getting watch history:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Remove a ticket from watch history (admin only)
+const removeFromWatchHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { ticketId } = req.params;
+    const cacheKey = `watchHistory:${userId}`;
+
+    if (!ticketId) {
+      return res.status(400).json({ message: 'Ticket ID is required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (!user.watchHistory.includes(ticketId)) {
+      return res.status(400).json({ message: 'Ticket not found in watch history.' });
+    }
+
+    user.watchHistory = user.watchHistory.filter(id => id.toString() !== ticketId);
+    await user.save();
+
+    await redisClient.del(cacheKey); // Xóa cache khi có thay đổi
+
+    res.status(200).json({ message: 'Ticket removed from watch history successfully.', watchHistory: user.watchHistory });
+  } catch (error) {
+    console.error('Error removing from watch history:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   rateMovie,
-  getRatingMovie
+  getRatingMovie,
+  addToWishlist,
+  removeFromWishlist,
+  getWishlist,
+  getWatchHistory,
+  removeFromWatchHistory
 };

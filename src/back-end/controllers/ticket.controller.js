@@ -1227,6 +1227,17 @@ const createTicket = async (req, res) => {
         });        await createdMovieTicket.save({ session });
         totalAmount += movieTicketTotal;
 
+        // add ticket to user's watch history if logged in
+        if (user) {
+          user.watchHistory = user.watchHistory || [];
+          user.watchHistory.push(createdMovieTicket._id);
+          await user.save({ session });
+
+          // Cập nhật lại Redis nếu có dùng cache user
+          const userCacheKey = `user:${user._id}`;
+          await redisClient.set(userCacheKey, JSON.stringify(user));
+        }
+
         // CRITICAL: Update Schedule.OccupiedSeat to mark seats as occupied
         await Schedule.findByIdAndUpdate(
           schedule,
