@@ -28,7 +28,7 @@ router.delete('/wishlist/:movieId', protect, restrictTo('customer'), removeFromW
 router.get('/wishlist', protect, restrictTo('customer'), getWishlist);
 
 // Watch history
-router.get('/watch-history', protect, restrictTo('administrator'), getWatchHistory);
+router.get('/watch-history', protect, restrictTo('customer'), getWatchHistory);
 router.delete('/watch-history/:ticketId', protect, restrictTo('administrator'), removeFromWatchHistory);
 
 module.exports = router;
