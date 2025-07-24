@@ -106,8 +106,9 @@ const LoginForm = ({ isCustomer = true }) => {
     return (
         <div className="w-full max-w-xs px-4 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-lg xl:max-w-xl">
             {/* Title */}
-            <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">LOGIN</h1>
-
+            <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
+                {isCustomer ? 'LOGIN' : 'STAFF LOGIN'}
+            </h1>
             {/* Register Link */}
             {isCustomer && (
                 <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">

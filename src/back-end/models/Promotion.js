@@ -39,7 +39,7 @@ const promotionSchema = new mongoose.Schema({
   appliedLoyaltyRank: {
     type: String, // Store 'rankName' from LoyaltyRank
     enum: ['SILVER', 'GOLD', 'PLATINUM'], // Only applies to this customer tier
-    default: null, // No limit if no value
+    default: 'SILVER', // Default to SILVER if not specified
   },
   
   // RemainingUse: Number of uses remaining

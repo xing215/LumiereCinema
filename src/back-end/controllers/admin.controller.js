@@ -4,6 +4,7 @@ const Ticket = require('../models/Ticket');
 const MovieRating = require('../models/MovieRating');
 const { redisClient } = require('../config/redis.config');
 const Branch = require('../models/Branch');
+const Promotion = require('../models/Promotion');
 
 const getAllProfiles = async (req, res) => {
   try {
@@ -174,6 +175,98 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Lấy tất cả promotion (có cache)
+const getAllPromotions = async (req, res) => {
+  try {
+    const cached = await redisClient.get('promotionList');
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+    const promotions = await Promotion.find();
+    await redisClient.set('promotionList', JSON.stringify(promotions), { EX: 3600 });
+    res.status(200).json(promotions);
+  } catch (error) {
+    console.error('Error getting promotions:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Lấy promotion theo code (có cache)
+const getPromotionByCode = async (req, res) => {
+  try {
+    const code = req.params.promotionCode.toUpperCase();
+    const cacheKey = `promotion:${code}`;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+    const promotion = await Promotion.findOne({ promotionCode: code });
+    if (!promotion) {
+      return res.status(404).json({ message: 'Promotion not found.' });
+    }
+    await redisClient.set(cacheKey, JSON.stringify(promotion), { EX: 3600 });
+    res.status(200).json(promotion);
+  } catch (error) {
+    console.error('Error getting promotion:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Khi tạo, cập nhật, xóa promotion thì xóa cache liên quan
+const createPromotion = async (req, res) => {
+  try {
+    const data = req.body;
+    const exists = await Promotion.findOne({ promotionCode: data.promotionCode });
+    if (exists) {
+      return res.status(400).json({ message: 'Promotion code already exists.' });
+    }
+    const promotion = new Promotion(data);
+    await promotion.save();
+    await redisClient.del('promotionList');
+    res.status(201).json({ message: 'Promotion created successfully.', promotion });
+  } catch (error) {
+    console.error('Error creating promotion:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+const updatePromotion = async (req, res) => {
+  try {
+    const { promotionCode } = req.params;
+    const updateData = req.body;
+    const promotion = await Promotion.findOneAndUpdate(
+      { promotionCode: promotionCode.toUpperCase() },
+      updateData,
+      { new: true, runValidators: true }
+    );
+    if (!promotion) {
+      return res.status(404).json({ message: 'Promotion not found.' });
+    }
+    await redisClient.del('promotionList');
+    await redisClient.del(`promotion:${promotionCode.toUpperCase()}`);
+    res.status(200).json({ message: 'Promotion updated successfully.', promotion });
+  } catch (error) {
+    console.error('Error updating promotion:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+const deletePromotion = async (req, res) => {
+  try {
+    const { promotionCode } = req.params;
+    const promotion = await Promotion.findOneAndDelete({ promotionCode: promotionCode.toUpperCase() });
+    if (!promotion) {
+      return res.status(404).json({ message: 'Promotion not found.' });
+    }
+    await redisClient.del('promotionList');
+    await redisClient.del(`promotion:${promotionCode.toUpperCase()}`);
+    res.status(200).json({ message: 'Promotion deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting promotion:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
 module.exports = {
   getAllProfiles,
   getDetailedProfile,
@@ -181,4 +274,9 @@ module.exports = {
   updateUserRoles,
   updateUserStatus,
   deleteUser,
+  getAllPromotions,
+  getPromotionByCode,
+  createPromotion,
+  updatePromotion,
+  deletePromotion,
 };
