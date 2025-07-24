@@ -125,7 +125,8 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                 response = await changePassword(formData);
             }
 
-            setMessage(response.data?.message || 'Password updated successfully.');
+            console.log('Password change/reset response:', response);
+            setMessage(response.data?.message || response.error || 'Password changed successfully.');
             setIsSuccess(response.success);
             
             // Redirect to login page after successful password change/reset
@@ -134,7 +135,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             }, 2000);
         } catch (error) {
             console.error('Password change error:', error);
-            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+            setMessage(response.error || 'An error occurred. Please try again.');
             setIsSuccess(false);
         } finally {
             setIsLoading(false);
@@ -144,7 +145,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
     return (
         <div className="w-full max-w-sm px-4 sm:max-w-md sm:px-0 md:max-w-lg lg:max-w-xl xl:max-w-2xl">
             {/* Title */}
-            <h1 className="mb-4 text-center font-['Unbounded'] text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">CHANGE PASSWORD</h1>
+            <h1 className="mb-4 text-center font-['Unbounded'] text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">{ResetToken ? 'RESET PASSWORD' : 'CHANGE PASSWORD'}</h1>
 
             {/* Change Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">

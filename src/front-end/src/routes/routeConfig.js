@@ -2,7 +2,7 @@ import LandingPage from '@pages/LandingPage';
 import Registration from '@pages/Registration';
 import Login from '@pages/Login';
 import StaffLogin from '@pages/staff/Login';
-import StaffResetPwd from '@pages/staff/ResetPwd';
+import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
@@ -116,7 +116,7 @@ export const routeConfig = [
     },
     {
         path: ROUTES.STAFF_RESET_PASSWORD,
-        component: StaffResetPwd,
+        component: StaffForgotPwd,
         type: 'staff-public',
         requiresAuth: false
     },
