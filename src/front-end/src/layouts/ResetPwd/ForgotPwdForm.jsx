@@ -70,7 +70,7 @@ const ForgotPwdForm = ({ forgotPwdHook }) => {
         try {
             const response = await resetPassword(formData.email);
             setMessage(response.data?.message || 'If the email exists, a password reset link has been sent.');
-            setIsSuccess(response.success);
+            setIsSuccess(true);
         } catch (error) {
             console.error('Reset password error:', error);
             setMessage(error?.error || 'An error occurred. Please try again.');
