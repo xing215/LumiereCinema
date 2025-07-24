@@ -1,36 +1,10 @@
-import { useState } from 'react';
-import UploadCSVButton from '../../components/buttons/scheduleMange/uploadCsvButton.jsx';
-import AddScheduleButton from '../../components/buttons/scheduleMange/addScheduleButton.jsx';
-import { Download } from 'lucide-react';
-import { Circle } from 'lucide-react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
-import MobileNotSupported from '../../components/display/MobileNotSupported.jsx';
-
-const DownloadTemplateButton = () => {
-    return (
-        <button className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline">
-            Download template
-            <Download className="h-4 text-slate-950" />
-        </button>
-    );
-};
-
-const DateChosenButton = () => {
-    return (
-        <button className="relative z-20 flex h-8 items-center gap-2">
-            <button className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950">07/10/2025</button>
-        </button>
-    );
-};
-
-const SelectBranchButton = () => {
-    return (
-        <button className="absolute bottom-5 left-1/2 h-9 w-96 -translate-x-1/2 transform">
-            <div className="absolute top-0 left-0 h-9 w-96 rounded-xl bg-white shadow-[inset_0px_0px_50px_3px_rgba(3,5,28,1.00)]" />
-            <div className="font-unbounded absolute top-1/2 left-1/2 -translate-1/2 transform justify-start text-center text-base font-bold text-nowrap text-white">LUMIERE CINEMA CAO THẮNG</div>
-        </button>
-    );
-};
+import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
+import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
+import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
+import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton.jsx';
+import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
+import AddButton from "@components/buttons/Staff/AddButton.jsx";
 
 const Schedule = () => {
     return (
@@ -39,7 +13,11 @@ const Schedule = () => {
             <div className="relative z-10 h-[95%] w-[90%]">
                 <div className="flex justify-between px-[1px] py-1">
                     {Array.from({ length: 24 }, (_, hour) => {
-                        return <div key={hour} className="font-libre-franklin justify-center text-center text-xs font-bold text-black">{hour < 10 ? `0${hour}` : hour}:00</div>;
+                        return (
+                            <div key={hour} className="font-libre-franklin justify-center text-center text-xs font-bold text-black">
+                                {hour < 10 ? `0${hour}` : hour}h
+                            </div>
+                        );
                     })}
                 </div>
 
@@ -77,7 +55,7 @@ const ScheduleManagePage = () => {
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
 
                 <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/10 xl:top-1/20">
-                    <AddScheduleButton />
+                    <AddButton text="Add Schedule"/>
                     <div className="flex flex-col items-center">
                         <DownloadTemplateButton />
                         <UploadCSVButton />

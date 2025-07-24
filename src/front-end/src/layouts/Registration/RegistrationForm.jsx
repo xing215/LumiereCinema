@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CustomDropdown from '../../components/UI/CustomDropdown.jsx';
-import ShowIcon from '../../assets/icons/show.svg';
-import HideIcon from '../../assets/icons/hide.svg';
+import { useUser } from '@contexts/UserContext';
+import { useRegister } from '@hooks/useAuth';
+import { ROUTES } from '@routes/routeConfig';
+import { validatePassword, formatPasswordErrors } from '@/utils/auth.utils';
+import CustomDropdown from '@components/UI/CustomDropdown';
+import ShowIcon from '@assets/icons/show.svg';
+import HideIcon from '@assets/icons/hide.svg';
 
 const RegistrationForm = () => {
     const navigate = useNavigate();
+    const { login } = useUser();
+    const { registerUser, loading, error } = useRegister();
 
     const [formData, setFormData] = useState({
         name: '',
         birthday: '',
         gender: '',
         email: '',
-        phoneNumber: '',
+        phone: '',
         password: '',
         retypePassword: '',
     });
@@ -25,7 +31,7 @@ const RegistrationForm = () => {
     const patterns = {
         name: /^[a-zA-ZÀ-ỹ\s]{2,}\s+[a-zA-ZÀ-ỹ\s]{2,}$/,
         email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        phoneNumber: /^(?:\+84|0084|0)[235789][0-9]{1,2}[0-9]{7}$/,
+        phone: /^(?:\+84|0084|0)[235789][0-9]{1,2}[0-9]{7}$/,
         gender: /^(Male|Female|Other)$/,
     };
 
@@ -43,8 +49,8 @@ const RegistrationForm = () => {
                     error = 'Please enter a valid email address';
                 }
                 break;
-            case 'phoneNumber':
-                if (!patterns.phoneNumber.test(value)) {
+            case 'phone':
+                if (!patterns.phone.test(value)) {
                     error = 'Please enter a valid Vietnamese phone number';
                 }
                 break;
@@ -52,7 +58,7 @@ const RegistrationForm = () => {
                 if (value) {
                     const selectedDate = new Date(value);
                     const today = new Date();
-                    today.setHours(0, 0, 0, 0); // Reset time to compare only dates
+                    today.setHours(0, 0, 0, 0);
                     if (selectedDate >= today) {
                         error = 'Birthday must be before today';
                     }
@@ -64,8 +70,9 @@ const RegistrationForm = () => {
                 }
                 break;
             case 'password':
-                if (value.length < 6) {
-                    error = 'Password must be at least 6 characters long';
+                const passwordErrors = validatePassword(value);
+                if (passwordErrors.length > 0) {
+                    error = formatPasswordErrors(passwordErrors);
                 }
                 break;
             case 'retypePassword':
@@ -104,7 +111,7 @@ const RegistrationForm = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Validate all fields before submit
@@ -119,8 +126,24 @@ const RegistrationForm = () => {
             return;
         }
 
-        // Handle registration logic here
-        console.log('Registration data:', formData);
+        // Prepare data for API (match backend field names)
+        const registrationData = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            retypePassword: formData.retypePassword,
+            phone: formData.phone,
+            birthday: formData.birthday,
+            gender: formData.gender,
+        };
+
+        const result = await registerUser(registrationData);
+        
+        if (result.success) {
+            // Navigate to login page or homepage
+            navigate(ROUTES.LOGIN);
+        }
+        // Error is handled by the hook and displayed below
     };
 
     return (
@@ -131,13 +154,19 @@ const RegistrationForm = () => {
             {/* Login Link */}
             <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
                 Already have an account?
-                <span onClick={() => navigate('/login')} className="ml-1 cursor-pointer font-['Libre_Franklin'] text-purple-400 hover:text-purple-300">
+                <span onClick={() => !loading && navigate(ROUTES.LOGIN)} className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                     Login
                 </span>
             </p>
 
             {/* Registration Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
+                {/* Error Message */}
+                {error && (
+                    <div className="rounded-md bg-red-100 p-3 text-center">
+                        <p className="font-['Libre_Franklin'] text-sm text-red-800">{error}</p>
+                    </div>
+                )}
                 {/* Name */}
                 <div>
                     <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Name</label>
@@ -178,6 +207,8 @@ const RegistrationForm = () => {
                             borderColor="zinc-400"
                             textColor="black"
                             bgOpacity="bg-opacity-70"
+                            height="h-10 sm:h-11 md:h-12 lg:h-13 xl:h-14"
+                            textAlign="left"
                             options={[
                                 { value: 'Male', label: 'Male' },
                                 { value: 'Female', label: 'Female' },
@@ -207,13 +238,13 @@ const RegistrationForm = () => {
                     <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Phone Number</label>
                     <input
                         type="tel"
-                        name="phoneNumber"
-                        value={formData.phoneNumber}
+                        name="phone"
+                        value={formData.phone}
                         onChange={handleInputChange}
-                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.phoneNumber ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.phone ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
                         required
                     />
-                    {errors.phoneNumber && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.phoneNumber}</p>}
+                    {errors.phone && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.phone}</p>}
                 </div>
 
                 {/* Password */}
@@ -266,9 +297,10 @@ const RegistrationForm = () => {
                 <div className="flex justify-center pt-4 sm:pt-6">
                     <button
                         type="submit"
-                        className="flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl"
+                        disabled={loading}
+                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
-                        REGISTER
+                        {loading ? 'REGISTERING...' : 'REGISTER'}
                     </button>
                 </div>
             </form>

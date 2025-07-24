@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Camera } from 'lucide-react';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
 
 const MainBody = () => {
     return (
@@ -35,7 +35,7 @@ const MainBody = () => {
                 <div className="relative flex w-full items-center gap-2 pt-3 md:gap-4 md:pt-8">
                     <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Ticket:</p>
                     <div className="relative isolate h-6 w-[80%] rounded-xl bg-zinc-100 md:h-8 md:w-[90%] lg:h-9 lg:w-[80%]" />
-                    <Camera className="h-8 w-8 text-white md:h-10 md:w-10" />
+                    <Camera className="h-8 w-8 text-white hover:cursor-pointer md:h-10 md:w-10" />
                 </div>
             </div>
         </div>

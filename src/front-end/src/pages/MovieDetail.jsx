@@ -1,8 +1,8 @@
-import Header from '../layouts/LandingPage/Header.jsx';
-import Footer from '../layouts/LandingPage/Footer.jsx';
-import { TrailerVideo } from '../layouts/MovieDetail/TrailerVideo.jsx';
-import MovieInfo from '../layouts/MovieDetail/MovieInfo.jsx';
-import Suggestion from '../layouts/MovieDetail/Suggestion.jsx';
+import Header from '@layouts/LandingPage/Header.jsx';
+import Footer from '@layouts/LandingPage/Footer.jsx';
+import { TrailerVideo } from '@layouts/MovieDetail/TrailerVideo.jsx';
+import MovieInfo from '@layouts/MovieDetail/MovieInfo.jsx';
+import Suggestion from '@layouts/MovieDetail/Suggestion.jsx';
 
 const MainBody = () => {
     return (

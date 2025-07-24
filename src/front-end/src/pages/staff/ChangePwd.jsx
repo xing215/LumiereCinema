@@ -1,6 +1,6 @@
 import React from 'react';
-import ChangePwd from '../../layouts/ChangePwd/ChangePwdForm.jsx';
-import StaffLayout from '../../layouts/StaffLayout.jsx';
+import ChangePwd from '@layouts/ChangePwd/ChangePwdForm.jsx';
+import StaffLayout from '@layouts/StaffLayout.jsx';
 
 const StaffChangePwd = () => {
     return (

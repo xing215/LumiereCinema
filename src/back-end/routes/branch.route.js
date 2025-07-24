@@ -8,7 +8,14 @@ const {
   editSnack,
   deleteSnack,
   getSnackList,
+  getAvailableBranches,
 } = require('../controllers/branch.controller.js');
+
+/**
+ * GET /available
+ * Lấy danh sách tất cả branches có sẵn với số phim đang chiếu
+ */
+router.get('/available', getAvailableBranches);
 
 router.get('/:branchId/snacks', getSnackList);
 

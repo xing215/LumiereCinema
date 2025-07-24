@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const promotionSchema = new mongoose.Schema({
-  // PromotionCode (PK): Mã khuyến mãi mà người dùng sẽ nhập
+  // PromotionCode (PK): Promotion code that users will enter
   promotionCode: {
     type: String,
     required: true,
@@ -10,63 +10,64 @@ const promotionSchema = new mongoose.Schema({
     trim: true,
   },
 
-  // Name: Tên hoặc mô tả ngắn gọn của chương trình
+  // Name: Name or short description of the program
   name: {
     type: String,
     required: true,
     trim: true,
   },
 
-  // DiscountRate: Tỷ lệ hoặc số tiền giảm giá
+  // DiscountRate: Discount rate or discount amount
   discountRate: {
     type: Number,
     required: true,
     min: 0,
   },
-  
-  // Logic ngầm định: Cần một trường để biết 'discountRate' là % hay số tiền cố định.
-  discountType: {
-    type: String,
-    required: true,
-    enum: ['Percentage', 'FixedAmount'], // Giảm theo % hoặc số tiền cố định
+
+  maximumDiscount: {
+    type: Number,
+    default: null, // No limit if no value
+    min: 0
   },
 
-  // AppliedProduct: ID của sản phẩm cụ thể được áp dụng (nếu có)
-  // Có thể là MovieId hoặc SnackId. Cần một trường để phân biệt.
   appliedProduct: {
-    id: { type: mongoose.Schema.Types.ObjectId },
-    type: { type: String, enum: ['Movie', 'Snack'] }
+    type: String, // Store 'productType' (example: 'Movie', 'Snack', 'All')
+    enum: ['Movie', 'Snack', 'All'], // Only applies to this product type
+    required: true,
   },
 
   appliedLoyaltyRank: {
-    type: String, // Lưu 'rankName' của LoyaltyRank
-    ref: 'LoyaltyRank'
+    type: String, // Store 'rankName' from LoyaltyRank
+    enum: ['SILVER', 'GOLD', 'PLATINUM'], // Only applies to this customer tier
+    default: null, // No limit if no value
   },
   
-  // RemainingUse: Số lượt sử dụng còn lại
+  // RemainingUse: Number of uses remaining
   remainingUse: {
       type: Number,
       default: null
   },
 
-  // MinimumSpend: Điều kiện chi tiêu tối thiểu để được áp dụng
+  // MinimumSpend: Minimum spending requirement to apply
   minimumSpend: {
     type: Number,
     required: true,
     default: 0
   },
 
-  // Ngày bắt đầu và kết thúc
+  // Start and end dates
   startDate: {
     type: Date,
-    required: true,
+    //required: true,
+    default: null
   },
   endDate: {
     type: Date,
-    required: true,
+    //required: true,
+    default: null
   },
 
-  // Trạng thái hoạt động
+  // Active status
   isActive: {
     type: Boolean,
     default: true
@@ -74,18 +75,16 @@ const promotionSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// Middleware để kiểm tra ngày tháng
+// Middleware to validate dates
 promotionSchema.pre('save', function(next) {
     if (this.endDate < this.startDate) {
         return next(new Error('The end date must be after the start date.'));
     }
-    // Logic kiểm tra discountRate dựa trên discountType
-    if (this.discountType === 'Percentage' && (this.discountRate < 0 || this.discountRate > 100)) {
+    // Logic to validate discountRate based on discountType
+    if (this.discountRate < 0 || this.discountRate > 100) {
         return next(new Error('The discount percentage must be between 0 and 100.'));
     }
     next();
 });
-
-// Removed redundant explicit index for promotionCode as unique: true already creates it.
 
 module.exports = mongoose.model('Promotion', promotionSchema);

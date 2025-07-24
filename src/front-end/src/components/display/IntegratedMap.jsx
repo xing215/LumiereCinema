@@ -1,16 +1,225 @@
-import MapView from '../../assets/sample/Maps.png';
-import LocationTable from './LocationTable.jsx';
+import React, { use, useEffect, useRef, useState } from "react";
+import LocationTable from "@components/display/LocationTable.jsx";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-const IntegratedMap = () => {
+const DEFAULT_CENTER = [10.76285093853062, 106.6824844998954];
+const DEFAULT_BOUNDS = [
+    [5.5, 99.5],
+    [25.5, 112.0],
+];
+
+const cinemas = [
+    {
+        _id: "66b8a1c4f2e8d5a1b3c4d5c1",
+        name: "Lumiere Cao Thắng",
+        address: "379-381 Cao Thắng St, Ward 12",
+        city: "Ho Chi Minh City",
+        location: {
+            type: "Point",
+            coordinates: [10.775349914547771, 106.67129777333415],
+        },
+        isActive: true,
+        showings: "7",
+    },
+];
+
+function getDistance(lon1, lat1, lon2, lat2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+            Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 100) / 100;
+}
+
+const getCenter = () => {
+    if (
+        cinemas.length > 0 &&
+        cinemas[0].location &&
+        cinemas[0].location.coordinates
+    ) {
+        return [
+            cinemas[0].location.coordinates[0],
+            cinemas[0].location.coordinates[1],
+        ];
+    }
+    return DEFAULT_CENTER;
+};
+
+const IntegratedMap = ({
+    onClick = () => {},
+    selectedCinema = null,
+    isOpen = false,
+}) => {
+    const [maxdistance, setMaxDistance] = useState("");
+    const [userLocation, setUserLocation] = useState(null);
+
+    const mapRef = useRef(null);
+    const leafletMapRef = useRef(null);
+
+    useEffect(() => {
+        if (mapRef.current && !leafletMapRef.current) {
+            leafletMapRef.current = L.map(mapRef.current, {
+                center: getCenter(),
+                zoom: 19,
+                minZoom: 6,
+                maxBounds: DEFAULT_BOUNDS,
+                maxBoundsViscosity: 0.6,
+                scrollWheelZoom: true,
+            
+            });
+
+            if (screen.width < 768) {
+                 leafletMapRef.current.zoomControl.setPosition("bottomright");
+            } else {
+                leafletMapRef.current.zoomControl.setPosition("topright");
+            }
+
+            L.tileLayer(
+                "http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}",
+                {
+                    maxZoom: 20,
+                    subdomains: ["mt0", "mt1", "mt2", "mt3"],
+                    tileSize: 512,
+                    zoomOffset: -1,
+                }
+            ).addTo(leafletMapRef.current);
+
+        }
+
+        if (leafletMapRef.current) {
+            leafletMapRef.current.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    leafletMapRef.current.removeLayer(layer);
+                }
+            });
+
+            cinemas.forEach((cinema) => {
+                if (cinema.location && cinema.location.coordinates) {
+                    const marker = L.marker([
+                        cinema.location.coordinates[0],
+                        cinema.location.coordinates[1],
+                    ]).addTo(leafletMapRef.current);
+                    marker.bindPopup(
+                        `<b>${cinema.name}</b><br/>${cinema.address || ""}`
+                    );
+                }
+            });
+        }
+
+        return () => {
+            if (leafletMapRef.current) {
+                leafletMapRef.current.remove();
+                leafletMapRef.current = null;
+            }
+        };
+    }, [maxdistance, isOpen]);
+
+
+    // Only get geolocation when user clicks on the map
+    useEffect(() => {
+        if (!leafletMapRef.current) return;
+        const map = leafletMapRef.current;
+        const handleMapClick = () => {
+            if (navigator.geolocation.getCurrentPosition && cinemas.length > 0) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    setUserLocation({
+                        type: "Point",
+                        coordinates: [
+                            position.coords.latitude,
+                            position.coords.longitude,
+                        ],
+                    });
+                });
+            }
+        };
+        map.on('click', handleMapClick);
+        return () => {
+            map.off('click', handleMapClick);
+        };
+    }, [maxdistance, isOpen]);
+
+    useEffect(() => {
+        const map = leafletMapRef.current;
+        if (!map) return;
+
+        const handleWheel = (e) => {
+            const currentZoom = map.getZoom();
+            const minZoom = map.getMinZoom();
+            const maxZoom = map.getMaxZoom();
+            const isZoomingOut = e.deltaY > 0;
+            const isZoomingIn = e.deltaY < 0;
+
+            if (
+                (currentZoom <= minZoom && isZoomingOut) ||
+                (currentZoom >= maxZoom && isZoomingIn)
+            ) {
+                map.scrollWheelZoom.disable();
+                setTimeout(() => {
+                    map.scrollWheelZoom.enable();
+                }, 100);
+            }
+        };
+
+        const mapContainer = map.getContainer();
+        mapContainer.addEventListener("wheel", handleWheel, { passive: false });
+
+        return () => {
+            mapContainer.removeEventListener("wheel", handleWheel);
+        };
+    }, []);
+
+    useEffect(() => {
+        let scrollTimeout = null;
+
+        const handleScroll = () => {
+            if (leafletMapRef.current) {
+                leafletMapRef.current.scrollWheelZoom.disable();
+                leafletMapRef.current.dragging.disable();
+            }
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(handleScrollEnd, 300);
+        };
+
+        const handleScrollEnd = () => {
+            if (leafletMapRef.current) {
+                leafletMapRef.current.scrollWheelZoom.enable();
+                leafletMapRef.current.dragging.enable();
+            }
+        };
+
+        document.addEventListener("scroll", handleScroll, { passive: true });
+        document.addEventListener("touchend", handleScrollEnd, { passive: true });
+
+        return () => {
+            document.removeEventListener("scroll", handleScroll);
+            document.removeEventListener("touchend", handleScrollEnd);
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+        };
+    }, []);
+
     return (
-        <div className="relative z-20 flex w-screen justify-center gap-3 lg:block lg:gap-0">
-            <div className="relative z-20 h-70 w-[35%] sm:h-75 md:h-80 lg:absolute lg:left-28 lg:h-full lg:w-auto xl:left-53">
-                <LocationTable />
+        <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
+            <div className="ml-2 mt-[1%] relative z-3 w-[95%] md:w-[18vw] h-[30%] md:h-[95%]">
+                <LocationTable
+                    cinemas={cinemas}
+                    curlocation={userLocation}
+                    maxdistance={maxdistance}
+                    setMaxDistance={setMaxDistance}
+                    onClick={onClick}
+                    selectedlocation={selectedCinema}
+                />
             </div>
-
-            <div className="no-scrollbar relative h-70 w-[55%] overflow-auto rounded-xl sm:h-75 md:h-80 md:w-[60%] lg:left-1/2 lg:h-140 lg:w-[85%] lg:-translate-x-1/2 lg:transform lg:rounded-2xl xl:h-180 xl:w-[75%]">
-                <img src={MapView} alt="MapView" className="absolute top-0 h-[350px] object-cover sm:h-[800px] sm:w-[3200px]" />
-            </div>
+            <div
+                ref={mapRef}
+                className="absolute top-0 h-full w-full overflow-auto rounded-xl border-gray-200 z-2"
+            />
         </div>
     );
 };

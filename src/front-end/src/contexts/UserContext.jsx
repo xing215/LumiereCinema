@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Create User Context
 const UserContext = createContext();
@@ -14,17 +14,75 @@ export const useUser = () => {
 
 // User Provider Component
 export const UserProvider = ({ children }) => {
-    // EDIT USER MANAGEMENT HERE
-    const [userRoles, setUserRoles] = useState(['all']); // Default roles
-    const [userName, setUserName] = useState('Vương Ngũ Tín Thành'); // Default user name
+    const [user, setUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [token, setToken] = useState(null);
+
+    // Initialize auth state from localStorage
+    useEffect(() => {
+        const savedToken = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('user');
+        
+        if (savedToken && savedUser) {
+            try {
+                const parsedUser = JSON.parse(savedUser);
+                setToken(savedToken);
+                setUser(parsedUser);
+                setIsAuthenticated(true);
+            } catch (error) {
+                console.error('Error parsing saved user data:', error);
+                logout();
+            }
+        }
+        setIsLoading(false);
+    }, []);
+
+    const login = (userData, userToken) => {
+        setUser(userData);
+        setToken(userToken);
+        setIsAuthenticated(true);
+        
+        // Save to localStorage
+        localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+    };
+
+    const logout = () => {
+        setUser(null);
+        setToken(null);
+        setIsAuthenticated(false);
+        
+        // Clear localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+    };
+
+    const updateUser = (userData) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+    };
+
+    // Legacy support for existing code
+    const userRoles = user?.roles || ['all'];
+    const userName = user?.name || 'Guest';
 
     return (
         <UserContext.Provider
             value={{
+                // New auth state
+                user,
+                isAuthenticated,
+                isLoading,
+                token,
+                login,
+                logout,
+                updateUser,
+                // Legacy support
                 userRoles,
-                setUserRoles,
+                setUserRoles: (roles) => updateUser({ ...user, roles }),
                 userName,
-                setUserName,
+                setUserName: (name) => updateUser({ ...user, name }),
             }}
         >
             {children}

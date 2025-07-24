@@ -1,108 +1,139 @@
 const Movie = require('../models/Movie.js');
 const Schedule = require('../models/Schedule.js');
 const MovieRating = require('../models/MovieRating.js');
-// Import redisClient đã được khởi tạo từ file config của bạn
+// Import Redis client for caching
 const { redisClient } = require('../config/redis.config.js');
 
-// Thời gian cache hết hạn mặc định (tính bằng giây), ở đây là 10 phút
+// Default cache expiration time (in seconds) - 10 minutes
 const DEFAULT_EXPIRATION = 600;
 const DETAIL_CACHE_EXPIRATION = 3600;
 
 /**
- * @desc    Lấy danh sách phim đang chiếu (tối ưu với Redis & Projection)
+ * @desc    Get list of now showing movies (optimized with Redis & Projection)
  * @route   GET /api/movies/now-showing
  */
 const getNowShowingMovies = async (req, res) => {
     const cacheKey = 'movies:now-showing';
 
     try {
-        // 1. KIỂM TRA TRONG CACHE TRƯỚC
+        // 1. Check cache first
         const cachedMovies = await redisClient.get(cacheKey);
         if (cachedMovies) {
-            console.log('Cache Hit for now-showing movies!');
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }
-
-        // 2. NẾU KHÔNG CÓ TRONG CACHE (CACHE MISS) -> TRUY VẤN DATABASE
-        console.log('Cache Miss! Fetching from DB...');
-        // Dùng .select() để chỉ lấy các trường cần thiết, giảm lượng dữ liệu truyền tải
-        const movies = await Movie.find({ status: 'Now Showing' })
-            .sort({ releaseDate: -1 })
-            .select('title posterURL duration genre ageRating ratingsAverage');
-
-        // 3. LƯU KẾT QUẢ VÀO CACHE ĐỂ DÙNG CHO LẦN SAU
-        await redisClient.set(cacheKey, JSON.stringify(movies), {
+        }        // 2. Cache miss - fetch from database
+        // Use date-based query instead of status field
+        const now = new Date();
+        // Use the same logic as virtual property for consistency
+        const movies = await Movie.find({ 
+            isHidden: false
+        });
+        
+        // Filter in JavaScript to match virtual property logic exactly
+        const nowShowingMovies = movies.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return !movie.isHidden && releaseDate <= now;
+        })
+        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+        .map(movie => ({
+            _id: movie._id,
+            title: movie.title,
+            posterURL: movie.posterURL,
+            duration: movie.duration,
+            genre: movie.genre,
+            ageRating: movie.ageRating,
+            ratingsAverage: movie.ratingsAverage,
+            releaseDate: movie.releaseDate
+        }));        // 3. Save result to cache for next time
+        await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(movies);
+        res.status(200).json(nowShowingMovies);
 
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Lấy danh sách phim sắp chiếu (tối ưu với Redis)
+ * @desc    Get list of upcoming movies (optimized with Redis)
  * @route   GET /api/movies/upcoming
  * @access  Public
  */
 
 const getUpcomingMovies = async (req, res) => {
-    // Định nghĩa một cache key riêng cho "upcoming"
+    // Define unique cache key for "upcoming"
     const cacheKey = 'movies:upcoming';
 
     try {
-        // 1. Kiểm tra cache trước
+        // 1. Check cache first
         const cachedMovies = await redisClient.get(cacheKey);
         if (cachedMovies) {
-            console.log('Cache Hit for upcoming movies!');
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }
-
-        // 2. Nếu cache miss, truy vấn DB
-        console.log('Cache Miss! Fetching upcoming movies from DB...');
-        const movies = await Movie.find({ status: 'Upcoming' })
-            .sort({ releaseDate: 1 }) // Sắp xếp theo ngày phát hành gần nhất
-            .select('title posterURL releaseDate genre');
-
-        // 3. Lưu vào cache
-        await redisClient.set(cacheKey, JSON.stringify(movies), {
+        }        // 2. Cache miss - fetch from database
+        // Use date-based query instead of status field
+        const now = new Date();
+        // Use the same logic as virtual property for consistency
+        const movies = await Movie.find({ 
+            isHidden: false
+        });
+        
+        // Filter in JavaScript to match virtual property logic exactly
+        const upcomingMovies = movies.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return !movie.isHidden && releaseDate > now;
+        })
+        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+        .map(movie => ({
+            _id: movie._id,
+            title: movie.title,
+            posterURL: movie.posterURL,
+            releaseDate: movie.releaseDate,
+            genre: movie.genre
+        }));        // 3. Save to cache
+        await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(movies);
+        res.status(200).json(upcomingMovies);
     } catch (error) {
         console.error('Get Upcoming Movies Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Lấy chi tiết một bộ phim theo ID (tối ưu với Redis)
+ * @desc    Get movie details by ID (optimized with Redis)
  * @route   GET /api/movies/:id
  * @access  Public
  */
 const getMovieDetails = async (req, res) => {
-    // Khóa cache sẽ là duy nhất cho mỗi phim, ví dụ: 'movie:6860b11d3d13366261a33aca'
+    // Cache key will be unique for each movie, e.g., 'movie:6860b11d3d13366261a33aca'
     const cacheKey = `movie:${req.params.id}`;
 
     try {
         const cachedMovie = await redisClient.get(cacheKey);
         if (cachedMovie) {
-            console.log(`Cache Hit for movie ID: ${req.params.id}!`);
+            // Cache hit
             return res.status(200).json(JSON.parse(cachedMovie));
         }
 
-        console.log(`Cache Miss! Fetching movie ID: ${req.params.id} from DB...`);
+        // Cache miss - fetch from database
         const movie = await Movie.findById(req.params.id);
 
         if (!movie) {
-            return res.status(404).json({ message: 'Không tìm thấy phim.' });
+            return res.status(404).json({ message: 'Movie not found.' });
         }
 
-        // Lưu vào cache với thời gian hết hạn dự phòng là 1 giờ
+        // Check if movie is hidden (soft deleted)
+        if (movie.isHidden) {
+            return res.status(404).json({ message: 'Movie not found.' });
+        }
+
+        // Save to cache with 1 hour expiration
         await redisClient.set(cacheKey, JSON.stringify(movie), {
             EX: DETAIL_CACHE_EXPIRATION,
         });
@@ -110,13 +141,13 @@ const getMovieDetails = async (req, res) => {
         res.status(200).json(movie);
     } catch (error) {
         console.error('Get Movie Details Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 
 /**
- * @desc    Tìm kiếm phim bằng Atlas Search
+ * @desc    Search movies using Atlas Search
  * @route   GET /api/movies/search?q=...
  * @access  Public
  */
@@ -124,41 +155,48 @@ const searchMovies = async (req, res) => {
     try {
         const keyword = req.query.q;
         if (!keyword) {
-            return res.status(400).json({ message: 'Vui lòng cung cấp từ khóa tìm kiếm.' });
+            return res.status(400).json({ message: 'Please provide search keyword.' });
         }
 
-        // Dùng aggregation pipeline với giai đoạn $search
+        // Use aggregation pipeline with $search stage
         const movies = await Movie.aggregate([
             {
                 $search: {
-                    index: 'movie_search_index', // Tên index bạn đã tạo trên MongoDB Atlas
+                    index: 'movie_search_index', // Index name created on MongoDB Atlas
                     text: {
                         query: keyword,
                         path: {
-                            'wildcard': '*' // Tìm trên tất cả các trường đã được index (title, description, cast, director)
+                            'wildcard': '*' // Search across all indexed fields (title, description, cast, director)
                         },
                         fuzzy: {
-                            maxEdits: 1 // Cho phép sai khác 1 ký tự (xử lý lỗi chính tả)
+                            maxEdits: 1 // Allow 1 character difference (handle typos)
                         }
                     }
                 }
             },
             {
-                $project: { // Tương tự .select(), chỉ lấy các trường cần thiết
+                $match: {
+                    isHidden: false // Only show non-hidden movies
+                }
+            },
+            {
+                $project: { // Similar to .select(), only get necessary fields
                     title: 1,
                     posterURL: 1,
                     duration: 1,
                     genre: 1,
                     ageRating: 1,
                     ratingsAverage: 1,
-                    score: { $meta: "searchScore" } // Lấy điểm liên quan do Atlas Search chấm
+                    releaseDate: 1,
+                    isHidden: 1,
+                    score: { $meta: "searchScore" } // Get relevance score from Atlas Search
                 }
             },
             {
-                $sort: { score: -1 } // Sắp xếp theo điểm liên quan cao nhất
+                $sort: { score: -1 } // Sort by highest relevance score
             },
             {
-                $limit: 5 // Giới hạn kết quả trả về để tránh quá tải
+                $limit: 10 // Limit results to avoid overload
             },
         ]);
 
@@ -166,12 +204,12 @@ const searchMovies = async (req, res) => {
 
     } catch (error) {
         console.error('Search Movies Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Lấy tất cả phim cho quản lý
+ * @desc    Get all movies for management
  * @route   GET /api/movies/all
  * @access  Administrator
  */
@@ -179,17 +217,17 @@ const getAllMovies = async (req, res) => {
     try {
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title posterURL duration genre status ageRating ratingsAverage createdAt');
+            .select('title posterURL duration genre isHidden ageRating ratingsAverage releaseDate createdAt');
         
         res.status(200).json(movies);
     } catch (error) {
         console.error('Get All Movies Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Thêm phim mới
+ * @desc    Add new movie
  * @route   POST /api/movies
  * @access  Administrator
  */
@@ -197,35 +235,35 @@ const addMovie = async (req, res) => {
     try {
         const movieData = req.body;
         
-        // Kiểm tra xem phim có tồn tại chưa
+        // Check if movie already exists
         const existingMovie = await Movie.findOne({ title: movieData.title });
         if (existingMovie) {
-            return res.status(400).json({ message: 'Phim với tên này đã tồn tại.' });
+            return res.status(400).json({ message: 'Movie with this title already exists.' });
         }
 
         const newMovie = new Movie(movieData);
         await newMovie.save();
         
-        // Xóa cache để cập nhật dữ liệu mới
+        // Clear cache to update with new data
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         
         res.status(201).json({
-            message: 'Thêm phim thành công.',
+            message: 'Movie added successfully.',
             movie: newMovie
         });
     } catch (error) {
         console.error('Add Movie Error:', error);
         // MongoDB duplicate key error
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'Phim với tên này đã tồn tại.' });
+            return res.status(400).json({ message: 'Movie with this title already exists.' });
         }
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Cập nhật phim (PUT/PATCH - toàn bộ hoặc một phần)
+ * @desc    Update movie (PUT/PATCH - full or partial update)
  * @route   PUT /api/movies/:movieId
  * @route   PATCH /api/movies/:movieId
  * @access  Administrator
@@ -235,8 +273,8 @@ const updateMovie = async (req, res) => {
         const { movieId } = req.params;
         const updateData = req.body;
         
-        // Sử dụng $set để cập nhật chỉ các trường được cung cấp
-        // Ok cho cả PUT và PATCH
+        // Use $set to update only provided fields
+        // Works for both PUT and PATCH
         const movie = await Movie.findByIdAndUpdate(
             movieId,
             { $set: updateData },
@@ -244,26 +282,26 @@ const updateMovie = async (req, res) => {
         );
         
         if (!movie) {
-            return res.status(404).json({ message: 'Không tìm thấy phim.' });
+            return res.status(404).json({ message: 'Movie not found.' });
         }
         
-        // Xóa cache liên quan
+        // Clear related cache
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         await redisClient.del(`movie:${movieId}`);
         
         res.status(200).json({
-            message: 'Cập nhật phim thành công.',
+            message: 'Movie updated successfully.',
             movie
         });
     } catch (error) {
         console.error('Update Movie Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Xóa phim
+ * @desc    Delete movie (soft delete by setting isHidden to true)
  * @route   DELETE /api/movies/:movieId
  * @access  Administrator
  */
@@ -271,46 +309,49 @@ const deleteMovie = async (req, res) => {
     try {
         const { movieId } = req.params;
         
-        // Kiểm tra xem phim có lịch chiếu nào không
+        // Check if movie has any schedules
         const hasSchedules = await Schedule.findOne({ movie: movieId });
         if (hasSchedules) {
-            // Trước khi trả về response, cần lấy thông tin phim
+            // Get movie info before response
             const movie = await Movie.findById(movieId);
             if (!movie) {
-                return res.status(404).json({ message: 'Không tìm thấy phim.' });
-            }
-            
-            // Nếu có lịch chiếu, không cho xóa - sử dụng status code 400 thay vì 200
-            return res.status(400).json({
-                message: 'Phim này đang có lịch chiếu, không thể xóa.',
-                movie
+                return res.status(404).json({ message: 'Movie not found.' });
+            }            
+            // If movie has schedules, soft delete by setting isHidden to true
+            return res.status(200).json({
+                message: 'Movie has active schedules. Performing soft delete by hiding movie.',
+                action: 'soft_delete'
             });
         }
         
-        // Nếu không có lịch chiếu, xóa hoàn toàn
-        const movie = await Movie.findByIdAndDelete(movieId);
+        // If no schedules, perform soft delete by setting isHidden to true
+        const movie = await Movie.findByIdAndUpdate(
+            movieId, 
+            { isHidden: true }, 
+            { new: true }
+        );
         
         if (!movie) {
-            return res.status(404).json({ message: 'Không tìm thấy phim.' });
+            return res.status(404).json({ message: 'Movie not found.' });
         }
         
-        // Xóa cache liên quan
+        // Clear related cache
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         await redisClient.del(`movie:${movieId}`);
         
         res.status(200).json({
-            message: 'Phim đã được xóa khỏi hệ thống.',
+            message: 'Movie has been soft deleted (hidden).',
             movie
         });
     } catch (error) {
         console.error('Delete Movie Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Lấy lịch chiếu của phim
+ * @desc    Get movie showtimes
  * @route   GET /api/movies/:movieId/showscreen
  * @access  Customer
  */
@@ -319,15 +360,15 @@ const getMovieShowtimes = async (req, res) => {
         const { movieId } = req.params;
         const { date } = req.query;
         
-        // Kiểm tra phim có tồn tại không
+        // Check if movie exists and is not hidden
         const movie = await Movie.findById(movieId);
-        if (!movie) {
-            return res.status(404).json({ message: 'Không tìm thấy phim.' });
+        if (!movie || movie.isHidden) {
+            return res.status(404).json({ message: 'Movie not found.' });
         }
         
         let query = { movie: movieId };
         
-        // Nếu có filter theo ngày
+        // If filtering by date
         if (date) {
             const startDate = new Date(date);
             const endDate = new Date(date);
@@ -338,7 +379,7 @@ const getMovieShowtimes = async (req, res) => {
                 $lt: endDate
             };
         } else {
-            // Chỉ lấy lịch chiếu từ hiện tại trở đi
+            // Only get showtimes from current time onwards
             query.startTime = { $gte: new Date() };
         }
         
@@ -350,51 +391,42 @@ const getMovieShowtimes = async (req, res) => {
         res.status(200).json(schedules);
     } catch (error) {
         console.error('Get Movie Showtimes Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
 /**
- * @desc    Lấy tổng hợp đánh giá của phim
+ * @desc    Get movie rating summary
  * @route   GET /api/movies/:movieId/get-ratings
  * @access  Customer
  */
 const getMovieRatingSummary = async (req, res) => {
     try {
         const { movieId } = req.params;
-        const { page = 1, limit = 10 } = req.query;
         
-        // Kiểm tra phim có tồn tại không
+        // Check if movie exists and is not hidden
         const movie = await Movie.findById(movieId);
-        if (!movie) {
-            return res.status(404).json({ message: 'Không tìm thấy phim.' });
+        if (!movie || movie.isHidden) {
+            return res.status(404).json({ message: 'Movie not found.' });
         }
-        
-        const skip = (page - 1) * limit;
-        
-        const ratings = await MovieRating.find({ movie: movieId })
-            .populate('user', 'name')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit));
-        
-        const totalRatings = await MovieRating.countDocuments({ movie: movieId });
+                
+        const ratings = await MovieRating.find({ movieId: movieId })
+            .populate('userId', 'name')
+            .sort({ createdAt: -1 });
         
         res.status(200).json({
             ratings,
             totalRatings,
-            currentPage: parseInt(page),
-            totalPages: Math.ceil(totalRatings / limit),
             ratingsAverage: movie.ratingsAverage,
             ratingsQuantity: movie.ratingsQuantity
         });
     } catch (error) {
         console.error('Get Movie Rating Summary Error:', error);
-        res.status(500).json({ message: 'Đã có lỗi xảy ra ở máy chủ.' });
+        res.status(500).json({ message: 'Server error occurred.' });
     }
 };
 
-// Cập nhật lại module.exports để thêm các hàm mới
+// Export all movie controller functions
 module.exports = {
     getNowShowingMovies,
     getUpcomingMovies,

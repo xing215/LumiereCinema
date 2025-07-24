@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Menu, Film } from 'lucide-react';
-import sidebarConfig, { hasRole, filterMenuItems, getUserRoleInfo, getUserPermissions, hasPermission } from './sidebarConfig.js';
+import { useUser } from '@contexts/UserContext.jsx';
+import { ROUTES } from '@routes/routeConfig.js';
+import sidebarConfig, {filterMenuItems, getUserRoleInfo} from '@config/adminSidebar.config.js';
 
 const StaffSidebar = ({
     isCollapsed = false,
@@ -10,11 +12,11 @@ const StaffSidebar = ({
     onItemClick = () => {},
     userRoles = ['none'], // Default to all roles
     currentUser = null,
-    showQuickActions = true,
     onMobileToggle = () => {},
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useUser();
     const [expandedItems, setExpandedItems] = useState({});
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [filteredMainItems, setFilteredMainItems] = useState([]);
@@ -64,10 +66,10 @@ const StaffSidebar = ({
         if (item.action === 'logout') {
             // Add logout logic here
             if (window.confirm('Are you sure you want to logout?')) {
-                // Clear session/localStorage
-                localStorage.removeItem('staffToken');
-                localStorage.removeItem('staffUser');
-                navigate('/staff/login');
+                // Use the UserContext logout function
+                logout();
+                // Redirect to root path
+                navigate(ROUTES.HOME);
             }
             return;
         }
@@ -150,22 +152,30 @@ const StaffSidebar = ({
     return (
         <>
             {/* Mobile overlay - transparent, for closing menu */}
-            {isMobileOpen && <div className="fixed inset-0 z-40 lg:hidden" onClick={() => {
-                setIsMobileOpen(false);
-                onMobileToggle(false);
-            }} />}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 z-40 lg:hidden"
+                    onClick={() => {
+                        setIsMobileOpen(false);
+                        onMobileToggle(false);
+                    }}
+                />
+            )}
 
             {/* Mobile toggle button */}
-            <button onClick={() => {
-                setIsMobileOpen(true);
-                onMobileToggle(true);
-            }} className={`fixed top-4 left-4 z-50 rounded-lg p-2 lg:hidden ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} border`}>
+            <button
+                onClick={() => {
+                    setIsMobileOpen(true);
+                    onMobileToggle(true);
+                }}
+                className={`fixed top-4 left-4 z-50 rounded-lg p-2 lg:hidden ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} border`}
+            >
                 <Menu size={20} />
             </button>
 
             {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 z-50 h-full transition-all duration-300 ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} ${isCollapsed ? 'w-16 lg:w-16' : 'w-64'} ${isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full'} flex flex-col border-r lg:translate-x-0`}
+                className={`fixed top-0 left-0 z-50 h-full transition-all duration-300 ${currentTheme.bg} ${currentTheme.text} ${currentTheme.border} ${isCollapsed ? 'w-16 lg:w-16' : 'w-64'} ${isMobileOpen ? 'w-64 translate-x-0' : '-translate-x-full'} flex flex-col border-r lg:translate-x-0`}
             >
                 {/* Header */}
                 <div className={`border-b p-4 ${currentTheme.border}`}>

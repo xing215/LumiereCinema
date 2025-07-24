@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ShowIcon from '../../assets/icons/show.svg';
-import HideIcon from '../../assets/icons/hide.svg';
+import { ROUTES } from '@routes/routeConfig.js';
+import { useChangePassword, useResetPassword } from '@hooks/useAuth';
+import { validatePassword, formatPasswordErrors } from '@utils/auth.utils.js';
+import ShowIcon from '@assets/icons/show.svg';
+import HideIcon from '@assets/icons/hide.svg';
 
-const ChangePwdForm = () => {
+const ChangePwdForm = ({ ResetToken = null }) => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        currentPassword: '',
+        currentPassword: ResetToken ? '' : '',
         newPassword: '',
         retypeNewPassword: '',
     });
@@ -16,20 +19,27 @@ const ChangePwdForm = () => {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showRetypeNewPassword, setShowRetypeNewPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
 
+    const { changePassword } = useChangePassword();
+    const { resetPassword } = useResetPassword();
     const validateField = (name, value) => {
         let error = '';
 
         switch (name) {
             case 'currentPassword':
-                if (!value) {
+                // Skip validation if ResetToken exists
+                if (!ResetToken && !value) {
                     error = 'Current password is required';
                 }
                 break;
             case 'newPassword':
-                if (value.length < 6) {
-                    error = 'Password must be at least 6 characters long';
-                } else if (value === formData.currentPassword) {
+                const passwordErrors = validatePassword(value);
+                if (passwordErrors.length > 0) {
+                    error = formatPasswordErrors(passwordErrors);
+                } else if (!ResetToken && value === formData.currentPassword) {
                     error = 'New password must be different from current password';
                 }
                 break;
@@ -52,6 +62,10 @@ const ChangePwdForm = () => {
             [name]: value,
         }));
 
+        // Clear any previous messages
+        setMessage('');
+        setIsSuccess(false);
+
         // Real-time validation
         const error = validateField(name, value);
         setErrors((prev) => ({
@@ -68,8 +82,8 @@ const ChangePwdForm = () => {
             }));
         }
 
-        // Special case: validate newPassword when currentPassword changes
-        if (name === 'currentPassword' && formData.newPassword) {
+        // Special case: validate newPassword when currentPassword changes (only if not using ResetToken)
+        if (!ResetToken && name === 'currentPassword' && formData.newPassword) {
             const newPasswordError = validateField('newPassword', formData.newPassword);
             setErrors((prev) => ({
                 ...prev,
@@ -78,8 +92,11 @@ const ChangePwdForm = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+        setMessage('');
+        setIsSuccess(false);
 
         // Validate all fields before submit
         const newErrors = {};
@@ -90,11 +107,38 @@ const ChangePwdForm = () => {
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
+            setIsLoading(false);
             return;
         }
 
-        // Handle password change logic here
-        console.log('Password change data:', formData);
+        try {
+            let response;
+            if (ResetToken) {
+                // Reset password with token
+                response = await resetPassword({
+                    token: ResetToken,
+                    newPassword: formData.newPassword,
+                    retypeNewPassword: formData.retypeNewPassword
+                });
+            } else {
+                // Regular password change
+                response = await changePassword(formData);
+            }
+
+            setMessage(response.data?.message || 'Password updated successfully.');
+            setIsSuccess(response.success);
+            
+            // Redirect to login page after successful password change/reset
+            setTimeout(() => {
+                navigate(ROUTES.LOGIN);
+            }, 2000);
+        } catch (error) {
+            console.error('Password change error:', error);
+            setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+            setIsSuccess(false);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -104,28 +148,39 @@ const ChangePwdForm = () => {
 
             {/* Change Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
-                {/* Current Password */}
-                <div>
-                    <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Current password</label>
-                    <div className="relative">
-                        <input
-                            type={showCurrentPassword ? 'text' : 'password'}
-                            name="currentPassword"
-                            value={formData.currentPassword}
-                            onChange={handleInputChange}
-                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.currentPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
-                            required
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6"
-                        >
-                            <img src={showCurrentPassword ? HideIcon : ShowIcon} alt={showCurrentPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
-                        </button>
+                {/* Success/Error Message */}
+                {message && (
+                    <div className={`p-3 rounded-lg text-center ${isSuccess ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <p className="font-['Libre_Franklin'] text-sm">{message}</p>
                     </div>
-                    {errors.currentPassword && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.currentPassword}</p>}
-                </div>
+                )}
+
+                {/* Current Password - Only show if not using ResetToken */}
+                {!ResetToken && (
+                    <div>
+                        <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Current password</label>
+                        <div className="relative">
+                            <input
+                                type={showCurrentPassword ? 'text' : 'password'}
+                                name="currentPassword"
+                                value={formData.currentPassword}
+                                onChange={handleInputChange}
+                                disabled={isLoading}
+                                className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.currentPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                disabled={isLoading}
+                                className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6"
+                            >
+                                <img src={showCurrentPassword ? HideIcon : ShowIcon} alt={showCurrentPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
+                            </button>
+                        </div>
+                        {errors.currentPassword && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.currentPassword}</p>}
+                    </div>
+                )}
 
                 {/* New Password */}
                 <div>
@@ -136,12 +191,14 @@ const ChangePwdForm = () => {
                             name="newPassword"
                             value={formData.newPassword}
                             onChange={handleInputChange}
-                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.newPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                            disabled={isLoading}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.newPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             required
                         />
                         <button
                             type="button"
                             onClick={() => setShowNewPassword(!showNewPassword)}
+                            disabled={isLoading}
                             className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6"
                         >
                             <img src={showNewPassword ? HideIcon : ShowIcon} alt={showNewPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
@@ -159,12 +216,14 @@ const ChangePwdForm = () => {
                             name="retypeNewPassword"
                             value={formData.retypeNewPassword}
                             onChange={handleInputChange}
-                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypeNewPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                            disabled={isLoading}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypeNewPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             required
                         />
                         <button
                             type="button"
                             onClick={() => setShowRetypeNewPassword(!showRetypeNewPassword)}
+                            disabled={isLoading}
                             className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6"
                         >
                             <img src={showRetypeNewPassword ? HideIcon : ShowIcon} alt={showRetypeNewPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
@@ -177,9 +236,10 @@ const ChangePwdForm = () => {
                 <div className="flex justify-center pt-4 sm:pt-6">
                     <button
                         type="submit"
-                        className="flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl"
+                        disabled={isLoading}
+                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        CONFIRM
+                        {isLoading ? 'PROCESSING...' : 'CONFIRM'}
                     </button>
                 </div>
             </form>

@@ -1,10 +1,10 @@
-import backAndForwardButton from '../../assets/img/backAndForwardButton.png';
-import ArrowForwardButton from '../../assets/img/forwardButton.svg';
+import backAndForwardButton from '@assets/img/backAndForwardButton.png';
+import ArrowForwardButton from '@assets/img/forwardButton.svg';
 
 const forwardButton = () => {
     return (
         <button
-            className="absolute top-1/2 right-0 z-50 h-[45px] w-[45px] -translate-y-1/2 sm:right-3 sm:h-[60px] sm:w-[60px] lg:right-6 lg:h-[70px] lg:w-[70px] xl:right-8 xl:h-[80px] xl:w-[80px]"
+            className="absolute top-1/2 right-0 z-50 h-[45px] w-[45px] -translate-y-1/2 hover:cursor-pointer sm:right-3 sm:h-[60px] sm:w-[60px] lg:right-6 lg:h-[70px] lg:w-[70px] xl:right-8 xl:h-[80px] xl:w-[80px]"
             aria-label="ForwardButton"
         >
             <div className="relative h-full w-full">
