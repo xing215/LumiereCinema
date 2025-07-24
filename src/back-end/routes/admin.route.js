@@ -1,0 +1,35 @@
+const express = require('express');
+const router = express.Router();
+
+const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
+
+const {
+  getAllProfiles,
+  getDetailedProfile,
+  updateUserDetails,
+  updateUserRoles,
+  updateUserStatus,
+  deleteUser,
+  getAllPromotions,
+  getPromotionByCode,
+  createPromotion,
+  updatePromotion,
+  deletePromotion,
+} = require('../controllers/admin.controller.js');
+
+// Quản lý user
+router.get('/users', protect, restrictTo('administrator'), getAllProfiles);
+router.get('/users/:userId', protect, restrictTo('administrator'), getDetailedProfile);
+router.patch('/users/:userId', protect, restrictTo('administrator'), updateUserDetails);
+router.patch('/users/:userId/roles', protect, restrictTo('administrator'), updateUserRoles);
+router.patch('/users/:userId/status', protect, restrictTo('administrator'), updateUserStatus);
+router.delete('/users/:userId', protect, restrictTo('administrator'), deleteUser);
+
+// Quản lý promotion
+router.get('/promotions/all', protect, restrictTo('administrator'), getAllPromotions);
+router.get('/promotions/:promotionCode', protect, restrictTo('administrator'), getPromotionByCode);
+router.post('/promotions', protect, restrictTo('administrator'), createPromotion);
+router.patch('/promotions/:promotionCode', protect, restrictTo('administrator'), updatePromotion);
+router.delete('/promotions/:promotionCode', protect, restrictTo('administrator'), deletePromotion);
+
+module.exports = router;

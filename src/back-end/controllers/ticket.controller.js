@@ -1315,8 +1315,7 @@ const createTicket = async (req, res) => {
 
       // ===== Add loyalty points if user is logged in =====
       if (user && finalTotal > 0) {
-        const pointsToAdd = Math.floor(finalTotal / 10000); // 1 point per 10,000 VND
-        user.loyaltyPoints = (user.loyaltyPoints || 0) + pointsToAdd;
+        user.addLunarPointsFromPurchase(finalTotal);
         await user.save({ session });
       }
 
