@@ -257,7 +257,7 @@ const forgotPassword = async (req, res) => {
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password/confirm?token=${resetToken}`;
 
         // Email configuration
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             service: 'gmail', // or your email service
             auth: {
                 user: process.env.EMAIL_USER,
@@ -334,7 +334,7 @@ const staffForgotPassword = async (req, res) => {
         const resetUrl = `${process.env.FRONTEND_URL}/staff/reset-password/confirm?token=${resetToken}`;
 
         // Email configuration
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             service: 'gmail', // or your email service
             auth: {
                 user: process.env.EMAIL_USER,

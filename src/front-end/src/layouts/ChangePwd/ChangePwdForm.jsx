@@ -125,7 +125,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                 response = await changePassword(formData);
             }
 
-            setMessage(response.data?.message || 'Password updated successfully.');
+            setMessage(response.data?.status || 'Password updated successfully.');
             setIsSuccess(response.success);
             
             // Redirect to login page after successful password change/reset
