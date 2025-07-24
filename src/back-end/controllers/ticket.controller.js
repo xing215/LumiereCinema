@@ -22,71 +22,32 @@ const CacheManager = require('../utils/cacheManager');
  */
 const getSchedulesByBranch = async (req, res) => {
   try {
+
     const { branchId } = req.params;
-    const { date, movieId } = req.query; 
+    const { movieId } = req.query;
 
     // Validate branchId format
     if (!mongoose.Types.ObjectId.isValid(branchId)) {
-      return res.status(400).json({
-        error: 'Invalid branch ID format'
-      });
+      return res.status(400).json({ error: 'Invalid branch ID format' });
     }
-
-    // Validate required date
-    if (!date) {
-      return res.status(400).json({
-        error: 'Date is required as query parameter'
-      });
-    }
-
     // Validate movieId if provided
     if (movieId && !mongoose.Types.ObjectId.isValid(movieId)) {
-      return res.status(400).json({
-        error: 'Invalid movie ID format'
-      });
+      return res.status(400).json({ error: 'Invalid movie ID format' });
     }
 
-    // Parse target date
-    const targetDate = new Date(date);
-    
-    // Validate date
-    if (isNaN(targetDate.getTime())) {
-      return res.status(400).json({
-        error: 'Invalid date format. Use YYYY-MM-DD'
-      });
-    }
-
-    // Create date range for the entire day
-    const targetYear = targetDate.getFullYear();
-    const targetMonth = targetDate.getMonth();
-    const targetDay = targetDate.getDate();
-    const startOfDay = new Date(targetYear, targetMonth, targetDay, 0, 0, 0, 0);
-    const endOfDay = new Date(targetYear, targetMonth, targetDay, 23, 59, 59, 999);
     // Try to get branch info from cache first
     let branch = await CacheManager.getCachedBranchInfo(branchId);
-    if (branch) {
-      // Branch found in cache
-    } else {
+    if (!branch) {
       branch = await Branch.findById(branchId).lean();
       if (!branch) {
-        return res.status(404).json({
-          error: 'Branch not found'
-        });
+        return res.status(404).json({ error: 'Branch not found' });
       }
-      // Cache the branch info
       await CacheManager.cacheBranchInfo(branchId, branch);
     }
 
-    // Build aggregation pipeline
+    // Build aggregation pipeline for all schedules of the movie in the branch
     const pipeline = [
-      // Stage 1: Match active screens for the branch
-      {
-        $match: {
-          branch: new mongoose.Types.ObjectId(branchId),
-          isActive: true
-        }
-      },
-      // Stage 2: Lookup schedules for these screens
+      { $match: { branch: new mongoose.Types.ObjectId(branchId), isActive: true } },
       {
         $lookup: {
           from: 'schedules',
@@ -95,10 +56,6 @@ const getSchedulesByBranch = async (req, res) => {
             {
               $match: {
                 $expr: { $eq: ['$screen', '$$screenId'] },
-                startTime: {
-                  $gte: startOfDay,
-                  $lte: endOfDay
-                },
                 ...(movieId ? { movie: new mongoose.Types.ObjectId(movieId) } : {})
               }
             },
@@ -107,17 +64,8 @@ const getSchedulesByBranch = async (req, res) => {
           as: 'schedules'
         }
       },
-      // Stage 3: Only keep screens that have schedules
-      {
-        $match: {
-          'schedules.0': { $exists: true }
-        }
-      },
-      // Stage 4: Unwind schedules to process each one individually
-      {
-        $unwind: '$schedules'
-      },
-      // Stage 5: Lookup movie information
+      { $match: { 'schedules.0': { $exists: true } } },
+      { $unwind: '$schedules' },
       {
         $lookup: {
           from: 'movies',
@@ -125,17 +73,9 @@ const getSchedulesByBranch = async (req, res) => {
           foreignField: '_id',
           as: 'movieData'
         }
-      },      // Stage 6: Unwind movie data
-      {
-        $unwind: '$movieData'
       },
-      // Stage 6.5: Filter out hidden movies
-      {
-        $match: {
-          'movieData.isHidden': false
-        }
-      },
-      // Stage 7: Lookup active seat holds for each schedule
+      { $unwind: '$movieData' },
+      { $match: { 'movieData.isHidden': false } },
       {
         $lookup: {
           from: 'seatholds',
@@ -147,18 +87,11 @@ const getSchedulesByBranch = async (req, res) => {
                 expiresAt: { $gt: new Date() }
               }
             },
-            {
-              $project: {
-                seatNumber: 1,
-                expiresAt: 1,
-                holdReason: 1
-              }
-            }
+            { $project: { seatNumber: 1, expiresAt: 1, holdReason: 1 } }
           ],
           as: 'seatHolds'
         }
       },
-      // Stage 8: Calculate seat statistics
       {
         $addFields: {
           'schedules.totalSeats': { $multiply: ['$size.rows', '$size.columns'] },
@@ -167,7 +100,6 @@ const getSchedulesByBranch = async (req, res) => {
           'schedules.heldSeats': '$seatHolds'
         }
       },
-      // Stage 9: Calculate available seats
       {
         $addFields: {
           'schedules.availableSeatsCount': {
@@ -178,7 +110,6 @@ const getSchedulesByBranch = async (req, res) => {
           }
         }
       },
-      // Stage 10: Project final structure
       {
         $project: {
           screenInfo: {
@@ -211,7 +142,6 @@ const getSchedulesByBranch = async (req, res) => {
           }
         }
       },
-      // Stage 11: Group by screen to collect all schedules
       {
         $group: {
           _id: '$screenInfo._id',
@@ -219,17 +149,16 @@ const getSchedulesByBranch = async (req, res) => {
           schedules: { $push: '$schedule' }
         }
       }
-    ];    // Execute aggregation pipeline
+    ];
+
     const result = await Screen.aggregate(pipeline);
 
-    // Format response
     const screens = result.map(screenData => ({
       screenInfo: screenData.screenInfo,
       schedules: screenData.schedules
     }));
 
     return res.status(200).json({
-      date: targetDate.toISOString().split('T')[0],
       movieFilter: movieId || null,
       totalScreens: screens.length,
       totalSchedules: screens.reduce((sum, screen) => sum + screen.schedules.length, 0),
@@ -392,19 +321,21 @@ const getSeatMapBySchedule = async (req, res) => {
       }
       
       const seatData = { seatNumber };
-      
       // Add basic seat category information
       const seatInfo = seatTypeMap.get(seatNumber);
       if (seatInfo) {
         seatData.category = seatInfo.category;
         seatData.categoryName = seatInfo.categoryName;
         seatData.isHidden = seatInfo.isHidden;
+        seatData.fee = seatInfo.price;
+        seatData.specialFee = seatInfo.specialPrice;
       } else {
         seatData.category = 'STANDARD';
         seatData.categoryName = 'Standard';
         seatData.isHidden = false;
+        seatData.fee = 0;
+        seatData.specialFee = 0;
       }
-      
       // Determine seat status
       if (seatData.isHidden) {
         seatData.status = 'hidden';
@@ -416,7 +347,6 @@ const getSeatMapBySchedule = async (req, res) => {
       } else {
         seatData.status = 'available';
       }
-
       seatsByRow[rowLetter].push(seatData);
     });    return res.status(200).json({
       schedule: {

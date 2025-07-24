@@ -19,6 +19,7 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
+import SnackPurchase from '@pages/SnackPurchase.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -31,6 +32,7 @@ export const ROUTES = {
     MOVIES: '/movies',
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
+    BUY_SNACK: '/buy-snack',
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
@@ -97,7 +99,13 @@ export const routeConfig = [
         type: 'public',
         requiresAuth: false
     },
-    
+    {
+        path: ROUTES.BUY_SNACK,
+        component: SnackPurchase,
+        type: 'public',
+        requiresAuth: false
+    },
+
     // Customer protected routes - require authentication but not staff roles
     {
         path: ROUTES.CHANGE_PASSWORD,
