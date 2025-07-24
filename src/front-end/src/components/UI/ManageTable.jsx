@@ -21,7 +21,7 @@ const ManageTable = ({
 }) => {
     const headerScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
-    const [expandedRow, setExpandedRow] = useState(null); // Track row nào đang expanded
+    const [expandedRow, setExpandedRow] = useState(null);
 
     // Check if column config exists and has content
     const hasColumnConfig = columnConfig && Object.keys(columnConfig).length > 0;

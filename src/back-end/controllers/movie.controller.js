@@ -215,9 +215,10 @@ const searchMovies = async (req, res) => {
  */
 const getAllMovies = async (req, res) => {
     try {
+        // Get all movies (no need to filter isHidden since we do hard delete)
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title posterURL duration genre isHidden ageRating ratingsAverage releaseDate createdAt');
+            .select('title description posterURL trailerURL duration genre ageRating ratingsAverage releaseDate status createdAt');
         
         res.status(200).json(movies);
     } catch (error) {
@@ -301,7 +302,7 @@ const updateMovie = async (req, res) => {
 };
 
 /**
- * @desc    Delete movie (soft delete by setting isHidden to true)
+ * @desc    Delete movie (hard delete - permanently remove from database)
  * @route   DELETE /api/movies/:movieId
  * @access  Administrator
  */
@@ -309,31 +310,30 @@ const deleteMovie = async (req, res) => {
     try {
         const { movieId } = req.params;
         
-        // Check if movie has any schedules
-        const hasSchedules = await Schedule.findOne({ movie: movieId });
-        if (hasSchedules) {
-            // Get movie info before response
-            const movie = await Movie.findById(movieId);
-            if (!movie) {
-                return res.status(404).json({ message: 'Movie not found.' });
-            }            
-            // If movie has schedules, soft delete by setting isHidden to true
-            return res.status(200).json({
-                message: 'Movie has active schedules. Performing soft delete by hiding movie.',
-                action: 'soft_delete'
-            });
-        }
-        
-        // If no schedules, perform soft delete by setting isHidden to true
-        const movie = await Movie.findByIdAndUpdate(
-            movieId, 
-            { isHidden: true }, 
-            { new: true }
-        );
-        
+        // Check if movie exists first
+        const movie = await Movie.findById(movieId);
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
+        
+        // Check if movie has any active schedules
+        const hasSchedules = await Schedule.findOne({ movie: movieId });
+        if (hasSchedules) {
+            return res.status(400).json({ 
+                message: 'Cannot delete movie. Movie has active schedules. Please remove all schedules first.',
+                action: 'delete_blocked'
+            });
+        }
+        
+        // Check if movie has any ratings
+        const hasRatings = await MovieRating.findOne({ movieId: movieId });
+        if (hasRatings) {
+            // Delete all ratings for this movie first
+            await MovieRating.deleteMany({ movieId: movieId });
+        }
+        
+        // Perform hard delete - permanently remove from database
+        await Movie.findByIdAndDelete(movieId);
         
         // Clear related cache
         await redisClient.del('movies:now-showing');
@@ -341,8 +341,12 @@ const deleteMovie = async (req, res) => {
         await redisClient.del(`movie:${movieId}`);
         
         res.status(200).json({
-            message: 'Movie has been soft deleted (hidden).',
-            movie
+            message: 'Movie has been permanently deleted from database.',
+            action: 'hard_delete',
+            deletedMovie: {
+                id: movie._id,
+                title: movie.title
+            }
         });
     } catch (error) {
         console.error('Delete Movie Error:', error);

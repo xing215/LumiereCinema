@@ -131,10 +131,16 @@ const RowTemplate = (props) => {
                             key={index}
                             className={`${columnWidth} ${hasColumnConfig ? 'flex-shrink-0' : ''} flex ${props.isExpanded ? 'items-start' : 'items-center'} ${index === 1 ? 'justify-start' : 'justify-center'}`}
                         >
-                            <div className={`font-libre-franklin w-full lg:text-lg xl:text-xl ${index === 1 ? 'text-left' : 'text-center'} justify-center
-                                ${props.isHeader ? 'font-bold' : 'font-medium'} 
-                                ${shouldTruncateText ? 'truncate' : ''} 
-                                ${props.isExpanded && !props.isHeader ? 'whitespace-normal break-words py-2' : ''}`}>
+                            <div 
+                                className={`font-libre-franklin w-full lg:text-lg xl:text-xl text-center justify-center
+                                    ${props.isHeader ? 'font-bold' : 'font-medium'} 
+                                    ${props.isExpanded && !props.isHeader ? 'whitespace-normal break-words py-2' : ''}`}
+                                style={shouldTruncateText ? {
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                } : {}}
+                            >
                                 {value === 'TickButton' ? (
                                     props.isHeader ? (
                                         <span></span>
@@ -199,10 +205,18 @@ const RowTemplate = (props) => {
                                             disabled={props.isUpdating}
                                             isUpdating={props.isUpdating && props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
                                             className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
+                                            tooltipText={tooltipText}
+                                            shouldTruncate={shouldTruncateText && !props.isExpanded}
                                         />
                                     ) : (
-                                        <span title={tooltipText} className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}>
-                                            {value}
+                                        <span
+                                            title={tooltipText}
+                                            className={`
+                                                ${props.isExpanded ? 'whitespace-normal leading-relaxed' : ''} 
+                                                ${shouldTruncateText && !props.isExpanded ? 'truncate block' : ''}
+                                            `}
+                                        >
+                                           {value}
                                         </span>
                                     )
                                 )}
