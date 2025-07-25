@@ -285,12 +285,18 @@ export const useAddMovie = () => {
     setLoading(true);
     setError(null);
     
+    console.log('Adding movie with data:', movieData);
+    console.log('API URL:', getApiUrl('addMovie'));
+    
     try {
       const response = await axios.post(getApiUrl('addMovie'), movieData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Add movie response:', response.data);
       return { success: true, data: response.data };
     } catch (err) {
+      console.error('Add movie error:', err);
+      console.error('Error response:', err.response?.data);
       const errorMessage = err.response?.data?.message || 'Failed to add movie';
       setError(errorMessage);
       return { success: false, error: errorMessage };

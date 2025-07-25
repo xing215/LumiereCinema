@@ -36,6 +36,9 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
             // Convert to JSON
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
             
+            console.log('Raw JSON data from Excel:', jsonData);
+            console.log('First row example:', jsonData[0]);
+            
             if (jsonData.length === 0) {
                 alert('The file appears to be empty or has no valid data');
                 return;
@@ -43,6 +46,8 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
 
             // Validate and transform data based on template type
             const processedData = processUploadedData(jsonData, templateType);
+            
+            console.log('Processed data:', processedData);
             
             // Call parent callback with processed data
             if (onDataParsed) {
@@ -65,23 +70,49 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
     };
 
     const processUploadedData = (data, type) => {
+        // Helper function to convert DD/MM/YYYY to YYYY-MM-DD
+        const convertDateFormat = (dateString) => {
+            if (!dateString) return '';
+            
+            // If already in YYYY-MM-DD format, return as is
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateString;
+            }
+            
+            // Convert DD/MM/YYYY to YYYY-MM-DD
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const [day, month, year] = parts;
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            
+            return dateString; // Return original if can't parse
+        };
+
         switch (type) {
             case 'movie':
                 return data.map((row, index) => {
-                    // Map Excel columns to movie fields
                     return {
                         title: row['Movie Title'] || '',
                         description: row['Description'] || '',
-                        releaseDate: row['Release Date'] || '',
+                        releaseDate: convertDateFormat(row['Release Date']) || '',
                         genre: typeof row['Genre'] === 'string' 
                             ? row['Genre'].split(',').map(g => g.trim()).filter(Boolean)
                             : [],
-                        duration: parseInt(row['Duration (min)']) || 0,
+                        duration: parseInt(row['Duration']) || 0,
                         ageRating: row['Age Rating'] || '',
-                        trailerURL: row['Trailer URL'] || '',
-                        posterURL: row['Poster URL'] || '',
-                        status: row['Status'] || 'Active',
-                        rowIndex: index
+                        trailerURL: row['Trailer'] || '',
+                        posterURL: row['Poster'] || '',
+                        status: row['Status'] || 'Now Showing',
+                        rowIndex: index,
+                        isHidden: false,
+                        director : row['Director'] || '',
+                        cast: typeof row['Cast'] === 'string' 
+                            ? row['Cast'].split(',').map(c => c.trim()).filter(Boolean)
+                            : [],
+                        language: row['Language'] || '',
+                        ratingsAverage: parseFloat(row['Ratings Average']) || 0,
+                        ratingsQuantity: parseInt(row['Ratings Quantity']) || 0,
                     };
                 });
             default:

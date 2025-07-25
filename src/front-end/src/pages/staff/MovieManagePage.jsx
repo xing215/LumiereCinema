@@ -186,10 +186,16 @@ const MovieManagePage = () => {
                         releaseDate: movieData.releaseDate,
                         genre: movieData.genre,
                         duration: movieData.duration,
-                        ageRating: movieData.ageRating,
+                        ageRating: movieData.ageRating || 'P',
                         trailerURL: movieData.trailerURL,
                         posterURL: movieData.posterURL,
-                        status: movieData.status || 'Active'
+                        status: movieData.status || 'Now Showing',
+                        isHidden: movieData.isHidden || false,
+                        director: movieData.director || '',
+                        cast: movieData.cast || [],
+                        language: movieData.language || '',
+                        ratingsAverage: movieData.ratingsAverage || 0,
+                        ratingsQuantity: movieData.ratingsQuantity || 0
                     };
 
                     const result = await addMovie(movieToAdd);
@@ -239,7 +245,7 @@ const MovieManagePage = () => {
     const movieColumnConfig = [
         { width: 'w-12', truncate: false },    // TickButton - checkbox column
         { width: 'w-52', truncate: true },     // Movie Title - wider since no ID column
-        { width: 'w-82', truncate: true },     // Description - largest column, truncated
+        { width: 'w-80', truncate: true },     // Description - largest column, truncated
         { width: 'w-40', truncate: false },    // Release Date - date column
         { width: 'w-40', truncate: true },     // Genre - wider for comma-separated genres
         { width: 'w-20', truncate: false },    // Duration - small column for numbers
