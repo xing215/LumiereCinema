@@ -24,10 +24,12 @@ const EditableCell = ({
         }
     };
 
-    // Update editValue when value prop changes
+    // Update editValue when value prop changes - only when not editing
     useEffect(() => {
-        setEditValue(value || '');
-    }, [value]);
+        if (!isEditing) {
+            setEditValue(value || '');
+        }
+    }, [value, isEditing]);
 
     // Focus input when editing starts
     useEffect(() => {
@@ -36,7 +38,7 @@ const EditableCell = ({
             inputRef.current.select();
             autoResizeTextarea(inputRef.current);
         }
-    }, [isEditing, editValue]);
+    }, [isEditing]); // Remove editValue dependency
 
     const handleDoubleClick = (e) => {
         e.preventDefault();
@@ -54,12 +56,20 @@ const EditableCell = ({
         } else if (e.key === 'Escape') {
             e.preventDefault();
             handleCancel();
+        } else if (e.key === 'Tab') {
+            // Save on Tab
+            e.preventDefault();
+            handleSave();
         }
         // Allow normal Enter for new lines in textarea
     };
 
-    const handleBlur = () => {
-        handleSave();
+    const handleBlur = (e) => {
+        // Only save if we're not switching to another input within the same component
+        // This prevents save when clicking escape or ctrl+enter
+        if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+            handleSave();
+        }
     };
 
     const handleSave = () => {

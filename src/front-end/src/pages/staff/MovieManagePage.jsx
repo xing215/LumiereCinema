@@ -9,7 +9,7 @@ import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateBu
 import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton';
 import AddButton from '@components/buttons/Staff/AddButton';
 import { useGetMovies, useRemoveMovie, useUpdateMovie, useAddMovie } from '@hooks/useAdmin';
-import { useInlineEdit } from '@hooks/useInlineEdit';
+import { useInlineEdit, useStatusUpdate } from '@hooks/useInlineEdit';
 
 
 const IntegratedButton = ({ onImportData, isLoading = false }) => (
@@ -32,10 +32,11 @@ const IntegratedButton = ({ onImportData, isLoading = false }) => (
 )
 
 const MovieManagePage = () => {
-    const { getMovies, movies, loading } = useGetMovies();
+    const { getMovies, movies, setMovies, loading } = useGetMovies();
     const { removeMovie, loading: removeLoading } = useRemoveMovie();
     const { updateMovie } = useUpdateMovie();
     const { addMovie, loading: addLoading } = useAddMovie();
+    const { updateStatus, updatingRows } = useStatusUpdate(updateMovie);
     
     const [tickedMovies, setTickedMovies] = useState(new Set());
     const [showConfirmDeleteMovies, setShowConfirmDeleteMovies] = useState(false);
@@ -63,7 +64,7 @@ const MovieManagePage = () => {
     }, []);
 
     // Define which columns are editable (by index) and their corresponding field names
-    const editableColumns = [1, 2, 3, 4, 5, 6, 7, 8]; // Movie Title, Description, Release Date, Genre, Duration, Age Rating, Trailer, Poster (removing Status since it uses ActiveButton)
+    const editableColumns = [1, 2, 3, 4, 5, 6, 7, 8]; // Movie Title, Description, Release Date, Genre, Duration, Age Rating, Trailer, Poster (excluding Visible since it uses ActiveButton)
     const columnFieldMapping = {
         1: 'title',
         2: 'description', 
@@ -73,7 +74,7 @@ const MovieManagePage = () => {
         6: 'ageRating',
         7: 'trailerURL',
         8: 'posterURL',
-        9: 'status' // Add status field mapping
+        9: 'isHidden' // Add isHidden field mapping for ActiveButton
     };
 
     // Handle starting inline edit
@@ -107,16 +108,12 @@ const MovieManagePage = () => {
         }
     };
 
-    // Handle status change from ActiveButton
-    const handleStatusChange = async (rowIndex, newStatus) => {
-        const movie = movies[rowIndex];
-        if (movie) {
-            const movieId = movie.id || movie._id;
-            try {
-                await saveEdit(movieId, 'status', newStatus);
-            } catch (error) {
-                console.error('Failed to save status:', error);
-            }
+    // Handle status/visibility toggle from ActiveButton
+    const onStatusChange = async (rowIndex, newIsHidden) => {
+        const result = await updateStatus(movies, setMovies, rowIndex, 'isHidden', newIsHidden);
+        
+        if (!result.success) {
+            alert(`Failed to update visibility: ${result.error}`);
         }
     };
 
@@ -130,7 +127,12 @@ const MovieManagePage = () => {
         movie.ageRating || '', // Use ageRating instead of audienceType
         movie.trailerURL || '', // Use trailerURL (capital URL)
         movie.posterURL || '', // Use posterURL (capital URL)
-        { type: 'ActiveButton', status: movie.status, rowIndex: index }, // Pass actual status and row index
+        { 
+            type: 'ActiveButton', 
+            isHidden: movie.isHidden,
+            rowIndex: index,
+            isUpdating: updatingRows.has(index)
+        }, 
         'PreviewButton'
     ]) || [];
 
@@ -231,7 +233,7 @@ const MovieManagePage = () => {
         }
     };
 
-    const header = ['', 'Movie Title', 'Description', 'Release Date', 'Genre', 'Duration (min)', 'Age Rating', 'Trailer', 'Poster', 'Status', 'Preview'];
+    const header = ['', 'Movie Title', 'Description', 'Release Date', 'Genre', 'Duration (min)', 'Age Rating', 'Trailer', 'Poster', 'Active', 'Preview'];
 
     // Configuration for Movie table columns without ID column
     const movieColumnConfig = [
@@ -244,7 +246,7 @@ const MovieManagePage = () => {
         { width: 'w-24', truncate: false },    // Age Rating - moderate width
         { width: 'w-20', truncate: true },    // Trailer - button column
         { width: 'w-40', truncate: true },    // Poster - button column
-        { width: 'w-20', truncate: false },    // ActiveButton - action column
+        { width: 'w-20', truncate: false },    // ActiveButton - ActiveButton toggle column
         { width: 'w-24', truncate: false }     // Preview - action column
     ];
     const formatReleaseDate = (dateString) => {
@@ -299,7 +301,7 @@ const MovieManagePage = () => {
                         onSaveEdit={handleSaveEdit}
                         onCancelEdit={cancelEdit}
                         isUpdating={isUpdating}
-                        onStatusChange={handleStatusChange}
+                        onStatusChange={onStatusChange}
                     />
                 )}
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Movies</div>

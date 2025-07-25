@@ -273,7 +273,7 @@ export const useGetMovies = () => {
     }
   };
 
-  return { getMovies, movies, loading, error };
+  return { getMovies, movies, setMovies, loading, error };
 };
 
 export const useAddMovie = () => {

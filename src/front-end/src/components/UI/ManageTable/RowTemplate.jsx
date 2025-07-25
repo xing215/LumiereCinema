@@ -159,13 +159,16 @@ const RowTemplate = (props) => {
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'ActiveButton' ? (
                                     props.isHeader ? (
-                                        <span>Status</span>
+                                        <span>Active</span>
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
                                             <ActiveButton 
-                                                status={value.status}
-                                                onStatusChange={(newStatus) => props.onStatusChange?.(value.rowIndex, newStatus)}
+                                                isHidden={value.isHidden}
+                                                onToggle={(newIsHidden) => props.onStatusChange?.(value.rowIndex, newIsHidden)}
                                                 disabled={props.isUpdating}
+                                                activeLabel="Visible"
+                                                inactiveLabel="Hidden"
+                                                isUpdating={value.isUpdating || false}
                                             />
                                         </div>
                                     )
@@ -202,7 +205,7 @@ const RowTemplate = (props) => {
                                             onStartEdit={() => props.onStartEdit?.(props.rowIndex, index, value)}
                                             onSave={(newValue) => props.onSaveEdit?.(props.rowIndex, index, newValue)}
                                             onCancel={props.onCancelEdit}
-                                            disabled={props.isUpdating}
+                                            disabled={false}
                                             isUpdating={props.isUpdating && props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
                                             className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
                                             tooltipText={tooltipText}
