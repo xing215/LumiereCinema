@@ -19,6 +19,10 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
+import SnackPurchase from '@pages/SnackPurchase.jsx';
+
+import Developing from '@/pages/others/Developing.jsx';
+import NotFound from '@/pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -31,9 +35,15 @@ export const ROUTES = {
     MOVIES: '/movies',
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
+    BUY_SNACK: '/buy-snack',
+    ABOUT_US: '/developing',
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
+    PROFILE: '/developing',
+    WISHLIST: '/developing',
+    WATCH_HISTORY: '/developing',
+    LUNAR_POINT: '/developing',
     
     // Staff routes
     STAFF_ROOT: '/staff',
@@ -50,6 +60,10 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+
+    // Other pages
+    DEVELOPING: '/developing',
+    NOT_FOUND: '/404'
 };
 
 // Route configuration
@@ -97,7 +111,25 @@ export const routeConfig = [
         type: 'public',
         requiresAuth: false
     },
-    
+    {
+        path: ROUTES.BUY_SNACK,
+        component: SnackPurchase,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.DEVELOPING,
+        component: Developing,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.NOT_FOUND,
+        component: NotFound,
+        type: 'public',
+        requiresAuth: false
+    },
+
     // Customer protected routes - require authentication but not staff roles
     {
         path: ROUTES.CHANGE_PASSWORD,
