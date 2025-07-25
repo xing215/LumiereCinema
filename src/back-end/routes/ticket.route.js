@@ -4,6 +4,7 @@ const router = express.Router();
 const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
 
 const {
+  getSchedulesByBranch,
   createTicket,
   getTicketByCode,
   getAllTickets,
@@ -13,6 +14,7 @@ const {
   makeTicketValid,
 } = require('../controllers/ticket.controller.js');
 
+router.get('/schedules/:branchId', getSchedulesByBranch);
 
 router.post('/snacks', createTicket);
 

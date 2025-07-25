@@ -2,12 +2,12 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
-import { useResetPassword } from '@hooks/useAuth';
+import { useForgotPassword } from '@hooks/useAuth';
 import Header from '@layouts/LandingPage/Header.jsx';
 import ChatBot from '@components/display/ChatBot.jsx';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
-import ResetPwdForm from '@layouts/ResetPwd/ResetPwdForm.jsx';
+import ForgotPwdForm from '@layouts/ResetPwd/ForgotPwdForm.jsx';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -34,7 +34,7 @@ const ForgotPassword = () => {
         return null;
     }
 
-    const resetPwdHook = useResetPassword();
+    const forgotPwdHook = useForgotPassword();
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden overflow-y-hidden bg-slate-950">
             <Header />
@@ -50,7 +50,7 @@ const ForgotPassword = () => {
             </div>
             
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
-                <ResetPwdForm resetPwdHook={resetPwdHook} />
+                <ForgotPwdForm forgotPwdHook={forgotPwdHook} />
             </div>
 
             <ChatBot />

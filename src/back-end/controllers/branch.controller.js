@@ -321,10 +321,122 @@ const getAvailableBranches = async (req, res) => {
   }
 };
 
+const getBranchById = async (req, res) => {
+  const { branchId } = req.params;
+  try {
+    // Check cache first
+  // const cacheKey = `branch:${branchId}`;
+  // const cachedBranch = await redisClient.get(cacheKey);
+  // if (cachedBranch) {
+  //   return res.status(200).json(JSON.parse(cachedBranch));
+  // }
+
+    // Aggregation pipeline similar to getAvailableBranches, but filter by _id
+    const pipeline = [
+      { $match: { _id: new mongoose.Types.ObjectId(branchId) } },
+      {
+        $lookup: {
+          from: 'screens',
+          localField: '_id',
+          foreignField: 'branch',
+          pipeline: [ { $match: { isActive: true } } ],
+          as: 'screens'
+        }
+      },
+      {
+        $lookup: {
+          from: 'schedules',
+          let: { branchScreens: '$screens._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $in: ['$screen', '$$branchScreens'] },
+                startTime: { $gte: new Date() }
+              }
+            },
+            {
+              $lookup: {
+                from: 'movies',
+                localField: 'movie',
+                foreignField: '_id',
+                pipeline: [
+                  { $match: { isHidden: false, releaseDate: { $lte: new Date() } } }
+                ],
+                as: 'movieData'
+              }
+            },
+            { $match: { 'movieData.0': { $exists: true } } },
+            {
+              $group: {
+                _id: '$movie',
+                movieInfo: { $first: { $arrayElemAt: ['$movieData', 0] } }
+              }
+            }
+          ],
+          as: 'showingMovies'
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          address: 1,
+          city: 1,
+          imageURL: 1,
+          location: 1,
+          isActive: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          showingMoviesCount: { $size: '$showingMovies' },
+          showingMovies: 1,
+          screens: 1
+        }
+      }
+    ];
+
+    const result = await Branch.aggregate(pipeline);
+    if (!result || result.length === 0) {
+      return res.status(404).json({ error: 'Branch not found' });
+    }
+    const branch = result[0];
+
+    // Prepare response in the same format as getAvailableBranches, but with extra details
+    const response = {
+      _id: branch._id,
+      name: branch.name,
+      address: branch.address,
+      city: branch.city,
+      imageURL: branch.imageURL,
+      location: branch.location,
+      isActive: branch.isActive,
+      createdAt: branch.createdAt,
+      updatedAt: branch.updatedAt,
+      showingMoviesCount: branch.showingMoviesCount,
+      showingMovies: branch.showingMovies,
+      screens: branch.screens
+    };
+
+    // Cache the result
+    if (response) {
+      // await redisClient.setEx(cacheKey, 600, JSON.stringify(response));
+    }
+
+
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Error fetching branch by ID:', error);
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   createSnack,
   editSnack,
   deleteSnack,
   getSnackList,
-  getAvailableBranches
+  getAvailableBranches,
+  getBranchById
 };

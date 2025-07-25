@@ -1,5 +1,8 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import LocationTable from "@components/display/LocationTable.jsx";
+import icon from "@assets/img/icon.png";
+import iconShadow from "@assets/img/icon-shadow.png";
+import current from "@assets/img/current.png";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -7,21 +10,6 @@ const DEFAULT_CENTER = [10.76285093853062, 106.6824844998954];
 const DEFAULT_BOUNDS = [
     [5.5, 99.5],
     [25.5, 112.0],
-];
-
-const cinemas = [
-    {
-        _id: "66b8a1c4f2e8d5a1b3c4d5c1",
-        name: "Lumiere Cao Thắng",
-        address: "379-381 Cao Thắng St, Ward 12",
-        city: "Ho Chi Minh City",
-        location: {
-            type: "Point",
-            coordinates: [10.775349914547771, 106.67129777333415],
-        },
-        isActive: true,
-        showings: "7",
-    },
 ];
 
 function getDistance(lon1, lat1, lon2, lat2) {
@@ -38,16 +26,15 @@ function getDistance(lon1, lat1, lon2, lat2) {
     return Math.round(R * c * 100) / 100;
 }
 
-const getCenter = () => {
+const getCenter = (cinemas) => {
     if (
+        Array.isArray(cinemas) &&
         cinemas.length > 0 &&
         cinemas[0].location &&
         cinemas[0].location.coordinates
     ) {
-        return [
-            cinemas[0].location.coordinates[0],
-            cinemas[0].location.coordinates[1],
-        ];
+        const [lng, lat] = cinemas[0].location.coordinates;
+        return [lat, lng];
     }
     return DEFAULT_CENTER;
 };
@@ -56,33 +43,76 @@ const IntegratedMap = ({
     onClick = () => {},
     selectedCinema = null,
     isOpen = false,
+    cinemas = [],
 }) => {
     const [maxdistance, setMaxDistance] = useState("");
     const [userLocation, setUserLocation] = useState(null);
+    const [filteredCinemas, setFilteredCinemas] = useState(cinemas);
+    const [userLocationMarker, setUserLocationMarker] = useState(null);
+    const [distanceCircle, setDistanceCircle] = useState(null);
+    const [hoveredCinema, setHoveredCinema] = useState(null);
 
     const mapRef = useRef(null);
     const leafletMapRef = useRef(null);
+    const cinemaMarkersRef = useRef([]);
 
+    // Function to move map to a specific cinema location
+    const moveToLocation = (cinema) => {
+        if (!leafletMapRef.current || !cinema.location || !cinema.location.coordinates) return;
+        
+        const [lng, lat] = cinema.location.coordinates;
+        leafletMapRef.current.setView([lat, lng], Math.max(leafletMapRef.current.getZoom(), 16), {
+            animate: true,
+            duration: 0.5
+        });
+    };
+
+    // Handle hovering on cinema cards
     useEffect(() => {
-        if (mapRef.current && !leafletMapRef.current) {
+        if (hoveredCinema) {
+            moveToLocation(hoveredCinema);
+        }
+    }, [hoveredCinema]);
+
+    // Filter cinemas based on distance
+    useEffect(() => {
+        if (isOpen && userLocation && maxdistance !== "") {
+            const maxDistNum = Number(maxdistance);
+            const newCinemas = cinemas.filter((cinema) => {
+                if (!cinema.location || !cinema.location.coordinates) return false;
+                const [lng, lat] = cinema.location.coordinates;
+                const distance = getDistance(
+                    userLocation.coordinates[0],
+                    userLocation.coordinates[1],
+                    lng,
+                    lat
+                );
+                return distance <= maxDistNum;
+            });
+            setFilteredCinemas(newCinemas);
+        } else if (isOpen && maxdistance === "") {
+            setFilteredCinemas(cinemas);
+        }
+    }, [maxdistance, userLocation, cinemas, isOpen]);
+
+    // Initialize map
+    useEffect(() => {
+        if (isOpen && mapRef.current && !leafletMapRef.current) {
             leafletMapRef.current = L.map(mapRef.current, {
-                center: getCenter(),
-                zoom: 19,
+                center: getCenter(filteredCinemas),
+                zoom: 13, // More reasonable initial zoom
                 minZoom: 6,
                 maxBounds: DEFAULT_BOUNDS,
                 maxBoundsViscosity: 0.6,
                 scrollWheelZoom: true,
-            
             });
 
-            if (screen.width < 768) {
-                 leafletMapRef.current.zoomControl.setPosition("bottomright");
-            } else {
-                leafletMapRef.current.zoomControl.setPosition("topright");
-            }
+            leafletMapRef.current.zoomControl.setPosition(
+                window.innerWidth < 768 ? "bottomright" : "topright"
+            );
 
             L.tileLayer(
-                "http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}",
+                "https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}",
                 {
                     maxZoom: 20,
                     subdomains: ["mt0", "mt1", "mt2", "mt3"],
@@ -90,65 +120,171 @@ const IntegratedMap = ({
                     zoomOffset: -1,
                 }
             ).addTo(leafletMapRef.current);
-
         }
 
-        if (leafletMapRef.current) {
-            leafletMapRef.current.eachLayer((layer) => {
-                if (layer instanceof L.Marker) {
-                    leafletMapRef.current.removeLayer(layer);
-                }
-            });
-
-            cinemas.forEach((cinema) => {
-                if (cinema.location && cinema.location.coordinates) {
-                    const marker = L.marker([
-                        cinema.location.coordinates[0],
-                        cinema.location.coordinates[1],
-                    ]).addTo(leafletMapRef.current);
-                    marker.bindPopup(
-                        `<b>${cinema.name}</b><br/>${cinema.address || ""}`
-                    );
-                }
-            });
-        }
-
+        // Cleanup when component unmounts or isOpen becomes false
         return () => {
-            if (leafletMapRef.current) {
+            if (!isOpen && leafletMapRef.current) {
                 leafletMapRef.current.remove();
                 leafletMapRef.current = null;
+                cinemaMarkersRef.current = [];
+                setUserLocationMarker(null);
+                setDistanceCircle(null);
             }
         };
-    }, [maxdistance, isOpen]);
+    }, [isOpen]);
 
-
-    // Only get geolocation when user clicks on the map
+    // Update cinema markers when filteredCinemas changes
     useEffect(() => {
-        if (!leafletMapRef.current) return;
-        const map = leafletMapRef.current;
-        const handleMapClick = () => {
-            if (navigator.geolocation.getCurrentPosition && cinemas.length > 0) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    setUserLocation({
-                        type: "Point",
-                        coordinates: [
-                            position.coords.latitude,
-                            position.coords.longitude,
-                        ],
+        if (!leafletMapRef.current || !isOpen) return;
+
+        const LocationMarker = L.Icon.extend({
+            options: {
+                shadowUrl: iconShadow,
+                iconUrl: icon,
+                iconSize: [25, 41], // Add proper icon size
+                iconAnchor: [12, 41], // Center bottom of icon
+                shadowSize: [41, 41],
+                shadowAnchor: [13, 41],
+                popupAnchor: [1, -34],
+            },
+        });
+
+        // Clear existing cinema markers
+        cinemaMarkersRef.current.forEach(marker => {
+            leafletMapRef.current.removeLayer(marker);
+        });
+        cinemaMarkersRef.current = [];
+
+        // Add new cinema markers
+        filteredCinemas.forEach((cinema) => {
+            if (cinema.location && cinema.location.coordinates) {
+                const [lng, lat] = cinema.location.coordinates;
+                const marker = L.marker(
+                    [lat, lng],
+                    { icon: new LocationMarker() }
+                ).addTo(leafletMapRef.current);
+                
+                marker.bindPopup(
+                    `<b>${cinema.name}</b><br/>${cinema.address || ""}`
+                );
+                
+                // Add hover event to move map to cinema location
+                marker.on('click', () => {
+                    leafletMapRef.current.setView([lat, lng], Math.max(leafletMapRef.current.getZoom(), 16), {
+                        animate: true,
+                        duration: 0.5
                     });
                 });
+                
+                cinemaMarkersRef.current.push(marker);
+            }
+        });
+    }, [filteredCinemas, isOpen]);
+
+    // Handle user location functionality (geolocation + marker)
+    useEffect(() => {
+        if (!leafletMapRef.current || !isOpen) return;
+        
+        const map = leafletMapRef.current;
+        
+        const handleMapClick = () => {
+            if (navigator.geolocation && filteredCinemas.length > 0) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newUserLocation = {
+                            type: "Point",
+                            coordinates: [
+                                position.coords.longitude,
+                                position.coords.latitude,
+                            ],
+                        };
+                        
+                        // Remove existing user location marker
+                        if (userLocationMarker) {
+                            map.removeLayer(userLocationMarker);
+                        }
+
+                        // Create user location icon
+                        const UserLocationIcon = L.Icon.extend({
+                            options: {
+                                iconUrl: current,
+                                iconSize: [40, 40],
+                                iconAnchor: [10, 10],
+                                popupAnchor: [0, -10],
+                            },
+                        });
+
+                        // Add new user location marker
+                        const lat = newUserLocation.coordinates[1];
+                        const lng = newUserLocation.coordinates[0];
+                        const newMarker = L.marker(
+                            [lat, lng],
+                            { icon: new UserLocationIcon() }
+                        ).addTo(map);
+
+                        newMarker.bindPopup("Your Location");
+                        setUserLocationMarker(newMarker);
+                        setUserLocation(newUserLocation);
+
+                        // Center map on user location
+                        map.setView([lat, lng], 15);
+                    },
+                    (error) => {
+                        console.error("Geolocation error:", error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    }
+                );
             }
         };
-        map.on('click', handleMapClick);
+
+        map.on("click", handleMapClick);
         return () => {
-            map.off('click', handleMapClick);
+            map.off("click", handleMapClick);
         };
-    }, [maxdistance, isOpen]);
+    }, [isOpen, filteredCinemas, userLocationMarker]);
 
+    // Handle distance circle visualization
     useEffect(() => {
-        const map = leafletMapRef.current;
-        if (!map) return;
+        if (!leafletMapRef.current || !userLocation || !isOpen) return;
 
+        const map = leafletMapRef.current;
+        const lat = userLocation.coordinates[1];
+        const lng = userLocation.coordinates[0];
+
+        // Remove existing distance circle
+        if (distanceCircle) {
+            map.removeLayer(distanceCircle);
+        }
+
+        // Add distance circle if maxdistance is set
+        if (maxdistance !== "" && !isNaN(Number(maxdistance))) {
+            const radiusInMeters = Number(maxdistance) * 1000; // Convert km to meters
+            
+            const circle = L.circle([lat, lng], {
+                color: '#3b82f6', // Blue color
+                fillColor: '#3b82f6',
+                fillOpacity: 0.1,
+                weight: 2,
+                opacity: 0.6,
+                radius: radiusInMeters
+            }).addTo(map);
+
+            setDistanceCircle(circle);
+        } else {
+            setDistanceCircle(null);
+        }
+    }, [userLocation, maxdistance, isOpen]);
+
+    // Handle zoom limits
+    useEffect(() => {
+        if (!leafletMapRef.current || !isOpen) return;
+
+        const map = leafletMapRef.current;
         const handleWheel = (e) => {
             const currentZoom = map.getZoom();
             const minZoom = map.getMinZoom();
@@ -160,10 +296,8 @@ const IntegratedMap = ({
                 (currentZoom <= minZoom && isZoomingOut) ||
                 (currentZoom >= maxZoom && isZoomingIn)
             ) {
-                map.scrollWheelZoom.disable();
-                setTimeout(() => {
-                    map.scrollWheelZoom.enable();
-                }, 100);
+                e.preventDefault();
+                return false;
             }
         };
 
@@ -171,11 +305,16 @@ const IntegratedMap = ({
         mapContainer.addEventListener("wheel", handleWheel, { passive: false });
 
         return () => {
-            mapContainer.removeEventListener("wheel", handleWheel);
+            if (mapContainer) {
+                mapContainer.removeEventListener("wheel", handleWheel);
+            }
         };
-    }, []);
+    }, [isOpen]);
 
+    // Handle scroll interference
     useEffect(() => {
+        if (!isOpen) return;
+
         let scrollTimeout = null;
 
         const handleScroll = () => {
@@ -202,23 +341,28 @@ const IntegratedMap = ({
             document.removeEventListener("touchend", handleScrollEnd);
             if (scrollTimeout) clearTimeout(scrollTimeout);
         };
-    }, []);
+    }, [isOpen]);
+
+    if (!isOpen) {
+        return null;
+    }
 
     return (
         <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
-            <div className="ml-2 mt-[1%] relative z-3 w-[95%] md:w-[18vw] h-[30%] md:h-[95%]">
+            <div className="ml-2 mt-[1%] relative z-10 w-[95%] md:w-[18vw] h-[30%] md:h-[95%]">
                 <LocationTable
-                    cinemas={cinemas}
+                    cinemas={filteredCinemas}
                     curlocation={userLocation}
                     maxdistance={maxdistance}
                     setMaxDistance={setMaxDistance}
                     onClick={onClick}
                     selectedlocation={selectedCinema}
+                    onHover={setHoveredCinema}
                 />
             </div>
             <div
                 ref={mapRef}
-                className="absolute top-0 h-full w-full overflow-auto rounded-xl border-gray-200 z-2"
+                className="absolute top-0 h-full w-full overflow-auto rounded-xl border-gray-200 z-0"
             />
         </div>
     );

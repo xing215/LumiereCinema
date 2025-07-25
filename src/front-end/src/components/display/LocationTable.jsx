@@ -1,4 +1,4 @@
-const LocationCard = ({cinema, branchName, location, showings, curlocation, onClick, maxdistance, isSelected = false}) => {
+const LocationCard = ({cinema, branchName, location, showings, curlocation, onClick, maxdistance, isSelected = false, onHover}) => {
     function getDistance(lon1, lat1, lon2, lat2) {
     const R = 6371; // Earth radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -20,8 +20,10 @@ let distance = null;
 }
     return (
         <div className={`${maxdistance > distance || maxdistance === '' ? '' : 'hidden'} group relative z-10 mb-2 h-auto w-full rounded-xl p-2 pt-1 mix-blend-color-dodge ${isSelected ? 'bg-zinc-300/60 xl:p-4' : 'hover:bg-zinc-300/50 bg-zinc-300/30'} xl:py-4`}
-onClick={() => onClick(cinema)}
-        style={{ cursor: 'pointer' }}>
+            onClick={() => onClick(cinema)}
+            onMouseEnter={() => onHover && onHover(cinema)}
+            onMouseLeave={() => onHover && onHover(null)}
+            style={{ cursor: 'pointer' }}>
             <h2 className="font-libre-franklin text-[10px] pt-1 font-bold text-white sm:text-xs md:text-md lg:text-[18px]">{branchName}</h2>
             <p className="font-libre-franklin text-[7px] font-light text-white md:text-[10px] lg:text-xs pb-1">
                 {' '}
@@ -48,7 +50,7 @@ const HeaderTable = ({ maxdistance, setMaxDistance }) => {
     );
 };
 
-const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedlocation = null}) => {
+const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedlocation = null, onHover}) => {
 
     return (
         <div className="py-4 no-scrollbar relative flex h-full w-[90%] flex-col items-center overflow-y-scroll bg-transparent">
@@ -63,6 +65,7 @@ const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedloca
                     onClick={onClick}
                     isSelected={cinema._id === selectedlocation?._id}
                     cinema={cinema}
+                    onHover={onHover}
                 />
             ))}
         </div>
@@ -70,7 +73,7 @@ const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedloca
 };
 
 
-const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMaxDistance, cinemas, onClick}) => {
+const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMaxDistance, cinemas, onClick, onHover}) => {
 
     return (
         <div className="relative flex h-full w-full md:w-[18vw] flex-col items-center overflow-hidden rounded-xl bg-slate-950 md:min-w-[160px]">
@@ -81,7 +84,7 @@ const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMa
             <div className="absolute right-[-10px] bottom-0 h-20 w-20 rounded-full bg-sky-400/100 mix-blend-lighten blur-[100px] md:right-[-20px] md:bottom-[30px] md:h-30 md:w-30 lg:right-[-30px] lg:bottom-[-30px] lg:h-40 lg:w-40 lg:bg-sky-400/80 xl:right-[-50px] xl:bottom-[-50px] xl:h-56 xl:w-56 xl:bg-sky-400/50" />
 
             {curlocation? <HeaderTable maxdistance={maxdistance} setMaxDistance={setMaxDistance} /> : null}
-            <LocationFrame cinemas={cinemas} curlocation={curlocation} maxdistance={maxdistance} onClick={onClick} selectedlocation={selectedlocation} />
+            <LocationFrame cinemas={cinemas} curlocation={curlocation} maxdistance={maxdistance} onClick={onClick} selectedlocation={selectedlocation} onHover={onHover} />
         </div>
     );
 };
