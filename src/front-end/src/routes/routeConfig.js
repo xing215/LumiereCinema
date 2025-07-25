@@ -21,7 +21,8 @@ import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 
-import Developing from '@pages/Developing.jsx';
+import Developing from '@/pages/others/Developing.jsx';
+import NotFound from '@/pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -60,8 +61,9 @@ export const ROUTES = {
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
 
-    // Developing page
+    // Other pages
     DEVELOPING: '/developing',
+    NOT_FOUND: '/404'
 };
 
 // Route configuration
@@ -118,6 +120,12 @@ export const routeConfig = [
     {
         path: ROUTES.DEVELOPING,
         component: Developing,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.NOT_FOUND,
+        component: NotFound,
         type: 'public',
         requiresAuth: false
     },
