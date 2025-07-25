@@ -21,6 +21,8 @@ import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 
+import Developing from '@pages/Developing.jsx';
+
 // Route aliases for better portability
 export const ROUTES = {
     // Public routes
@@ -33,9 +35,14 @@ export const ROUTES = {
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
     BUY_SNACK: '/buy-snack',
+    ABOUT_US: '/developing',
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
+    PROFILE: '/developing',
+    WISHLIST: '/developing',
+    WATCH_HISTORY: '/developing',
+    LUNAR_POINT: '/developing',
     
     // Staff routes
     STAFF_ROOT: '/staff',
@@ -52,6 +59,9 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+
+    // Developing page
+    DEVELOPING: '/developing',
 };
 
 // Route configuration
@@ -102,6 +112,12 @@ export const routeConfig = [
     {
         path: ROUTES.BUY_SNACK,
         component: SnackPurchase,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.DEVELOPING,
+        component: Developing,
         type: 'public',
         requiresAuth: false
     },

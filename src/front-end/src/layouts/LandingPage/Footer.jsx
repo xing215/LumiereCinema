@@ -2,6 +2,8 @@ import LogoImg from '@assets/img/Logo.svg';
 import NavButton from '@components/buttons/footer/navButton.jsx';
 import Star from '@assets/img/Star.png';
 import Moon from '@assets/img/Moon.png';
+import { ROUTES } from '@routes/routeConfig.js';
+import { useNavigate } from 'react-router-dom';
 
 const SpaceH = () => {
     return <div className="h-[3px] w-full md:h-[5px] lg:h-[6px] xl:h-[10px]" />;
@@ -28,6 +30,7 @@ const Logo = () => {
 };
 
 const AboutUs = () => {
+    const navigate = useNavigate();
     return (
         <div className="flex flex-col items-center md:py-12 lg:px-3.5">
             <p className="font-unbounded md:text-md text-[10px] font-bold text-white sm:text-xs lg:text-lg xl:text-xl">
@@ -36,43 +39,46 @@ const AboutUs = () => {
                 Cinema
             </p>
             <SpaceH />
-            <NavButton name="About Us" />
+            <NavButton name="About Us" onClick={() => navigate(ROUTES.ABOUT_US)} />
         </div>
     );
 };
 
 const Cinema = () => {
+    const navigate = useNavigate();
     return (
         <div className="flex flex-col items-center md:py-12 lg:px-3.5">
             <p className="font-unbounded md:text-md text-[10px] font-bold text-white sm:text-xs lg:text-lg xl:text-xl">Cinema</p>
             <SpaceH />
-            <NavButton name="Buy Ticket" />
+            <NavButton name="Buy Ticket" onClick={() => navigate(ROUTES.MOVIES)} />
             <SpaceH />
-            <NavButton name="Buy Snack" />
+            <NavButton name="Buy Snack" onClick={() => navigate(ROUTES.BUY_SNACK)} />
         </div>
     );
 };
 
 const Account = () => {
+    const navigate = useNavigate();
     return (
         <div className="flex flex-col items-center md:py-12 lg:px-3.5">
             <p className="font-unbounded md:text-md text-[10px] font-bold text-white sm:text-xs lg:text-lg xl:text-xl">Account</p>
             <SpaceH />
-            <NavButton name="Profile" />
+            <NavButton name="Profile" onClick={() => navigate(ROUTES.PROFILE)} />
             <SpaceH />
-            <NavButton name="Wishlist" />
+            <NavButton name="Wishlist" onClick={() => navigate(ROUTES.WISHLIST)} />
             <SpaceH />
-            <NavButton name="Watch History" />
+            <NavButton name="Watch History" onClick={() => navigate(ROUTES.WATCH_HISTORY)} />
         </div>
     );
 };
 
 const Extras = () => {
+    const navigate = useNavigate();
     return (
         <div className="flex flex-col items-center md:py-12 lg:px-3.5">
             <p className="font-unbounded md:text-md text-[10px] font-bold text-white sm:text-xs lg:text-lg xl:text-xl">Extras</p>
             <SpaceH />
-            <NavButton name="Lunar Point" />
+            <NavButton name="Lunar Point" onClick={() => navigate(ROUTES.LUNAR_POINT)} />
         </div>
     );
 };
@@ -122,6 +128,7 @@ const ContactUs = () => {
 };
 
 const Footer = () => {
+    const navigate = useNavigate();
     return (
         <div className="relative bottom-0 z-20 h-60 w-screen md:h-80 lg:h-100 xl:h-130">
             <div className="absolute z-10 h-full w-full bg-slate-900" />

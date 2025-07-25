@@ -85,7 +85,7 @@ const SnackPurchase = () => {
     };
 
     // Navigation methods
-    const [currentStep, setCurrentStep] = useState(MENU_STEPS.SNACK);
+    const [currentStep, setCurrentStep] = useState(MENU_STEPS.CINEMA);
 
     const goToNextStep = () => {
         if (currentStep < MENU_STEPS.TICKET_DISPLAY) {
