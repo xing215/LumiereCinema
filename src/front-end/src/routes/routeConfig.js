@@ -19,6 +19,7 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
+import AboutUs from '@/pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 
 import Developing from '@/pages/others/Developing.jsx';
@@ -35,8 +36,8 @@ export const ROUTES = {
     MOVIES: '/movies',
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
+    ABOUT_US: '/about-us',
     BUY_SNACK: '/buy-snack',
-    ABOUT_US: '/developing',
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
@@ -238,6 +239,12 @@ export const routeConfig = [
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['branchmanager']
+    },
+    {
+        path: ROUTES.ABOUT_US,
+        component: AboutUs,
+        type: 'public',
+        requiresAuth: false
     },
 ];
 
