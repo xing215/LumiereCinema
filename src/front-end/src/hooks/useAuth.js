@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
-import { getApiUrl, getApiUrlWithParams } from '@config/api.config';
+import { getApiUrl, getApiUrlWithParams, getActivationApiUrl } from '@config/api.config';
 
 /**
  * Authentication hooks for handling user login, registration, logout, and password management
@@ -157,6 +157,32 @@ export const useResetPassword = () => {
   };
 
   return { resetPassword, loading, error, success };
+};
+
+export const useActivateAccount = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const activateAccount = async (activateToken) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    
+    try {
+      const response = await axios.post(getActivationApiUrl(activateToken));
+      setSuccess(true);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Account activation failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { activateAccount, loading, error, success };
 };
 
 export const useChangePassword = () => {
