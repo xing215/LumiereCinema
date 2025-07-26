@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import ProtectedRoute from '@components/ProtectedRoute.jsx';
-import { routeConfig, getRedirectPath } from '@routes/routeConfig.js';
+import { ROUTES, routeConfig, getRedirectPath } from '@routes/routeConfig.js';
 
 // Loading component
 const LoadingSpinner = () => (
@@ -54,6 +54,8 @@ const AppRoutes = () => {
                         element={<RouteHandler route={route} />}
                     />
                 ))}
+                {/* Fallback route for 404 Not Found */}
+                <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
             </Routes>
         </Router>
     );

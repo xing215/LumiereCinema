@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
-import { getApiUrl } from '@config/api.config';
+import { getApiUrl, getApiUrlWithParams } from '@config/api.config';
 
 /**
  * Authentication hooks for handling user login, registration, logout, and password management
@@ -83,7 +83,7 @@ export const useLogout = () => {
 };
 
 
-export const useResetPassword = () => {
+export const useForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -108,7 +108,7 @@ export const useResetPassword = () => {
   return { resetPassword, loading, error, success };
 };
 
-export const useStaffResetPassword = () => {
+export const useStaffForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -123,6 +123,32 @@ export const useStaffResetPassword = () => {
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Staff password reset request failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { resetPassword, loading, error, success };
+};
+
+// Hook for both user and staff password reset
+export const useResetPassword = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const resetPassword = async (token, newPassword, retypeNewPassword) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const response = await axios.post(getApiUrl('resetPassword'), token, newPassword, retypeNewPassword);
+      setSuccess(true);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Password reset request failed';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

@@ -19,6 +19,7 @@ const branchRoutes = require('./routes/branch.route.js');
 const ticketsRoutes = require('./routes/tickets.route.js');
 const userRoutes = require('./routes/user.route.js');
 const chatbotRoutes = require('./routes/chatbot.route.js');
+const adminRoutes = require('./routes/admin.route.js');
 
 // 3. Thực hiện kết nối tới các cơ sở dữ liệu
 connectDB();
@@ -38,6 +39,7 @@ app.use('/api/branches', branchRoutes);
 app.use('/api/tickets', ticketsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Route mặc định để kiểm tra server
 app.get('/', (req, res) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import SnackSelect from '@components/UI/SnackSelect';
+import Combo1 from '@assets/img/combo1.png';
 
 const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket }) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
@@ -156,11 +157,11 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
             </div>
             {/* Mobile footer */}
             <div
-                className={`fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out md:hidden ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}
+                className={`fixed right-0 bottom-0 left-0 z-50 flex h-auto flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out md:hidden ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}
                 style={{ bottom: 'max(0px, env(safe-area-inset-bottom))' }}
             >
                 <BackNaviButton onClick={onBack} />
-                <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
+                <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white py-2">
                     {/* TODO: Replace with actual selected movie/schedule info if available */}
                     {snackTicketData && snackTicketData.branch ? (
                         <>

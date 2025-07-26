@@ -112,7 +112,7 @@ const getUpcomingMovies = async (req, res) => {
  */
 const getMovieDetails = async (req, res) => {
     // Cache key will be unique for each movie, e.g., 'movie:6860b11d3d13366261a33aca'
-    const cacheKey = `movie:${req.params.id}`;
+    const cacheKey = `movie:${req.params.movieId}`;
 
     try {
         const cachedMovie = await redisClient.get(cacheKey);
@@ -122,8 +122,9 @@ const getMovieDetails = async (req, res) => {
         }
 
         // Cache miss - fetch from database
-        const movie = await Movie.findById(req.params.id);
+        const movie = await Movie.findById(req.params.movieId);
 
+        
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }

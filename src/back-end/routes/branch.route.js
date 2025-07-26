@@ -9,6 +9,7 @@ const {
   deleteSnack,
   getSnackList,
   getAvailableBranches,
+  getBranchById
 } = require('../controllers/branch.controller.js');
 
 /**
@@ -16,6 +17,7 @@ const {
  * Lấy danh sách tất cả branches có sẵn với số phim đang chiếu
  */
 router.get('/available', getAvailableBranches);
+router.get('/:branchId', getBranchById);
 
 router.get('/:branchId/snacks', getSnackList);
 

@@ -2,7 +2,7 @@ import LandingPage from '@pages/LandingPage';
 import Registration from '@pages/Registration';
 import Login from '@pages/Login';
 import StaffLogin from '@pages/staff/Login';
-import StaffResetPwd from '@pages/staff/ResetPwd';
+import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
@@ -19,6 +19,11 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
+import AboutUs from '@/pages/AboutUs';
+import SnackPurchase from '@pages/SnackPurchase.jsx';
+
+import Developing from '@/pages/others/Developing.jsx';
+import NotFound from '@/pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -31,9 +36,15 @@ export const ROUTES = {
     MOVIES: '/movies',
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
+    ABOUT_US: '/about-us',
+    BUY_SNACK: '/buy-snack',
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
+    PROFILE: '/developing',
+    WISHLIST: '/developing',
+    WATCH_HISTORY: '/developing',
+    LUNAR_POINT: '/developing',
     
     // Staff routes
     STAFF_ROOT: '/staff',
@@ -50,6 +61,10 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+
+    // Other pages
+    DEVELOPING: '/developing',
+    NOT_FOUND: '/404'
 };
 
 // Route configuration
@@ -97,7 +112,25 @@ export const routeConfig = [
         type: 'public',
         requiresAuth: false
     },
-    
+    {
+        path: ROUTES.BUY_SNACK,
+        component: SnackPurchase,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.DEVELOPING,
+        component: Developing,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.NOT_FOUND,
+        component: NotFound,
+        type: 'public',
+        requiresAuth: false
+    },
+
     // Customer protected routes - require authentication but not staff roles
     {
         path: ROUTES.CHANGE_PASSWORD,
@@ -116,7 +149,7 @@ export const routeConfig = [
     },
     {
         path: ROUTES.STAFF_RESET_PASSWORD,
-        component: StaffResetPwd,
+        component: StaffForgotPwd,
         type: 'staff-public',
         requiresAuth: false
     },
@@ -206,6 +239,12 @@ export const routeConfig = [
         type: 'staff',
         requiresAuth: true,
         allowedRoles: ['branchmanager']
+    },
+    {
+        path: ROUTES.ABOUT_US,
+        component: AboutUs,
+        type: 'public',
+        requiresAuth: false
     },
 ];
 

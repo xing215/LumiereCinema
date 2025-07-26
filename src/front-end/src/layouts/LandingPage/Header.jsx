@@ -27,7 +27,7 @@ const Header = () => {
     const handleAccountClick = () => {
         if (isAuthenticated) {
             // Temporarily navigate to '#' as requested
-            navigate('#');
+            navigate(ROUTES.DEVELOPING);
         } else {
             navigate(ROUTES.LOGIN);
         }
@@ -51,9 +51,9 @@ const Header = () => {
             <div className="absolute top-0 left-1/2 z-20 h-8 w-[calc(120vw+2rem)] -translate-x-1/2 transform bg-gradient-to-b from-slate-950 via-slate-950 to-transparent sm:h-10 lg:h-20" />
             <div className="absolute top-0 left-1/2 z-20 h-15 w-[calc(120vw+2rem)] -translate-x-1/2 transform bg-gradient-to-b from-slate-950 via-slate-950 to-transparent blur-sm sm:h-20 sm:blur-lg lg:h-30 lg:blur-md" />
             <div className="relative mx-auto flex max-w-screen flex-nowrap content-center items-center justify-center overflow-x-hidden pt-2 md:gap-3 md:pt-3 lg:gap-5 lg:pt-5.5 xl:gap-10 xl:pt-9">
-                <Logo />
-                <NavButton name="Buy Tickets" />
-                <NavButton name="Buy Snacks" />
+                <Logo onClick={() => navigate(ROUTES.HOME)} />
+                <NavButton name="Buy Tickets" onClick={() => navigate(ROUTES.MOVIES)} />
+                <NavButton name="Buy Snacks" onClick={() => navigate(ROUTES.BUY_SNACK)} />
                 <NavButton 
                     name={isAuthenticated ? 'Account' : 'Login/Register'} 
                     onClick={handleAccountClick}
