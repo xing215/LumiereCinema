@@ -13,7 +13,7 @@ const getProfile = async (req, res) => {
     }
 
       const userId = req.user.email;
-      const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude password
+      const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked'); // Exclude password
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }

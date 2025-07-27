@@ -20,7 +20,7 @@ export const useGetMovieById = () => {
       return;
     }
     try {
-      const response = await axios.get(buildApiUrl(`/api/movies/${movieId}`));
+      const response = await axios.get(getMovieApiUrl(movieId));
       setMovie(response.data);
     } catch (error) {
       console.error('Error fetching movie:', error);
