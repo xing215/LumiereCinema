@@ -15,6 +15,10 @@ const {
   createPromotion,
   updatePromotion,
   deletePromotion,
+  createBranch,
+  updateBranch,
+  deleteBranch,
+  updateBranchStatus,
 } = require('../controllers/admin.controller.js');
 
 // Quản lý user
@@ -31,5 +35,11 @@ router.get('/promotions/:promotionCode', protect, restrictTo('administrator'), g
 router.post('/promotions', protect, restrictTo('administrator'), createPromotion);
 router.patch('/promotions/:promotionCode', protect, restrictTo('administrator'), updatePromotion);
 router.delete('/promotions/:promotionCode', protect, restrictTo('administrator'), deletePromotion);
+
+// Quản lý branch
+router.post('/branches', protect, restrictTo('administrator'), createBranch);
+router.patch('/branches/:branchId', protect, restrictTo('administrator'), updateBranch);
+router.delete('/branches/:branchId', protect, restrictTo('administrator'), deleteBranch);
+router.patch('/branches/:branchId/status', protect, restrictTo('administrator'), updateBranchStatus);
 
 module.exports = router;
