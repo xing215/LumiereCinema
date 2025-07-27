@@ -5,6 +5,7 @@ import NowShowing from '@layouts/LandingPage/NowShowingMovie.jsx';
 import Maps from '@layouts/LandingPage/Maps.jsx';
 import UpComing from '@layouts/LandingPage/UpcomingMovie.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
+import ErrorModal from '@/layouts/Error';
 
 const LandingPage = () => {
     return (

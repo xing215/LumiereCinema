@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
 import { getApiUrl, getApiUrlWithParams, getActivationApiUrl } from '@config/api.config';
+import { useError } from '@contexts/ErrorContext';
 
 /**
  * Authentication hooks for handling user login, registration, logout, and password management
@@ -37,13 +38,14 @@ export const useLogin = () => {
 
 export const useAuthInterceptor = () => {
   const { logout } = useUser();
-
+  const { showError } = useError();
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           logout();
+          showError('', 'Your session has expired. Please log in again.');
         }
         return Promise.reject(error);
       }
