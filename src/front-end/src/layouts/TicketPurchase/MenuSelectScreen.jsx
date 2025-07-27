@@ -4,59 +4,8 @@ import NextNaviButton from '@components/buttons/NaviButton';
 import { BackNaviButton } from '@components/buttons/NaviButton';
 import DateSlider from '@components/UI/Dateslider';
 import CinemaPopUp from '@components/UI/CinemaPopUp';
-import mockPoster from '@assets/sample/ThamTuKien.jpg';
-
-
-const schedules = [
-    { 
-        _id: 'sid',
-        movie: {_id: 'mid', name: 'Movie 1', poster: 'poster1.jpg'},
-        screen: {_id:'ssid', name: 'Screen 1', totalSeats: 80},
-        startTime: '2025-07-14T08:00:00.000',
-        endTime: '2025-07-14T10:30:00.000',
-        OccupiedSeats: [
-            { row: 'A', no: 1 },
-            { row: 'A', no: 2 }
-        ],
-    },
-    { 
-        _id: 'sid2',
-        movie: {_id: 'mid2', name: 'Movie 2', poster: 'poster2.jpg'},
-        screen: {_id:'ssid2', name: 'Screen 2', totalSeats: 100},
-        startTime: '2025-07-16T11:00:00.000',
-        endTime: '2025-07-14T13:30:00.000',
-        OccupiedSeats: [
-            { row: 'B', no: 1 },
-            { row: 'B', no: 2 }
-        ],
-    },
-    {
-        _id: 'sid3',
-        movie: {_id: 'mid3', name: 'Movie 3', poster: 'poster3.jpg'},
-        screen: {_id:'ssid3', name: 'Screen 3', totalSeats: 120},
-        startTime: '2025-07-15T14:00:00.000',
-        endTime: '2025-07-14T16:30:00.000',
-        OccupiedSeats: [
-            { row: 'C', no: 1 },
-            { row: 'C', no: 2 }
-        ],
-    }
-];
-
-const cinemas = [
-    {
-    "_id": "66b8a1c4f2e8d5a1b3c4d5c1",
-    "name": "Lumiere Cao Thắng",
-    "address": "379-381 Cao Thắng St, Ward 12",
-    "city": "Ho Chi Minh City",
-    "location": {
-        "type": "Point",
-        "coordinates": [106.6917, 10.7769]
-    },
-    "isActive": true,
-    "showings": "7"
-    }        
-];
+import { useFetchBranches } from '@hooks/useBranch';
+import { useGetSchedulesByBranch } from '@hooks/useTicket';
 
 // =============================== TIME GRID =============================== 
 
@@ -98,8 +47,8 @@ const TimeGrid = ({selectedSchedule, onScheduleSelect, schedules, viewingDate })
                     <TimeButton 
                         key={schedule._id}
                         time={formatTime(schedule.startTime)} 
-                        seats={schedule.screen.totalSeats - schedule.OccupiedSeats.length}
-                        isSelected={selectedSchedule === schedule}
+                        seats={schedule.screen.totalSeats - schedule.OccupiedSeat.length}
+                        isSelected={selectedSchedule._id === schedule._id}
                         onSelect={onScheduleSelect}
                         schedule={schedule}
                     />
@@ -107,7 +56,7 @@ const TimeGrid = ({selectedSchedule, onScheduleSelect, schedules, viewingDate })
             ) : (
                 <div className="flex w-full items-center justify-center py-8">
                     <div className="font-['Unbounded'] text-sm font-semibold text-white/60">
-                        {viewingDate ? 'No showtimes available for this date' : 'Please select a date to view showtimes'}
+                        {schedules > 0 ? viewingDate ? 'No showtimes available for this date' : 'Please select a date to view showtimes' : 'No showtimes available'}
                     </div>
                 </div>
             )}
@@ -117,15 +66,15 @@ const TimeGrid = ({selectedSchedule, onScheduleSelect, schedules, viewingDate })
 
 // =============================== CHOOSE CINEMA =============================== 
 
-const ChooseCinemaButton = ({ onClick, label }) => (
+export const ChooseCinemaButton = ({ onClick, label, loading,  branches, error }) => (
     <button 
         className="group relative flex h-auto w-[80vw] items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
         style={{ cursor: 'pointer' }}
-        onClick={onClick}
+        onClick={loading || branches.length === 0 || error ? () => {} : onClick}
     >
         <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)] group-hover:bg-zinc-300/70" />
         <div className=" md:text-md h-auto items-center justify-center  font-['Unbounded'] text-base font-black text-white mx-2">
-            {(label ? label.toUpperCase() : 'CHOOSE CINEMA')}
+            {((loading || branches.length === 0 || error) ? '• • •' : (label ? label.toUpperCase() : 'CHOOSE CINEMA'))}
         </div>
     </button>
 );
@@ -135,10 +84,24 @@ const MenuSelectScreen = ({onNext, onBack, movieTicketData, updateMovieTicket}) 
     const [lastScrollY, setLastScrollY] = useState(0);
     const [selectedBranch, setSelectedBranch] = useState(movieTicketData.branch);
     const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
-    
-const uniqueDates = [...new Set(schedules.map(schedule => {
-    return new Date(schedule.startTime).toISOString().split('T')[0];
-}))]
+
+    const { fetchBranches, branches, loading: branchLoading, error: branchError } = useFetchBranches();
+    const { schedules, loading: scheduleLoading, error: schedulesError, fetchSchedules } = useGetSchedulesByBranch();  
+
+useEffect(() => {
+    fetchBranches();
+}, []);
+
+useEffect(() => {
+    if (movieTicketData.branch._id && movieTicketData.schedule.movie._id) {
+        fetchSchedules(movieTicketData.schedule.movie._id, movieTicketData.branch._id);
+    }
+}, [movieTicketData.branch._id, movieTicketData.schedule.movie._id]);
+
+
+    const uniqueDates = [...new Set(schedules.map(schedule => {
+        return new Date(schedule.startTime).toISOString().split('T')[0];
+    }))]
     .sort()
     .map(dateStr => ({
         date: dateStr,
@@ -152,8 +115,17 @@ const uniqueDates = [...new Set(schedules.map(schedule => {
     };
     
 const firstDate = getFirstAvailableDate();
-const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
-    
+
+
+const [viewingDate, setViewingDate] = useState(getFirstAvailableDate()?.date || null);
+
+useEffect(() => {
+  if (firstDate?.date) {
+    setViewingDate(firstDate.date);
+  }
+}, [firstDate?.date]);
+
+
     const getSelectedDate = () => {
         if (movieTicketData.schedule?._id) {
                 const selectedDate = new Date(movieTicketData.schedule.startTime).toISOString().split('T')[0];
@@ -170,21 +142,23 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
 
 
     const handleBranchSelect = (branch) => {
-        console.log('Selected branch:', branch);
         console.log('Current movie ticket data:', movieTicketData);
         updateMovieTicket({ branch: branch});
     };
 
-    const handleScheduleSelect = (schedule) => {
-        console.log('Selected schedule:', schedule);
-        console.log('Current movie ticket data:', movieTicketData);
-        updateMovieTicket({ schedule: schedule });
-    };
+const handleScheduleSelect = (schedule) => {
+    console.log('Current movie ticket data:', movieTicketData);
+    updateMovieTicket({
+        ...movieTicketData,
+        schedule: {
+            ...schedule,
+            movie: movieTicketData.schedule.movie // preserve the movie inside schedule
+        }
+    });
+};
 
     const handleDateSelect = (date) => {
-        console.log('Selected date:', date);
         console.log('Current movie ticket data:', movieTicketData);
-        console.log('Current viewing date:', viewingDate);
         setViewingDate(date);
   };
 
@@ -246,7 +220,7 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 {/* Content layer */}
                 <div className="hidden md:block">
-                    <BPoster Pics={mockPoster} />
+                    <BPoster Pics={movieTicketData?.schedule?.movie?.poster} />
                 </div>
                 <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
                     <div className={`relative flex flex-col h-full items-center ${!movieTicketData.branch._id ? 'justify-center' : 'justify-start'}`}>
@@ -263,12 +237,15 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
                             </>
                         )}
                         <div className="w-[55vw] overflow-hidden rounded-xl pt-5 md:hidden">
-                                    <BPoster Pics={mockPoster} />
+                                    <BPoster Pics={movieTicketData?.schedule?.movie?.poster} />
                                 </div>
                                 <div className="h-5 md:h-7" />
                         <ChooseCinemaButton 
                             onClick={() => setIsCinemaPopupOpen(true)} 
                             label={movieTicketData.branch?.name}
+                            loading={branchLoading}
+                            branches={branches}
+                            error={branchError}
                         />
                         
                         {movieTicketData.branch._id  && (
@@ -326,12 +303,12 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
 {/* =============================== BOTTOM BAR ===============================  */}
 
                 <div
-                    className={`fixed right-0 bottom-0 left-0 z-50 flex h-15 flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out md:hidden ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}
+                    className={`fixed right-0 bottom-0 left-0 z-50 flex h-auto flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out md:hidden ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`}
                     style={{ bottom: 'max(0px, env(safe-area-inset-bottom))' }}
                 >
                     <BackNaviButton onClick={onBack} />
-                    <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white">
-                        Movie: {movieTicketData?.movie?.name || 'Tham Tu Kien'}
+                    <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white py-2">
+                        Movie: {movieTicketData?.schedule?.movie?.name}
                         <br />
                           {!movieTicketData.branch._id ? (
                                 <>
@@ -374,7 +351,7 @@ const [viewingDate, setViewingDate] = useState(firstDate?.date || null);
                 isOpen={isCinemaPopupOpen} 
                 onClose={() => setIsCinemaPopupOpen(false)} 
                 onCinemaSelect={handleBranchSelect}
-                cinemas={cinemas}
+                cinemas={branches}
                 selectedCinema={movieTicketData.branch}
             />
         </div>

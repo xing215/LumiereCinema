@@ -12,7 +12,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            // document.body.style.overflow = 'hidden'; // Prevent background scroll
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
         } else {
             // Reset overflow when popup closes
             document.body.style.overflow = '';
@@ -49,13 +49,13 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
                         e.stopPropagation();
                         onClose();
                     }}
-                    className="absolute -top-12 -right-2 md:-right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
+                    className="absolute -top-12 -right-2 md:-top-15 lg:-right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
                 >
                     ×
                 </button>
                 {/* Cinema Map */}
                 <div className="w-auto h-auto flex items-center justify-center overflow-hidden">
-                    <IntegratedMap onClick={handleBranchSelect} selectedCinema={selectedCinema} isOpen={isOpen} />
+                    <IntegratedMap onClick={handleBranchSelect} selectedCinema={selectedCinema} isOpen={isOpen} cinemas = {cinemas} />
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 // src/pages/TicketPurchase.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import {useNavigate, useSearchParams, useLocation} from 'react-router-dom';
 import Header from '@layouts/LandingPage/Header.jsx';
 import { Title } from '@components/UI/label.jsx';
@@ -8,7 +8,12 @@ import MenuSelectSeats from '@layouts/TicketPurchase/MenuSelectSeats.jsx';
 import MenuSelectSnack from '@layouts/TicketPurchase/MenuSelectSnack.jsx';
 import MenuInfo from '@layouts/TicketPurchase/MenuInfo.jsx';
 import MenuPayment from '@layouts/TicketPurchase/MenuPayment.jsx';
+import MenuTicketDisplay from '@layouts/TicketPurchase/MenuTicketDisplay.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
+import { useGetBranchById } from '@/hooks/useBranch';
+// Add movie hook import (assuming it exists)
+import { useGetMovieById } from '@/hooks/useMovie';
+import SeatLayout from '@/layouts/TicketPurchase/SeatLayout';
 
 const MENU_STEPS = {
     SCREEN: 0,
@@ -16,76 +21,20 @@ const MENU_STEPS = {
     SNACK: 2,
     INFO: 3,
     PAYMENT: 4,
+    TICKET_DISPLAY: 5
 };
 
 const TicketPurchase = () => {
-
-    // Mock data for schedules and cinemas (call in menuSelectScreen)
-    // const schedules = [
-    //     { 
-    //         _id: 'sid',
-    //         movie: {_id: 'mid', name: 'Movie 1', poster: 'poster1.jpg'},
-    //         screen: {_id:'ssid', name: 'Screen 1', totalSeats: 80},
-    //         startTime: '2025-07-14T08:00:00.000',
-    //         endTime: '2025-07-14T10:30:00.000',
-    //         OccupiedSeat: [
-    //             { row: 'A', no: 1 },
-    //             { row: 'A', no: 2 }
-    //         ],
-    //     },
-    // ];
-
-    // const cinemas = [
-    //     {
-    //     "_id": "66b8a1c4f2e8d5a1b3c4d5c1",
-    //     "name": "Lumiere Cao Thắng",
-    //     "address": "379-381 Cao Thắng St, Ward 12",
-    //     "city": "Ho Chi Minh City",
-    //     "location": {
-    //         "type": "Point",
-    //         "coordinates": [106.6917, 10.7769]
-    //     },
-    //     "isActive": true,
-    //     "showings": "7"
-    //     }        
-    // ];
-
-// =============================== TICKETS =============================== 
-
-
     const location = useLocation();
     const [urlparm] = useSearchParams();
     const movieId = urlparm.get('movieId');
     const branchId = urlparm.get('branchId');
     const locationHook = useLocation();
-    // get movie, branch by Id from backend
-    const pickedMovie = {_id: 'mid', name: 'Movie 1', poster: 'poster1.jpg'};
-    const pickedBranch = (branchId == null ? 
-        {
-        "_id": null,
-        "name": null,
-        "address": null,
-        "city": null,
-        "location": {
-            "type": null,
-            "coordinates": null
-        },
-        "isActive": null,
-        "showings": null
-        }     
-        : 
-        {
-        "_id": "66b8a1c4f2e8d5a1b3c4d5c1",
-        "name": "Lumiere Cao Thắng",
-        "address": "379-381 Cao Thắng St, Ward 12",
-        "city": "Ho Chi Minh City",
-        "location": {
-            "type": "Point",
-            "coordinates": [106.6917, 10.7769]
-        },
-        "isActive": true,
-        "showings": "7"
-        }     );
+    
+    // Hooks for fetching data
+    const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
+    const { getMovieById, movie, loading: movieLoading, error: movieError } = useGetMovieById();
+    
     const passedNoLoginCustomerInfo = locationHook.state?.noLoginCustomerInfo || {
         name: null,
         phone: null,
@@ -93,12 +42,27 @@ const TicketPurchase = () => {
     };
 
     const [movieTicketData, setMovieTicketData] = useState({
-        customer: null, // chưa rõ cách ghép he
+        customer: null,
         noLoginCustomerInfo: passedNoLoginCustomerInfo,
-        branch: pickedBranch,
+        branch: {
+            _id: null,
+            name: null,
+            address: null,
+            city: null,
+            location: {
+                type: null,
+                coordinates: null
+            },
+            isActive: null,
+            showings: null
+        },
         schedule: { 
             _id: null,
-            movie: pickedMovie,
+            movie: {
+                _id: null,
+                name: null,
+                poster: null
+            },
             screen: null,
             startTime: null,
             endTime: null,
@@ -109,67 +73,160 @@ const TicketPurchase = () => {
         },
         seats: [],
         promotion: null,
-        seller: null, // Will be set if purchased at counter
-        total: 0
-    }); //movie is initialized with pickedMovie, all schedule data will be replaced by new schedule data when user selects a schedule, which has the same movie info
-
-    
-    // Snack Ticket Data
-    const [snackTicketData, setSnackTicketData] = useState({
-        customer: null,
-        noLoginCustomerInfo: passedNoLoginCustomerInfo,
-        branch: pickedBranch,
-        snackList: [], // {snack: id, quantity: number}
-        promotionCode: '',
-        seller: null, // Will be set if purchased at counter
+        seller: null,
         total: 0
     });
 
-// =============================== CHANGE TICKET INFO =============================== 
+    const [snackTicketData, setSnackTicketData] = useState({
+        customer: null,
+        noLoginCustomerInfo: passedNoLoginCustomerInfo,
+        branch: {
+            _id: null,
+            name: null,
+            address: null,
+            city: null,
+            location: {
+                type: null,
+                coordinates: null
+            },
+            isActive: null,
+            showings: null
+        },
+        snackList: [],
+        promotionCode: '',
+        seller: null,
+        total: 0
+    });
 
+    // Fetch movie and branch data when component mounts
+    useEffect(() => {
+        if (movieId && movieId !== 'null') {
+            console.log('Fetching movie with ID:', movieId);
+            getMovieById(movieId);
+        }
+        
+        if (branchId && branchId !== 'null') {
+            console.log('Fetching branch with ID:', branchId);
+            getBranchById(branchId);
+            console.log('Branch data:', branch);
+            console.log('error:', branchError);
+        }
+    }, [movieId, branchId]);
 
-    const navigate = useNavigate()
+    // Update movieTicketData when movie is fetched
+    useEffect(() => {
+        if (movie && movie._id) {
+            console.log('Movie fetched:', movie);
+            updateMovieTicket({
+                schedule: {
+                    ...movieTicketData.schedule,
+                    movie: {
+                        _id: movie._id,
+                        name: movie.title,
+                        poster: movie.posterURL
+                    }
+                }
+            });
+        }
+    }, [movie]);
+
+    // Update both ticket data when branch is fetched
+    useEffect(() => {
+        if (branch && branch._id) {
+            console.log('Branch fetched:', branch);
+            const branchData = {
+                _id: branch._id,
+                name: branch.name,
+                address: branch.address,
+                city: branch.city,
+                location: branch.location,
+                isActive: branch.isActive,
+                showings: branch.showings
+            };
+            
+            updateMovieTicket({ branch: branchData });
+            updateSnackTicket({ branch: branchData });
+        }
+    }, [branch]);
+
+    const navigate = useNavigate();
+    
     const updateMovieTicket = (updates) => {
+        console.log('Updating movie ticket data with:', updates);
         setMovieTicketData(prev => ({ ...prev, ...updates }));
     };
 
+    // Update URL when branch changes
     useEffect(() => {
-    if (movieTicketData.branch && movieTicketData.branch._id) {
-        const stateObj = movieTicketData.noLoginCustomerInfo?.id
-            ? { state: { noLoginCustomerInfo: movieTicketData.noLoginCustomerInfo.id } }
-            : {};
+        if (movieTicketData.branch && movieTicketData.branch._id) {
+            const stateObj = movieTicketData.noLoginCustomerInfo?.id
+                ? { state: { noLoginCustomerInfo: movieTicketData.noLoginCustomerInfo.id } }
+                : {};
 
-        navigate(
-            `?movieId=${movieId || 'null'}&branchId=${movieTicketData.branch._id || 'null'}`,
-            { replace: true, ...stateObj }
-        );
-    }
-}, [movieTicketData.branch?._id]);
+            // Reset ticket data, keep movie, update branch
+            setMovieTicketData(prev => ({
+                ...prev,
+                branch: { ...movieTicketData.branch },
+                schedule: {
+                    _id: null,
+                    movie: prev.schedule.movie, // preserve movie
+                    screen: null,
+                    startTime: null,
+                    endTime: null,
+                    OccupiedSeat: [],
+                },
+                seats: [],
+                promotion: null,
+                seller: null,
+                total: 0
+            }));
+
+            setSnackTicketData(prev => ({
+                ...prev,
+                branch: { ...movieTicketData.branch },
+                snackList: [],
+                promotionCode: '',
+                seller: null,
+                total: 0
+            }));
+
+            navigate(
+                `?movieId=${movieId || 'null'}&branchId=${movieTicketData.branch._id || 'null'}`,
+                { replace: true, ...stateObj }
+            );
+        }
+    }, [movieTicketData.branch?._id]);
 
     const updateSnackTicket = (updates) => {
         setSnackTicketData(prev => ({ ...prev, ...updates }));
     };
-// =============================== SWITCH MENUS =============================== 
+
+    // Navigation methods
+    const [currentStep, setCurrentStep] = useState(MENU_STEPS.SCREEN);
 
     const goToNextStep = () => {
-        if (currentStep < MENU_STEPS.PAYMENT) {
+        if (currentStep < MENU_STEPS.TICKET_DISPLAY) {
             setCurrentStep(currentStep + 1);
         }
     };
 
     const goToPreviousStep = () => {
         if (currentStep == MENU_STEPS.SCREEN) {
-             navigate(-1); return; 
+             navigate(-1); 
+             return; 
         }
         if (currentStep > MENU_STEPS.SCREEN) {
             setCurrentStep(currentStep - 1);
         }
     };
 
+    const handlePaymentComplete = () => {
+        // Handle payment completion logic
+        console.log('Payment completed');
+    };
 
-// =============================== SWITCH MENUS =============================== 
-    const [currentStep, setCurrentStep] = useState(MENU_STEPS.SCREEN);
     const renderCurrentMenu = () => {
+
         switch (currentStep) {
             case MENU_STEPS.SCREEN:
                 return (
@@ -212,11 +269,17 @@ const TicketPurchase = () => {
             case MENU_STEPS.PAYMENT:
                 return (
                     <MenuPayment 
-                        onNext={handlePaymentComplete} 
+                        onNext={goToNextStep} 
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         snackTicketData={snackTicketData}
-                        mockSchedules={schedules}
+                    />
+                );
+            case MENU_STEPS.TICKET_DISPLAY:
+                return (
+                    <MenuTicketDisplay
+                        movieTicketData={movieTicketData}
+                        snackTicketData={snackTicketData}
                     />
                 );
             default:
@@ -226,22 +289,21 @@ const TicketPurchase = () => {
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         updateMovieTicket={updateMovieTicket}
-                        updateSnackTicket={updateSnackTicket}
-                        mockSchedules={schedules}
-                        cinemas={cinemas}
                     />
                 );
         }
     };
 
-// =============================== RETURNS =============================== 
-
     return (
-        <div className="overflow-y-hidden relative flex flex-col h-auto min-h-screen w-screen overflow-x-hidden bg-slate-950">
+        <div className="overflow-y-hidden overflow-hidden relative flex flex-col h-auto min-h-screen w-screen overflow-x-hidden bg-slate-950">
             <Header />
             <Title text="BUY TICKET" />
             {renderCurrentMenu()}
             <div className="h-10 w-screen lg:h-20" />
+            <div className="pointer-events-none absolute top-[60px] -left-[20px] h-20 w-20 rounded-full bg-purple-600/60 mix-blend-lighten blur-[100px] sm:top-[80px] sm:-left-[30px] sm:h-28 sm:w-28 md:top-[100px] md:-left-[50px] md:h-36 md:w-36 lg:top-[135px] lg:-left-[71px] lg:h-44 lg:w-44" />
+            <div className="pointer-events-none absolute top-[140px] left-[50px] h-20 w-20 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px] sm:top-[180px] sm:left-[80px] sm:h-28 sm:w-28 md:top-[220px] md:left-[120px] md:h-36 md:w-36 lg:top-[275px] lg:left-[168px] lg:h-44 lg:w-44" />
+            <div className="pointer-events-none absolute -right-[40px] -bottom-0 h-[250px] w-[200px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] sm:-right-[60px] sm:-bottom-0 sm:h-[350px] sm:w-[300px] md:-right-[80px] md:-bottom-0 md:h-[450px] md:w-[400px] lg:-right-100 lg:-bottom-0 lg:h-[580.90px] lg:w-[517.76px]" />
+            <div className="pointer-events-none absolute right-[40px] bottom-0 h-20 w-20 rounded-full bg-amber-300/60 mix-blend-lighten blur-[100px] sm:right-[60px] sm:bottom-0 sm:h-28 sm:w-28 md:right-[80px] md:bottom-0 md:h-36 md:w-36 lg:right-100 lg:bottom-0 lg:h-44 lg:w-44" />
             <Footer />
         </div>
     );

@@ -32,20 +32,11 @@ const ResetPwdEmail = () => {
             
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
             {/* Main component */}
-            {tokenError ? (
-                <div className="w-full max-w-lg px-4 text-center">
-                    <h1 className="mb-4 text-center font-['Unbounded'] text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">INVALID LINK</h1>
-                    <p className="mb-6 font-['Libre_Franklin'] text-sm font-normal text-white sm:mb-8 sm:text-base md:text-lg">The reset link is invalid or has expired.</p>
-                    <div className="flex justify-center">
-                        <button
-                            onClick={() => navigate(ROUTES.HOME)}
-                            className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl`}
-                        >
-                            RETURN TO HOMEPAGE
-                        </button>
-                    </div>
-                </div>
-            ) : (
+            {tokenError ? 
+                setTimeout(() => {
+                    navigate(ROUTES.HOME);
+                }, 0)
+             : (
                 <ChangePwdForm ResetToken={resetToken} />
             )}
         </div>

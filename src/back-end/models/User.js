@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema({
 
   passwordResetExpires: Date,
 
+  activationToken: String,
+  activationExpires: Date,
+  activateStatus: { type: Boolean, default: false },
+
 }, { timestamps: true });
 
 userSchema.methods.addLunarPointsFromPurchase = function (amountInVND) {

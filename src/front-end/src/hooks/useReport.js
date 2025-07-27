@@ -36,47 +36,6 @@ export const useGetRevenueReport = () => {
   return { getRevenueReport, reportData, loading, error };
 };
 
-export const useExportReport = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const { token } = useUser();
-
-  const exportReport = async (reportData, format = 'pdf') => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await axios.post('/api/reports/export', {
-        data: reportData,
-        format
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
-      });
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `report.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      return { success: true };
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to export report';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { exportReport, loading, error };
-};
-
 export const useGetAvailableBranches = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -91,9 +50,9 @@ export const useGetAvailableBranches = () => {
       const roles = user?.roles || (user?.role ? [user.role] : []);
       let apiUrl;
       if (roles.includes('administrator')) {
-        apiUrl = getApiUrl('branches');
+        apiUrl = getApiUrl('reportBranches');
       } else if (roles.includes('branchmanager')) {
-        apiUrl = getApiUrl('branch');
+        apiUrl = getApiUrl('reportBranch');
       }
       const response = await axios.get(apiUrl, {
         headers: { Authorization: `Bearer ${token}` }
@@ -110,36 +69,6 @@ export const useGetAvailableBranches = () => {
   };
 
   return { getAvailableBranches, branches, loading, error };
-};
-
-export const useGetAvailableMovies = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [movies, setMovies] = useState([]);
-  const { token } = useUser();
-
-  const getAvailableMovies = async (branchId = null) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const params = branchId ? { branchId } : {};
-      const response = await axios.get('/api/reports/movies', {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      });
-      setMovies(response.data);
-      return { success: true, data: response.data };
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to fetch movies';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { getAvailableMovies, movies, loading, error };
 };
 
 export const useSetBranch = () => {

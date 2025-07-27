@@ -63,6 +63,7 @@ const API_CONFIG = {
     // Auth endpoints
     login: '/api/auth/login',
     register: '/api/auth/register',
+    activateAccount: '/api/auth/activate',
     logout: '/api/auth/logout',
     changePassword: '/api/auth/change-password',
     forgotPassword: '/api/auth/forgot-password',
@@ -71,6 +72,7 @@ const API_CONFIG = {
     // Staff auth endpoints
     staffLogin: '/api/auth/staff/login',
     staffForgotPassword: '/api/auth/staff/forgot-password',
+  
     
     // Movie endpoints
     nowShowingMovies: '/api/movies/now-showing',
@@ -85,15 +87,17 @@ const API_CONFIG = {
     deleteMovie: '/api/movies', // DELETE + /:movieId
     
     // Report endpoints
-    branches: '/api/reports/branches',
-    branch: '/api/reports/branch',
+    reportBranches: '/api/reports/branches',
+    reportBranch: '/api/reports/branch',
     revenueSummary: '/api/reports/revenue-summary',
     
     // Branch endpoints (snack management)
+    branches: '/api/branches/available', //
     getSnacks: '/api/branches', // + /:branchId/snacks
     createSnack: '/api/branches', // POST + /:branchId/snacks
     editSnack: '/api/branches', // PATCH + /:branchId/snacks/:snackId
     deleteSnack: '/api/branches', // DELETE + /:branchId/snacks/:snackId
+    branch: '/api/branches', // + /:branchId
     
     // Ticket endpoints
     createTicket: '/api/tickets/snacks',
@@ -160,6 +164,13 @@ export const getApiUrlWithParams = (endpointName, params = {}) => {
   return url;
 };
 
+export const getActivationApiUrl = (token) => {
+  const baseURL = getApiUrl('activateAccount');
+  if (!token) {
+    return baseURL;
+  }
+  return `${baseURL}/${token}`;
+};
 /**
  * Helper function to build URLs for specific movie operations
  * @param {string} movieId - The movie ID

@@ -7,17 +7,17 @@ const { redisClient } = require('../config/redis.config');
 
 const getProfile = async (req, res) => {
   try {
-    const cachedUser = await redisClient.get(`userProfile`)
+    const cachedUser = await redisClient.get(`user:${req.user.id}`);
     if (cachedUser) {
       return res.status(200).json(JSON.parse(cachedUser));
     }
 
       const userId = req.user.email;
-      const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude password
+      const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked'); // Exclude password
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
-    await redisClient.set(`userProfile`, JSON.stringify(user), { EX: 3600 }); // Cache user profile for 1 hour
+    await redisClient.set(`user:${req.user.id}`, JSON.stringify(user), { EX: 3600 }); // Cache user profile for 1 hour
     res.status(200).json(user);
   } catch (error) {
     console.error('Error getting profile:', error);
@@ -34,7 +34,7 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     await redisClient.del(`userList`);
-    await redisClient.del(`userProfile`);
+    await redisClient.del(`user:${userId}`); // Clear cache for updated user profile
 
           const allowedFields = ['email', 'name', 'phone', 'birthday', 'gender'];
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { getApiUrl, getBranchSnackApiUrl } from '@config/api.config';
+import { getApiUrl, buildApiUrl } from '@config/api.config';
 import { useUser } from '@contexts/UserContext';
 
 /**
@@ -21,7 +21,7 @@ export const useFetchBranches = () => {
       const response = await axios.get(getApiUrl('branches'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBranches(response.data);
+      setBranches(response.data.branches || []);
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
@@ -33,6 +33,34 @@ export const useFetchBranches = () => {
   };
 
   return { fetchBranches, branches, loading, error };
+};
+
+export const useGetBranchById = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+  const [branch, setBranch] = useState(null);
+
+  const getBranchById = async (branchId) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get(buildApiUrl(`/api/branches/${branchId}`), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBranch(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch branch';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getBranchById, branch, loading, error };
 };
 
 export const useSetCurrentBranch = () => {
