@@ -9,7 +9,14 @@ const {
   deleteSnack,
   getSnackList,
   getAvailableBranches,
-  getBranchById
+  getBranchById,
+  // Schedule management functions
+  scheduleMovieScreening,
+  editMovieSchedule,
+  deleteMovieSchedule,
+  getMovieSchedules,
+  // Screen management function
+  getBranchScreens
 } = require('../controllers/branch.controller.js');
 
 /**
@@ -25,5 +32,14 @@ router.get('/:branchId/snacks', getSnackList);
 router.post('/:branchId/snacks', protect, restrictTo('administrator'), createSnack);
 router.patch('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), editSnack);
 router.delete('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), deleteSnack);
+
+// Các thao tác quản lý schedule của branch (bảo vệ, phân quyền branch manager)
+router.get('/:branchId/schedules', protect, restrictTo('branchmanager'), getMovieSchedules);
+router.post('/:branchId/schedules', protect, restrictTo('branchmanager'), scheduleMovieScreening);
+router.patch('/:branchId/schedules/:scheduleId', protect, restrictTo('branchmanager'), editMovieSchedule);
+router.delete('/:branchId/schedules/:scheduleId', protect, restrictTo('branchmanager'), deleteMovieSchedule);
+
+// Các thao tác xem screens của branch (bảo vệ, phân quyền branch manager)
+router.get('/:branchId/screens', protect, restrictTo('branchmanager'), getBranchScreens);
 
 module.exports = router;
