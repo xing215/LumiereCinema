@@ -7,6 +7,7 @@ import MenuSelectSnack from '@layouts/TicketPurchase/MenuSelectSnack.jsx';
 import MenuInfo from '@layouts/TicketPurchase/MenuInfo.jsx';
 import MenuPayment from '@layouts/TicketPurchase/MenuPayment.jsx';
 import MenuTicketDisplay from '@layouts/TicketPurchase/MenuTicketDisplay.jsx';
+import { useCreateTicket } from '@hooks/useTicket';
 import MenuSelectCinema from '@/layouts/TicketPurchase/MenuSelectCinema';
 import Footer from '@layouts/LandingPage/Footer.jsx';
 import { useGetBranchById } from '@/hooks/useBranch';
@@ -121,10 +122,24 @@ const SnackPurchase = () => {
         }
     };
 
-    const handlePaymentComplete = () => {
-        // Handle payment completion logic
-        console.log('Payment completed');
+
+    // Ticket creation hook and state
+    const { createTicket, ticket, loading: ticketLoading, error: ticketError } = useCreateTicket();
+
+    const handlePaymentComplete = async () => {
+        await createTicket({ snackTicketData });
     };
+
+    useEffect(() => {
+        if (ticket) {
+            console.log('Snack ticket created successfully:', ticket);
+            setCurrentStep(MENU_STEPS.TICKET_DISPLAY);
+        } else if (ticketError) {
+            console.error('Error creating snack ticket:', ticketError);
+            alert('An error occurred while creating your snack ticket. Please try again.');
+            setCurrentStep(MENU_STEPS.PAYMENT);
+        }
+    }, [ticket, ticketError]);
 
     const renderCurrentMenu = () => {
         switch (currentStep) {
@@ -159,15 +174,18 @@ const SnackPurchase = () => {
             case MENU_STEPS.PAYMENT:
                 return (
                     <MenuPayment 
-                        onNext={goToNextStep} 
+                        onNext={handlePaymentComplete} 
                         onBack={goToPreviousStep}
                         snackTicketData={snackTicketData}
+                        loading={ticketLoading}
                     />
                 );
             case MENU_STEPS.TICKET_DISPLAY:
                 return (
                     <MenuTicketDisplay
                         snackTicketData={snackTicketData}
+                        ticket={ticket}
+                        loading={ticketLoading}
                     />
                 );
             default:

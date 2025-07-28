@@ -162,7 +162,7 @@ const getSnackList = async (req, res) => {
     }
 
     const snacks = await Snack.find({ branch: branchId })
-      .select('name price discountedPrice imageURL stock isHidden description createdAt updatedAt');
+      .select('name shortname price discountedPrice imageURL stock isHidden description createdAt updatedAt');
 
     if (!snacks || snacks.length === 0) {
       return res.status(404).json({ message: 'No snacks found for this branch.' });

@@ -252,6 +252,8 @@ const getSeatMapBySchedule = async (req, res) => {
       });
     }
 
+    
+
     const schedule = aggregationResult[0];
     const { rows, columns } = schedule.screen.size;
     const totalSeats = rows * columns;    // OPTIMIZATION: Use Redis cache for seat layout generation via CacheManager
@@ -386,21 +388,14 @@ const holdSeats = async (req, res) => {
   const session = await mongoose.startSession();
   
   try {
-    const { scheduleId, seatNumbers, holdDurationMinutes, replaceExisting = false } = req.body;
+    const { scheduleId, sessionId, seatNumbers, holdDurationMinutes, replaceExisting = false } = req.body;
+   const userId = req.user && req.user?.id ? req.user?.id : null;
 
-    let sessionId = req.body.sessionId || null; // Use sessionId from request body if provided
-    console.log('Hold request body:', req.user.id);
-   const userId = req.user && req.user.id ? req.user.id : null;
-
-    if (userId) {
-      sessionId = null; // Clear sessionId if userId is provided
+    if (!userId && !sessionId) {
+      return res.status(400).json({
+        error: 'Either userId or sessionId is required'
+      });
     }
-
-       if (!userId && !sessionId) {
-        return res.status(400).json({
-          error: 'Either userId or sessionId is required'
-        });
-      }
     
     console.log('Hold request:', {
       scheduleId,
@@ -638,7 +633,8 @@ const holdSeats = async (req, res) => {
  */
 const reserveSnacks = async (req, res) => {
   try {
-    const { branchId, snackItems, userId, sessionId, reserveDurationMinutes } = req.body;
+    const { branchId, snackItems, sessionId, reserveDurationMinutes } = req.body;
+    const userId = req.user && req.user?.id ? req.user?.id : null;
 
     // Validation
     if (!branchId || !snackItems || !Array.isArray(snackItems) || snackItems.length === 0) {
@@ -820,13 +816,14 @@ const createSnackTicket = async (req, res) => {
   
   try {
     const { 
-      customer, 
       noLoginCustomerInfo, 
       branch, 
       seller, 
       promotionCode,
       snackList 
     } = req.body;
+
+    const customer = req.user && req.user?.id ? req.user?.id : null;
 
     // Validate snackList is provided
     if (!snackList || !Array.isArray(snackList) || snackList.length === 0) {
@@ -1063,7 +1060,6 @@ const createTicket = async (req, res) => {
   
   try {
     const { 
-      customer, 
       noLoginCustomerInfo, 
       branch, 
       seller, 
@@ -1071,6 +1067,9 @@ const createTicket = async (req, res) => {
       movieTicket,
       snackTicket 
     } = req.body;
+
+    const customer = req.user && req.user?.id ? req.user?.id : null;
+    console.log(req.body)
 
     // Validate that at least one ticket type is requested
     if (!movieTicket && !snackTicket) {
@@ -1097,76 +1096,41 @@ const createTicket = async (req, res) => {
 
       // ===== Process Movie Ticket =====
       if (movieTicket) {
-        const { schedule, seats } = movieTicket;
-        
+        const { schedule, seats, total: movieTicketTotal } = movieTicket;
         // Validate movie ticket data
         if (!schedule || !seats || !Array.isArray(seats) || seats.length === 0) {
           throw { status: 400, message: 'Movie ticket requires schedule and seats array' };
         }
-
-        // Validate schedule exists and get movie pricing
+        // Validate schedule exists and get movie info
         const scheduleData = await Schedule.findById(schedule)
           .populate('movie')
           .populate('screen')
           .session(session);
-        
         if (!scheduleData) {
           throw { status: 404, message: 'Schedule not found' };
         }
-
         if (scheduleData.movie.isHidden) {
           throw { status: 400, message: 'Movie is not available' };
-        }        // Check seat availability
+        }
+        // Check seat availability
         const existingTickets = await Ticket.find({
           schedule: schedule,
           seats: { $in: seats },
           status: { $in: ['Confirmed', 'CheckedIn'] }
         }).session(session);
-
         if (existingTickets.length > 0) {
           const occupiedSeats = existingTickets.flatMap(ticket => ticket.seats);
           const conflictSeats = seats.filter(seat => occupiedSeats.includes(seat));
-          throw { 
-            status: 409, 
+          throw {
+            status: 409,
             message: 'Some seats are already booked',
-            conflictSeats 
+            conflictSeats
           };
-        }        // Calculate movie ticket price based on seat categories
-        let movieTicketTotal = 0;
-        
-        // Determine if customer qualifies for special pricing (elderly 60+, students with HSSV assumed based on age)
-        let useSpecialPricing = false;
-        if (user && user.birthday) {
-          const age = new Date().getFullYear() - new Date(user.birthday).getFullYear();
-          useSpecialPricing = age >= 60 || (age >= 16 && age <= 25); // Elderly (60+) or student age (16-25)
-        }        for (const seatNumber of seats) {
-          // Find seat information with category shortname (no populate needed since it's a string)
-          const seat = await Seat.findOne({
-            seatNumber: seatNumber,
-            screen: scheduleData.screen._id
-          }).session(session);
-
-          if (!seat) {
-            throw { status: 400, message: `Seat ${seatNumber} not found in this screen` };
-          }
- 
-          // Get seat category using shortname lookup
-          const seatCategory = await SeatCategory.findOne({ shortname: seat.category }).session(session);
-          
-          if (!seatCategory) {
-            throw { status: 400, message: `Seat category '${seat.category}' not found for seat ${seatNumber}` };
-          }
-
-          // Apply special pricing logic
-          let seatPrice = seatCategory.Fee; // Default price
-          if (useSpecialPricing && seatCategory.FeeForSpecial > 0) {
-            seatPrice = seatCategory.FeeForSpecial; // Use special price for eligible customers
-          }
-          
-          movieTicketTotal += seatPrice;
         }
-
-        // Create movie ticket
+        // Use total from API (required)
+        if (typeof movieTicketTotal !== 'number') {
+          throw { status: 400, message: 'Movie ticket total is required and must be a number' };
+        }
         createdMovieTicket = new Ticket({
           customer: customer || null,
           seller: seller || null,
@@ -1175,27 +1139,24 @@ const createTicket = async (req, res) => {
           seats,
           total: movieTicketTotal,
           status: 'Confirmed'
-        });        await createdMovieTicket.save({ session });
+        });
+        await createdMovieTicket.save({ session });
         totalAmount += movieTicketTotal;
-
         // add ticket to user's watch history if logged in
         if (user) {
           user.watchHistory = user.watchHistory || [];
           user.watchHistory.push(createdMovieTicket._id);
           await user.save({ session });
-
           // Cập nhật lại Redis nếu có dùng cache user
           const userCacheKey = `user:${user._id}`;
           await redisClient.set(userCacheKey, JSON.stringify(user));
         }
-
         // CRITICAL: Update Schedule.OccupiedSeat to mark seats as occupied
         await Schedule.findByIdAndUpdate(
           schedule,
           { $addToSet: { OccupiedSeat: { $each: seats } } },
           { session }
         );
-
         // Clear seat holds for these seats
         await SeatHold.deleteMany({
           schedule: schedule,
@@ -1209,30 +1170,29 @@ const createTicket = async (req, res) => {
 
       // ===== Process Snack Ticket =====
       if (snackTicket) {
-        const { snackList } = snackTicket;
-        
+        const { snackList, total: snackTicketTotal } = snackTicket;
         if (!snackList || !Array.isArray(snackList) || snackList.length === 0) {
           throw { status: 400, message: 'Snack ticket requires snackList array' };
         }
-
-        // Calculate snack total and update stock
-        const { total: snackTotal, validatedSnackList } = await calculateTotalAndUpdateStock(
-          snackList, 
-          branchData._id, 
+        // Calculate and validate snack list (but do not use backend total)
+        const { validatedSnackList } = await calculateTotalAndUpdateStock(
+          snackList,
+          branchData._id,
           session
         );
-
-        // Create snack ticket
+        // Use total from API (required)
+        if (typeof snackTicketTotal !== 'number') {
+          throw { status: 400, message: 'Snack ticket total is required and must be a number' };
+        }
         createdSnackTicket = new SnackTicket({
           branch,
           snackList: validatedSnackList,
-          total: snackTotal,
+          total: snackTicketTotal,
           seller: seller || null,
           ...(customer ? { customer } : { noLoginCustomerInfo })
         });
-
         await createdSnackTicket.save({ session });
-        totalAmount += snackTotal;
+        totalAmount += snackTicketTotal;
       }
 
       // ===== Apply promotions and discounts =====
@@ -1540,12 +1500,13 @@ const getSnacksByBranch = async (req, res) => {
  */
 const manageSeatHold = async (req, res) => {
   try {
-    const { holdId } = req.params;
-    const { action, extendMinutes, userId, sessionId } = req.body;
+    console.log(req.body)
+    const { action, extendMinutes, sessionId, scheduleId, seatNumbers } = req.body;
+    const userId = req.user.id
 
-    if (!mongoose.Types.ObjectId.isValid(holdId)) {
+    if (!userId && !sessionId) {
       return res.status(400).json({
-        error: 'Invalid hold ID format'
+        error: 'Either userId or sessionId is required'
       });
     }
 
@@ -1555,49 +1516,58 @@ const manageSeatHold = async (req, res) => {
       });
     }
 
-    // Find the hold
-    const hold = await SeatHold.findById(holdId);
-
-    if (!hold) {
-      return res.status(404).json({
-        error: 'Seat hold not found or already expired'
-      });
+    // Build query for holds
+    const query = {
+      ...(scheduleId && { schedule: scheduleId }),
+      $or: [
+        ...(userId ? [{ user: userId }] : []),
+        ...(sessionId ? [{ sessionId: sessionId }] : [])
+      ]
+    };
+    if (seatNumbers && Array.isArray(seatNumbers)) {
+      query.seatNumber = { $in: seatNumbers };
     }
 
-    // Verify ownership
-    const isOwner = (userId && hold.user?.toString() === userId) || 
-                   (sessionId && hold.sessionId === sessionId);
+    const holds = await SeatHold.find(query);
 
-    if (!isOwner) {
-      return res.status(403).json({
-        error: 'You can only manage your own seat holds'
+    if (!holds.length) {
+      return res.status(404).json({
+        error: 'No seat holds found for the given user/session'
       });
     }
 
     if (action === 'release') {
-      await SeatHold.findByIdAndDelete(holdId);
+      const ids = holds.map(h => h._id);
+      await SeatHold.deleteMany({ _id: { $in: ids } });
       return res.status(200).json({
         success: true,
-        message: 'Seat hold released successfully',
-        seatNumber: hold.seatNumber
+        message: 'Seat holds released successfully',
+        releasedCount: ids.length,
+        seatNumbers: holds.map(h => h.seatNumber)
       });
     }
 
     if (action === 'extend') {
       const additionalMinutes = Math.min(extendMinutes || 5, 15); // Max 15 minutes extension
-      await hold.extendHold(additionalMinutes);
-      
+      const now = new Date();
+      let extended = 0;
+      for (const hold of holds) {
+        // Only extend if not expired
+        if (hold.expiresAt > now) {
+          await hold.extendHold(additionalMinutes);
+          extended++;
+        }
+      }
       return res.status(200).json({
         success: true,
-        message: 'Seat hold extended successfully',
-        seatNumber: hold.seatNumber,
-        newExpiresAt: hold.expiresAt,
+        message: 'Seat holds extended successfully',
+        extendedCount: extended,
         extendedBy: additionalMinutes
       });
     }
 
   } catch (error) {
-    console.error('Error managing seat hold:', error);
+    console.error('Error managing seat holds:', error);
     return res.status(500).json({
       error: 'Internal server error'
     });

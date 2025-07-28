@@ -48,7 +48,7 @@ router.get('/screen/:scheduleId', getSeatMapBySchedule);
  *         movieTicket?: { schedule, seats }, 
  *         snackTicket?: { snackList: [{ shortname, quantity }] } }
  */
-router.post('/create', createTicket);
+router.post('/create', getUser, createTicket);
 
 // =============================================================================
 // MOVIE TICKET SPECIFIC ROUTES
@@ -66,7 +66,7 @@ router.post('/movie/hold', getUser, holdSeats);
  * Quản lý seat hold (release/extend)
  * Body: { action: 'release'|'extend', extendMinutes?, userId?, sessionId? }
  */
-router.patch('/movie/hold/:holdId', manageSeatHold);
+router.patch('/movie/hold/', getUser, manageSeatHold);
 
 /**
  * DELETE /movie/hold/bulk
@@ -120,7 +120,7 @@ router.get('/:branchId/snacks', getSnacksByBranch);
  * Đặt trước snacks tạm thời
  * Body: { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
  */
-router.post('/snack/reserve', reserveSnacks);
+router.post('/snack/reserve', getUser, reserveSnacks);
 
 /**
  * POST /snack/create
@@ -128,7 +128,7 @@ router.post('/snack/reserve', reserveSnacks);
  * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, 
  *         snackList: [{ shortname, quantity }] }
  */
-router.post('/snack/create', createSnackTicket);
+router.post('/snack/create', getUser, createSnackTicket);
 
 /**
  * GET /snack/admin/all

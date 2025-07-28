@@ -168,38 +168,44 @@ export const useRemoveScreen = () => {
 };
 
 export const useGetSchedules = () => {
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [schedules, setSchedules] = useState([]);
   const { token } = useUser();
-  const { currentBranch } = useSetCurrentBranch();
-
-  const getSchedules = async (date, branchId = currentBranch) => {
-    if (!branchId) {
-      setError('No branch selected');
-      return { success: false, error: 'No branch selected' };
-    }
-
+  const fetchSchedules = async (movieId, branchId) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.get(`/api/branches/${branchId}/schedules`, {
+      const url = buildApiUrl(`/api/tickets/${branchId}/schedule`);
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { date }
+        params: movieId ? { movieId } : {}
       });
-      setSchedules(response.data);
-      return { success: true, data: response.data };
+      const screens = response.data.screens || [];
+    const allSchedules = screens.flatMap(screen =>
+      (screen.schedules || []).map(schedule => ({
+        _id: schedule._id,
+        movie: schedule.movie,
+        screen: {
+          _id: screen._id,
+          name: screen.screenInfo?.screenName || screen.screenName,
+          totalSeats: screen.screenInfo?.totalSeats || screen.totalSeats,
+        },
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        availableSeatsCount: schedule.seatInfo?.availableSeatsCount || 0,
+      }))
+    );
+    setSchedules(allSchedules);
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch schedules';
       setError(errorMessage);
-      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
-  return { getSchedules, schedules, loading, error };
+  return { schedules, loading, error, fetchSchedules };
 };
 
 export const useUpdateSchedule = () => {

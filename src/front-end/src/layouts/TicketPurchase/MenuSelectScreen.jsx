@@ -5,7 +5,7 @@ import { BackNaviButton } from '@components/buttons/NaviButton';
 import DateSlider from '@components/UI/Dateslider';
 import CinemaPopUp from '@components/UI/CinemaPopUp';
 import { useFetchBranches } from '@hooks/useBranch';
-import { useGetSchedulesByBranch } from '@hooks/useTicket';
+import { useGetSchedules } from '@hooks/useBranch';
 
 // =============================== TIME GRID =============================== 
 
@@ -14,7 +14,7 @@ const TimeButton = ({ time, seats, schedule, isSelected, onSelect}) => {
     return (
         <button 
             className={`group ${seats <= 0 ? 'cursor-not-allowed opacity-50' : ''} relative flex w-[38vw] flex-col items-center justify-center -space-y-1 rounded-xl md:w-[calc(100vw*0.12)] lg:w-[calc(100vw*0.10)] ${isSelected ? 'outline-2 outline-white' : ''}`}
-            onClick={() => onSelect(schedule)}
+            onClick={onSelect}
             style={{ cursor: 'pointer' }}
             disabled={seats <= 0}
         >
@@ -48,10 +48,9 @@ const TimeGrid = ({selectedSchedule, onScheduleSelect, schedules, viewingDate })
                     <TimeButton 
                         key={schedule._id}
                         time={formatTime(schedule.startTime)} 
-                        seats={schedule.screen.totalSeats - schedule.OccupiedSeat.length}
+                        seats={schedule.availableSeatsCount}
                         isSelected={selectedSchedule._id === schedule._id}
-                        onSelect={onScheduleSelect}
-                        schedule={schedule}
+                        onSelect={() => onScheduleSelect(schedule)}
                     />
                 ))
             ) : (
@@ -87,7 +86,7 @@ const MenuSelectScreen = ({onNext, onBack, movieTicketData, updateMovieTicket}) 
     const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
 
     const { fetchBranches, branches, loading: branchLoading, error: branchError } = useFetchBranches();
-    const { schedules, loading: scheduleLoading, error: schedulesError, fetchSchedules } = useGetSchedulesByBranch();  
+    const { schedules, loading: scheduleLoading, error: schedulesError, fetchSchedules } = useGetSchedules();  
 
 useEffect(() => {
     fetchBranches();
