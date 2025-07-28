@@ -135,6 +135,12 @@ const SnackPurchase = () => {
             console.log('Snack ticket created successfully:', ticket);
             setCurrentStep(MENU_STEPS.TICKET_DISPLAY);
         } else if (ticketError) {
+            if (ticketError.includes('Not enough stock for snack')) {
+                alert('Your snack selection exceeds available stock. Please adjust your order.');
+                setCurrentStep(MENU_STEPS.SNACK)
+                setSnackTicketData({snackList:[]})
+                return
+            }
             console.error('Error creating snack ticket:', ticketError);
             alert('An error occurred while creating your snack ticket. Please try again.');
             setCurrentStep(MENU_STEPS.PAYMENT);

@@ -343,6 +343,12 @@ useEffect(() => {
             setCurrentStep(MENU_STEPS.TICKET_DISPLAY);
         } else if (ticketError) {
             console.error('Error creating ticket:', ticketError);
+            if (ticketError.includes('Not enough stock for snack')) {
+                alert('Your snack selection exceeds available stock. Please adjust your order.');
+                setCurrentStep(MENU_STEPS.SNACK)
+                setSnackTicketData({snackList:[]})
+                return
+            }
             alert('An error occurred while creating your ticket. Please try again.');
             setCurrentStep(MENU_STEPS.PAYMENT);
         }

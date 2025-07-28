@@ -204,7 +204,8 @@ export const useCreateTicket = () => {
       setTicket(response.data);
       return { success: true, data: response.data };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to create ticket';
+      console.error('Error creating ticket:', err);
+      const errorMessage = err.response?.data?.error || 'Failed to create ticket';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
