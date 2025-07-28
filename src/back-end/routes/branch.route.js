@@ -32,10 +32,10 @@ router.get('/:branchId', getBranchById);
 
 router.get('/:branchId/snacks', getSnackList);
 
-// Các thao tác quản lý snack của branch (bảo vệ, phân quyền admin)
-router.post('/:branchId/snacks', protect, restrictTo('administrator'), createSnack);
-router.patch('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), editSnack);
-router.delete('/:branchId/snacks/:snackId', protect, restrictTo('administrator'), deleteSnack);
+// Các thao tác quản lý snack của branch (bảo vệ, phân quyền branch manager)
+router.post('/:branchId/snacks', protect, restrictTo('branchmanager'), createSnack);
+router.patch('/:branchId/snacks/:snackId', protect, restrictTo('branchmanager'), editSnack);
+router.delete('/:branchId/snacks/:snackId', protect, restrictTo('branchmanager'), deleteSnack);
 
 // Các thao tác quản lý schedule của branch (bảo vệ, phân quyền branch manager)
 router.get('/:branchId/schedules', protect, restrictTo('branchmanager'), getMovieSchedules);
