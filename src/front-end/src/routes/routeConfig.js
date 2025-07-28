@@ -1,5 +1,6 @@
 import LandingPage from '@pages/LandingPage';
 import Registration from '@pages/Registration';
+import ActivateAccount from '@pages/ActivateAccount.jsx';
 import Login from '@pages/Login';
 import StaffLogin from '@pages/staff/Login';
 import StaffForgotPwd from '@pages/staff/ForgotPwd';
@@ -31,6 +32,7 @@ export const ROUTES = {
     // Public routes
     HOME: '/',
     REGISTER: '/register',
+    ACTIVATION: '/activate',
     LOGIN: '/login',
     RESET_PASSWORD: '/reset-password',
     RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
@@ -51,7 +53,7 @@ export const ROUTES = {
     STAFF_ROOT: '/staff',
     STAFF_LOGIN: '/staff/login',
     STAFF_RESET_PASSWORD: '/staff/reset-password',
-    STAFF_RESET_PASSWORD_CONFIRM: '/staff/reset-password/confirm',
+    STAFF_RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     STAFF_CHANGE_PASSWORD: '/staff/change-password',
     STAFF_CHECKIN: '/staff/checkin',
     STAFF_SCHEDULE: '/staff/schedule',
@@ -80,6 +82,12 @@ export const routeConfig = [
     {
         path: ROUTES.REGISTER,
         component: Registration,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.ACTIVATION,
+        component: ActivateAccount,
         type: 'public',
         requiresAuth: false
     },

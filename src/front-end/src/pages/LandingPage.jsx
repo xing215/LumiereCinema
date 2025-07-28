@@ -5,8 +5,9 @@ import NowShowing from '@layouts/LandingPage/NowShowingMovie.jsx';
 import Maps from '@layouts/LandingPage/Maps.jsx';
 import UpComing from '@layouts/LandingPage/UpcomingMovie.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
-import { useFetchBranches } from '@/hooks/useBranch';
+import { useFetchBranches } from '@hooks/useBranch';
 import { useEffect } from 'react';
+import ErrorModal from '@layouts/Error';
 
 const LandingPage = () => {
     const { fetchBranches, branches, loading, error } = useFetchBranches();

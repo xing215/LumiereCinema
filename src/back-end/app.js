@@ -4,6 +4,9 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
+// 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
+dotenv.config();
+
 // 1. Import các hàm kết nối từ file config
 const { connectDB } = require('./config/database.config.js'); 
 const { connectRedis } = require('./config/redis.config.js');
@@ -15,10 +18,9 @@ const reportRoutes = require('./routes/report.route.js');
 const branchRoutes = require('./routes/branch.route.js');
 const ticketsRoutes = require('./routes/tickets.route.js');
 const userRoutes = require('./routes/user.route.js');
+const chatbotRoutes = require('./routes/chatbot.route.js');
 const adminRoutes = require('./routes/admin.route.js');
-
-// 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
-dotenv.config();
+const qrRoutes = require('./routes/qr.route.js');
 
 // 3. Thực hiện kết nối tới các cơ sở dữ liệu
 connectDB();
@@ -37,7 +39,9 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/tickets', ticketsRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/qr', qrRoutes);
 
 // Route mặc định để kiểm tra server
 app.get('/', (req, res) => {

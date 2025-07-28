@@ -59,8 +59,42 @@ const register = async (req, res) => {
             expiresIn: '1d',
         });
 
+        // Activation token generation
+        const activationToken = crypto.randomBytes(32).toString('hex');
+        const activationExpires = Date.now() + 3600000; // 1 hour
+
+        newUser.activationToken = activationToken;
+        newUser.activationExpires = activationExpires;
+        await newUser.save();
+
+        const activationUrl = `${process.env.FRONTEND_URL}/activate?token=${activationToken}`;
+
+        // Email configuration
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const fs = require('fs');
+        const path = require('path');
+        const templatePath = path.join(__dirname, '../templates/activateAccount.html');
+        let emailHtml = fs.readFileSync(templatePath, 'utf8');
+        emailHtml = emailHtml.replace(/\{\{activateUrl\}\}/g, activationUrl);
+        emailHtml = emailHtml.replace(/\{\{fullname\}\}/g, newUser.name);
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Account Activation - Lumiere Cinema',
+            html: emailHtml
+        };
+
+        await transporter.sendMail(mailOptions);
+
         res.status(201).json({
-            message: 'Account registration successful!',
+            message: 'Please check your email to activate the account.',
             token: token,
             user: {
                 id: newUser._id,
@@ -71,6 +105,51 @@ const register = async (req, res) => {
 
     } catch (error) {
         console.error('Register Error:', error);
+        res.status(500).json({ message: 'A server error occurred.' });
+    }
+};
+
+/**
+ * @desc    Customer activate account
+ * @route   POST /api/auth/activate/:token
+ */
+const activateAccount = async (req, res) => {
+    try {
+        const { token } = req.params;
+        if (!token) {
+            return res.status(400).json({ message: 'Activation token is required.' });
+        }
+
+        const user = await User.findOne({ activationToken: token});
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired activation token.\nConsider re-creating your account.' });
+        }
+        else if (user.activateStatus) {
+            return res.status(200).json({ message: 'Your account is already activated.' });
+        }
+        else if (user.activationExpires < Date.now()) {
+            // Delete account if activation token is expired
+            try {
+                await User.deleteOne({ _id: user._id });
+            } catch (error) {
+                user.email = undefined; // Clear email to avoid revealing it
+                user.activationToken = undefined;
+                user.activationExpires = undefined;
+                user.isLocked = true; // Lock the account
+                await user.save();
+                console.error('Error deleting expired user account:', error);
+            }
+            return res.status(400).json({ message: 'Invalid or expired activation token.\nConsider re-creating your account.' });
+        }
+
+        user.activateStatus = true;
+        await user.save();
+
+        res.status(200).json({ message: 'Account activated successfully.' });
+
+    } catch (error) {
+        console.error('Activate Account Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
     }
 };
@@ -96,6 +175,28 @@ const login = async (req, res) => {
         // Check if user is a customer (only customers can login through /login)
         if (!user.roles.includes('customer')) {
             return res.status(401).json({ message: 'Email or password is incorrect.' });
+        }
+
+        if (user.isLocked) {
+            return res.status(403).json({ message: 'Your account is locked. Please contact support.' });
+        }
+
+        if (!user.activateStatus) {
+            if (user.activationExpires < Date.now()) {
+                // Delete account if activation token is expired
+                try {
+                    await User.deleteOne({ _id: user._id });
+                } catch (error) {
+                    user.email = undefined; // Clear email to avoid revealing it
+                    user.activationToken = undefined;
+                    user.activationExpires = undefined;
+                    user.isLocked = true; // Lock the account
+                    await user.save();
+                    console.error('Error deleting expired user account:', error);
+                }
+                return res.status(401).json({ message: 'Email or password is incorrect.' });
+            }
+            return res.status(403).json({ message: 'Your account is not activated. Please check your email for the activation link.' });
         }
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -258,7 +359,7 @@ const forgotPassword = async (req, res) => {
 
         // Email configuration
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // or your email service
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
@@ -333,7 +434,7 @@ const staffForgotPassword = async (req, res) => {
 
         // Email configuration
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // or your email service
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
@@ -420,6 +521,7 @@ const resetPassword = async (req, res) => {
 
 module.exports = {
     register,
+    activateAccount,
     login,
     staffLogin,
     logout,

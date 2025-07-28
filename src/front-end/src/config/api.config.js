@@ -63,6 +63,7 @@ const API_CONFIG = {
     // Auth endpoints
     login: '/api/auth/login',
     register: '/api/auth/register',
+    activateAccount: '/api/auth/activate',
     logout: '/api/auth/logout',
     changePassword: '/api/auth/change-password',
     forgotPassword: '/api/auth/forgot-password',
@@ -165,6 +166,13 @@ export const getApiUrlWithParams = (endpointName, params = {}) => {
   return url;
 };
 
+export const getActivationApiUrl = (token) => {
+  const baseURL = getApiUrl('activateAccount');
+  if (!token) {
+    return baseURL;
+  }
+  return `${baseURL}/${token}`;
+};
 /**
  * Helper function to build URLs for specific movie operations
  * @param {string} movieId - The movie ID
