@@ -1,60 +1,60 @@
 import { useState, useEffect } from 'react';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import SnackSelect from '@components/UI/SnackSelect';
+import { useGetSnacks } from '@hooks/useBranch';
 import Combo1 from '@assets/img/combo1.png';
+import { useUser } from '@contexts/UserContext';
 
-const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket }) => {
+const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket, mustBuy=false }) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
-    const [selectedSnacks, setSelectedSnacks] = useState(snackTicketData.snackList || []);
+    // Use snackTicketData.snack as the source of truth for selected snacks
+    const { getSnacks, snacks, loading, error } = useGetSnacks();
+    const { isAuthenticated } = useUser();
+    
+
+    useEffect(() => {
+        // Fetch snacks when component mounts
+        getSnacks(snackTicketData?.branch?._id);
+    }, []);
 
     // Handle snack selection
-    const handleSnackAdd = (snackId, quantity = 1) => {
-        const existingIndex = selectedSnacks.findIndex(item => item.snack === snackId);
+    const handleSnackAdd = (snackId, quantity = 1, snackName = '', cost) => {
+        const snacks = Array.isArray(snackTicketData?.snackList) ? [...snackTicketData.snackList] : [];
+        const existingIndex = snacks.findIndex(item => item.snack === snackId);
         let newSnackList;
-
         if (existingIndex >= 0) {
-            // Update existing snack quantity
-            newSnackList = [...selectedSnacks];
+            newSnackList = [...snacks];
             newSnackList[existingIndex].quantity += quantity;
         } else {
-            // Add new snack
-            newSnackList = [...selectedSnacks, { snack: snackId, quantity }];
+            newSnackList = [...snacks, { snack: snackId, quantity, snackName}];
         }
-
-        setSelectedSnacks(newSnackList);
+        const newSnackValue = (snackTicketData?.total || 0) + (cost * quantity);
+        updateSnackTicket({ total: newSnackValue });
         updateSnackTicket({ snackList: newSnackList });
-        calculateTotal(newSnackList);
     };
 
     // Handle snack removal
-    const handleSnackRemove = (snackId) => {
-        const newSnackList = selectedSnacks.filter(item => item.snack !== snackId);
-        setSelectedSnacks(newSnackList);
+    const handleSnackRemove = (snackId, cost) => {
+        const snacks = Array.isArray(snackTicketData?.snackList) ? [...snackTicketData.snackList] : [];
+        const existingIndex = snacks.findIndex(item => item.snack === snackId);
+        if (existingIndex === -1) return;   
+        let newSnackList = [...snacks];
+        if (newSnackList[existingIndex].quantity > 1) {
+            newSnackList[existingIndex].quantity -= 1;
+        } else {
+            newSnackList.splice(existingIndex, 1);
+        }
+        const newSnackValue = (snackTicketData?.total - cost) || 0;
+        updateSnackTicket({ total: newSnackValue });
         updateSnackTicket({ snackList: newSnackList });
-        calculateTotal(newSnackList);
-    };
-
-    // Calculate total price for snacks
-    const calculateTotal = (snackList = selectedSnacks) => {
-        // Mock pricing - replace with actual snack pricing
-        const snackPrices = {
-            'snack1': 50000,
-            'snack2': 75000,
-            'snack3': 120000,
-        };
-
-        const total = snackList.reduce((sum, item) => {
-            const price = snackPrices[item.snack] || 50000;
-            return sum + (price * item.quantity);
-        }, 0);
-
-        updateSnackTicket({ total });
-        return total;
     };
 
     const handleNext = () => {
-        calculateTotal();
+        if (mustBuy && (!snackTicketData?.snackList || snackTicketData.snackList.length === 0)) {
+            alert('Please select at least one snack before proceeding.');
+            return;
+        }
         onNext();
     };
 
@@ -80,60 +80,34 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
 
     return (
         <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
-            <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
+            <div className="relative flex h-full w-full flex-row min-h-[300px] justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
                 {/* Background layer */}
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 {/* Main content */}
                 <div className="relative flex flex-1 flex-col items-center justify-between">
                     <div className="inline-flex w-[90vw] h-auto flex-wrap items-start justify-start gap-5 pt-5 pl-2.5 md:pt-7 lg:w-[calc(70vw)]">
-                        <SnackSelect 
-                            snack_type="Combo 1 - 1 popcorn + 1 drink" 
-                            snackId="snack1"
-                            price={50000}
-                            onAdd={() => handleSnackAdd('snack1')}
-                            onRemove={() => handleSnackRemove('snack1')}
-                            quantity={selectedSnacks.find(s => s.snack === 'snack1')?.quantity || 0}
-                        />
-                        <SnackSelect 
-                            snack_type="Combo 2 - 2 popcorn + 2 drink" 
-                            snackId="snack2"
-                            price={75000}
-                            onAdd={() => handleSnackAdd('snack2')}
-                            onRemove={() => handleSnackRemove('snack2')}
-                            quantity={selectedSnacks.find(s => s.snack === 'snack2')?.quantity || 0}
-                        />
-                        <SnackSelect 
-                            snack_type="Premium Combo - Large popcorn + Large drink + Nachos" 
-                            snackId="snack3"
-                            price={120000}
-                            onAdd={() => handleSnackAdd('snack3')}
-                            onRemove={() => handleSnackRemove('snack3')}
-                            quantity={selectedSnacks.find(s => s.snack === 'snack3')?.quantity || 0}
-                        />
-                        <SnackSelect 
-                            snack_type="Hot Dog Combo" 
-                            snackId="snack4"
-                            price={85000}
-                            onAdd={() => handleSnackAdd('snack4')}
-                            onRemove={() => handleSnackRemove('snack4')}
-                            quantity={selectedSnacks.find(s => s.snack === 'snack4')?.quantity || 0}
-                        />
-                        <SnackSelect 
-                            snack_type="Candy Mix" 
-                            snackId="snack5"
-                            price={35000}
-                            onAdd={() => handleSnackAdd('snack5')}
-                            onRemove={() => handleSnackRemove('snack5')}
-                            quantity={selectedSnacks.find(s => s.snack === 'snack5')?.quantity || 0}
-                        />
-                        <SnackSelect 
-                            snack_type="Ice Cream" 
-                            snackId="snack6"
-                            price={25000}
-                            onAdd={() => handleSnackAdd('snack6')}
-                            onRemove={() => handleSnackRemove('snack6')}
-                            quantity={selectedSnacks.find(s => s.snack === 'snack6')?.quantity || 0}
-                        />
+                        {loading ? (
+                            <div className="text-white w-full text-center">• • •</div>
+                        ) : Array.isArray(snacks) && snacks.length > 0 ? (
+                            snacks.map(snack => (
+                                <SnackSelect
+                                    key={snack._id}
+                                    snack_type={snack.name}
+                                    description={snack.description}
+                                    price={snack.price}
+                                    onAdd={() => handleSnackAdd(snack._id, 1, snack.name, snack.price)}
+                                    onRemove={() => handleSnackRemove(snack._id, snack.price)}
+                                    quantity={
+                                        (Array.isArray(snackTicketData?.snackList)
+                                            ? snackTicketData.snackList.find(s => s.snack === (snack._id))?.quantity
+                                            : 0) || 0
+                                    }
+                                    img={snack.imageURL || Combo1}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-white w-auto m-auto font-['Unbounded']">No snacks available.</div>
+                        )}
                     </div>
                     <div className="h-3 md:h-5" />
                     {/* Desktop footer */}
@@ -141,14 +115,9 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
                         <div className="bottom-0 w-80 text-right font-['Unbounded'] text-[10px] font-semibold text-white">
                             {/* TODO: Replace with actual selected movie/schedule info if available */}
                             {/* You can pass these as props if needed */}
-                            {snackTicketData && snackTicketData.branch ? (
-                                <>
-                                    {/* Optionally display date/time if available */}
-                                    Cinema: {snackTicketData.branch?.name}
-                                </>
-                            ) : (
-                                <>Cinema: Not selected</>
-                            )}
+                            Snack: {Array.isArray(snackTicketData?.snackList)&& snackTicketData.snackList.length > 0
+        ? snackTicketData.snackList.map(c => `${c.quantity} ${c.snackName}`).join(', ')
+        : 'Select snacks for your watching experience'}
                         </div>
                         <BackNaviButton onClick={onBack} />
                         <NextNaviButton text="INFO" onClick={handleNext} />
@@ -163,15 +132,11 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket })
                 <BackNaviButton onClick={onBack} />
                 <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white py-2">
                     {/* TODO: Replace with actual selected movie/schedule info if available */}
-                    {snackTicketData && snackTicketData.branch ? (
-                        <>
-                            Cinema: {snackTicketData.branch?.name}
-                        </>
-                    ) : (
-                        <>Cinema: Not selected</>
-                    )}
+                           Snack: {Array.isArray(snackTicketData?.snackList)&& snackTicketData.snackList.length > 0
+        ? snackTicketData.snackList.map(c => `${c.quantity} ${c.snackName}`).join(', ')
+        : 'Select snacks for your watching experience'}
                 </div>
-                <NextNaviButton text="INFO" onClick={handleNext} />
+                <NextNaviButton text={isAuthenticated ? `PAYMENT` : `INFO`} onClick={handleNext} />
             </div>
         </div>
     );

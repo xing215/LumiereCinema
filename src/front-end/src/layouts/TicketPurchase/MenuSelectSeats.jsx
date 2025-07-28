@@ -4,24 +4,23 @@ import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
 import { useGetSeatsBySchedule } from '@/hooks/useTicket';
 // import SeatLayout from '@components/display/Seats';
-import mockPoster from '@assets/sample/ThamTuKien.jpg';
+// import mockPoster from '@assets/sample/ThamTuKien.jpg';
 import SeatLayout, {Seats, CoupleSeat} from '@/layouts/TicketPurchase/SeatLayout';
 
 const SeatName = ({ type, text, isCouple = false }) => (
     <div className="flex w-auto flex-row items-center justify-start gap-3">
         {isCouple ? (
-            <CoupleSeat seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-yellow-500'} />
+            <CoupleSeat seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-yellow-400'} canCursor={false} />
         ) : (
-            <Seats type={type} seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-blue-500'} />
+            <Seats  type={type} isSelected={type === 'Selected'} seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-blue-400'} canCursor={false} />
         )}
         <div className="relative justify-start text-center font-['Unbounded'] text-xs font-normal text-white">{text}</div>
     </div>
 );
 
-const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket }) => {
+const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket}) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
-    const [selectedSeats, setSelectedSeats] = useState(movieTicketData.seats || []);
     const { seats, loading: ScheduleLoading, error, fetchSeats } = useGetSeatsBySchedule();
 
     useEffect(() => {
@@ -31,52 +30,73 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket })
     }, [movieTicketData.schedule]);
 
     // Handle seat selection/deselection
+    // Accept seatName as string or array, flatten, and update seats
     const handleSeatToggle = (seatName) => {
-        let newSelectedSeats;
-        if (selectedSeats.includes(seatName)) {
-            // Remove seat if already selected
-            newSelectedSeats = selectedSeats.filter(seat => seat !== seatName);
-        } else {
-            // Add seat if not selected
-            newSelectedSeats = [...selectedSeats, seatName];
-        }
-        
-        setSelectedSeats(newSelectedSeats);
-        updateMovieTicket({ seats: newSelectedSeats });
-    };
-
-    // Calculate total price based on selected seats
-    const calculateTotal = () => {
-        // Mock pricing - replace with actual seat pricing logic
-        const seatPrices = {
-            'Normal': 100000,
-            'VIP': 150000,
-            'Couple': 180000
-        };
-        
-        let total = 0;
-        selectedSeats.forEach(seatName => {
-            // Extract seat type based on seat name - this is simplified
-            // In real implementation, you'd get seat type from seat data
-            const row = seatName.charAt(0);
-            let seatType = 'Normal';
-            if (['E', 'F'].includes(row)) seatType = 'VIP';
-            if (seatName.includes('2') || seatName.includes('3')) seatType = 'Couple';
-            
-            total += seatPrices[seatType];
+        // Always treat seatName as array
+        const seatNames = Array.isArray(seatName) ? seatName : [seatName];
+        let newSelectedSeats = Array.isArray(movieTicketData?.seats) ? [...movieTicketData.seats] : [];
+        seatNames.forEach(name => {
+            if (newSelectedSeats.includes(name)) {
+                // If seat is already selected, unselect it
+                newSelectedSeats = newSelectedSeats.filter(seat => seat !== name);
+            } else {
+                // If seat is not selected, select it
+                newSelectedSeats.push(name);
+            }
         });
-        
-        updateMovieTicket({ total });
-        return total;
-    };
 
+        // Prevent leaving a single unselected seat ('gap') between two selected seats in the same row
+        // Only check if seats/seatsByRow is available
+        if (seats && seats.seatsByRow) {
+            // Build a map of selected seats by row
+            const selectedByRow = {};
+            newSelectedSeats.forEach(seat => {
+                const row = seat.charAt(0);
+                if (!selectedByRow[row]) selectedByRow[row] = [];
+                selectedByRow[row].push(seat);
+            });
+            // For each row, check for single-seat gaps (considering both selected and taken seats)
+            let hasGap = false;
+            Object.keys(seats.seatsByRow).forEach(rowKey => {
+                const rowSeats = seats.seatsByRow[rowKey];
+                const seatNumbers = rowSeats.map(s => s.seatNumber);
+                const selected = selectedByRow[rowKey] || [];
+                // Mark filled seats (selected or taken) in row
+                const filledFlags = rowSeats.map(s => selected.includes(s.seatNumber) || s.isTaken || (movieTicketData?.schedule?.OccupiedSeat?.includes(s.seatNumber)));
+                // Check for single unfilled seat between two filled seats
+                for (let i = 1; i < filledFlags.length - 1; i++) {
+                    if (!filledFlags[i] && filledFlags[i - 1] && filledFlags[i + 1]) {
+                        hasGap = true;
+                        break;
+                    }
+                }
+            });
+            if (hasGap) {
+                alert('You cannot leave a single seats between selections.');
+                return;
+            }
+        }
+
+        if (newSelectedSeats.length > (movieTicketData.adultTickets + movieTicketData.discountedTickets)) {
+            alert('Please add more tickets');
+        } else {
+            if (newSelectedSeats.length < movieTicketData.discountedTickets)
+                updateMovieTicket({total: newSelectedSeats.length * 45000});
+            else
+                updateMovieTicket({ total: movieTicketData.discountedTickets*45000 + (newSelectedSeats.length - movieTicketData.discountedTickets) * 80000 });
+            updateMovieTicket({ seats: newSelectedSeats });
+        }
+    };
     // Check if user can proceed
-    const canProceed = selectedSeats.length > 0;
+    const canProceed = movieTicketData?.seats.length > 0;
 
     const handleNext = () => {
         if (canProceed) {
-            calculateTotal();
-            onNext();
+            if ((movieTicketData.adultTickets + movieTicketData.discountedTickets) !== movieTicketData?.seats.length) {
+                alert('Please select the same number of seats as tickets.');
+            } else {
+                onNext();
+            }
         } else {
             alert('Please select at least one seat before proceeding.');
         }
@@ -112,53 +132,67 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket })
                     <BPoster Pics={movieTicketData?.schedule?.movie?.poster} />
                 </div>
                 {/* Main content */}
-                <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
+                <div className="relative flex min-w-[56vw] flex-1 flex-col items-center justify-between">
                     <div className="relative flex flex-col md:flex-row gap-5 items-center justify-between px-4 py-5 md:px-6 md:h-[407px]">
-                        <div className="relative flex shrink flex-row items-center justify-start md:w-[20vw] lg:w-[15vw] md:flex-col lg:justify-start lg:gap-1">
-                            <TicketSelect ticket_type="Adult" price={'80,000'}/>
-                            <div className="h-2 w-10 md:h-3" />
-                            <TicketSelect ticket_type="Student/ Elders" price={'45,000'}/>
-                            <div className="h-4 md:h-5" />
+                        <div className="relative flex shrink flex-row items-center justify-start md:w-[90%] md:flex-col lg:justify-start lg:gap-1">
+                        <TicketSelect
+                            ticket_type="Adult"
+                            price={'80,000'}
+                            amount={movieTicketData.adultTickets}
+                            onChange={fn => updateMovieTicket({ adultTickets: fn(movieTicketData.adultTickets) })}
+                        />
+                        <div className="h-2 w-10 md:h-3 lg:h-0" />
+                        <TicketSelect
+                            ticket_type="Student/ Elders"
+                            price={'45,000'}
+                            amount={movieTicketData.discountedTickets}
+                            onChange={fn => updateMovieTicket({ discountedTickets: fn(movieTicketData.discountedTickets) })}
+                            hover_message='Please show your ID at the ticket counter.'
+                        />
+                            <div className="h-4 md:h-2" />
 
-                            <div className="hidden h-auto w-full flex-row flex-wrap justify-start gap-3 md:flex">
+                            <div className="hidden h-auto w-full flex-row flex-wrap justify-start gap-2 md:flex">
                                 <SeatName type="Normal" text="Normal Seat" />
                                 <SeatName type="Taken" text="Taken Seat" />
                                 <SeatName type="Couple" text="Couple Seat" isCouple={true} />
+                                <SeatName type="Selected" text="Selected Seat" />
                             </div>
                         </div>
                         <div className="flex h-auto w-full flex-row flex-wrap justify-center gap-3 py-5 md:hidden">
                             <SeatName type="Normal" text="Normal Seat" />
                             <SeatName type="Taken" text="Taken Seat" />
                             <SeatName type="Couple" text="Couple Seat" isCouple={true} />
+                            <SeatName type="Selected" text="Selected Seat" />
+
                         </div>
                         {/* <div className="relative flex justify-center scale-100 md:scale-100 lg:scale-90 xl:scale-75 xl:m-7 md:m-8 w-[50vw] md:w-[30vw] lg:h-auto"> */}
                         <div className="relative flex justify-center w-[80vw] md:w-[37vw] h-full">
-                            <SeatLayout schedule={movieTicketData?.schedule} seatMap={seats.seatsByRow} screenMap={seats.screen} loading={ScheduleLoading}/>
+                            <SeatLayout schedule={movieTicketData?.schedule} seatMap={seats.seatsByRow} screenMap={seats.screen} loading={ScheduleLoading} selectedSeats={movieTicketData?.seats} onClick={handleSeatToggle}/>
 
                         </div>
                         
                     </div>
                                     <div className="hidden h-auto w-full flex-row items-center justify-end gap-2 px-4 pb-6 sm:px-8 md:flex md:px-10 lg:px-12">
                     <div className="w-80 justify-start text-right font-['Unbounded'] text-[10px] font-semibold text-white">
-                        Monday, 23th May, 2025, 07:00
+                        {movieTicketData.adultTickets > 0 && <>{movieTicketData.adultTickets} Adult Ticket(s)</>}{movieTicketData.adultTickets > 0 && movieTicketData.discountedTickets > 0 && <>, </>}{movieTicketData.discountedTickets > 0 && <>{movieTicketData.discountedTickets} Student/Elder Ticket(s)</>}
                         <br />
-                        Cinema: 123 NVC St, D3, HCM
+                        Seats: {movieTicketData?.seats && movieTicketData.seats.length > 0 ? movieTicketData.seats.join(', ') : 'None selected'}
                     </div>
                     <BackNaviButton onClick={onBack} />
-                    <NextNaviButton text="SEATINGS" onClick={onNext} />
+                    <NextNaviButton text="SEATINGS" onClick={handleNext} />
                 </div>
 
             <div className={`fixed right-0 bottom-0 left-0 z-50 flex h-auto flex-row items-center justify-end gap-2 border-t border-white/10 bg-slate-900/90 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out md:hidden ${isBottomBarVisible ? 'translate-y-0' : 'translate-y-full'}`} style={{ bottom: 'max(0px, env(safe-area-inset-bottom))' }}>
                 <BackNaviButton onClick={onBack} />
                 <div className="relative flex-1 text-center font-['Unbounded'] text-[9px] font-semibold text-white py-2">
-                    Movie: Tham Tu Kien
+                    Movie: {movieTicketData?.schedule?.movie?.name || 'Movie Name'}
                     <br />
-                    Monday, 23th May, 2025, 07:00
+                    {movieTicketData.adultTickets > 0 && <>{movieTicketData.adultTickets} Adult Ticket(s)</>}{movieTicketData.adultTickets > 0 && movieTicketData.discountedTickets > 0 && <>, </>}{movieTicketData.discountedTickets > 0 && <>{movieTicketData.discountedTickets} Student/Elder Ticket(s)</>}
                     <br />
-                    Cinema: 123 NVC St, D3, HCM
+                    Seats: {movieTicketData?.seats && movieTicketData.seats.length > 0 ? movieTicketData.seats.join(', ') : 'None selected'}
                 </div>
 
-                <NextNaviButton text="INFO" onClick={onNext} />
+                <NextNaviButton text="INFO" onClick={handleNext} />
             </div>
                 </div>
 

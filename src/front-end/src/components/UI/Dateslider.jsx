@@ -238,7 +238,7 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
                 </div>
             </div>
             
-            <div className="hidden flex-row items-center justify-center gap-3 pt-3 md:flex md:gap-2 md:pt-2 transition-all duration-300">
+            <div className="flex-row items-center justify-center gap-3 pt-3 flex md:gap-2 md:pt-2 transition-all duration-300">
                 <div className="h-[3px] w-3 bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 <div className="justify-start text-center font-['Unbounded'] text-[10px] font-semibold text-white sm:text-[12px]">
                     {uniqueDates.length > 0 ? viewingDate ? new Date(uniqueDates.find(d => d.date === viewingDate)?.date + 'T00:00:00.000Z')?.toLocaleDateString('en-US', {

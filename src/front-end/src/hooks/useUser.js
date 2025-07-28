@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
+import { getApiUrl } from '@/config/api.config';
 
 /**
  * User logic hooks for managing user profile data and user-specific interactions
@@ -17,7 +18,7 @@ export const useFetchProfile = () => {
     setError(null);
     
     try {
-      const response = await axios.get('/api/user/profile', {
+      const response = await axios.get(getApiUrl('userProfile'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfile(response.data);
@@ -37,17 +38,17 @@ export const useFetchProfile = () => {
 export const useUpdateProfile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { token, updateUser } = useUser();
+  const { token } = useUser();
+
 
   const updateProfile = async (profileData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await axios.put('/api/user/profile', profileData, {
+      const response = await axios.patch(getApiUrl('userProfile'), profileData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      updateUser(response.data);
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update profile';

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
+const { protect, restrictTo, getUser } = require('../middlewares/auth.middleware.js');
 
 const { 
   getSchedulesByBranch, 
@@ -59,7 +59,7 @@ router.post('/create', createTicket);
  * Giữ ghế tạm thời
  * Body: { scheduleId, seatNumbers[], userId?, sessionId?, holdDurationMinutes?, replaceExisting? }
  */
-router.post('/movie/hold', holdSeats);
+router.post('/movie/hold', getUser, holdSeats);
 
 /**
  * PATCH /movie/hold/:holdId

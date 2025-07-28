@@ -10,10 +10,11 @@ import MenuInfo from '@layouts/TicketPurchase/MenuInfo.jsx';
 import MenuPayment from '@layouts/TicketPurchase/MenuPayment.jsx';
 import MenuTicketDisplay from '@layouts/TicketPurchase/MenuTicketDisplay.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
-import { useGetBranchById } from '@/hooks/useBranch';
+import { useGetBranchById } from '@hooks/useBranch';
 // Add movie hook import (assuming it exists)
-import { useGetMovieById } from '@/hooks/useMovie';
-import SeatLayout from '@/layouts/TicketPurchase/SeatLayout';
+import { useGetMovieById } from '@hooks/useMovie';
+import { useUser } from '@contexts/UserContext';
+import { useStartHoldSession } from '@hooks/useTicket';
 
 const MENU_STEPS = {
     SCREEN: 0,
@@ -67,14 +68,14 @@ const TicketPurchase = () => {
             startTime: null,
             endTime: null,
             OccupiedSeat: [
-                { row: 'A', no: 1 },
-                { row: 'A', no: 2 }
             ],
         },
         seats: [],
         promotion: null,
         seller: null,
-        total: 0
+        total: 0,
+        adultTickets: 0,
+        discountedTickets: 0
     });
 
     const [snackTicketData, setSnackTicketData] = useState({
@@ -101,22 +102,17 @@ const TicketPurchase = () => {
     // Fetch movie and branch data when component mounts
     useEffect(() => {
         if (movieId && movieId !== 'null') {
-            console.log('Fetching movie with ID:', movieId);
             getMovieById(movieId);
         }
         
         if (branchId && branchId !== 'null') {
-            console.log('Fetching branch with ID:', branchId);
             getBranchById(branchId);
-            console.log('Branch data:', branch);
-            console.log('error:', branchError);
         }
     }, [movieId, branchId]);
 
     // Update movieTicketData when movie is fetched
     useEffect(() => {
         if (movie && movie._id) {
-            console.log('Movie fetched:', movie);
             updateMovieTicket({
                 schedule: {
                     ...movieTicketData.schedule,
@@ -133,7 +129,6 @@ const TicketPurchase = () => {
     // Update both ticket data when branch is fetched
     useEffect(() => {
         if (branch && branch._id) {
-            console.log('Branch fetched:', branch);
             const branchData = {
                 _id: branch._id,
                 name: branch.name,
@@ -152,7 +147,6 @@ const TicketPurchase = () => {
     const navigate = useNavigate();
     
     const updateMovieTicket = (updates) => {
-        console.log('Updating movie ticket data with:', updates);
         setMovieTicketData(prev => ({ ...prev, ...updates }));
     };
 
@@ -175,6 +169,8 @@ const TicketPurchase = () => {
                     endTime: null,
                     OccupiedSeat: [],
                 },
+                adultTickets: 0,
+                discountedTickets: 0,
                 seats: [],
                 promotion: null,
                 seller: null,
@@ -200,13 +196,43 @@ const TicketPurchase = () => {
     const updateSnackTicket = (updates) => {
         setSnackTicketData(prev => ({ ...prev, ...updates }));
     };
+    const { isAuthenticated } = useUser();
 
     // Navigation methods
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.SCREEN);
+    const { startHoldSession, res, loading, error } = useStartHoldSession();
+    const [startedHoldSession, setStartedHoldSession] = useState(false);
+
+useEffect(() => {
+    async function holdSessionIfNeeded() {
+        if (currentStep === MENU_STEPS.PAYMENT ){
+            await startHoldSession({ scheduleId: movieTicketData.schedule._id, seatNumbers: movieTicketData.seats});
+            if (error) {
+                if (!isAuthenticated) {
+                    setCurrentStep(MENU_STEPS.INFO);
+                } else if (isAuthenticated) {
+                    setCurrentStep(MENU_STEPS.SNACK);
+                }
+
+                console.error('Error starting hold session:', error);
+                alert('An error occurred while holding your session. Please try again.');
+
+            }
+        }
+    }
+ holdSessionIfNeeded();
+}, [currentStep]);
 
     const goToNextStep = () => {
         if (currentStep < MENU_STEPS.TICKET_DISPLAY) {
-            setCurrentStep(currentStep + 1);
+            if(currentStep === MENU_STEPS.SNACK && !isAuthenticated) {
+                setCurrentStep(MENU_STEPS.INFO);
+                return;
+            } else if (currentStep === MENU_STEPS.SNACK && isAuthenticated) {
+                setCurrentStep(MENU_STEPS.PAYMENT);
+                return;
+            }
+                setCurrentStep(currentStep + 1);
         }
     };
 
@@ -216,9 +242,26 @@ const TicketPurchase = () => {
              return; 
         }
         if (currentStep > MENU_STEPS.SCREEN) {
+            if (currentStep === MENU_STEPS.PAYMENT && !isAuthenticated) {
+                setCurrentStep(MENU_STEPS.INFO);
+                return;
+            } else if (currentStep === MENU_STEPS.PAYMENT && isAuthenticated) {
+                setCurrentStep(MENU_STEPS.SNACK);
+                return
+            }
             setCurrentStep(currentStep - 1);
         }
     };
+
+    useEffect(() => {
+        if (!isAuthenticated && currentStep > MENU_STEPS.INFO && (!movieTicketData.noLoginCustomerInfo.name || !movieTicketData.noLoginCustomerInfo.phone || !movieTicketData.noLoginCustomerInfo.email)) {
+            setCurrentStep(MENU_STEPS.INFO);
+            alert('Please fill in your information before proceeding.');
+            return;
+        }
+    }, [isAuthenticated]);
+
+        
 
     const handlePaymentComplete = () => {
         // Handle payment completion logic

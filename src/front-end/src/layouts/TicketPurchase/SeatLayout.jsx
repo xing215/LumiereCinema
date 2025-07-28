@@ -1,7 +1,7 @@
 import screen from '@assets/img/Screen.svg';
 import { useEffect, useRef, useState } from 'react';
 
-export const Seats = ({ key, seatColor, isTaken, isSelected, onClick, seatCol, seatRow }) => {
+export const Seats = ({ key, seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -9,15 +9,15 @@ export const Seats = ({ key, seatColor, isTaken, isSelected, onClick, seatCol, s
     };
 
     return (
-        <div className={`w-[${(seatCol > seatRow ? 100/seatCol : 100/seatRow)}%] min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken ? 'pointer-events-none' : 'cursor-pointer'}`}
+        <div className={`w-[${(seatCol > seatRow ? 100/seatCol : 100/seatRow)}%] min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
         onClick={handleClick}>
-            <div className={`h-full md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : seatColor} rounded-sm`}/>
-            <div className={`h-[20%] w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : seatColor} rounded-sm`}/>
+            <div className={`h-full z-1 md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}/>
+            <div className={`h-[20%] z-1 w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}/>
         </div>
     );
 }
 
-export const CoupleSeat = ({ seatSize, seatColor, isSelected, onClick, seatRow, seatCol, isTaken }) => {
+export const CoupleSeat = ({ seatSize, seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor=true }) => {
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -25,13 +25,11 @@ export const CoupleSeat = ({ seatSize, seatColor, isSelected, onClick, seatRow, 
     }; 
 
     return (
-        <div className={`w-[${(seatCol > seatRow ? 100/seatCol : 100/seatRow)*2}%] min-w-[68px] group relative flex flex-row gap-2 ${isTaken ? 'pointer-events-none' : 'cursor-pointer'}`}
+        <div className={`w-[${(seatCol > seatRow ? 100/seatCol : 100/seatRow)*2}%] min-w-[68px] group relative flex flex-row gap-2 ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
         onClick={handleClick}>
-            <Seats seatSize={seatSize} seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken}
-            onClick={handleClick} />
-            <Seats seatSize={seatSize} seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken}
-            onClick={handleClick} />
-            <div className={`absolute inset-0 flex r-[50%] w-5 h-[55%] top-1 mx-auto items-center transition-colors justify-center ${isTaken ? 'bg-gray-400' : seatColor}`}/>
+            <Seats seatSize={seatSize} seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor}/>
+            <Seats seatSize={seatSize} seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
+            <div className={`absolute inset-0 flex z-0 r-[50%] md:h-[55%] w-5 h-[75%] top-1 mx-auto items-center transition-colors justify-center ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`}/>
         </div>
     );
 }
@@ -167,7 +165,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
     );
 };
 
-const SeatLayout = ({ schedule, screenMap, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading }) => {
+const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading }) => {
     const containerRef = useRef();
     const contentRef = useRef();
     const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -322,6 +320,8 @@ const SeatLayout = ({ schedule, screenMap, seatMap = {}, onClick = () => { conso
         }
     }, [isDragging, dragStart, transform]);
 
+    
+
     return (
         <div className="relative flex flex-col items-center w-full h-full">
             <img 
@@ -381,9 +381,9 @@ const SeatLayout = ({ schedule, screenMap, seatMap = {}, onClick = () => { conso
                                                     <CoupleSeat
                                                         key={current.seatNumber + '-' + next.seatNumber}
                                                         seatColor="bg-yellow-400 group-hover:bg-yellow-500"
-                                                        isTaken={schedule?.OccupiedSeat?.includes(current.seatNumber)}
-                                                        isSelected={current.isSelected || next.isSelected}
-                                                        onClick={() => onClick?.([current, next], rowIndex, i)}
+                                                        isTaken={(current.status === 'occupied' || current.status === 'holding')}
+                                                        isSelected={selectedSeats.includes(current.seatNumber) || selectedSeats.includes(next.seatNumber)}
+                                                        onClick={() => onClick?.([current.seatNumber, next.seatNumber])}
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
                                                     />
@@ -394,9 +394,9 @@ const SeatLayout = ({ schedule, screenMap, seatMap = {}, onClick = () => { conso
                                                     <Seats
                                                         key={current.seatNumber}
                                                         seatColor={current.category === 'VIP' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
-                                                        isTaken={schedule?.OccupiedSeat?.includes(current.seatNumber)}
-                                                        isSelected={current.isSelected}
-                                                        onClick={() => onClick?.(current, rowIndex, i)}
+                                                        isTaken={(current.status === 'occupied' || current.status === 'holding')}
+                                                        isSelected={selectedSeats.includes(current.seatNumber)}
+                                                        onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
                                                     />

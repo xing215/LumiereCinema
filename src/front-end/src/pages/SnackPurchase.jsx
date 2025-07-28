@@ -10,6 +10,7 @@ import MenuTicketDisplay from '@layouts/TicketPurchase/MenuTicketDisplay.jsx';
 import MenuSelectCinema from '@/layouts/TicketPurchase/MenuSelectCinema';
 import Footer from '@layouts/LandingPage/Footer.jsx';
 import { useGetBranchById } from '@/hooks/useBranch';
+import { useUser } from '@contexts/UserContext';
 
 const MENU_STEPS = {
     CINEMA:0,
@@ -85,15 +86,32 @@ const SnackPurchase = () => {
     };
 
     // Navigation methods
+    const { isAuthenticated } = useUser();
+    
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.CINEMA);
 
     const goToNextStep = () => {
+            if(currentStep === MENU_STEPS.SNACK && !isAuthenticated) {
+                setCurrentStep(MENU_STEPS.INFO);
+                return;
+            } else if (currentStep === MENU_STEPS.SNACK && isAuthenticated) {
+                setCurrentStep(MENU_STEPS.PAYMENT);
+                return;
+            }
+
         if (currentStep < MENU_STEPS.TICKET_DISPLAY) {
             setCurrentStep(currentStep + 1);
         }
     };
 
     const goToPreviousStep = () => {
+                if (currentStep === MENU_STEPS.PAYMENT && !isAuthenticated) {
+                setCurrentStep(MENU_STEPS.INFO);
+                return;
+            } else if (currentStep === MENU_STEPS.PAYMENT && isAuthenticated) {
+                setCurrentStep(MENU_STEPS.SNACK);
+                return;
+            }
         if (currentStep === MENU_STEPS.CINEMA) {
             navigate(-1);
             return;
@@ -126,6 +144,7 @@ const SnackPurchase = () => {
                         onBack={goToPreviousStep}
                         snackTicketData={snackTicketData}
                         updateSnackTicket={updateSnackTicket}
+                        mustBuy={true} // Ensure at least one snack is selected
                     />
                 );
             case MENU_STEPS.INFO:

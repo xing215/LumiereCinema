@@ -36,6 +36,7 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
 
     const handleNext = () => {
         if (canProceed) {
+            
             onNext();
         } else {
             alert('Please fill in all required customer information.');

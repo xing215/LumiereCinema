@@ -67,6 +67,7 @@ const API_CONFIG = {
     changePassword: '/api/auth/change-password',
     forgotPassword: '/api/auth/forgot-password',
     resetPassword: '/api/auth/reset-password',
+    userProfile: '/api/users/me',
     
     // Staff auth endpoints
     staffLogin: '/api/auth/staff/login',
@@ -104,6 +105,7 @@ const API_CONFIG = {
     getTicketByCode: '/api/tickets/snacks/admin', // + /:ticketCode
     updateTicket: '/api/tickets/snacks/admin', // PATCH + /:ticketCode
     deleteTicket: '/api/tickets/snacks/admin', // DELETE + /:ticketCode
+    holdSeat: '/api/tickets/movie/hold',
   }
 };
 
