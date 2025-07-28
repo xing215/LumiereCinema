@@ -26,8 +26,7 @@ const Header = () => {
 
     const handleAccountClick = () => {
         if (isAuthenticated) {
-            // Temporarily navigate to '#' as requested
-            navigate(ROUTES.DEVELOPING);
+            navigate(ROUTES.PROFILE);
         } else {
             navigate(ROUTES.LOGIN);
         }

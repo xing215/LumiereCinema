@@ -12,8 +12,8 @@ const getProfile = async (req, res) => {
       return res.status(200).json(JSON.parse(cachedUser));
     }
 
-      const userId = req.user.email;
-      const user = await User.findById(userId).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked'); // Exclude password
+      const userId = req.user.id;
+      const user = await User.findById(userId).select('-hashedPassword -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude password
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -29,37 +29,45 @@ const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const updateData = req.body;
-    const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude sensitive fields
-    if (!user) {S
+
+    // Validate allowed fields first
+    const allowedFields = ['name', 'phone', 'birthday', 'gender'];
+    
+    for (const field in updateData) {
+      if (!allowedFields.includes(field)) {
+        return res.status(400).json({ message: `Field ${field} cannot be updated.` });
+      }
+    }
+
+    // Check phone uniqueness if phone is being updated
+    if (updateData.phone) {
+      const phoneExists = await User.findOne({ 
+        phone: updateData.phone,
+        _id: { $ne: userId } // Exclude current user from the check
+      });
+      if (phoneExists) {
+        return res.status(400).json({ message: 'Phone number already in use.' });
+      }
+    }
+
+    // Find and update user
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { 
+        new: true,
+        runValidators: true,
+        select: '-hashedPassword -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'
+      }
+    );
+
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Clear cache after successful update
     await redisClient.del(`userList`);
-    await redisClient.del(`user:${userId}`); // Clear cache for updated user profile
-
-          const allowedFields = ['email', 'name', 'phone', 'birthday', 'gender'];
-
-          if(updateData.email) {
-            const emailExists = await User.findOne({ email: updateData.email });
-            if (emailExists) {
-              return res.status(400).json({ message: 'Email already in use.' });
-            }
-          }
-
-          if(updateData.phone) {
-            const phoneExists = await User.findOne({ phone: updateData.phone });
-            if (phoneExists) {
-              return res.status(400).json({ message: 'Phone number already in use.' });
-            }
-          }
-    
-          for (const field in updateData) {
-            if (!allowedFields.includes(field)) {
-              return res.status(400).json({ message: `Field ${field} cannot be updated.` });
-            }
-            user[field] = updateData[field];
-          }
-
-    await user.save();
+    await redisClient.del(`user:${userId}`);
 
     res.status(200).json({
       message: 'Profile updated successfully.',

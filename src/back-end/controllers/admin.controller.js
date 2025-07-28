@@ -12,7 +12,7 @@ const getAllProfiles = async (req, res) => {
     if (userList) {
       return res.status(200).json(JSON.parse(userList));
     }
-    const users = await User.find().select('-password -wishlist -watchHistory -branch -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const users = await User.find().select('-hashedPassword -wishlist -watchHistory -branch -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!users || users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
     }
@@ -86,7 +86,7 @@ const updateUserRoles = async (req, res) => {
   try {
     const allowedFields = ['roles'];
     const validRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
-    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -hashedPassword -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -119,7 +119,7 @@ const updateUserRoles = async (req, res) => {
 const updateUserStatus = async (req, res) => {
   try {
     const allowedFields = ['isLocked'];
-    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -hashedPassword -wishlist -watchHistory -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

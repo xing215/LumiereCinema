@@ -42,7 +42,7 @@ const getCenter = (cinemas) => {
 const IntegratedMap = ({
     onClick = () => {},
     selectedCinema = null,
-    isOpen = false,
+    isOpen = true,
     cinemas = [],
 }) => {
     const [maxdistance, setMaxDistance] = useState("");
@@ -183,12 +183,11 @@ const IntegratedMap = ({
     }, [filteredCinemas, isOpen]);
 
     // Handle user location functionality (geolocation + marker)
-    useEffect(() => {
-        if (!leafletMapRef.current || !isOpen) return;
+
+    const GetLocation = () => {
+                if (!leafletMapRef.current || !isOpen) return;
         
         const map = leafletMapRef.current;
-        
-        const handleMapClick = () => {
             if (navigator.geolocation && filteredCinemas.length > 0) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -242,9 +241,15 @@ const IntegratedMap = ({
             }
         };
 
-        map.on("click", handleMapClick);
+    useEffect(() => {
+        if (!leafletMapRef.current || !isOpen) return;
+        
+        const map = leafletMapRef.current;
+
+
+        map.on("click", () => GetLocation(map));
         return () => {
-            map.off("click", handleMapClick);
+            map.off("click", () => GetLocation(map));
         };
     }, [isOpen, filteredCinemas, userLocationMarker]);
 
@@ -349,7 +354,7 @@ const IntegratedMap = ({
 
     return (
         <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
-            <div className="ml-2 mt-[1%] relative z-10 w-[95%] md:w-[18vw] h-[30%] md:h-[95%]">
+            <div className=" mt-[1%] ml-0 md:ml-3 relative z-10 w-[95%] md:w-[25%] h-[30%] md:h-[98%] pt-2">
                 <LocationTable
                     cinemas={filteredCinemas}
                     curlocation={userLocation}
@@ -358,6 +363,8 @@ const IntegratedMap = ({
                     onClick={onClick}
                     selectedlocation={selectedCinema}
                     onHover={setHoveredCinema}
+                    getLocation={GetLocation}
+
                 />
             </div>
             <div

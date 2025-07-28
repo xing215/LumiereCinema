@@ -22,6 +22,7 @@ import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
 import AboutUs from '@/pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
+import UserProfile from '@pages/UserProfile.jsx';
 
 import Developing from '@/pages/others/Developing.jsx';
 import NotFound from '@/pages/others/NotFound.jsx';
@@ -43,7 +44,7 @@ export const ROUTES = {
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
-    PROFILE: '/developing',
+    PROFILE: '/user-profile',
     WISHLIST: '/developing',
     WATCH_HISTORY: '/developing',
     LUNAR_POINT: '/developing',
@@ -147,7 +148,14 @@ export const routeConfig = [
         requiresAuth: true,
         allowedRoles: ['customer'] // Only customers can access this
     },
-    
+    {
+        path: ROUTES.PROFILE,
+        component: UserProfile,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
     // Staff public routes - accessible to all staff without authentication
     {
         path: ROUTES.STAFF_LOGIN,

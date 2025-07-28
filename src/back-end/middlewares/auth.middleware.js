@@ -35,6 +35,28 @@ const protect = async (req, res, next) => {
     }
 };
 
+// Không cần protected cx có thể lấy được user.id nếu có
+const getUser = async (req, res, next) => {
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        try {
+            token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = await User.findById(decoded.id).select('-hashedPassword');
+            next();
+        } catch (error) {
+            req.user = { id: null }; // If token is invalid, set user to null
+            next();
+        }
+    }
+
+    if (!token) {
+        req.user = { id: null }; // If no token, set user to null
+        next();
+    }
+};
+
 /**
  * Middleware to check user roles
  * @param {...string} roles - Roles allowed to access
@@ -59,4 +81,4 @@ const restrictTo = (...roles) => {
     };
 };
 
-module.exports = { protect, restrictTo };
+module.exports = { protect, restrictTo, getUser };

@@ -277,7 +277,7 @@ export const useGetSnacks = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getBranchSnackApiUrl(branchId), {
+      const response = await axios.get(buildApiUrl(`/api/branches/${branchId}/snacks`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSnacks(response.data);

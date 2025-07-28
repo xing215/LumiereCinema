@@ -13,9 +13,10 @@ import { useGetSchedulesByBranch } from '@hooks/useTicket';
 const TimeButton = ({ time, seats, schedule, isSelected, onSelect}) => {
     return (
         <button 
-            className={`group relative flex w-[38vw] flex-col items-center justify-center -space-y-1 rounded-xl md:w-[calc(100vw*0.12)] lg:w-[calc(100vw*0.10)] ${isSelected ? 'outline-2 outline-white' : ''}`}
+            className={`group ${seats <= 0 ? 'cursor-not-allowed opacity-50' : ''} relative flex w-[38vw] flex-col items-center justify-center -space-y-1 rounded-xl md:w-[calc(100vw*0.12)] lg:w-[calc(100vw*0.10)] ${isSelected ? 'outline-2 outline-white' : ''}`}
             onClick={() => onSelect(schedule)}
             style={{ cursor: 'pointer' }}
+            disabled={seats <= 0}
         >
             <div className={`absolute top-0 left-0 h-full w-full rounded-xl mix-blend-color-dodge group-hover:bg-zinc-300/70 lg:[transform:translate3d(0,0,0)] ${isSelected ? 'bg-zinc-300/80' : 'bg-zinc-300/60'}`} />
             <div className="pt-2 font-['Unbounded'] text-[18px] font-bold text-white md:pt-1 md:text-[15px] lg:text-[17px]">{time}</div>
@@ -142,23 +143,21 @@ useEffect(() => {
 
 
     const handleBranchSelect = (branch) => {
-        console.log('Current movie ticket data:', movieTicketData);
         updateMovieTicket({ branch: branch});
     };
 
 const handleScheduleSelect = (schedule) => {
-    console.log('Current movie ticket data:', movieTicketData);
     updateMovieTicket({
         ...movieTicketData,
         schedule: {
             ...schedule,
             movie: movieTicketData.schedule.movie // preserve the movie inside schedule
-        }
+        },
+        seats: [], // reset seats when schedule changes
     });
 };
 
     const handleDateSelect = (date) => {
-        console.log('Current movie ticket data:', movieTicketData);
         setViewingDate(date);
   };
 

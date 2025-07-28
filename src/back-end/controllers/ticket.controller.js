@@ -386,8 +386,29 @@ const holdSeats = async (req, res) => {
   const session = await mongoose.startSession();
   
   try {
-    const { scheduleId, seatNumbers, userId, sessionId, holdDurationMinutes, replaceExisting = false } = req.body;
+    const { scheduleId, seatNumbers, holdDurationMinutes, replaceExisting = false } = req.body;
 
+    let sessionId = req.body.sessionId || null; // Use sessionId from request body if provided
+    console.log('Hold request body:', req.user.id);
+   const userId = req.user && req.user.id ? req.user.id : null;
+
+    if (userId) {
+      sessionId = null; // Clear sessionId if userId is provided
+    }
+
+       if (!userId && !sessionId) {
+        return res.status(400).json({
+          error: 'Either userId or sessionId is required'
+        });
+      }
+    
+    console.log('Hold request:', {
+      scheduleId,
+      seatNumbers,
+      sessionId,
+      holdDurationMinutes,
+      replaceExisting
+    });
     // Enhanced validation
     if (!scheduleId || !seatNumbers || !Array.isArray(seatNumbers) || seatNumbers.length === 0) {
       return res.status(400).json({
@@ -395,9 +416,9 @@ const holdSeats = async (req, res) => {
       });
     }
 
-    if (seatNumbers.length > 10) { // Prevent abuse
+    if (seatNumbers.length > 20) { // Prevent abuse
       return res.status(400).json({
-        error: 'Maximum 10 seats can be held at once'
+        error: 'Maximum 20 seats can be held at once'
       });
     }
 

@@ -42,7 +42,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
             className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000000000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
             onClick={handleBackdropClick}
         >
-            <div className="relative w-auto h-auto bg-white rounded-xl shadow-xl flex flex-col items-center justify-center">
+            <div className="relative w-auto h-autorounded-xl shadow-xl flex flex-col items-center justify-center">
                 {/* Close button */}
                 <button
                     onClick={e => {
@@ -54,7 +54,7 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
                     ×
                 </button>
                 {/* Cinema Map */}
-                <div className="w-auto h-auto flex items-center justify-center overflow-hidden">
+                <div className="w-auto h-auto">
                     <IntegratedMap onClick={handleBranchSelect} selectedCinema={selectedCinema} isOpen={isOpen} cinemas = {cinemas} />
                 </div>
             </div>

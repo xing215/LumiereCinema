@@ -15,8 +15,9 @@ const {
 const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
 
 // // Profile
-// router.get('/me', getProfile);
-// router.put('/me', updateProfile);
+router.get('/me', protect, restrictTo('customer'), getProfile);
+router.patch('/me', protect, restrictTo('customer'), updateProfile);
+router.put('/me', protect, restrictTo('customer'), updateProfile);
 
 // // Movie rating
 // router.post('/rate', rateMovie);

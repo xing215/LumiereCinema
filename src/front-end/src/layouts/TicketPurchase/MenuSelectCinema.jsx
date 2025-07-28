@@ -48,10 +48,11 @@ const MenuSelectCinema = ({ snackTicketData, updateSnackTicket, onBack, onNext }
                         selectedCinema={snackTicketData.branch}
                     />
 
-                    <div className="hidden absolute bottom-0 h-auto w-auto flex-row items-center justify-end gap-2 px-4 pb-6 sm:px-8 md:flex md:px-10 lg:px-12">
+                    <div className="absolute bottom-0 h-auto w-auto flex-row items-center justify-end gap-2 px-4 pb-6 sm:px-8 flex md:px-10 lg:px-12">
                         <BackNaviButton onClick={onBack} />
                         <NextNaviButton text="SNACKS" onClick={handleNextClick} />
                     </div>
+                    <div className="md:hidden h-10"/>
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { getApiUrl, buildApiUrl } from '@config/api.config';
 import { useUser } from '@contexts/UserContext';
+import  { v4 as uuidv4 } from 'uuid';
 
 /**
  * Ticket logic hooks for managing ticket booking, seat selection, and related operations
@@ -101,108 +102,6 @@ export const useFetchAvailableSeats = () => {
   return { fetchAvailableSeats, availableSeats, loading, error };
 };
 
-export const useSelectSeat = () => {
-  const [selectedSeats, setSelectedSeats] = useState([]);
-
-  const selectSeat = (seat) => {
-    setSelectedSeats(prev => {
-      const isAlreadySelected = prev.find(s => s.id === seat.id);
-      if (isAlreadySelected) {
-        return prev; // Don't add duplicate
-      }
-      return [...prev, seat];
-    });
-  };
-
-  const clearSelectedSeats = () => {
-    setSelectedSeats([]);
-  };
-
-  return { selectSeat, selectedSeats, clearSelectedSeats };
-};
-
-export const useRemoveSeat = () => {
-  const [selectedSeats, setSelectedSeats] = useState([]);
-
-  const removeSeat = (seatId) => {
-    setSelectedSeats(prev => prev.filter(seat => seat.id !== seatId));
-  };
-
-  const updateSelectedSeats = (seats) => {
-    setSelectedSeats(seats);
-  };
-
-  return { removeSeat, selectedSeats, updateSelectedSeats };
-};
-
-export const useSelectSnack = () => {
-  const [selectedSnacks, setSelectedSnacks] = useState({});
-
-  const selectSnack = (snackId, quantity) => {
-    setSelectedSnacks(prev => ({
-      ...prev,
-      [snackId]: {
-        ...prev[snackId],
-        quantity: (prev[snackId]?.quantity || 0) + quantity
-      }
-    }));
-  };
-
-  const updateSnackQuantity = (snackId, quantity) => {
-    if (quantity <= 0) {
-      setSelectedSnacks(prev => {
-        const updated = { ...prev };
-        delete updated[snackId];
-        return updated;
-      });
-    } else {
-      setSelectedSnacks(prev => ({
-        ...prev,
-        [snackId]: { ...prev[snackId], quantity }
-      }));
-    }
-  };
-
-  const clearSelectedSnacks = () => {
-    setSelectedSnacks({});
-  };
-
-  return { selectSnack, updateSnackQuantity, selectedSnacks, clearSelectedSnacks };
-};
-
-export const useCalculateTotal = () => {
-  const calculateTotal = (seats, snacks, promotion = null) => {
-    const seatTotal = seats.reduce((total, seat) => total + (seat.price || 0), 0);
-    
-    const snackTotal = Object.entries(snacks).reduce((total, [snackId, snackData]) => {
-      return total + (snackData.price * snackData.quantity);
-    }, 0);
-
-    let subtotal = seatTotal + snackTotal;
-    let discount = 0;
-
-    if (promotion) {
-      if (promotion.type === 'percentage') {
-        discount = subtotal * (promotion.value / 100);
-      } else if (promotion.type === 'fixed') {
-        discount = Math.min(promotion.value, subtotal);
-      }
-    }
-
-    const total = Math.max(0, subtotal - discount);
-
-    return {
-      seatTotal,
-      snackTotal,
-      subtotal,
-      discount,
-      total
-    };
-  };
-
-  return { calculateTotal };
-};
-
 export const useApplyPromotion = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -265,21 +164,36 @@ export const useCreateTicket = () => {
 export const useStartHoldSession = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
+  const [res, setRes] = useState(null);
   const { token } = useUser();
 
-  const startHoldSession = async (scheduleId, seatIds) => {
+  const startHoldSession = async ({ scheduleId, seatNumbers, holdDurationMinutes = 5, replaceExisting = false }) => {
     setLoading(true);
     setError(null);
-    
+    let sessionId = localStorage.getItem('sessionId');
+
+    console.log(scheduleId, seatNumbers, holdDurationMinutes, replaceExisting);
+
     try {
-      const response = await axios.post('/api/seats/hold', {
+      if (!token) {
+        if (!sessionId) {
+          sessionId = uuidv4();
+          localStorage.setItem('sessionId', sessionId);
+          console.log('New session created:', sessionId);
+        }
+      } else {
+        sessionId = null;
+      }
+     const response = await axios.post(getApiUrl('holdSeat'), {
         scheduleId,
-        seatIds
+        seatNumbers,
+        sessionId,
+        holdDurationMinutes
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSessionId(response.data.sessionId);
+      console.log('Hold session response:', response.data);
+      setRes(response.data);
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to hold seats';
@@ -290,7 +204,7 @@ export const useStartHoldSession = () => {
     }
   };
 
-  return { startHoldSession, sessionId, loading, error };
+  return { startHoldSession, res, loading, error };
 };
 
 export const useClearSession = () => {
