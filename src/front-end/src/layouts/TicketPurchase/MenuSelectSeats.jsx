@@ -3,8 +3,6 @@ import BPoster from '@components/UI/BPoster';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
 import { useGetSeatsBySchedule } from '@/hooks/useTicket';
-// import SeatLayout from '@components/display/Seats';
-// import mockPoster from '@assets/sample/ThamTuKien.jpg';
 import SeatLayout, {Seats, CoupleSeat} from '@/layouts/TicketPurchase/SeatLayout';
 
 const SeatName = ({ type, text, isCouple = false }) => (
