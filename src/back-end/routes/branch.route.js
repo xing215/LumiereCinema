@@ -15,8 +15,12 @@ const {
   editMovieSchedule,
   deleteMovieSchedule,
   getMovieSchedules,
-  // Screen management function
-  getBranchScreens
+  // Screen management functions
+  getBranchScreens,
+  createScreen,
+  getScreenById,
+  updateScreen,
+  deleteScreen
 } = require('../controllers/branch.controller.js');
 
 /**
@@ -39,7 +43,11 @@ router.post('/:branchId/schedules', protect, restrictTo('branchmanager'), schedu
 router.patch('/:branchId/schedules/:scheduleId', protect, restrictTo('branchmanager'), editMovieSchedule);
 router.delete('/:branchId/schedules/:scheduleId', protect, restrictTo('branchmanager'), deleteMovieSchedule);
 
-// Các thao tác xem screens của branch (bảo vệ, phân quyền branch manager)
+// Các thao tác quản lý screens của branch (bảo vệ, phân quyền branch manager)
 router.get('/:branchId/screens', protect, restrictTo('branchmanager'), getBranchScreens);
+router.post('/:branchId/screens', protect, restrictTo('branchmanager'), createScreen);
+router.get('/:branchId/screens/:screenId', protect, restrictTo('branchmanager'), getScreenById);
+router.patch('/:branchId/screens/:screenId', protect, restrictTo('branchmanager'), updateScreen);
+router.delete('/:branchId/screens/:screenId', protect, restrictTo('branchmanager'), deleteScreen);
 
 module.exports = router;
