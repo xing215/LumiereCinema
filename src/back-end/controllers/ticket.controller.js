@@ -984,6 +984,151 @@ const calculateTotalAndUpdateStock = async (snackList, branchId, session = null)
   return { total, validatedSnackList };
 };
 
+// Hàm tính số tiền giảm sau khi áp mã (cho frontend gọi để hiển thị trước khi thanh toán, không phải dùng thật sự)
+const calculateDiscountedTotal = async ({ user, promotionCode, snackTotal, movieTotal, session = null }) => {
+  try {
+    const promotion = await Promotion.findOne({
+      promotionCode: promotionCode,
+      isActive: true
+    }).session(session);
+
+    // Check if promotion is valid
+    if (!promotion) {
+      return { 
+        success: false, 
+        error: { status: 400, message: 'Invalid promotion code.' }
+      };
+    }
+
+    // Check promotion time validity
+    const now = new Date();
+    if (promotion.startDate && promotion.startDate > now || promotion.endDate && promotion.endDate < now) {
+      return { 
+        success: false, 
+        error: { status: 400, message: 'Promotion is not valid at this time.' }
+      };
+    }
+
+    let snackDiscount = 0;
+    let movieDiscount = 0;
+    let snackError = null;
+    let movieError = null;
+    let processedItems = 0;
+    let failedItems = 0;
+
+    // ===== Process Snack Total =====
+    if (snackTotal) {
+      processedItems++;
+      
+      try {
+        // Check if promotion applies to snacks
+        if (promotion.appliedProduct !== 'Snack' && promotion.appliedProduct !== 'All') {
+          throw new Error('Promotion not applicable for snacks.');
+        }
+        
+        // Check minimum spend
+        if (snackTotal < promotion.minimumSpend) {
+          throw new Error('Promotion minimum spend not met for snacks.');
+        }
+        
+        // Check remaining uses
+        if (promotion.remainingUse !== null && promotion.remainingUse <= 0) {
+          throw new Error('Promotion has no remaining uses.');
+        }
+        
+        // Check loyalty rank requirement
+        if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
+          throw new Error('Promotion not applicable for your loyalty rank.');
+        }
+        
+        // Calculate snack discount
+        snackDiscount = Math.min(snackTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
+        
+      } catch (error) {
+        snackError = error.message;
+        failedItems++;
+      }
+    }
+
+    // ===== Process Movie Total =====
+    if (movieTotal) {
+      processedItems++;
+      
+      try {
+        // Check if promotion applies to movies
+        if (promotion.appliedProduct !== 'Movie' && promotion.appliedProduct !== 'All') {
+          throw new Error('Promotion not applicable for movies.');
+        }
+        
+        // Check minimum spend
+        if (movieTotal < promotion.minimumSpend) {
+          throw new Error('Promotion minimum spend not met for movies.');
+        }
+        
+        // Check remaining uses (only if snack didn't already consume it)
+        if (promotion.remainingUse !== null && promotion.remainingUse <= 0) {
+          throw new Error('Promotion has no remaining uses.');
+        }
+        
+        // Check loyalty rank requirement
+        if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
+          throw new Error('Promotion not applicable for your loyalty rank.');
+        }
+        
+        // Calculate movie discount
+        movieDiscount = Math.min(movieTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
+        
+      } catch (error) {
+        movieError = error.message;
+        failedItems++;
+      }
+    }
+
+    // ===== Determine result based on success/failure =====
+    
+    // Case 1: All items failed OR only one item and it failed
+    if (failedItems === processedItems) {
+      const primaryError = snackError || movieError;
+      return { 
+        success: false, 
+        error: { 
+          status: 400, 
+          message: primaryError,
+          details: {
+            ...(snackError && { snackError }),
+            ...(movieError && { movieError })
+          }
+        }
+      };
+    }
+    
+    // Case 2: At least one item succeeded (partial or full success)
+    const hasSnackSuccess = snackTotal && !snackError;
+    const hasMovieSuccess = movieTotal && !movieError;
+    
+    // Build warnings object properly
+    const warnings = {};
+    if (snackError) warnings.snack = snackError;
+    if (movieError) warnings.movie = movieError;
+
+    return { 
+      success: true, 
+      data: { 
+        snackDiscount: hasSnackSuccess ? snackDiscount : 0,
+        movieDiscount: hasMovieSuccess ? movieDiscount : 0,
+        ...(Object.keys(warnings).length > 0 && { warnings })
+      }
+    };
+
+  } catch (error) {
+    console.error('Calculate Discounted Total Error:', error);
+    return { 
+      success: false, 
+      error: { status: 500, message: 'Database error while calculating discount.' }
+    };
+  }
+};
+
 // Áp dụng khuyến mãi và điểm thành viên
 const applyDiscounts = async ({ user, promotionCode, total, session = null }) => {
   let updatedTotal = total;
@@ -996,7 +1141,7 @@ const applyDiscounts = async ({ user, promotionCode, total, session = null }) =>
 
     // Check promotion validity using ORIGINAL total (before any discounts)
     if (
-      !promo || promo.startDate > now || promo.endDate < now || total < promo.minimumSpend
+      !promo || promo.startDate && promo.startDate > now || promo.endDate && promo.endDate < now || total < promo.minimumSpend
     ) {
       throw { status: 400, message: 'Invalid or inapplicable promotion.' };
     }
@@ -1722,7 +1867,8 @@ module.exports = {
   cleanupExpiredHolds,
   getCacheStats,  cleanupCache,
   preloadCache,
-  createSnackTicket
+  createSnackTicket,
+  calculateDiscountedTotal,
   // getTicketListByTime,
   // checkInTicket,
   // makeTicketValid,

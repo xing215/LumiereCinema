@@ -20,7 +20,8 @@ const {
   getTicketByCode,
   getAllTickets,
   updateTicket,
-  deleteTicket
+  deleteTicket,
+  calculateDiscountedTotal,
 } = require('../controllers/ticket.controller.js');
 
 // =============================================================================
@@ -176,5 +177,12 @@ router.post('/cache/cleanup', protect, restrictTo('administrator'), cleanupCache
  * Body: { routes: [{ branchId, scheduleId }] }
  */
 router.post('/cache/preload', protect, restrictTo('administrator'), preloadCache);
+
+/**
+ * GET /calculate-discounted-total
+ * Tính tổng tiền sau khi áp dụng khuyến mãi
+ * Query: { user, promotionCode, snackTotal, movieTotal, session = null }
+ */
+router.get('/calculate-discounted', getUser, calculateDiscountedTotal);
 
 module.exports = router;
