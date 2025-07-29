@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Ticket = require('../models/Ticket'); 
 const MovieRating = require('../models/MovieRating');
 const Movie = require('../models/Movie');
+const mongoose = require('mongoose');
 const { redisClient } = require('../config/redis.config');
 
 const getProfile = async (req, res) => {
@@ -272,6 +273,226 @@ const removeFromWatchHistory = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get all movie tickets for the user
+ * @route   GET /api/users/tickets
+ * @access  Customer
+ */
+const getUserTickets = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { 
+      status, 
+      page = 1, 
+      limit = 10 
+    } = req.query;
+
+    // Build cache key
+    const cacheKey = `userTickets:${userId}:${JSON.stringify(req.query)}`;
+    
+    // Check cache first
+    try {
+      const cachedTickets = await redisClient.get(cacheKey);
+      if (cachedTickets) {
+        return res.status(200).json({
+          ...JSON.parse(cachedTickets),
+          fromCache: true
+        });
+      }
+    } catch (cacheError) {
+      console.warn('Cache error:', cacheError);
+    }    // Build query conditions
+    const matchConditions = { customer: userId };
+
+    // Always limit to last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    matchConditions.createdAt = { $gte: thirtyDaysAgo };
+
+    // Add status filter if provided
+    if (status) {
+      const validStatuses = ['Confirmed', 'CheckedIn', 'Cancelled'];
+      if (validStatuses.includes(status)) {
+        matchConditions.status = status;
+      } else {
+        return res.status(400).json({ 
+          message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}` 
+        });
+      }
+    }
+
+    // Add additional date range filter if provided (within the 30-day limit)
+    if (fromDate || toDate) {
+      if (fromDate) {
+        const fromDateTime = new Date(fromDate);
+        if (isNaN(fromDateTime.getTime())) {
+          return res.status(400).json({ message: 'Invalid fromDate format.' });
+        }
+        // Use the later of thirtyDaysAgo or fromDate
+        if (fromDateTime > thirtyDaysAgo) {
+          matchConditions.createdAt.$gte = fromDateTime;
+        }
+      }
+      if (toDate) {
+        const toDateTime = new Date(toDate);
+        if (isNaN(toDateTime.getTime())) {
+          return res.status(400).json({ message: 'Invalid toDate format.' });
+        }
+        matchConditions.createdAt.$lte = toDateTime;
+      }
+    }
+
+    // Add additional date range filter if provided (within the 30-day limit)
+    if (fromDate || toDate) {
+      if (fromDate) {
+        const fromDateTime = new Date(fromDate);
+        if (isNaN(fromDateTime.getTime())) {
+          return res.status(400).json({ message: 'Invalid fromDate format.' });
+        }
+        // Use the later of thirtyDaysAgo or fromDate
+        if (fromDateTime > thirtyDaysAgo) {
+          matchConditions.createdAt.$gte = fromDateTime;
+        }
+      }
+      if (toDate) {
+        const toDateTime = new Date(toDate);
+        if (isNaN(toDateTime.getTime())) {
+          return res.status(400).json({ message: 'Invalid toDate format.' });
+        }
+        matchConditions.createdAt.$lte = toDateTime;
+      }
+    }
+
+    // Pagination setup
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build aggregation pipeline
+    const pipeline = [
+      { $match: matchConditions },
+      // Lookup schedule details
+      {
+        $lookup: {
+          from: 'schedules',
+          localField: 'schedule',
+          foreignField: '_id',
+          as: 'scheduleData'
+        }
+      },
+      { $unwind: '$scheduleData' },
+      // Lookup movie details
+      {
+        $lookup: {
+          from: 'movies',
+          localField: 'scheduleData.movie',
+          foreignField: '_id',
+          as: 'movieData'
+        }
+      },
+      { $unwind: '$movieData' },
+      // Lookup screen details
+      {
+        $lookup: {
+          from: 'screens',
+          localField: 'scheduleData.screen',
+          foreignField: '_id',
+          as: 'screenData'
+        }
+      },
+      { $unwind: '$screenData' },
+      // Lookup branch details
+      {
+        $lookup: {
+          from: 'branches',
+          localField: 'branch',
+          foreignField: '_id',
+          as: 'branchData'
+        }
+      },
+      { $unwind: '$branchData' },
+      // Project final structure
+      {
+        $project: {
+          _id: 1,
+          ticketCode: 1,
+          seats: 1,
+          total: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          movie: {
+            _id: '$movieData._id',
+            title: '$movieData.title',
+            duration: '$movieData.duration',
+            genre: '$movieData.genre',
+            rating: '$movieData.rating',
+            posterURL: '$movieData.posterURL'
+          },
+          schedule: {
+            _id: '$scheduleData._id',
+            startTime: '$scheduleData.startTime',
+            endTime: '$scheduleData.endTime'
+          },
+          screen: {
+            _id: '$screenData._id',
+            screenName: '$screenData.screenName',
+            screenType: '$screenData.screenType'
+          },
+          branch: {
+            _id: '$branchData._id',
+            name: '$branchData.name',
+            address: '$branchData.address',
+            city: '$branchData.city'
+          },
+          seatCount: { $size: '$seats' }
+        }
+      },
+      // Sort by creation date (newest first)
+      { $sort: { createdAt: -1 } }
+    ];
+
+    // Execute aggregation with pagination
+    const [tickets, totalCount] = await Promise.all([
+      Ticket.aggregate([...pipeline, { $skip: skip }, { $limit: limitNum }]),
+      Ticket.aggregate([...pipeline, { $count: 'total' }])
+    ]);
+
+    const total = totalCount.length > 0 ? totalCount[0].total : 0;
+
+    // Prepare response
+    const response = {
+      tickets,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalTickets: total,
+        hasNextPage: pageNum < Math.ceil(total / limitNum),
+        hasPrevPage: pageNum > 1,
+        limit: limitNum
+      },      filters: {
+        status: status || null
+      }
+    };
+
+    // Cache the result for 5 minutes
+    try {
+      await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+    } catch (cacheError) {
+      console.warn('Failed to cache user tickets:', cacheError);
+    }
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.error('Error getting user tickets:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -281,5 +502,6 @@ module.exports = {
   removeFromWishlist,
   getWishlist,
   getWatchHistory,
-  removeFromWatchHistory
+  removeFromWatchHistory,
+  getUserTickets
 };

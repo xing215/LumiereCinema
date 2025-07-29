@@ -9,7 +9,8 @@ const {
   removeFromWishlist,
   getWishlist,
   getWatchHistory,
-  removeFromWatchHistory
+  removeFromWatchHistory,
+  getUserTickets
 } = require('../controllers/user.controller');
 
 const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
@@ -31,5 +32,8 @@ router.get('/wishlist', protect, restrictTo('customer'), getWishlist);
 // Watch history
 router.get('/watch-history', protect, restrictTo('customer'), getWatchHistory);
 router.delete('/watch-history/:ticketId', protect, restrictTo('administrator'), removeFromWatchHistory);
+
+// Movie tickets
+router.get('/tickets', protect, restrictTo('customer'), getUserTickets);
 
 module.exports = router;

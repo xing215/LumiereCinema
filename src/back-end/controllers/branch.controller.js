@@ -1161,6 +1161,424 @@ const getBranchScreens = async (req, res) => {
   }
 };
 
+  // =============================== SCREEN MANAGEMENT ===============================
+
+  /**
+   * @desc    Create a new screen for a branch
+   * @route   POST /api/branches/:branchId/screens
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const createScreen = async (req, res) => {
+    try {
+      const { branchId } = req.params;
+      const { screenName, screenType, size } = req.body;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can create screens.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage screens for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate required fields
+      if (!screenName || !screenType || !size || !size.rows || !size.columns) {
+        return res.status(400).json({ 
+          message: 'Screen name, type, and size (rows, columns) are required.' 
+        });
+      }
+
+      // 4. Validate ObjectId format
+      if (!mongoose.Types.ObjectId.isValid(branchId)) {
+        return res.status(400).json({ 
+          message: 'Invalid branch ID format.' 
+        });
+      }
+
+      // 5. Verify branch exists and is active
+      const branch = await Branch.findById(branchId);
+      if (!branch || !branch.isActive) {
+        return res.status(404).json({ message: 'Branch not found or inactive.' });
+      }
+
+      // 6. Validate screen type
+      const validScreenTypes = ['2D', '3D', 'IMAX', '4DX'];
+      if (!validScreenTypes.includes(screenType)) {
+        return res.status(400).json({ 
+          message: `Invalid screen type. Valid types: ${validScreenTypes.join(', ')}` 
+        });
+      }
+
+      // 7. Validate size constraints
+      if (size.rows < 1 || size.rows > 30 || size.columns < 1 || size.columns > 50) {
+        return res.status(400).json({ 
+          message: 'Screen size must be between 1-30 rows and 1-50 columns.' 
+        });
+      }
+
+      // 8. Check for duplicate screen name in this branch
+      const existingScreen = await Screen.findOne({ 
+        screenName: screenName.trim(), 
+        branch: branchId 
+      });
+      if (existingScreen) {
+        return res.status(409).json({ 
+          message: 'A screen with this name already exists in this branch.' 
+        });
+      }
+
+      // 9. Create new screen
+      const newScreen = new Screen({
+        screenName: screenName.trim(),
+        branch: branchId,
+        screenType,
+        size: {
+          rows: parseInt(size.rows),
+          columns: parseInt(size.columns)
+        },
+        isActive: true
+      });
+
+      await newScreen.save();
+
+      // 10. Clear related caches
+      await redisClient.del(`screens:branch:${branchId}`);
+
+      res.status(201).json({
+        message: 'Screen created successfully.',
+        screen: newScreen
+      });
+
+    } catch (error) {
+      console.error('Error creating screen:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Get screen details by ID
+   * @route   GET /api/branches/:branchId/screens/:screenId
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const getScreenById = async (req, res) => {
+    try {
+      const { branchId, screenId } = req.params;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can view screen details.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only view screens for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 4. Find screen and verify it belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found or does not belong to your branch.' 
+        });
+      }
+
+      // 5. Get additional screen statistics
+      const totalSeats = screen.size.rows * screen.size.columns;
+
+      // Get active schedules count
+      const activeSchedulesCount = await Schedule.countDocuments({
+        screen: screenId,
+        startTime: { $gte: new Date() }
+      });
+
+      // 6. Prepare response
+      const response = {
+        _id: screen._id,
+        screenName: screen.screenName,
+        screenType: screen.screenType,
+        size: screen.size,
+        totalSeats,
+        isActive: screen.isActive,
+        createdAt: screen.createdAt,
+        updatedAt: screen.updatedAt,
+        statistics: {
+          activeSchedulesCount
+        }
+      };
+
+      res.status(200).json(response);
+
+    } catch (error) {
+      console.error('Error fetching screen details:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Update an existing screen
+   * @route   PATCH /api/branches/:branchId/screens/:screenId
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const updateScreen = async (req, res) => {
+    try {
+      const { branchId, screenId } = req.params;
+      const { screenName, screenType, size, isActive } = req.body;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can update screens.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage screens for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 4. Find the existing screen and verify it belongs to this branch
+      const existingScreen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId 
+      });
+
+      if (!existingScreen) {
+        return res.status(404).json({ 
+          message: 'Screen not found or does not belong to your branch.' 
+        });
+      }
+
+      // 5. Check if screen has active schedules (if trying to deactivate)
+      if (isActive === false && existingScreen.isActive) {
+        const activeSchedules = await Schedule.countDocuments({
+          screen: screenId,
+          startTime: { $gte: new Date() }
+        });
+
+        if (activeSchedules > 0) {
+          return res.status(400).json({ 
+            message: `Cannot deactivate screen. ${activeSchedules} active schedule(s) exist.` 
+          });
+        }
+      }
+
+      // 6. Build update object
+      const updateData = {};
+
+      // Validate and set screen name if provided
+      if (screenName) {
+        const trimmedName = screenName.trim();
+        
+        // Check for duplicate name (excluding current screen)
+        const duplicateScreen = await Screen.findOne({ 
+          screenName: trimmedName, 
+          branch: branchId,
+          _id: { $ne: screenId }
+        });
+
+        if (duplicateScreen) {
+          return res.status(409).json({ 
+            message: 'A screen with this name already exists in this branch.' 
+          });
+        }
+
+        updateData.screenName = trimmedName;
+      }
+
+      // Validate and set screen type if provided
+      if (screenType) {
+        const validScreenTypes = ['2D', '3D', 'IMAX', '4DX'];
+        if (!validScreenTypes.includes(screenType)) {
+          return res.status(400).json({ 
+            message: `Invalid screen type. Valid types: ${validScreenTypes.join(', ')}` 
+          });
+        }
+        updateData.screenType = screenType;
+      }
+
+      // Validate and set size if provided
+      if (size) {
+        if (!size.rows || !size.columns) {
+          return res.status(400).json({ 
+            message: 'Both rows and columns are required when updating size.' 
+          });
+        }
+
+        if (size.rows < 1 || size.rows > 30 || size.columns < 1 || size.columns > 50) {
+          return res.status(400).json({ 
+            message: 'Screen size must be between 1-30 rows and 1-50 columns.' 
+          });
+        }
+
+        updateData.size = {
+          rows: parseInt(size.rows),
+          columns: parseInt(size.columns)
+        };
+      }
+
+      // Set active status if provided
+      if (typeof isActive === 'boolean') {
+        updateData.isActive = isActive;
+      }
+
+      // 7. Update the screen
+      const updatedScreen = await Screen.findByIdAndUpdate(
+        screenId,
+        updateData,
+        { new: true, runValidators: true }
+      );
+
+      // 8. Clear related caches
+      await redisClient.del(`screens:branch:${branchId}`);
+
+      res.status(200).json({
+        message: 'Screen updated successfully.',
+        screen: updatedScreen
+      });
+
+    } catch (error) {
+      console.error('Error updating screen:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Delete a screen
+   * @route   DELETE /api/branches/:branchId/screens/:screenId
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const deleteScreen = async (req, res) => {
+    try {
+      const { branchId, screenId } = req.params;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can delete screens.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage screens for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 4. Find the screen and verify it belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found or does not belong to your branch.' 
+        });
+      }
+
+      // 5. Check for existing schedules
+      const schedulesCount = await Schedule.countDocuments({ screen: screenId });
+      
+      if (schedulesCount > 0) {
+        // If schedules exist, just deactivate the screen instead of deleting
+        const deactivatedScreen = await Screen.findByIdAndUpdate(
+          screenId,
+          { isActive: false },
+          { new: true }
+        );
+
+        await redisClient.del(`screens:branch:${branchId}`);
+
+        return res.status(200).json({
+          message: `Screen cannot be deleted due to existing schedules (${schedulesCount}). Screen has been deactivated instead.`,
+          screen: deactivatedScreen
+        });
+      }
+
+      // 6. Check for existing seats
+      const Seat = require('../models/Seat');
+      const seatsCount = await Seat.countDocuments({ screen: screenId });
+
+      if (seatsCount > 0) {
+        // Delete all seats associated with this screen first
+        await Seat.deleteMany({ screen: screenId });
+      }
+
+      // 7. Delete the screen
+      await Screen.findByIdAndDelete(screenId);
+
+      // 8. Clear related caches
+      await redisClient.del(`screens:branch:${branchId}`);
+
+      res.status(200).json({
+        message: 'Screen deleted successfully.',
+        deletedScreen: {
+          _id: screen._id,
+          screenName: screen.screenName,
+          screenType: screen.screenType,
+          deletedSeatsCount: seatsCount
+        }
+      });
+
+    } catch (error) {
+      console.error('Error deleting screen:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
 module.exports = {
   createSnack,
   editSnack,
@@ -1174,5 +1592,9 @@ module.exports = {
   deleteMovieSchedule,
   getMovieSchedules,
   // Screen management function
-  getBranchScreens
+  getBranchScreens,
+  createScreen,
+  getScreenById,
+  updateScreen,
+  deleteScreen
 };
