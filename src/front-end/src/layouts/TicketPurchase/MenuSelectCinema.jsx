@@ -4,7 +4,7 @@ import {ChooseCinemaButton} from '@layouts/TicketPurchase/MenuSelectScreen'; // 
 import {useFetchBranches} from '@/hooks/useBranch'; // Assuming you have a hook to fetch branches
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 
-const MenuSelectCinema = ({ snackTicketData, updateSnackTicket, onBack, onNext }) => {
+const MenuSelectCinema = ({ snackTicketData, updateSnackTicket, onBack, onNext, getSnacks }) => {
     const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
     const { fetchBranches, branches, loading: branchLoading, error: branchError } = useFetchBranches();
 
@@ -19,6 +19,8 @@ const MenuSelectCinema = ({ snackTicketData, updateSnackTicket, onBack, onNext }
             return;
         }
         onNext();
+        getSnacks(snackTicketData?.branch?._id)
+
     };
 
     useEffect(() => {

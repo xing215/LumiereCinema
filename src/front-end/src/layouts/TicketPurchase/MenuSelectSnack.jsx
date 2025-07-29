@@ -1,22 +1,20 @@
 import { useState, useEffect } from 'react';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import SnackSelect from '@components/UI/SnackSelect';
-import { useGetSnacks } from '@hooks/useBranch';
 import Combo1 from '@assets/img/combo1.png';
 import { useUser } from '@contexts/UserContext';
 
 
-const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket, mustBuy=false }) => {
+const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket, mustBuy=false, loading, snacks = [], getSnacks }) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     // Use snackTicketData.snack as the source of truth for selected snacks
-    const { getSnacks, snacks, loading, error } = useGetSnacks();
     const { isAuthenticated } = useUser();
 
 
     useEffect(() => {
-        // Fetch snacks when component mounts
-        getSnacks(snackTicketData?.branch?._id);
+        if (snacks.length === 0)
+            getSnacks(snackTicketData?.branch?._id);
     }, []);
 
     // Handle snack selection

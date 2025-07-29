@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import BPoster from '@components/UI/BPoster';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
-import { useGetSeatsBySchedule } from '@/hooks/useTicket';
 import SeatLayout, {Seats, CoupleSeat} from '@/layouts/TicketPurchase/SeatLayout';
 
 const SeatName = ({ type, text, isCouple = false }) => (
@@ -21,19 +20,20 @@ const MenuSelectSeats = ({
     onBack, 
     movieTicketData, 
     updateMovieTicket, 
-    heldSeats = [], // Seats held by current session
-    currentSession = null, // Current session info
-    clearSessionLoading
+    clearSessionLoading,
+    fetchSeats,
+    seats = [], // Seats data fetched from the server
+    seatsLoading = false, // Loading state for seats
 }) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
-    const { seats, loading: ScheduleLoading, error, fetchSeats } = useGetSeatsBySchedule();
 
     useEffect(() => {
-        if (movieTicketData.schedule) {
+        console.log(seats)
+        if (movieTicketData.schedule && seats.length === 0) {
             fetchSeats(movieTicketData.schedule._id);
         }
-    }, [movieTicketData.schedule, heldSeats]);
+    }, []);
 
     // Handle seat selection/deselection
     // Accept seatName as string or array, flatten, and update seats
@@ -89,13 +89,13 @@ if (seats && seats.seatsByRow) {
             // Check if adjacent seat is empty/available
             const adjacentIsSelected = selected.includes(adjacentSeat.seatNumber);
             const adjacentIsTaken = adjacentSeat.isTaken || adjacentSeat.status === 'occupied';
-            const adjacentIsHeldByOthers = adjacentSeat.status === 'holding' && !heldSeats.includes(adjacentSeat.seatNumber);
+            const adjacentIsHeldByOthers = adjacentSeat.status === 'holding';
             const adjacentIsFilled = adjacentIsSelected || adjacentIsTaken || adjacentIsHeldByOthers;
             
             // Check if far seat is filled
             const farIsSelected = selected.includes(farSeat.seatNumber);
             const farIsTaken = farSeat.isTaken || farSeat.status === 'occupied';
-            const farIsHeldByOthers = farSeat.status === 'holding' && !heldSeats.includes(farSeat.seatNumber);
+            const farIsHeldByOthers = farSeat.status === 'holding';
             const farIsFilled = farIsSelected || farIsTaken || farIsHeldByOthers;
             
             // Gap exists if adjacent is empty but far is filled
@@ -215,11 +215,10 @@ if (seats && seats.seatsByRow) {
                         <div className="relative flex justify-center w-[80vw] md:w-[37vw] xl:w-full h-full">
                             <SeatLayout 
                                 schedule={movieTicketData?.schedule} 
-                                seatMap={seats.seatsByRow} 
-                                screenMap={seats.screen} 
-                                loading={ScheduleLoading} 
+                                seatMap={seats?.seatsByRow} 
+                                screenMap={seats?.screen} 
+                                loading={seatsLoading} 
                                 selectedSeats={movieTicketData?.seats} 
-                                heldSeats={heldSeats} // Pass held seats
                                 onClick={handleSeatToggle}
                                 clearSessionLoading={clearSessionLoading}
                             />
@@ -253,6 +252,7 @@ if (seats && seats.seatsByRow) {
 
             </div>
         </div>
+        
     );
 };
 

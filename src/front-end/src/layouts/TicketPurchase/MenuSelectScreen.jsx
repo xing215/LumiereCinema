@@ -79,7 +79,7 @@ export const ChooseCinemaButton = ({ onClick, label, loading,  branches, error }
     </button>
 );
 
-const MenuSelectScreen = ({onNext, onBack, movieTicketData, updateMovieTicket}) => {
+const MenuSelectScreen = ({onNext, onBack, movieTicketData, updateMovieTicket, fetchSeats, getSnacks}) => {
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [selectedBranch, setSelectedBranch] = useState(movieTicketData.branch);
@@ -167,6 +167,8 @@ const handleScheduleSelect = (schedule) => {
     const handleNext = () => {
         if (canProceed) {
             onNext();
+            fetchSeats(movieTicketData.schedule._id);
+            getSnacks(movieTicketData?.branch?._id)
         } else {
             if (!movieTicketData.branch._id) {
                 alert('Please select a cinema first.');

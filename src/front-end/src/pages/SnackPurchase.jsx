@@ -12,6 +12,8 @@ import MenuSelectCinema from '@/layouts/TicketPurchase/MenuSelectCinema';
 import Footer from '@layouts/LandingPage/Footer.jsx';
 import { useGetBranchById } from '@/hooks/useBranch';
 import { useUser } from '@contexts/UserContext';
+import { useGetSnacks } from '@hooks/useBranch';
+
 
 const MENU_STEPS = {
     CINEMA:0,
@@ -29,6 +31,8 @@ const SnackPurchase = () => {
 
     // Hooks for fetching branch data
     const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
+    const { getSnacks, snacks, loading: snacksLoading, error: snacksError } = useGetSnacks();
+    
 
     const passedNoLoginCustomerInfo = locationHook.state?.noLoginCustomerInfo || {
         name: null,
@@ -139,6 +143,7 @@ const SnackPurchase = () => {
                 alert('Your snack selection exceeds available stock. Please adjust your order.');
                 setCurrentStep(MENU_STEPS.SNACK)
                 setSnackTicketData({snackList:[]})
+                getSnacks(snackTicketData?.branch?._id)
                 return
             }
             console.error('Error creating snack ticket:', ticketError);
@@ -156,6 +161,7 @@ const SnackPurchase = () => {
                         updateSnackTicket={updateSnackTicket}
                         onBack={goToPreviousStep}
                         onNext={goToNextStep}
+                        getSnacks={getSnacks}
                     />
                 );
             case MENU_STEPS.SNACK:
@@ -165,7 +171,10 @@ const SnackPurchase = () => {
                         onBack={goToPreviousStep}
                         snackTicketData={snackTicketData}
                         updateSnackTicket={updateSnackTicket}
-                        mustBuy={true} // Ensure at least one snack is selected
+                        snacks={snacks}
+                        getSnacks={getSnacks}
+                        loading={snacksLoading}
+                        mustBuy={true}
                     />
                 );
             case MENU_STEPS.INFO:

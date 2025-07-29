@@ -34,7 +34,7 @@ export const CoupleSeat = ({ seatSize, seatColor, isSelected, onClick, seatRow, 
     );
 }
 
-const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, onClick, schedule,  heldSeats, currentSession }) => {
+const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, onClick, schedule }) => {
     const miniMapRef = useRef();
     const [miniMapDimensions, setMiniMapDimensions] = useState({ width: 0, height: 0 });
     const [viewportRect, setViewportRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -119,8 +119,8 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                         while (i < seats.length) {
                                             const current = seats[i];
                                             const next = seats[i + 1];
-                                            const isTaken = (Array.isArray(heldSeats) && !heldSeats.includes(current.seatNumber)) && (current.status === 'occupied' || current.status === 'holding');
-                                            const nextIsTaken = next && (( Array.isArray(heldSeats) && !heldSeats.includes(next.seatNumber)) && (next.status === 'occupied' || next.status === 'holding'));
+                                            const isTaken = (current.status === 'occupied' || current.status === 'holding');
+                                            const nextIsTaken = next && (next.status === 'occupied' || next.status === 'holding');
 
                                             if (
                                                 current.category === 'VIP' &&
@@ -167,7 +167,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
     );
 };
 
-const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading, heldSeats, clearSessionLoading }) => {
+const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading, clearSessionLoading }) => {
     const containerRef = useRef();
     const contentRef = useRef();
     const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -383,7 +383,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                                     <CoupleSeat
                                                         key={current.seatNumber + '-' + next.seatNumber}
                                                         seatColor="bg-yellow-400 group-hover:bg-yellow-500"
-                                                        isTaken={(Array.isArray(heldSeats) && !heldSeats.includes(current.seatNumber)) && (current.status === 'occupied' || current.status === 'holding')}
+                                                        isTaken={ (current.status === 'occupied' || current.status === 'holding')}
                                                         isSelected={selectedSeats.includes(current.seatNumber) || selectedSeats.includes(next.seatNumber)}
                                                         onClick={() => onClick?.([current.seatNumber, next.seatNumber])}
                                                         seatCol={seats.length}
@@ -396,7 +396,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                                     <Seats
                                                         key={current.seatNumber}
                                                         seatColor={current.category === 'VIP' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
-                                                        isTaken={(Array.isArray(heldSeats) && !heldSeats.includes(current.seatNumber)) && (current.status === 'occupied' || current.status === 'holding')}
+                                                        isTaken={ (current.status === 'occupied' || current.status === 'holding')}
                                                         isSelected={selectedSeats.includes(current.seatNumber)}
                                                         onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}

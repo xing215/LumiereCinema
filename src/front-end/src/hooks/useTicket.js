@@ -109,8 +109,8 @@ export const useCreateTicket = () => {
     if (movieTicketData?.customer) {
         ticketData.customer = movieTicketData.customer;
     }
-    if (movieTicketData?.noLoginCustomerInfo) {
-        ticketData.noLoginCustomerInfo = movieTicketData.noLoginCustomerInfo;
+    if (movieTicketData?.noLoginCustomerInfo || snackTicketData?.noLoginCustomerInfo) {
+        ticketData.noLoginCustomerInfo = movieTicketData?.noLoginCustomerInfo || snackTicketData?.noLoginCustomerInfo;
     }
 
     // Add branch ID (required field)
@@ -250,7 +250,7 @@ export const useStartHoldSession = () => {
     return { success: true, data: response.data };
   } catch (err) {
     console.error('❌ Error in hold session:', err);
-    const errorMessage = err.status || 'Failed to hold seats';
+    const errorMessage = err?.response?.data?.error || 'Failed to hold seats';
     setError(errorMessage);
     return { success: false, error: errorMessage };
   } finally {
