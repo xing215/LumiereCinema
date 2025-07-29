@@ -1,5 +1,7 @@
 import React, {  useEffect, useState } from 'react';
 import { ROUTES } from '@routes/routeConfig';
+import { useNavigate } from "react-router-dom";
+
 import { validatePassword, formatPasswordErrors } from '@/utils/auth.utils';
 import CustomDropdown from '@components/UI/CustomDropdown';
 import { useFetchProfile, useUpdateProfile } from "@hooks/useUser";
@@ -15,6 +17,7 @@ const Buttons = ({ text, onClick, loading }) => {
 
 const ProfileForm = () => {
     const [hovered, setHovered] = useState(false);
+    const navigate = useNavigate();
 
 
     const { fetchProfile, profile, loading, error } = useFetchProfile();
@@ -305,7 +308,7 @@ if (formData.gender.toLowerCase() !== (profile?.gender || '').toLowerCase()) Upd
                     <Buttons text={!updating ? (updateError ? 'RETRY' : 'SAVE') : '• • •'} onClick={handleSubmit} loading={updating}/>
                 ) : (
                     <>
-                        <Buttons text={'CHANGE PASSWORD'}/>
+                        <Buttons text={'CHANGE PASSWORD'} onClick={() => navigate(ROUTES.CHANGE_PASSWORD)}/>
                         <Buttons text={'EDIT'} onClick={toggleEdit}/>
                     </>
                 )}

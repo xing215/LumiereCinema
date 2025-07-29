@@ -83,7 +83,8 @@ const TicketPurchase = () => {
         seller: null,
         total: 0,
         adultTickets: 0,
-        discountedTickets: 0
+        discountedTickets: 0,
+        discounted: 0
     });
 
     const [snackTicketData, setSnackTicketData] = useState({
@@ -104,7 +105,8 @@ const TicketPurchase = () => {
         snackList: [],
         promotionCode: '',
         seller: null,
-        total: 0
+        total: 0,
+        discounted:0
     });
 
     // Fetch movie and branch data when component mounts
@@ -160,6 +162,7 @@ const TicketPurchase = () => {
     
     const updateMovieTicket = (updates) => {
         setMovieTicketData(prev => ({ ...prev, ...updates }));
+        console.log('Updated movie ticket data:', { ...movieTicketData, ...updates });
     };
 
     // Update URL when branch changes
@@ -186,7 +189,8 @@ const TicketPurchase = () => {
                 seats: [],
                 promotion: null,
                 seller: null,
-                total: 0
+                total: 0,
+                discounted: 0
             }));
 
             setSnackTicketData(prev => ({
@@ -195,7 +199,8 @@ const TicketPurchase = () => {
                 snackList: [],
                 promotionCode: '',
                 seller: null,
-                total: 0
+                total: 0,
+                discounted: 0
             }));
 
             navigate(
@@ -207,6 +212,7 @@ const TicketPurchase = () => {
 
     const updateSnackTicket = (updates) => {
         setSnackTicketData(prev => ({ ...prev, ...updates }));
+        console.log('Updated snack ticket data:', { ...snackTicketData, ...updates });
     };
     const { isAuthenticated } = useUser();
 
@@ -220,6 +226,8 @@ const TicketPurchase = () => {
         console.log('Session expired, clearing session...', holdSeatData);
         setStartedHoldSession(false);
         setCurrentStep(MENU_STEPS.SEATS)
+        
+        // clearSession();
         alert('Your session has expired. Please select your seats again.');
         updateMovieTicket({
             seats: [],
@@ -420,6 +428,7 @@ useEffect(() => {
                         snackTicketData={snackTicketData}
                         updateMovieTicket={updateMovieTicket}
                         updateSnackTicket={updateSnackTicket}
+                        
                     />
                 );
             case MENU_STEPS.PAYMENT:
@@ -429,9 +438,12 @@ useEffect(() => {
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         snackTicketData={snackTicketData}
+                        updateMovieTicket={updateMovieTicket}
+                        updateSnackTicket={updateSnackTicket}
                         sessionExpiresAt={holdSeatData}
                         loading={loading}
                         onExpire={handleExpire}
+                        isSession={startedHoldSession}
                     />
                 );
             case MENU_STEPS.TICKET_DISPLAY:

@@ -38,30 +38,27 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
     const miniMapRef = useRef();
     const [miniMapDimensions, setMiniMapDimensions] = useState({ width: 0, height: 0 });
     const [viewportRect, setViewportRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
-
+    const [hideMiniMap, setHideMiniMap] = useState(false);
     const rowKeys = Object.keys(seatMap).sort();
 
     useEffect(() => {
         if (!needsPanning || !containerRef.current || !contentRef.current) return;
 
         const updateMiniMap = () => {
-            if (!containerRef.current || !contentRef.current) return; // <-- Add this line
+            if (!containerRef.current || !contentRef.current) return;
 
             const containerRect = containerRef.current.getBoundingClientRect();
             const contentRect = contentRef.current.getBoundingClientRect();
-            
             // Calculate mini-map dimensions (max 150px wide, maintain aspect ratio)
             const maxWidth = 150;
             const aspectRatio = contentRect.width / contentRect.height;
             const miniWidth = Math.min(maxWidth, contentRect.width * 0.2);
             const miniHeight = miniWidth / aspectRatio;
-            
             setMiniMapDimensions({ width: miniWidth, height: miniHeight });
 
             // Calculate viewport rectangle position and size on mini-map
             const scaleX = miniWidth / contentRect.width;
             const scaleY = miniHeight / contentRect.height;
-            
             const viewportWidth = containerRect.width * scaleX;
             const viewportHeight = containerRect.height * scaleY;
             const viewportX = -transform.x * scaleX;
@@ -73,17 +70,19 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                 width: viewportWidth,
                 height: viewportHeight
             });
+
+            // Hide minimap if viewport is at top-right corner
+            const epsilon = 2; // px tolerance
+            const atTopRight = Math.abs(viewportX - (miniWidth - viewportWidth)) < epsilon && Math.abs(viewportY) < epsilon;
+            setHideMiniMap(atTopRight);
         };
 
         updateMiniMap();
-        
-        // Update on transform changes
         const interval = setInterval(updateMiniMap, 16); // ~60fps
         return () => clearInterval(interval);
     }, [transform, needsPanning, containerRef, contentRef]);
 
-
-    if (!needsPanning) return null;
+    if (!needsPanning || hideMiniMap) return null;
 
     return (
         <div className="absolute top-[10%] right-0 bg-black/80 p-2 rounded-lg z-40 border border-gray-600 backdrop-blur-lg">
@@ -107,7 +106,6 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                 </div>
                             ))}
                         </div>
-                        
                         {/* Seats grid */}
                         <div className="flex flex-col gap-0.5">
                             {rowKeys.map((rowKey) => (
@@ -121,7 +119,6 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                             const next = seats[i + 1];
                                             const isTaken = (current.status === 'occupied' || current.status === 'holding');
                                             const nextIsTaken = next && (next.status === 'occupied' || next.status === 'holding');
-
                                             if (
                                                 current.category === 'VIP' &&
                                                 next &&
@@ -151,7 +148,6 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                         </div>
                     </div>
                 </div>
-
                 {/* Viewport indicator */}
                 <div
                     className="absolute border-2 border-pink-400 bg-pink-400/20 pointer-events-none"

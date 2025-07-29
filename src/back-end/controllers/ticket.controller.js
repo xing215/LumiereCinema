@@ -984,201 +984,181 @@ const calculateTotalAndUpdateStock = async (snackList, branchId, session = null)
   return { total, validatedSnackList };
 };
 
-// Hàm tính số tiền giảm sau khi áp mã (cho frontend gọi để hiển thị trước khi thanh toán, không phải dùng thật sự)
-const calculateDiscountedTotal = async ({ user, promotionCode, snackTotal, movieTotal, session = null }) => {
+// API handler: Tính số tiền giảm sau khi áp mã (cho frontend gọi để hiển thị trước khi thanh toán)
+// API handler: Tính số tiền giảm sau khi áp mã (cho frontend gọi để hiển thị trước khi thanh toán)
+const calculateDiscountedTotal = async (req, res) => {
   try {
+    console.log('Calculate Discounted Total Request:', req.body);
+    const { promotionCode, snackTotal, movieTotal } = req.body;
+    const userId = req.user && req.user?.id ? req.user?.id : null;
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId);
+      // handle not found, locked, etc.
+    }
+
+    // console.log('User:', user);
+
     const promotion = await Promotion.findOne({
       promotionCode: promotionCode,
       isActive: true
-    }).session(session);
-
+    });
     // Check if promotion is valid
     if (!promotion) {
-      return { 
-        success: false, 
+      console.log('Promotion not found or inactive:', promotionCode);
+      return res.status(400).json({
+        success: false,
         error: { status: 400, message: 'Invalid promotion code.' }
-      };
+      });
     }
-
     // Check promotion time validity
     const now = new Date();
-    if (promotion.startDate && promotion.startDate > now || promotion.endDate && promotion.endDate < now) {
-      return { 
-        success: false, 
+    if ((promotion.startDate && promotion.startDate > now) || (promotion.endDate && promotion.endDate < now)) {
+      console.log('Promotion is not valid at this time:', promotionCode);
+      return res.status(400).json({
+        success: false,
         error: { status: 400, message: 'Promotion is not valid at this time.' }
-      };
+      });
     }
-
     let snackDiscount = 0;
     let movieDiscount = 0;
     let snackError = null;
     let movieError = null;
     let processedItems = 0;
     let failedItems = 0;
-
     // ===== Process Snack Total =====
     if (snackTotal) {
       processedItems++;
-      
       try {
-        // Check if promotion applies to snacks
         if (promotion.appliedProduct !== 'Snack' && promotion.appliedProduct !== 'All') {
           throw new Error('Promotion not applicable for snacks.');
         }
-        
-        // Check minimum spend
         if (snackTotal < promotion.minimumSpend) {
           throw new Error('Promotion minimum spend not met for snacks.');
         }
-        
-        // Check remaining uses
         if (promotion.remainingUse !== null && promotion.remainingUse <= 0) {
           throw new Error('Promotion has no remaining uses.');
         }
-        
-        // Check loyalty rank requirement
         if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
-        
-        // Calculate snack discount
         snackDiscount = Math.min(snackTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
-        
       } catch (error) {
         snackError = error.message;
         failedItems++;
       }
     }
-
     // ===== Process Movie Total =====
     if (movieTotal) {
       processedItems++;
-      
       try {
-        // Check if promotion applies to movies
         if (promotion.appliedProduct !== 'Movie' && promotion.appliedProduct !== 'All') {
           throw new Error('Promotion not applicable for movies.');
         }
-        
-        // Check minimum spend
         if (movieTotal < promotion.minimumSpend) {
           throw new Error('Promotion minimum spend not met for movies.');
         }
-        
-        // Check remaining uses (only if snack didn't already consume it)
         if (promotion.remainingUse !== null && promotion.remainingUse <= 0) {
           throw new Error('Promotion has no remaining uses.');
         }
-        
-        // Check loyalty rank requirement
         if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
-        
-        // Calculate movie discount
         movieDiscount = Math.min(movieTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
-        
       } catch (error) {
         movieError = error.message;
         failedItems++;
       }
     }
-
     // ===== Determine result based on success/failure =====
-    
-    // Case 1: All items failed OR only one item and it failed
     if (failedItems === processedItems) {
       const primaryError = snackError || movieError;
-      return { 
-        success: false, 
-        error: { 
-          status: 400, 
+      console.log('All items failed:', { snackError, movieError });
+      return res.status(400).json({
+        success: false,
+        error: {
+          status: 400,
           message: primaryError,
           details: {
             ...(snackError && { snackError }),
             ...(movieError && { movieError })
           }
         }
-      };
+      });
     }
-    
-    // Case 2: At least one item succeeded (partial or full success)
     const hasSnackSuccess = snackTotal && !snackError;
     const hasMovieSuccess = movieTotal && !movieError;
-    
-    // Build warnings object properly
     const warnings = {};
     if (snackError) warnings.snack = snackError;
     if (movieError) warnings.movie = movieError;
-
-    return { 
-      success: true, 
-      data: { 
+    return res.status(200).json({
+      success: true,
+      data: {
         snackDiscount: hasSnackSuccess ? snackDiscount : 0,
         movieDiscount: hasMovieSuccess ? movieDiscount : 0,
+        promotion: promotionCode,
         ...(Object.keys(warnings).length > 0 && { warnings })
       }
-    };
-
+    });
   } catch (error) {
     console.error('Calculate Discounted Total Error:', error);
-    return { 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       error: { status: 500, message: 'Database error while calculating discount.' }
-    };
+    });
   }
 };
 
 // Áp dụng khuyến mãi và điểm thành viên
-const applyDiscounts = async ({ user, promotionCode, total, session = null }) => {
-  let updatedTotal = total;
+const applyDiscounts = async ({ user, promotionCode, snackTotal, movieTotal, session = null }) => {
+  // Accept snackTotal and movieTotal for unified discount handling
   let appliedPromotion = null;
+  let snackDiscount = 0;
+  let movieDiscount = 0;
+  let finalSnackTotal = snackTotal;
+  let finalMovieTotal = movieTotal;
 
-  // Apply promotion FIRST, then loyalty discount
   if (promotionCode) {
     const promo = await Promotion.findOne({ promotionCode: promotionCode, isActive: true }).session(session);
     const now = new Date();
-
-    // Check promotion validity using ORIGINAL total (before any discounts)
-    if (
-      !promo || promo.startDate && promo.startDate > now || promo.endDate && promo.endDate < now || total < promo.minimumSpend
-    ) {
+    if (!promo || (promo.startDate && promo.startDate > now) || (promo.endDate && promo.endDate < now)) {
       throw { status: 400, message: 'Invalid or inapplicable promotion.' };
     }
-
     if (promo.remainingUse !== null && promo.remainingUse <= 0) {
       throw { status: 400, message: 'Promotion has no remaining uses.' };
     }
-
     if (promo.appliedLoyaltyRank && !user) {
       throw { status: 400, message: 'Promotion requires a customer.' };
     }
-
     if (promo.appliedLoyaltyRank && user.loyaltyRank.rank !== promo.appliedLoyaltyRank) {
       throw { status: 400, message: 'Promotion not applicable for your loyalty rank.' };
     }
-
-    const discount = Math.min(updatedTotal * promo.discountRate / 100.0, promo.maximumDiscount);
-    updatedTotal -= discount;
-
+    // Snack discount
+    if (snackTotal && (promo.appliedProduct === 'Snack' || promo.appliedProduct === 'All') && snackTotal >= promo.minimumSpend) {
+      snackDiscount = Math.min(snackTotal * promo.discountRate / 100.0, promo.maximumDiscount);
+      finalSnackTotal -= snackDiscount;
+    }
+    // Movie discount
+    if (movieTotal && (promo.appliedProduct === 'Movie' || promo.appliedProduct === 'All') && movieTotal >= promo.minimumSpend) {
+      movieDiscount = Math.min(movieTotal * promo.discountRate / 100.0, promo.maximumDiscount);
+      finalMovieTotal -= movieDiscount;
+    }
     if (promo.remainingUse !== null) {
       promo.remainingUse -= 1;
       await promo.save({ session });
     }
-
     appliedPromotion = promo._id;
   }
-
-  // Apply loyalty discount AFTER promotion (if any)
-  if (user && user.loyaltyRank?.defaultDiscountRate) {
-    const loyaltyDiscount = updatedTotal * user.loyaltyRank.defaultDiscountRate / 100;
-    updatedTotal -= loyaltyDiscount;
-  }
-
-  // Ensure total cannot go below 0
-  updatedTotal = Math.max(0, updatedTotal);
-
-  return { total: updatedTotal, appliedPromotion };
+  // Loyalty discount
+  finalSnackTotal = Math.max(0, finalSnackTotal);
+  finalMovieTotal = Math.max(0, finalMovieTotal);
+  return {
+    snackTotal: finalSnackTotal,
+    movieTotal: finalMovieTotal,
+    appliedPromotion,
+    snackDiscount,
+    movieDiscount
+  };
 };
 
 /**
@@ -1213,7 +1193,14 @@ const createTicket = async (req, res) => {
       snackTicket 
     } = req.body;
 
-    const customer = req.user && req.user?.id ? req.user?.id : null;
+    let customer = req.user && req.user?.id ? req.user?.id : null;
+    // If noLoginCustomerInfo has phone, try to find user by phone
+    if (!customer && noLoginCustomerInfo && noLoginCustomerInfo.phone) {
+      const foundUser = await User.findOne({ phone: noLoginCustomerInfo.phone });
+      if (foundUser) {
+        customer = foundUser._id;
+      }
+    }
     console.log(req.body)
 
     // Validate that at least one ticket type is requested
@@ -1340,34 +1327,37 @@ const createTicket = async (req, res) => {
         totalAmount += snackTicketTotal;
       }
 
-      // ===== Apply promotions and discounts =====
-      let finalTotal = totalAmount;
+      // ===== Apply promotions and discounts (using both snack and movie totals) =====
+      let snackTicketTotal = createdSnackTicket ? createdSnackTicket.total : 0;
+      let movieTicketTotal = createdMovieTicket ? createdMovieTicket.total : 0;
       let appliedPromotion = null;
+      let finalSnackTotal = snackTicketTotal;
+      let finalMovieTotal = movieTicketTotal;
 
       if (user || promotionCode) {
-        const discountResult = await applyDiscounts({ 
-          user, 
-          promotionCode, 
-          total: totalAmount,
-          session 
+        const discountResult = await applyDiscounts({
+          user,
+          promotionCode,
+          snackTotal: snackTicketTotal,
+          movieTotal: movieTicketTotal,
+          session
         });
-        finalTotal = discountResult.total;
         appliedPromotion = discountResult.appliedPromotion;
-
-        // Update promotion reference in tickets
-        if (appliedPromotion) {
-          if (createdMovieTicket) {
-            createdMovieTicket.promotion = appliedPromotion;
-            createdMovieTicket.total = createdMovieTicket.total * (finalTotal / totalAmount);
-            await createdMovieTicket.save({ session });
-          }
-          if (createdSnackTicket) {
-            createdSnackTicket.promotion = appliedPromotion;
-            createdSnackTicket.total = createdSnackTicket.total * (finalTotal / totalAmount);
-            await createdSnackTicket.save({ session });
-          }
+        finalSnackTotal = discountResult.snackTotal;
+        finalMovieTotal = discountResult.movieTotal;
+        if (createdSnackTicket) {
+          createdSnackTicket.promotion = appliedPromotion;
+          createdSnackTicket.total = finalSnackTotal;
+          await createdSnackTicket.save({ session });
+        }
+        if (createdMovieTicket) {
+          createdMovieTicket.promotion = appliedPromotion;
+          createdMovieTicket.total = finalMovieTotal;
+          await createdMovieTicket.save({ session });
         }
       }
+
+      let finalTotal = finalSnackTotal + finalMovieTotal;
 
       // ===== Add loyalty points if user is logged in =====
       if (user && finalTotal > 0) {

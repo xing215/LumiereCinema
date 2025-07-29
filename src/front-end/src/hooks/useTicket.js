@@ -67,31 +67,29 @@ export const useApplyPromotion = () => {
   const [appliedPromotion, setAppliedPromotion] = useState(null);
   const { token } = useUser();
 
-  const applyPromotion = async (promotionCode) => {
+  // Accepts promotionCode, snackTotal, movieTotal
+  const applyPromotion = async ({ promotionCode, snackTotal, movieTotal }) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.post('/api/promotions/validate', { code: promotionCode }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAppliedPromotion(response.data);
+      console.log('Applying promotion:', { promotionCode, snackTotal, movieTotal });
+      const response = await axios.post(
+        getApiUrl('checkDiscountedTotal'),
+        { promotionCode, snackTotal, movieTotal },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log('Promotion applied successfully:', response.data.data);
+      setAppliedPromotion(response.data.data);
       return { success: true, data: response.data };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Invalid promotion code';
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid promotion code';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
-
-  const clearPromotion = () => {
-    setAppliedPromotion(null);
-    setError(null);
-  };
-
-  return { applyPromotion, appliedPromotion, clearPromotion, loading, error };
+  return { applyPromotion, appliedPromotion, loading, error };
 };
 
 export const useCreateTicket = () => {
@@ -128,10 +126,8 @@ export const useCreateTicket = () => {
     }
 
     // Add promotion code if present
-    if (movieTicketData?.promotionCode) {
-        ticketData.promotionCode = movieTicketData.promotionCode;
-    } else if (snackTicketData?.promotionCode) {
-        ticketData.promotionCode = snackTicketData.promotionCode;
+    if (movieTicketData?.promotion || snackTicketData?.promotion) {
+        ticketData.promotionCode = movieTicketData.promotion || snackTicketData.promotion;
     }
 
     // Movie ticket data
@@ -244,9 +240,9 @@ export const useStartHoldSession = () => {
     }, {
       headers: { Authorization: `Bearer ${token}` }
     });
-
+    setError(null);
     setHoldSeatData(response.data);
-
+    
     return { success: true, data: response.data };
   } catch (err) {
     console.error('❌ Error in hold session:', err);

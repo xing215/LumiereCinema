@@ -183,6 +183,6 @@ router.post('/cache/preload', protect, restrictTo('administrator'), preloadCache
  * Tính tổng tiền sau khi áp dụng khuyến mãi
  * Query: { user, promotionCode, snackTotal, movieTotal, session = null }
  */
-router.get('/calculate-discounted', getUser, calculateDiscountedTotal);
+router.post('/calculate-discounted', getUser, calculateDiscountedTotal);
 
 module.exports = router;

@@ -1,7 +1,8 @@
 import TicketDetail from '@components/UI/TicketDetail';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import CustomDropdown from '@components/UI/CustomDropdown.jsx';
-import { useState, useEffect } from 'react';
+import {useApplyPromotion} from '@hooks/useTicket';
+import { useState, useEffect, useRef } from 'react';
 
 const PaymentButton = ({ text, selected, onSelect }) => (
     <button 
@@ -14,12 +15,28 @@ const PaymentButton = ({ text, selected, onSelect }) => (
     </button>
 );
 
-const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange }) => (
+const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange, onBlur}) => {
+        const inputRef = useRef(null);
+        const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && typeof onBlur === 'function') {
+            inputRef.current && inputRef.current.blur();
+        }
+    };
+
+    return (
     <div className={`h-auto w-[80vw] min-w-0 flex-row items-center justify-center gap-2 md:max-w-[350px] md:min-w-[250px] ${className}`}>
         <div className={`h-auto w-auto justify-start font-['Unbounded'] font-bold text-white ${labelClass}`}>DISCOUNT:</div>
         <div className="z-3 h-auto flex-1">
-            <input type="text" value={value} onChange={onChange} className="h-10 font-['Unbounded'] w-full rounded-md border border-white bg-zinc-300 px-2 text-black" 
-            disabled={true}/>  
+            <input
+                type="text"
+                value={value}
+                onChange={onChange}
+                className="h-10 font-['Unbounded'] w-full rounded-md border border-white bg-zinc-300 px-2 text-black"
+                // disabled={true}
+                onBlur={onBlur}
+                onKeyDown={handleKeyDown}
+                ref={inputRef}
+            />
             {/* <CustomDropdown
                 name="discount"
                 placeholder=""
@@ -45,7 +62,7 @@ const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', v
             /> */}
         </div>
     </div>
-);
+);};
 
 const Timer = ({ timeLeft, isExpired }) => {
     const formatTime = (seconds) => {
@@ -73,7 +90,7 @@ const Timer = ({ timeLeft, isExpired }) => {
 };
 
 
-const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, sessionExpiresAt, loading, onExpire }) => {
+const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateSnackTicket, updateMovieTicket, sessionExpiresAt, loading, onExpire, isSession }) => {
     const [discountValue, setDiscountValue] = useState('');
     const [selectedPayment, setSelectedPayment] = useState('');
     const [timeLeft, setTimeLeft] = useState(null);
@@ -81,25 +98,18 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, session
 
     // Timer effect with onExpire callback
     useEffect(() => {
-        console.log('Session expires at:', sessionExpiresAt);
-        if (!sessionExpiresAt?.data.expiresAt || loading) return;
+        if (!isSession || !sessionExpiresAt?.data?.expiresAt || loading) return;
 
         let expiredCalled = false;
         const updateTimer = () => {
-            console.log('Updating timer...');
-            console.log('Current time:', new Date().toISOString());
-            console.log('Session expires at:', sessionExpiresAt.data.expiresAt);
             const now = new Date().getTime();
             const expiresAt = new Date(sessionExpiresAt.data.expiresAt).getTime();
             const difference = Math.max(0, Math.floor((expiresAt - now) / 1000));
             setTimeLeft(difference);
             setIsExpired(difference === 0);
-            console.log('Time left:', difference);
-            console.log('Expired called:', expiredCalled);
             if (difference === 0 && !expiredCalled) {
                 expiredCalled = true;
                 if (onExpire) {
-                    console.log('Calling onExpire callback...');
                     onExpire();
                 }
             }
@@ -114,24 +124,43 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, session
         return () => clearInterval(interval);
     }, [sessionExpiresAt, loading, onExpire]);
 
+    const { applyPromotion, appliedPromotion, loading: promotionLoading, error } = useApplyPromotion()
+
     const handleDiscountChange = (e) => {
         setDiscountValue(e.target.value);
     };
 
-    // Calculate total amount
-    const calculateGrandTotal = () => {
-        const movieTotal = movieTicketData.total || 0;
-        const snackTotal = snackTicketData.total || 0;
-        return movieTotal + snackTotal;
+    const handleDiscountBlurOrEnter = async (e) => {
+        console.log('Handling discount blur or enter:', e);
+ // Ensure input loses focus
+        if (discountValue.trim()) {
+            await applyPromotion({
+                promotionCode: discountValue.trim(),
+                snackTotal: snackTicketData?.total,
+                movieTotal: movieTicketData?.total
+            });
+        }
+        
     };
 
-    // Format currency for display
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(amount);
-    };
+    useEffect(() => {
+        if (appliedPromotion) {
+            console.log('Applying promotion:', appliedPromotion);
+            const {snackDiscount:finalSnackDiscount, movieDiscount:finalMovieDiscount} = appliedPromotion;
+            if (finalSnackDiscount !== 0) {
+                updateSnackTicket({promotion: appliedPromotion.promotion, discount: finalSnackDiscount });
+            }
+            if (finalMovieDiscount !== 0) {
+                updateMovieTicket({promotion: appliedPromotion.promotion, discount: finalMovieDiscount });
+        }
+            }
+        if (error) {
+            alert(`Error applying promotion`);
+            setDiscountValue('');
+            updateMovieTicket({ promotion: null, discount: 0 });
+            updateSnackTicket({ promotion: null, discount: 0 })
+        } 
+    }, [appliedPromotion, error]);
 
     const handleSelectPayment = (method) => {
         if (isExpired) {
@@ -191,7 +220,14 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, session
                                           <div className="flex w-full md:hidden justify-center pb-2">
                         <Timer timeLeft={timeLeft} isExpired={isExpired} />
                     </div>
-                        <DiscountDropdown className="flex md:hidden" labelClass="text-sm" direction="down" value={discountValue} onChange={handleDiscountChange} />
+                        <DiscountDropdown
+                            className="flex md:hidden"
+                            labelClass="text-sm"
+                            direction="down"
+                            value={discountValue}
+                            onChange={handleDiscountChange}
+                            onBlur={handleDiscountBlurOrEnter}
+                        />
                         <PaymentButton 
                             text="MOMO" 
                             selected={selectedPayment === 'MOMO'} 
@@ -210,7 +246,14 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, session
                     </div>
 
                     <div className="flex w-[80vw] flex-col items-center justify-center gap-2 px-4 pt-8 pb-10.5 sm:px-8 md:w-[35vw] md:px-10 md:pb-6 lg:w-[30vw] lg:px-12">
-                        <DiscountDropdown className="hidden md:flex" labelClass="text-base" direction="up" value={discountValue} onChange={handleDiscountChange} />
+                        <DiscountDropdown
+                            className="hidden md:flex"
+                            labelClass="text-base"
+                            direction="up"
+                            value={discountValue}
+                            onChange={handleDiscountChange}
+                            onBlur={handleDiscountBlurOrEnter}
+                        />
                         <div className="flex w-full flex-row items-center justify-center gap-2">
                             <BackNaviButton onClick={onBack} />
                             <NextNaviButton 

@@ -35,14 +35,17 @@ const TicketDetail = ({ movieTicketData, snackTicketData }) => {
     const snackCombos = Array.isArray(snackTicketData?.snackList)
         ? snackTicketData.snackList.map(c => `${c.quantity} ${c.name}`).join(', ')
         : 'N/A';
+    const discountValue = -((snackTicketData?.discount || 0) + (movieTicketData?.discount || 0));
 
-    const total = (movieTicketData?.total || 0) + (snackTicketData?.total || 0);
+    const total = (movieTicketData?.total || 0) + (snackTicketData?.total || 0) + discountValue;
 
     const isEmpty = val =>
         val === 'N/A' ||
         val === '' ||
         (Array.isArray(val) && val.length === 0);
 
+
+    const promotion = snackTicketData?.promotion || movieTicketData?.promotion;
     return (
         <div className="relative mx-auto flex w-full h-auto min-h-full flex-col items-center justify-start overflow-hidden rounded-xl">
             <div className="absolute h-full w-full inset-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
@@ -82,6 +85,12 @@ const TicketDetail = ({ movieTicketData, snackTicketData }) => {
                             </div>
                         )}
                     </div>
+                    {!isEmpty(promotion) && (
+                            <Detail label="Promotion" value={promotion} />
+                        )}
+                        {discountValue !== 0 && (
+                            <Detail label="Discount amount" value={discountValue.toLocaleString('en-US')} />
+                        )}
                     <div className="lg:text-lg w-auto font-['Unbounded'] text-md font-semibold text-white">
                         Total: <br/> {total.toLocaleString('en-US')} vnd
                     </div>

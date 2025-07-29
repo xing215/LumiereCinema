@@ -12,7 +12,7 @@ import Sample2 from '@assets/sample/Divided.png';
 const MovieCardContainer = ({ movies, loading }) => {
     if (loading) {
         return (
-            <div className="z-20 flex items-center justify-center w-full pb-10">
+            <div className="z-20 aspect-[300/470] flex items-center justify-center w-full pb-10">
                 <div className="text-white font-['Unbounded'] text-lg">Loading movies...</div>
             </div>
         );
@@ -81,7 +81,7 @@ const MainBody = () => {
 };
 const MovieListPage = () => {
     return (
-        <div className="no-scrollbar flex w-screen flex-col items-center overflow-x-hidden bg-slate-950">
+        <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
             <MainBody />
             <Footer />
