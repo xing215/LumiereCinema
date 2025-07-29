@@ -5,6 +5,112 @@ const MovieRating = require('../models/MovieRating');
 const { redisClient } = require('../config/redis.config');
 const Branch = require('../models/Branch');
 const Promotion = require('../models/Promotion');
+const bcrypt = require('bcryptjs');
+
+// =============================== USER MANAGEMENT ===============================
+
+/**
+ * @desc    Create a new user (admin only)
+ * @route   POST /api/admin/users
+ * @access  Administrator
+ */
+const createUser = async (req, res) => {
+  try {
+    const { name, email, phone, password, birthday, gender, roles, branch } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ 
+        message: 'Name, email, phone, and password are required fields.' 
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { phone }] 
+    });
+    if (existingUser) {
+      return res.status(400).json({ 
+        message: 'User with this email or phone already exists.' 
+      });
+    }
+
+    // Validate roles if provided
+    const validRoles = ['customer', 'cashier', 'checkincounter', 'branchmanager', 'administrator'];
+    if (roles && Array.isArray(roles)) {
+      for (const role of roles) {
+        if (!validRoles.includes(role)) {
+          return res.status(400).json({ 
+            message: `Invalid role: ${role}. Valid roles: ${validRoles.join(', ')}` 
+          });
+        }
+      }
+    }
+
+    // Validate branch if provided
+    if (branch) {
+      const branchExists = await Branch.findById(branch);
+      if (!branchExists) {
+        return res.status(400).json({ 
+          message: 'Invalid branch ID.' 
+        });
+      }
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user data
+    const userData = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      hashedPassword,
+      birthday: birthday ? new Date(birthday) : undefined,
+      gender: gender ? gender.toLowerCase() : 'male',
+      roles: roles && roles.length > 0 ? roles : ['customer'],
+      branch: branch || undefined,
+      activateStatus: true, // Admin-created users are automatically activated
+      isLocked: false
+    };
+
+    // Create new user
+    const newUser = new User(userData);
+    await newUser.save();
+
+    // Clear related caches
+    await redisClient.del('userList');
+
+    // Return user without sensitive data
+    const userResponse = {
+      _id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+      birthday: newUser.birthday,
+      gender: newUser.gender,
+      roles: newUser.roles,
+      branch: newUser.branch,
+      activateStatus: newUser.activateStatus,
+      isLocked: newUser.isLocked,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt
+    };
+
+    res.status(201).json({
+      message: 'User created successfully.',
+      user: userResponse
+    });
+
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
+  }
+}
 
 const getAllProfiles = async (req, res) => {
   try {
@@ -12,7 +118,7 @@ const getAllProfiles = async (req, res) => {
     if (userList) {
       return res.status(200).json(JSON.parse(userList));
     }
-    const users = await User.find().select('-hashedPassword -wishlist -watchHistory -branch -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const users = await User.find().select('-password -wishlist -watchHistory -branch -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!users || users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
     }
@@ -86,7 +192,7 @@ const updateUserRoles = async (req, res) => {
   try {
     const allowedFields = ['roles'];
     const validRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
-    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -hashedPassword -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -119,7 +225,7 @@ const updateUserRoles = async (req, res) => {
 const updateUserStatus = async (req, res) => {
   try {
     const allowedFields = ['isLocked'];
-    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -hashedPassword -wishlist -watchHistory -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -541,6 +647,7 @@ const updateBranchStatus = async (req, res) => {
 };
 
 module.exports = {
+  createUser,
   getAllProfiles,
   getDetailedProfile,
   updateUserDetails,
@@ -552,7 +659,6 @@ module.exports = {
   createPromotion,
   updatePromotion,
   deletePromotion,
-  // Branch management functions
   createBranch,
   updateBranch,
   deleteBranch,
