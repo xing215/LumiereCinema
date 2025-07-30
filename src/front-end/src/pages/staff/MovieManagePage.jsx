@@ -31,9 +31,9 @@ import {
 } from '@utils/sweetalert';
 
 
-const IntegratedButton = ({ onImportData, isLoading = false }) => (
+const IntegratedButton = ({ onImportData, onAddMovie, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
-        <AddButton text="Add Movie" />
+        <AddButton text="Add Movie" onClick={onAddMovie} disabled={isLoading} />
         <div className="flex flex-col items-center gap-1">
             <DownloadTemplateButton 
                 templatePath="/templates/MovieList-Template.xlsx"
@@ -47,6 +47,19 @@ const IntegratedButton = ({ onImportData, isLoading = false }) => (
                 disabled={isLoading}
             />
         </div>
+    </div>
+)
+
+const AddMovieButtons = ({ onConfirm, onCancel, isLoading = false }) => (
+    <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
+        <ConfirmButton 
+            onClick={onConfirm}
+            disabled={isLoading}
+        />
+        <CancelButton 
+            onClick={onCancel}
+            disabled={isLoading}
+        />
     </div>
 )
 
@@ -77,6 +90,19 @@ const MovieManagePage = () => {
     // State for tracking newly uploaded movies (for review)
     const [newlyUploadedMovies, setNewlyUploadedMovies] = useState(new Set());
     const [showReviewMode, setShowReviewMode] = useState(false);
+    
+    // State for adding new movie
+    const [isAddingMovie, setIsAddingMovie] = useState(false);
+    const [newMovieData, setNewMovieData] = useState({
+        title: '',
+        description: '',
+        releaseDate: '',
+        genre: '',
+        duration: '',
+        ageRating: 'P',
+        trailerURL: '',
+        posterURL: ''
+    });
 
     // Initialize inline editing hook
     const {
@@ -85,7 +111,7 @@ const MovieManagePage = () => {
         saveEdit,
         cancelEdit,
         isUpdating
-    } = useInlineEdit(updateMovie, getMovies);
+    } = useInlineEdit(updateMovie, getMovies, movies, setMovies);
 
     useEffect(() => {
         const fetchMovies = async () => {
@@ -124,15 +150,27 @@ const MovieManagePage = () => {
     const handleStartEdit = (rowIndex, columnIndex, currentValue) => {
         // Allow editing without expansion requirement and if not already updating and column is editable
         if (editableColumns.includes(columnIndex) && !isUpdating) {
-            startEdit(rowIndex, columnIndex, currentValue);
+            // If adding movie and this is the first row, allow editing
+            if (isAddingMovie && rowIndex === 0) {
+                startEdit(rowIndex, columnIndex, currentValue);
+            } else if (!isAddingMovie) {
+                startEdit(rowIndex, columnIndex, currentValue);
+            }
         }
     };
 
     // Handle saving inline edit
     const handleSaveEdit = async (rowIndex, columnIndex, newValue) => {
+        // Check if this is the new movie row (index 0 when adding)
+        if (isAddingMovie && rowIndex === 0) {
+            handleNewMovieFieldChange(columnIndex, newValue);
+            return;
+        }
+        
         // Get all movies (filtered + review) to find correct movie
         const allFilteredMovies = [...reviewMovies, ...existingMovies];
-        const movie = allFilteredMovies[rowIndex];
+        const adjustedIndex = isAddingMovie ? rowIndex - 1 : rowIndex; // Adjust for new movie row
+        const movie = allFilteredMovies[adjustedIndex];
         const fieldName = columnFieldMapping[columnIndex];
         
         if (movie && fieldName) {
@@ -150,6 +188,110 @@ const MovieManagePage = () => {
                 console.error('Failed to save edit:', error);
                 // Could add toast notification here for user feedback
             }
+        }
+    };
+
+    // Handle new movie field changes
+    const handleNewMovieFieldChange = (columnIndex, value) => {
+        const fieldName = columnFieldMapping[columnIndex];
+        if (fieldName) {
+            setNewMovieData(prev => ({
+                ...prev,
+                [fieldName]: value
+            }));
+        }
+    };
+
+    // Start adding new movie
+    const handleStartAddMovie = () => {
+        setIsAddingMovie(true);
+        setNewMovieData({
+            title: '',
+            description: '',
+            releaseDate: '',
+            genre: '',
+            duration: '',
+            ageRating: 'P',
+            trailerURL: '',
+            posterURL: ''
+        });
+    };
+
+    // Cancel adding new movie
+    const handleCancelAddMovie = () => {
+        setIsAddingMovie(false);
+        setNewMovieData({
+            title: '',
+            description: '',
+            releaseDate: '',
+            genre: '',
+            duration: '',
+            ageRating: 'P',
+            trailerURL: '',
+            posterURL: ''
+        });
+    };
+
+    // Confirm adding new movie
+    const handleConfirmAddMovie = async () => {
+        try {
+            // Validate required fields
+            if (!newMovieData.title.trim()) {
+                showUploadError('Movie title is required');
+                return;
+            }
+
+            // Show adding progress
+            showAddingMovies();
+
+            // Prepare movie data for API
+            const movieToAdd = {
+                title: newMovieData.title.trim(),
+                description: newMovieData.description.trim(),
+                releaseDate: newMovieData.releaseDate,
+                genre: newMovieData.genre ? newMovieData.genre.split(',').map(g => g.trim()).filter(Boolean) : [],
+                duration: newMovieData.duration ? parseInt(newMovieData.duration) : 0,
+                ageRating: newMovieData.ageRating || 'P',
+                trailerURL: newMovieData.trailerURL.trim(),
+                posterURL: newMovieData.posterURL.trim(),
+                isHidden: true, // Default to hidden
+                director: '',
+                cast: [],
+                language: '',
+                ratingsAverage: 0,
+                ratingsQuantity: 0
+            };
+
+            const result = await addMovie(movieToAdd);
+
+            if (result.success) {
+                // Refresh movies list
+                await getMovies();
+                
+                // Reset add movie state
+                setIsAddingMovie(false);
+                setNewMovieData({
+                    title: '',
+                    description: '',
+                    releaseDate: '',
+                    genre: '',
+                    duration: '',
+                    ageRating: 'P',
+                    trailerURL: '',
+                    posterURL: ''
+                });
+
+                // Show success message
+                closeSwal();
+                showMoviesAdded(1);
+            } else {
+                closeSwal();
+                showUploadError(result.error || 'Failed to add movie');
+            }
+        } catch (error) {
+            console.error('Failed to add movie:', error);
+            closeSwal();
+            showUploadError(error.message || 'Failed to add movie');
         }
     };
 
@@ -264,7 +406,31 @@ const MovieManagePage = () => {
     ]);
 
     // Combine with review movies at the top
-    const allMovieRows = [...reviewMovieRows, ...existingMovieRows];
+    let allMovieRows = [...reviewMovieRows, ...existingMovieRows];
+    
+    // Add new movie row at the top if adding
+    if (isAddingMovie) {
+        const newMovieRow = [
+            { type: 'AddIndicator' }, // Special indicator for new movie
+            newMovieData.title,
+            newMovieData.description,
+            newMovieData.releaseDate,
+            newMovieData.genre,
+            newMovieData.duration,
+            newMovieData.ageRating,
+            newMovieData.trailerURL,
+            newMovieData.posterURL,
+            { 
+                type: 'ActiveButton', 
+                isHidden: true,
+                rowIndex: 0,
+                isUpdating: false,
+                disabled: true // Disable during add
+            }, 
+            { type: 'AddLabel', text: 'NEW' }
+        ];
+        allMovieRows = [newMovieRow, ...allMovieRows];
+    }
 
     const handleDeleteConfirm = async () => {
         // Get all movies (filtered + review) to find correct IDs
@@ -479,7 +645,13 @@ const MovieManagePage = () => {
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} placeholder="Search by movie title or genre..." />
                 
-                {showReviewMode ? (
+                {isAddingMovie ? (
+                    <AddMovieButtons 
+                        onConfirm={handleConfirmAddMovie}
+                        onCancel={handleCancelAddMovie}
+                        isLoading={addLoading}
+                    />
+                ) : showReviewMode ? (
                     <ReviewButtons 
                         onConfirm={handleConfirmReview}
                         onCancel={handleCancelReview}
@@ -493,6 +665,7 @@ const MovieManagePage = () => {
                 ) : (
                     <IntegratedButton 
                         onImportData={handleImportData}
+                        onAddMovie={handleStartAddMovie}
                         isLoading={loading || importLoading || addLoading}
                     />
                 )}

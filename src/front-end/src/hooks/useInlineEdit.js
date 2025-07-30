@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
  * Custom hook for managing inline editing functionality
  * Handles edit state, value changes, and API updates
  */
-export const useInlineEdit = (updateFunction, refreshFunction) => {
+export const useInlineEdit = (updateFunction, refreshFunction, items, setItems) => {
     const [editingCell, setEditingCell] = useState(null); // { rowIndex, columnIndex, originalValue }
     const [editValue, setEditValue] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
@@ -45,8 +45,19 @@ export const useInlineEdit = (updateFunction, refreshFunction) => {
             console.log('Update result:', result);
             
             if (result.success) {
-                // Refresh the data to reflect changes
-                if (refreshFunction) {
+                // Update local state instead of refreshing
+                if (items && setItems) {
+                    setItems(prevItems => {
+                        return prevItems.map(item => {
+                            const currentItemId = item.id || item._id;
+                            if (currentItemId === itemId) {
+                                return { ...item, [fieldName]: newValue };
+                            }
+                            return item;
+                        });
+                    });
+                } else if (refreshFunction) {
+                    // Fallback to refresh if items/setItems not provided
                     console.log('Refreshing data...');
                     await refreshFunction();
                 }
@@ -65,7 +76,7 @@ export const useInlineEdit = (updateFunction, refreshFunction) => {
         } finally {
             setIsUpdating(false);
         }
-    }, [editingCell, updateFunction, refreshFunction, isUpdating, cancelEdit]);
+    }, [editingCell, updateFunction, refreshFunction, items, setItems, isUpdating, cancelEdit]);
 
     return {
         editingCell,

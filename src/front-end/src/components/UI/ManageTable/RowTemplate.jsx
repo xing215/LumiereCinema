@@ -107,6 +107,9 @@ const RowTemplate = (props) => {
 
     // Check if this is a review row
     const isReviewRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'ReviewIndicator';
+    
+    // Check if this is an add movie row
+    const isAddRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'AddIndicator';
 
     return (
         <div className="z-10 flex flex-col">
@@ -115,6 +118,7 @@ const RowTemplate = (props) => {
                     ${props.checked ? 'bg-zinc-400' : ''} 
                     ${props.isExpanded ? 'bg-zinc-300 shadow-md' : ''} 
                     ${isReviewRow ? 'bg-orange-50 border-l-4 border-orange-500 shadow-lg' : ''} 
+                    ${isAddRow ? 'bg-green-50 border-l-4 border-green-500 shadow-lg' : ''} 
                     ${!props.isHeader ? 'hover:bg-gray-50 cursor-pointer' : ''}
                     ${!hasColumnConfig ? 'justify-between' : ''}
                     ${hasColumnConfig ? 'min-w-max' : 'w-full'}`}
@@ -163,6 +167,16 @@ const RowTemplate = (props) => {
                                             </span>
                                         </div>
                                     )
+                                ) : value && typeof value === 'object' && value.type === 'AddIndicator' ? (
+                                    props.isHeader ? (
+                                        <span></span>
+                                    ) : (
+                                        <div className="flex justify-center w-full">
+                                            <span className="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full animate-pulse">
+                                                NEW
+                                            </span>
+                                        </div>
+                                    )
                                 ) : value === 'ActiveButton' ? (
                                     props.isHeader ? (
                                         <span>Active</span>
@@ -183,6 +197,7 @@ const RowTemplate = (props) => {
                                                 activeLabel="Visible"
                                                 inactiveLabel="Hidden"
                                                 isUpdating={value.isUpdating || false}
+                                                isRowTicked={props.checked}
                                             />
                                         </div>
                                     )
@@ -221,6 +236,14 @@ const RowTemplate = (props) => {
                                             <PreviewButton/>
                                         </div>
                                     )
+                                ) : value && typeof value === 'object' && value.type === 'AddLabel' ? (
+                                    props.isHeader ? (
+                                        <span>Preview</span>
+                                    ) : (
+                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                            <PreviewButton/>
+                                        </div>
+                                    )
                                 ) : (
                                     // Check if this cell should be editable
                                     props.editableFields && props.editableFields.includes(index) && !props.isHeader ? (
@@ -235,6 +258,7 @@ const RowTemplate = (props) => {
                                             className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
                                             tooltipText={tooltipText}
                                             shouldTruncate={shouldTruncateText && !props.isExpanded}
+                                            fieldType={index === 3 ? 'date' : 'text'}
                                         />
                                     ) : (
                                         <span

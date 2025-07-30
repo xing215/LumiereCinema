@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@styles/datepicker.css';
+import { CalendarIcon } from 'lucide-react';
 
 const EditableCell = ({ 
     value, 
@@ -14,7 +18,27 @@ const EditableCell = ({
     shouldTruncate = false // Add shouldTruncate prop
 }) => {
     const [editValue, setEditValue] = useState(value || '');
+    const [selectedDate, setSelectedDate] = useState(null);
     const inputRef = useRef(null);
+    const datePickerRef = useRef(null);
+
+    // Convert string date to Date object for date picker
+    useEffect(() => {
+        if (fieldType === 'date' && value) {
+            try {
+                const date = new Date(value);
+                if (!isNaN(date.getTime())) {
+                    setSelectedDate(date);
+                } else {
+                    setSelectedDate(null);
+                }
+            } catch (error) {
+                setSelectedDate(null);
+            }
+        } else if (fieldType === 'date') {
+            setSelectedDate(null);
+        }
+    }, [value, fieldType]);
 
     // Function to auto-resize textarea based on content
     const autoResizeTextarea = (textarea) => {
@@ -33,12 +57,20 @@ const EditableCell = ({
 
     // Focus input when editing starts
     useEffect(() => {
-        if (isEditing && inputRef.current) {
-            inputRef.current.focus();
-            inputRef.current.select();
-            autoResizeTextarea(inputRef.current);
+        if (isEditing) {
+            if (fieldType === 'date' && datePickerRef.current) {
+                setTimeout(() => {
+                    if (datePickerRef.current) {
+                        datePickerRef.current.setFocus();
+                    }
+                }, 100);
+            } else if (inputRef.current) {
+                inputRef.current.focus();
+                inputRef.current.select();
+                autoResizeTextarea(inputRef.current);
+            }
         }
-    }, [isEditing]); // Remove editValue dependency
+    }, [isEditing, fieldType]);
 
     const handleDoubleClick = (e) => {
         e.preventDefault();
@@ -46,6 +78,42 @@ const EditableCell = ({
         if (!disabled && onStartEdit) {
             onStartEdit();
         }
+    };
+
+    const handleDateChange = (date) => {
+        setSelectedDate(date);
+        // Auto save when date is selected
+        setTimeout(() => {
+            if (date) {
+                // Convert to YYYY-MM-DD format
+                const formattedDate = date.toISOString().split('T')[0];
+                setEditValue(formattedDate);
+                if (onSave) {
+                    onSave(formattedDate);
+                }
+            } else {
+                setEditValue('');
+                if (onSave) {
+                    onSave('');
+                }
+            }
+        }, 100);
+    };
+
+    // Handle input focus to prevent mobile keyboard
+    const handleDateInputFocus = (e) => {
+        // On mobile devices, blur immediately to prevent keyboard
+        if (window.innerWidth <= 768) {
+            e.target.blur();
+        }
+        // Set readonly attribute dynamically
+        e.target.setAttribute('readonly', 'readonly');
+    };
+
+    // Handle input click to ensure calendar opens
+    const handleDateInputClick = (e) => {
+        // Remove readonly temporarily to allow calendar interaction
+        e.target.removeAttribute('readonly');
     };
 
     const handleKeyDown = (e) => {
@@ -91,23 +159,68 @@ const EditableCell = ({
         autoResizeTextarea(e.target);
     };
 
+    // Format date for display
+    const formatDisplayDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+                return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+            }
+        } catch (error) {
+            return dateStr;
+        }
+        return dateStr;
+    };
+
     if (isEditing) {
-        return (
-            <textarea
-                ref={inputRef}
-                value={editValue}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
-                className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${className}`}
-                style={{ 
-                    minWidth: '60px',
-                    minHeight: '40px',
-                    lineHeight: '1.4'
-                }}
-                rows={1}
-            />
-        );
+        if (fieldType === 'date') {
+            return (
+                <div className="relative w-full">
+                    <DatePicker
+                        ref={datePickerRef}
+                        selected={selectedDate}
+                        onChange={handleDateChange}
+                        onKeyDown={handleKeyDown}
+                        dateFormat="dd/MM/yyyy"
+                        className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+                        calendarClassName="react-datepicker-custom"
+                        showPopperArrow={false}
+                        autoComplete="off"
+                        placeholderText="Select date..."
+                        isClearable
+                        todayButton="Today"
+                        showYearDropdown
+                        showMonthDropdown
+                        dropdownMode="select"
+                        maxDate={new Date()} // Prevent future dates for movie releases
+                        minDate={new Date('1900-01-01')} // Reasonable minimum date
+                        autoFocus
+                        shouldCloseOnSelect={true}
+                        onClickOutside={handleSave}
+                        onFocus={handleDateInputFocus}
+                        onClick={handleDateInputClick}
+                    />
+                </div>
+            );
+        } else {
+            return (
+                <textarea
+                    ref={inputRef}
+                    value={editValue}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleBlur}
+                    className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${className}`}
+                    style={{ 
+                        minWidth: '60px',
+                        minHeight: '40px',
+                        lineHeight: '1.4'
+                    }}
+                    rows={1}
+                />
+            );
+        }
     }
 
     return (
@@ -132,20 +245,36 @@ const EditableCell = ({
                             whiteSpace: 'nowrap'
                         } : {}}
                     >
-                        {value || ''}
+                        {fieldType === 'date' ? formatDisplayDate(value) : (value || '')}
                     </span>
                 </span>
             ) : (
-                <span 
-                    className={shouldTruncate ? 'truncate block w-full' : 'w-full'}
-                    style={shouldTruncate ? {
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                    } : {}}
-                >
-                    {value || ''}
-                </span>
+                fieldType === 'date' ? (
+                    <div className="flex items-center gap-1 w-full">
+                        <CalendarIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <span 
+                            className={shouldTruncate ? 'truncate block flex-1' : 'flex-1'}
+                            style={shouldTruncate ? {
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                            } : {}}
+                        >
+                            {formatDisplayDate(value) || 'Select date...'}
+                        </span>
+                    </div>
+                ) : (
+                    <span 
+                        className={shouldTruncate ? 'truncate block w-full' : 'w-full'}
+                        style={shouldTruncate ? {
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                        } : {}}
+                    >
+                        {value || ''}
+                    </span>
+                )
             )}
         </div>
     );

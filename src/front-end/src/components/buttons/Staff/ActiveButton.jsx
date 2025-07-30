@@ -7,7 +7,8 @@ const ActiveButton = ({
     activeLabel = 'Active',
     inactiveLabel = 'Hidden',
     size = 'h-5 w-5',
-    isUpdating = false
+    isUpdating = false,
+    isRowTicked = false
 }) => {
     // Đơn giản: isHidden = false → checked = true
     
@@ -44,7 +45,7 @@ const ActiveButton = ({
                 <span className="inline-block w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
             ) : checked ? 
                 <SquareCheckBig className="h-full w-full text-green-600" /> : 
-                <Square className="h-full w-full text-gray-400" />
+                <Square className={`h-full w-full ${isRowTicked ? 'text-white' : 'text-gray-400'}`} />
             }
         </button>
     );
