@@ -17,7 +17,9 @@ const ManageTable = ({
     onCancelEdit,
     isUpdating,
     // Status change prop
-    onStatusChange
+    onStatusChange,
+    // Review mode props
+    reviewMovieIds
 }) => {
     const headerScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -36,6 +38,12 @@ const ManageTable = ({
             }
             return newSet;
         });
+    };
+
+    // Check if row is in review mode
+    const isReviewRow = (index) => {
+        const row = data[index];
+        return row && row[0] && typeof row[0] === 'object' && row[0].type === 'ReviewIndicator';
     };
 
     // Handle row expand/collapse
@@ -107,7 +115,7 @@ const ManageTable = ({
                             onEdit={onEdit}
                             onEditSeat={onEditSeat}
                             columnConfig={columnConfig}
-                            isExpanded={expandedRow === index}
+                            isExpanded={expandedRow === index || isReviewRow(index)} // Auto-expand review rows
                             onRowClick={() => handleRowClick(index)}
                             // Inline editing props
                             editableFields={editableFields}

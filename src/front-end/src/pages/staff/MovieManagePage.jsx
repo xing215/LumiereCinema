@@ -8,6 +8,8 @@ import DeleteButton from '@components/buttons/Staff/DeleteButton';
 import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton';
 import UploadCSVButton from '@components/buttons/Staff/uploadCsvButton';
 import AddButton from '@components/buttons/Staff/AddButton';
+import ConfirmButton from '@components/buttons/Staff/ConfirmButton';
+import CancelButton from '@components/buttons/Staff/CancelButton';
 import { useGetMovies, useRemoveMovie, useUpdateMovie, useAddMovie } from '@hooks/useAdmin';
 import { useInlineEdit, useStatusUpdate } from '@hooks/useInlineEdit';
 
@@ -31,6 +33,19 @@ const IntegratedButton = ({ onImportData, isLoading = false }) => (
     </div>
 )
 
+const ReviewButtons = ({ onConfirm, onCancel, isLoading = false }) => (
+    <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[15vh]">
+        <ConfirmButton 
+            onClick={onConfirm}
+            disabled={isLoading}
+        />
+        <CancelButton 
+            onClick={onCancel}
+            disabled={isLoading}
+        />
+    </div>
+)
+
 const MovieManagePage = () => {
     const { getMovies, movies, setMovies, loading } = useGetMovies();
     const { removeMovie, loading: removeLoading } = useRemoveMovie();
@@ -41,6 +56,10 @@ const MovieManagePage = () => {
     const [tickedMovies, setTickedMovies] = useState(new Set());
     const [showConfirmDeleteMovies, setShowConfirmDeleteMovies] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
+    
+    // State for tracking newly uploaded movies (for review)
+    const [newlyUploadedMovies, setNewlyUploadedMovies] = useState(new Set());
+    const [showReviewMode, setShowReviewMode] = useState(false);
 
     // Initialize inline editing hook
     const {
@@ -117,16 +136,21 @@ const MovieManagePage = () => {
         }
     };
 
-    const movieRows = movies?.map((movie, index) => [
+    // Separate movies into newly uploaded and existing
+    const existingMovies = movies?.filter(movie => !newlyUploadedMovies.has(movie._id)) || [];
+    const reviewMovies = movies?.filter(movie => newlyUploadedMovies.has(movie._id)) || [];
+
+    // Create rows for existing movies
+    const existingMovieRows = existingMovies.map((movie, index) => [
         'TickButton',
         movie.title || movie.name || '',
         movie.description || '',
         movie.releaseDate || '',
-        Array.isArray(movie.genre) ? movie.genre.join(', ') : (movie.genre || ''), // Format genre array as comma-separated string
+        Array.isArray(movie.genre) ? movie.genre.join(', ') : (movie.genre || ''),
         movie.duration || '',
-        movie.ageRating || '', // Use ageRating instead of audienceType
-        movie.trailerURL || '', // Use trailerURL (capital URL)
-        movie.posterURL || '', // Use posterURL (capital URL)
+        movie.ageRating || '',
+        movie.trailerURL || '',
+        movie.posterURL || '',
         { 
             type: 'ActiveButton', 
             isHidden: movie.isHidden || false,
@@ -134,7 +158,31 @@ const MovieManagePage = () => {
             isUpdating: updatingRows.has(index)
         }, 
         'PreviewButton'
-    ]) || [];
+    ]);
+
+    // Create rows for review movies (newly uploaded) - always expanded
+    const reviewMovieRows = reviewMovies.map((movie, index) => [
+        { type: 'ReviewIndicator' }, // Special indicator for review movies
+        movie.title || '',
+        movie.description || '',
+        movie.releaseDate || '',
+        Array.isArray(movie.genre) ? movie.genre.join(', ') : (movie.genre || ''),
+        movie.duration || '',
+        movie.ageRating || '',
+        movie.trailerURL || '',
+        movie.posterURL || '',
+        { 
+            type: 'ActiveButton', 
+            isHidden: movie.isHidden || false,
+            rowIndex: existingMovies.length + index,
+            isUpdating: false,
+            disabled: true // Disable during review
+        }, 
+        { type: 'ReviewLabel', text: 'REVIEW' }
+    ]);
+
+    // Combine with review movies at the top
+    const allMovieRows = [...reviewMovieRows, ...existingMovieRows];
 
     const handleDelete = async () => {
         const selectedMovieIds = Array.from(tickedMovies).map(index => {
@@ -156,7 +204,7 @@ const MovieManagePage = () => {
         }
     };
 
-    // Import movies from Excel
+    // Import movies from Excel - upload directly and track for review
     const handleImportData = async (parsedData) => {
         if (!parsedData || parsedData.length === 0) {
             alert('No valid data found in the file');
@@ -169,6 +217,7 @@ const MovieManagePage = () => {
             let successCount = 0;
             let errorCount = 0;
             const errors = [];
+            const uploadedMovieIds = [];
 
             for (const movieData of parsedData) {
                 try {
@@ -189,7 +238,6 @@ const MovieManagePage = () => {
                         ageRating: movieData.ageRating || 'P',
                         trailerURL: movieData.trailerURL,
                         posterURL: movieData.posterURL,
-                        // Remove status field - using virtual property based on releaseDate and isHidden
                         isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true,
                         director: movieData.director || '',
                         cast: movieData.cast || [],
@@ -202,6 +250,10 @@ const MovieManagePage = () => {
                     
                     if (result.success) {
                         successCount++;
+                        // Track the newly uploaded movie ID
+                        if (result.data && result.data.movie) {
+                            uploadedMovieIds.push(result.data.movie._id);
+                        }
                     } else {
                         errors.push(`Row ${movieData.rowIndex + 1}: ${result.error || 'Failed to add movie'}`);
                         errorCount++;
@@ -213,27 +265,58 @@ const MovieManagePage = () => {
             }
 
             // Show results
-            let message = `Import completed!\nSuccessfully imported: ${successCount} movies`;
+            let message = `Upload completed!\nSuccessfully uploaded: ${successCount} movies`;
             if (errorCount > 0) {
                 message += `\nFailed: ${errorCount} movies`;
                 if (errors.length > 0) {
-                    message += `\n\nErrors:\n${errors.slice(0, 5).join('\n')}`;
-                    if (errors.length > 5) {
-                        message += `\n... and ${errors.length - 5} more errors`;
-                    }
+                    message += `\n\nErrors:\n${errors.join('\n')}`;
                 }
             }
-            
             alert(message);
 
-            // Refresh the movie list if any movies were added
-            if (successCount > 0) {
-                await getMovies();
+            // Refresh movies and set review mode
+            await getMovies();
+            
+            if (uploadedMovieIds.length > 0) {
+                setNewlyUploadedMovies(new Set(uploadedMovieIds));
+                setShowReviewMode(true);
             }
 
         } catch (error) {
             console.error('Import error:', error);
             alert('An error occurred during import. Please try again.');
+        } finally {
+            setImportLoading(false);
+        }
+    };
+
+    // Confirm review - accept newly uploaded movies
+    const handleConfirmReview = () => {
+        setNewlyUploadedMovies(new Set());
+        setShowReviewMode(false);
+        alert('Movies have been confirmed and are now live!');
+    };
+
+    // Cancel review - delete newly uploaded movies
+    const handleCancelReview = async () => {
+        if (newlyUploadedMovies.size === 0) return;
+        
+        setImportLoading(true);
+        try {
+            // Delete all newly uploaded movies
+            for (const movieId of newlyUploadedMovies) {
+                await removeMovie(movieId);
+            }
+            
+            // Refresh movies and clear review mode
+            await getMovies();
+            setNewlyUploadedMovies(new Set());
+            setShowReviewMode(false);
+            alert('Newly uploaded movies have been removed.');
+            
+        } catch (error) {
+            console.error('Error canceling review:', error);
+            alert('Failed to remove some movies. Please try again.');
         } finally {
             setImportLoading(false);
         }
@@ -261,7 +344,7 @@ const MovieManagePage = () => {
     };
 
     // Format movieRows with formatted release date
-    const formattedMovieRows = movieRows.map(row => {
+    const formattedMovieRows = allMovieRows.map(row => {
         const newRow = [...row];
         newRow[3] = formatReleaseDate(row[3]);
         return newRow;
@@ -271,7 +354,13 @@ const MovieManagePage = () => {
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton />
-                {tickedMovies.size > 0 ? (
+                {showReviewMode ? (
+                    <ReviewButtons 
+                        onConfirm={handleConfirmReview}
+                        onCancel={handleCancelReview}
+                        isLoading={importLoading}
+                    />
+                ) : tickedMovies.size > 0 ? (
                     <DeleteButton 
                         onClicked={() => setShowConfirmDeleteMovies(true)} 
                         disabled={removeLoading}
@@ -308,6 +397,7 @@ const MovieManagePage = () => {
                         onCancelEdit={cancelEdit}
                         isUpdating={isUpdating}
                         onStatusChange={onStatusChange}
+                        reviewMovieIds={newlyUploadedMovies} // Pass review movie IDs for special handling
                     />
                 )}
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Movies</div>

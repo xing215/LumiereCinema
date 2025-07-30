@@ -105,12 +105,16 @@ const RowTemplate = (props) => {
         };
     }, [expandTimeout]);
 
+    // Check if this is a review row
+    const isReviewRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'ReviewIndicator';
+
     return (
         <div className="z-10 flex flex-col">
             <div
                 className={`relative flex items-center gap-5 pl-[3%] pr-[3%] lg:py-3 xl:gap-2 xl:py-5 transition-all duration-300 
                     ${props.checked ? 'bg-zinc-400' : ''} 
                     ${props.isExpanded ? 'bg-zinc-300 shadow-md' : ''} 
+                    ${isReviewRow ? 'bg-orange-50 border-l-4 border-orange-500 shadow-lg' : ''} 
                     ${!props.isHeader ? 'hover:bg-gray-50 cursor-pointer' : ''}
                     ${!hasColumnConfig ? 'justify-between' : ''}
                     ${hasColumnConfig ? 'min-w-max' : 'w-full'}`}
@@ -149,6 +153,16 @@ const RowTemplate = (props) => {
                                             <TickButton check={props.checked} onTick={props.onTicked} />
                                         </div>
                                     )
+                                ) : value && typeof value === 'object' && value.type === 'ReviewIndicator' ? (
+                                    props.isHeader ? (
+                                        <span></span>
+                                    ) : (
+                                        <div className="flex justify-center w-full">
+                                            <span className="px-2 py-1 text-xs font-bold text-white bg-blue-500 rounded-full animate-pulse">
+                                                REVIEW
+                                            </span>
+                                        </div>
+                                    )
                                 ) : value === 'ActiveButton' ? (
                                     props.isHeader ? (
                                         <span>Active</span>
@@ -165,7 +179,7 @@ const RowTemplate = (props) => {
                                             <ActiveButton 
                                                 isHidden={value.isHidden}
                                                 onToggle={(newIsHidden) => props.onStatusChange?.(value.rowIndex, newIsHidden)}
-                                                disabled={props.isUpdating}
+                                                disabled={value.disabled || props.isUpdating}
                                                 activeLabel="Visible"
                                                 inactiveLabel="Hidden"
                                                 isUpdating={value.isUpdating || false}
@@ -193,7 +207,18 @@ const RowTemplate = (props) => {
                                         <span>Preview</span>
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <PreviewButton onClick={() => props.onPreview?.(props.rowIndex)} />
+                                            <PreviewButton 
+                                                onClick={() => props.onPreview?.(props.rowIndex)} 
+                                                disabled={isReviewRow}
+                                            />
+                                        </div>
+                                    )
+                                ) : value && typeof value === 'object' && value.type === 'ReviewLabel' ? (
+                                    props.isHeader ? (
+                                        <span>Preview</span>
+                                    ) : (
+                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                            <PreviewButton/>
                                         </div>
                                     )
                                 ) : (
