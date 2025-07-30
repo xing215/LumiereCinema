@@ -43,7 +43,8 @@ const getNowShowingMovies = async (req, res) => {
             genre: movie.genre,
             ageRating: movie.ageRating,
             ratingsAverage: movie.ratingsAverage,
-            releaseDate: movie.releaseDate
+            releaseDate: movie.releaseDate,
+            status: movie.status
         }));        // 3. Save result to cache for next time
         await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
             EX: DEFAULT_EXPIRATION,
@@ -92,7 +93,8 @@ const getUpcomingMovies = async (req, res) => {
             title: movie.title,
             posterURL: movie.posterURL,
             releaseDate: movie.releaseDate,
-            genre: movie.genre
+            genre: movie.genre,
+            status: movie.status
         }));        // 3. Save to cache
         await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
             EX: DEFAULT_EXPIRATION,
