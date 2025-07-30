@@ -68,7 +68,6 @@ const ReportPage = () => {
   ];
 
   const selectedBranchObj = dropdownOptions.find(opt => opt.value === selectedBranchForAdmin.id) || dropdownOptions[0];
-
   return (
     <StaffLayout backgroundClass="bg-gray-300">
       <div className="relative bg-gray-300 w-full min-h-screen lg:h-screen font-mina lg:overflow-hidden">
@@ -136,7 +135,7 @@ const ReportPage = () => {
             </p>
           )}
         </div>
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-10 w-[90%] sm:w-110 lg:absolute lg:origin-center">
+        <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-10 w-[90%] sm:w-110 lg:absolute lg:origin-center">
           {isAdmin ? (
             <CustomDropdown
               options={dropdownOptions}

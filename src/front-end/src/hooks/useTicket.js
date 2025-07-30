@@ -341,3 +341,37 @@ export const useActiveTicket = () => {
 
   return { activeTicket, loading, error };
 };
+
+export const useGetTicketDetailsByCode = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [ticket, setTicket] = useState(null);
+    const { token } = useUser();
+
+    // Hàm getTicket giờ không cần ticketType nữa
+    const getTicket = async (ticketCode) => {
+        if (!ticketCode) return;
+        setLoading(true);
+        setError(null);
+        setTicket(null);
+        
+        try {
+            // Luôn gọi đến một URL chung (backend sẽ tự xử lý)
+            // Chúng ta có thể dùng URL của vé phim làm đại diện
+            const url = buildApiUrl(`/api/tickets/movie/admin/${ticketCode}`);
+            const response = await axios.get(url, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setTicket(response.data); // Dữ liệu trả về giờ đã có trường ticketType
+            return { success: true, data: response.data };
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Ticket not found or an error occurred.';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+    return { getTicket, ticket, loading, error };
+};
