@@ -5,11 +5,6 @@ import MovieCard from '@components/UI/MovieCard';
 import BranchFilterButton from '@components/buttons/branchFilterButton';
 import MovieStatusFilterButton from '@components/buttons/movieStatusFilterButton';
 import { useFetchNowShowing, useFetchComingSoon } from '@hooks/useMovie';
-import CustomDropdown from "@/components/UI/CustomDropdown";
-
-
-import Sample1 from '@assets/sample/ThamTuKien.jpg';
-import Sample2 from '@assets/sample/Divided.png';
 
 const MovieCardContainer = ({ movies, loading }) => {
     if (loading) {
@@ -26,86 +21,29 @@ const MovieCardContainer = ({ movies, loading }) => {
                 movies.map((movie, index) => (
                     <MovieCard 
                         key={movie._id || index} 
-                        linkImg={movie.posterUrl || Sample1} 
                         movie={movie}
                         page="MovieList" 
                     />
                 ))
-            ) : (
-                <>
-                    {/* Fallback to sample data */}
-                    <MovieCard linkImg={Sample1} page="MovieList" />
-                    <MovieCard linkImg={Sample2} page="MovieList" />
-                    <MovieCard linkImg={Sample1} page="MovieList" />
-                    <MovieCard linkImg={Sample2} page="MovieList" />
-                    <MovieCard linkImg={Sample1} page="MovieList" />
-                    <MovieCard linkImg={Sample2} page="MovieList" />
-                    <MovieCard linkImg={Sample1} page="MovieList" />
-                    <MovieCard linkImg={Sample2} page="MovieList" />
-                    <MovieCard linkImg={Sample1} page="MovieList" />
-                    <MovieCard linkImg={Sample2} page="MovieList" />
-                    <MovieCard linkImg={Sample1} page="MovieList" />
-                    <MovieCard linkImg={Sample2} page="MovieList" />
-                </>
-            )}
+            ) : null}
         </div>
     );
 };
 
 const MainBody = () => {
-    const { fetchNowShowing, movies: nowShowingMovies, loading: nowShowingLoading } = useFetchNowShowing();
-    const { fetchComingSoon, movies: comingSoonMovies, loading: comingSoonLoading } = useFetchComingSoon();
-    const [selectedFilter, setSelectedFilter] = useState('now-showing');
+    const { fetchNowShowing, movies, loading } = useFetchNowShowing();
 
     useEffect(() => {
         fetchNowShowing();
-        fetchComingSoon();
     }, []);
-
-    const displayMovies = selectedFilter === 'now-showing' ? nowShowingMovies : comingSoonMovies;
-    const loading = selectedFilter === 'now-showing' ? nowShowingLoading : comingSoonLoading;
-
-    const handleFilterChange = (filter) => {
-        setSelectedFilter(filter);
-        if (filter === 'now-showing') {
-            fetchNowShowing();
-        } else if (filter === 'coming-soon') {
-            fetchComingSoon();
-        }
-    }
-
 
     return (
         <div className="relative flex w-[75%] flex-col pt-20 md:pt-30 lg:pt-35 xl:pt-40">
             <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">MOVIES</div>
             <div className="flex w-full justify-between gap-1 py-3 md:justify-start md:gap-2 md:py-6 lg:gap-3 lg:py-8 xl:gap-4 xl:py-10">
                 <BranchFilterButton />
-                        <div className=" z-50 w-[48%] md:w-[31%] lg:w-[23%]">
-                        <CustomDropdown name="discount"
-                        placeholder=""
-                        value={selectedFilter}
-                        onChange={handleFilterChange}
-                        bgColor="indigo-700 backdrop-blur-[30px]"
-                        inputBgColor="pink-400"
-                        variant={'figma'}
-                        hoverColor="purple-600"
-                        borderColor=""
-                        textColor="white"
-                        dropdownTextColor="white"
-                        height="h-10"
-                        inputTextSize="text-md"
-                        optionTextSize="text-sm"
-                        openDirection='down'
-                        textAlign="left"
-                        options={[
-                            { value: 'Information', label: 'Information' },
-                            { value: 'Wishlist', label: 'Wishlist' },
-                            { value: 'Watch history', label: 'Watch history' },
-                            { value: 'Lunar points', label: 'Lunar points' },
-                        ]}/>
-                </div>
             </div>
-            <MovieCardContainer movies={displayMovies} loading={loading} />
+            <MovieCardContainer movies={movies} loading={loading} />
             <div className="h-5 w-full sm:h-10 md:h-20 lg:h-25" />
 
             <div className="absolute top-80 right-[-50px] z-10 h-[200px] w-[100px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] md:top-100 md:right-[-140px] md:h-[300px] md:w-[150px] lg:right-[-200px] lg:h-[400px] lg:w-[200px] xl:top-150 xl:right-[-300px] xl:h-[488px] xl:w-[315px]" />
