@@ -5,6 +5,9 @@ import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton.jsx';
 import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
 import AddButton from "@components/buttons/Staff/AddButton.jsx";
+import { useEffect } from 'react'; 
+import { useUser } from '@contexts/UserContext';
+import { useGetBranchById } from '@hooks/useBranch'; 
 
 const Schedule = () => {
     return (
@@ -49,6 +52,14 @@ const Schedule = () => {
 };
 
 const ScheduleManagePage = () => {
+    const { user } = useUser();
+    const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
+    
+    useEffect(() => {
+        if (user && user.roles?.includes('branchmanager') && user.branch) {
+            getBranchById(user.branch._id);
+        }
+    }, [user]);
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
@@ -67,7 +78,7 @@ const ScheduleManagePage = () => {
 
                 <Schedule />
 
-                <SelectBranchButton />
+                <SelectBranchButton isLoading={branchLoading} branchName={userBranch?.name} />
             </MobileNotSupported>
 
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
