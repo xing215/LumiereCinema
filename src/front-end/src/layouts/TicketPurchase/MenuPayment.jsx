@@ -15,7 +15,7 @@ const PaymentButton = ({ text, selected, onSelect }) => (
     </button>
 );
 
-const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange, onBlur}) => {
+const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange, onBlur, promotion}) => {
         const inputRef = useRef(null);
         const handleKeyDown = (e) => {
         if (e.key === 'Enter' && typeof onBlur === 'function') {
@@ -31,7 +31,7 @@ const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', v
                 type="text"
                 value={value}
                 onChange={onChange}
-                className="h-10 font-['Unbounded'] w-full rounded-md border border-white bg-zinc-300 px-2 text-black"
+                className={`h-10 font-['Unbounded'] w-full rounded-md border  bg-zinc-300 px-2 text-black" ${promotion ? 'border-green-500 border-3' : 'border-white'}`}
                 // disabled={true}
                 onBlur={onBlur}
                 onKeyDown={handleKeyDown}
@@ -253,6 +253,7 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateS
                             value={discountValue}
                             onChange={handleDiscountChange}
                             onBlur={handleDiscountBlurOrEnter}
+                            promotion={movieTicketData?.promotion|| snackTicketData?.promotion}
                         />
                         <div className="flex w-full flex-row items-center justify-center gap-2">
                             <BackNaviButton onClick={onBack} />

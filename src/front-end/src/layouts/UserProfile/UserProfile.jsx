@@ -54,11 +54,11 @@ const Profile = () => {
                 placeholder=""
                 value={accountPage}
                 onChange={handleInputChange}
-                bgColor="indigo-700 backdrop-blur-[10px]"
+                bgColor="indigo-700 backdrop-blur-[30px]"
                 inputBgColor="pink-400"
                 variant={'figma'}
                 hoverColor="purple-700"
-                borderColor="white"
+                borderColor=""
                 textColor="white"
                 dropdownTextColor="white"
                 height="h-10"
