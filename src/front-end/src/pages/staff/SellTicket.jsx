@@ -144,7 +144,7 @@ const handleFilterChange = (filter) => {
             setDisplayedMovies(nowShowingMovies);
         } else if (filter === 'UPCOMING') {
             setDisplayedMovies(comingSoonMovies);
-        } else if (filter === 'ALL') {
+        } else if (filter === 'ALL MOVIES') {
             setDisplayedMovies([...nowShowingMovies, ...comingSoonMovies]);
         }
     }
@@ -277,9 +277,10 @@ const handleFilterChange = (filter) => {
                                 openDirection='down'
                                 textAlign="center"
                                 options={[
+                                    { value: 'ALL MOVIES', label: 'ALL MOVIES' },
                                     { value: 'NOW SHOWING', label: 'NOW SHOWING' },
                                     { value: 'UPCOMING', label: 'UPCOMING' },
-                                    { value: 'ALL', label: 'ALL' },
+                                    
                                 ]}
                             />
                         </div>
