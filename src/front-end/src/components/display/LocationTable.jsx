@@ -37,7 +37,7 @@ let distance = null;
 
 const HeaderTable = ({ maxdistance, setMaxDistance }) => {
     return (
-        <div className="relative flex h-auto flex-row items-center justify-center gap-1 pt-5 md:pt-10 min-h-[2px] px-2">
+        <div className="relative flex h-auto flex-row items-center justify-center gap-1 min-h-[2px] px-2">
             <span className="font-unbounded text-[8px] w-auto font-normal text-left pl-2 text-white sm:text-xs xl:text-sm">Farthest distance:</span>
             <span className=" pl-1 absolute right-5 font-unbounded text-[8px] font-normal text-right text-black sm:text-xs xl:text-sm bg-zinc-300 ">km</span>
             <input
@@ -54,13 +54,24 @@ const HeaderTable = ({ maxdistance, setMaxDistance }) => {
 
 const GetLocationButton = ({onClick}) => {
     return (
-        <button className="relative flex flex-row cursor-pointer h-auto w-[90%] z-10 rounded-2xl py-3 mt-5 md:mt-10 mb-1 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] justify-center items-center bg-pink-400 p-2 text-white hover:bg-purple-700" 
+        <button className="relative flex flex-row cursor-pointer h-auto w-[90%] z-10 rounded-2xl py-3 mb-1 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] justify-center items-center bg-pink-400 p-2 text-white hover:bg-purple-700" 
         onClick={onClick}>
             <Locate className="h-full w-[5%] md:w-[10%]"/>
             <span className="relative text-sm md:text-md font-['Unbounded'] text-center h-auto w-[75%] font-semibold">Use Current Location</span>
         </button>
     );
 };
+
+const UnselectCinemaButton = ({onClick}) => {
+    return (
+        <button className="relative flex flex-row cursor-pointer h-auto w-[90%] z-10 rounded-2xl py-4 mb-3 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] justify-center items-center bg-pink-400 p-2 text-white hover:bg-purple-700" 
+        onClick={onClick}>
+            {/* <Locate className="h-full w-[5%] md:w-[10%]"/> */}
+            <span className="relative text-sm md:text-md font-['Unbounded'] text-center h-auto w-full font-semibold">Unselect Cinema</span>
+        </button>
+    );
+};
+
 
 
 const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedlocation = null, onHover}) => {
@@ -86,7 +97,7 @@ const LocationFrame = ({cinemas, curlocation, maxdistance, onClick, selectedloca
 };
 
 
-const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMaxDistance, cinemas, onClick, onHover, getLocation}) => {
+const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMaxDistance, cinemas, onClick, onHover, getLocation, getAllCinemas = false, getAllCinemasClick=() => {console.log("Get all cinemas clicked");}}) => {
 
     return (
         <div className="relative flex h-full w-full md:w-full flex-col items-center overflow-hidden rounded-xl bg-slate-950 md:min-w-[200px]">
@@ -96,6 +107,8 @@ const LocationTable = ({selectedlocation = null, curlocation, maxdistance, setMa
 
             <div className="absolute right-[-10px] bottom-0 h-20 w-20 rounded-full bg-sky-400/100 mix-blend-lighten blur-[100px] md:right-[-20px] md:bottom-[30px] md:h-30 md:w-30 lg:right-[-30px] lg:bottom-[-30px] lg:h-40 lg:w-40 lg:bg-sky-400/80 xl:right-[-50px] xl:bottom-[-50px] xl:h-56 xl:w-56 xl:bg-sky-400/50" />
 
+            <div className="h-5 md:h-10 w-full"/>
+            {getAllCinemas && <UnselectCinemaButton onClick={getAllCinemasClick} />}
             {curlocation? <HeaderTable maxdistance={maxdistance} setMaxDistance={setMaxDistance} /> : <GetLocationButton onClick={getLocation} />}
             <LocationFrame cinemas={cinemas} curlocation={curlocation} maxdistance={maxdistance} onClick={onClick} selectedlocation={selectedlocation} onHover={onHover} />
         </div>
