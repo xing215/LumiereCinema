@@ -5,6 +5,8 @@ import MovieCard from '@components/UI/MovieCard';
 import BranchFilterButton from '@components/buttons/branchFilterButton';
 import MovieStatusFilterButton from '@components/buttons/movieStatusFilterButton';
 import { useFetchNowShowing, useFetchComingSoon } from '@hooks/useMovie';
+import CustomDropdown from "@/components/UI/CustomDropdown";
+
 
 import Sample1 from '@assets/sample/ThamTuKien.jpg';
 import Sample2 from '@assets/sample/Divided.png';
@@ -23,8 +25,8 @@ const MovieCardContainer = ({ movies, loading }) => {
             {movies && movies.length > 0 ? (
                 movies.map((movie, index) => (
                     <MovieCard 
-                        key={movie.id || index} 
-                        linkImg={movie.poster || Sample1} 
+                        key={movie._id || index} 
+                        linkImg={movie.posterUrl || Sample1} 
                         movie={movie}
                         page="MovieList" 
                     />
@@ -63,12 +65,45 @@ const MainBody = () => {
     const displayMovies = selectedFilter === 'now-showing' ? nowShowingMovies : comingSoonMovies;
     const loading = selectedFilter === 'now-showing' ? nowShowingLoading : comingSoonLoading;
 
+    const handleFilterChange = (filter) => {
+        setSelectedFilter(filter);
+        if (filter === 'now-showing') {
+            fetchNowShowing();
+        } else if (filter === 'coming-soon') {
+            fetchComingSoon();
+        }
+    }
+
+
     return (
         <div className="relative flex w-[75%] flex-col pt-20 md:pt-30 lg:pt-35 xl:pt-40">
             <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">MOVIES</div>
             <div className="flex w-full justify-between gap-1 py-3 md:justify-start md:gap-2 md:py-6 lg:gap-3 lg:py-8 xl:gap-4 xl:py-10">
                 <BranchFilterButton />
-                <MovieStatusFilterButton onFilterChange={setSelectedFilter} />
+                        <div className=" z-50 w-[48%] md:w-[31%] lg:w-[23%]">
+                        <CustomDropdown name="discount"
+                        placeholder=""
+                        value={selectedFilter}
+                        onChange={handleFilterChange}
+                        bgColor="indigo-700 backdrop-blur-[30px]"
+                        inputBgColor="pink-400"
+                        variant={'figma'}
+                        hoverColor="purple-600"
+                        borderColor=""
+                        textColor="white"
+                        dropdownTextColor="white"
+                        height="h-10"
+                        inputTextSize="text-md"
+                        optionTextSize="text-sm"
+                        openDirection='down'
+                        textAlign="left"
+                        options={[
+                            { value: 'Information', label: 'Information' },
+                            { value: 'Wishlist', label: 'Wishlist' },
+                            { value: 'Watch history', label: 'Watch history' },
+                            { value: 'Lunar points', label: 'Lunar points' },
+                        ]}/>
+                </div>
             </div>
             <MovieCardContainer movies={displayMovies} loading={loading} />
             <div className="h-5 w-full sm:h-10 md:h-20 lg:h-25" />
@@ -81,7 +116,7 @@ const MainBody = () => {
 };
 const MovieListPage = () => {
     return (
-        <div className="no-scrollbar flex w-screen flex-col items-center overflow-x-hidden bg-slate-950">
+        <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
             <MainBody />
             <Footer />

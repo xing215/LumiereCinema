@@ -153,7 +153,7 @@ const CustomDropdown = ({
                         onKeyDown={handleInputKeyDown}
                         onFocus={() => setIsOpen(true)}
                         placeholder={placeholder}
-                        className={` ${height} w-full rounded-lg px-3 pr-10 sm:px-4 ${inputBackgroundClass} text-${textColor} border border-${borderColor} font-['Unbounded'] ${inputTextSize} ${getTextAlignClass(textAlign)} transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'} `}
+                        className={` ${height} w-full rounded-lg px-3 pr-10 sm:px-4 ${inputBackgroundClass} text-${textColor} ${ borderColor !== '' ? `border border-${borderColor}` : ''} ring-0 font-['Unbounded'] ${inputTextSize} ${getTextAlignClass(textAlign)} transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
                     />
                     <button type="button" onClick={() => setIsOpen(!isOpen)} className="absolute top-1/2 right-3 -translate-y-1/2 transform">
                         <svg
@@ -170,7 +170,7 @@ const CustomDropdown = ({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${inputBackgroundClass} text-${textColor} border border-${borderColor} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)]' : 'shadow-sm'} `}
+                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${inputBackgroundClass} text-${textColor} ${ borderColor !== '' ? `border border-${borderColor}` : ''} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
                 >
                     <span className={`${inputTextSize} ${getSpanClass(textAlign)}`}>{forceFillLabel
                         ? (options.find(opt => opt.value === value)?.label || value || placeholder)
@@ -190,7 +190,7 @@ const CustomDropdown = ({
 
             {isOpen && (
                 <div
-                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-20 overflow-hidden rounded-lg border shadow-xl border-${borderColor}`}
+                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-20 overflow-hidden rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}
                 >
                     {filteredOptions.length > 0 ? (
                         filteredOptions.map((option, index) => (

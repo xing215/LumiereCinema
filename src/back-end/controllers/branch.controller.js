@@ -46,7 +46,6 @@ const createSnack = async (req, res) => {
     await newSnack.save();
 
     // 4. Xoá cache danh sách snack của rạp này
-    await redisClient.del(`snacks:branch:${branchId}`);
 
     res.status(201).json({
       message: 'Snack created successfully.',
@@ -79,7 +78,6 @@ const editSnack = async (req, res) => {
     }
 
     // Xoá cache danh sách snack của rạp này
-    await redisClient.del(`snacks:branch:${branchId}`);
 
     res.status(200).json({
       message: 'Snack updated successfully.',
@@ -104,7 +102,6 @@ const deleteSnack = async (req, res) => {
     const snack = await Snack.findOneAndDelete({ _id: snackId, branch: branchId });
     if (snack) {
       // Nếu xóa được thì xóa cache và trả về kết quả
-      await redisClient.del(`snacks:branch:${branchId}`);
       return res.status(200).json({
         message: 'Snack deleted successfully.',
         snack
@@ -146,12 +143,6 @@ const getSnackList = async (req, res) => {
     const { branchId } = req.params;
     const cacheKey = `snacks:branch:${branchId}`;
 
-    // 1. Kiểm tra cache
-    const cachedSnacks = await redisClient.get(cacheKey);
-    if (cachedSnacks) {
-      // Cache hit for snacks
-      return res.status(200).json(JSON.parse(cachedSnacks));
-    }
 
     // 2. Nếu cache miss → query DB
     // Cache miss - fetch from database
@@ -162,14 +153,12 @@ const getSnackList = async (req, res) => {
     }
 
     const snacks = await Snack.find({ branch: branchId })
-      .select('name price discountedPrice imageURL stock isHidden description createdAt updatedAt');
+      .select('name shortname price discountedPrice imageURL stock isHidden description createdAt updatedAt');
 
     if (!snacks || snacks.length === 0) {
       return res.status(404).json({ message: 'No snacks found for this branch.' });
     }
 
-    // 3. Lưu vào cache
-    await redisClient.set(cacheKey, JSON.stringify(snacks), { EX: DEFAULT_EXPIRATION });
 
     res.status(200).json(snacks);
   } catch (error) {

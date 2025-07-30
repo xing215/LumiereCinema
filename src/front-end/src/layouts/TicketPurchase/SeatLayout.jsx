@@ -1,7 +1,7 @@
 import screen from '@assets/img/Screen.svg';
 import { useEffect, useRef, useState } from 'react';
 
-export const Seats = ({ key, seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
+export const Seats = ({  seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -38,28 +38,27 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
     const miniMapRef = useRef();
     const [miniMapDimensions, setMiniMapDimensions] = useState({ width: 0, height: 0 });
     const [viewportRect, setViewportRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
-
+    const [hideMiniMap, setHideMiniMap] = useState(false);
     const rowKeys = Object.keys(seatMap).sort();
 
     useEffect(() => {
         if (!needsPanning || !containerRef.current || !contentRef.current) return;
 
         const updateMiniMap = () => {
+            if (!containerRef.current || !contentRef.current) return;
+
             const containerRect = containerRef.current.getBoundingClientRect();
             const contentRect = contentRef.current.getBoundingClientRect();
-            
             // Calculate mini-map dimensions (max 150px wide, maintain aspect ratio)
             const maxWidth = 150;
             const aspectRatio = contentRect.width / contentRect.height;
             const miniWidth = Math.min(maxWidth, contentRect.width * 0.2);
             const miniHeight = miniWidth / aspectRatio;
-            
             setMiniMapDimensions({ width: miniWidth, height: miniHeight });
 
             // Calculate viewport rectangle position and size on mini-map
             const scaleX = miniWidth / contentRect.width;
             const scaleY = miniHeight / contentRect.height;
-            
             const viewportWidth = containerRect.width * scaleX;
             const viewportHeight = containerRect.height * scaleY;
             const viewportX = -transform.x * scaleX;
@@ -71,17 +70,19 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                 width: viewportWidth,
                 height: viewportHeight
             });
+
+            // Hide minimap if viewport is at top-right corner
+            const epsilon = 2; // px tolerance
+            const atTopRight = Math.abs(viewportX - (miniWidth - viewportWidth)) < epsilon && Math.abs(viewportY) < epsilon;
+            setHideMiniMap(atTopRight);
         };
 
         updateMiniMap();
-        
-        // Update on transform changes
         const interval = setInterval(updateMiniMap, 16); // ~60fps
         return () => clearInterval(interval);
     }, [transform, needsPanning, containerRef, contentRef]);
 
-
-    if (!needsPanning) return null;
+    if (!needsPanning || hideMiniMap) return null;
 
     return (
         <div className="absolute top-[10%] right-0 bg-black/80 p-2 rounded-lg z-40 border border-gray-600 backdrop-blur-lg">
@@ -105,7 +106,6 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                 </div>
                             ))}
                         </div>
-                        
                         {/* Seats grid */}
                         <div className="flex flex-col gap-0.5">
                             {rowKeys.map((rowKey) => (
@@ -117,9 +117,8 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                         while (i < seats.length) {
                                             const current = seats[i];
                                             const next = seats[i + 1];
-                                            const isTaken = current.isTaken || (current.seatNumber && (typeof schedule !== 'undefined' && schedule?.OccupiedSeat?.includes(current.seatNumber)));
-                                            const nextIsTaken = next && (next.isTaken || (next.seatNumber && (typeof schedule !== 'undefined' && schedule?.OccupiedSeat?.includes(next.seatNumber))));
-
+                                            const isTaken = (current.status === 'occupied' || current.status === 'holding');
+                                            const nextIsTaken = next && (next.status === 'occupied' || next.status === 'holding');
                                             if (
                                                 current.category === 'VIP' &&
                                                 next &&
@@ -149,7 +148,6 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                         </div>
                     </div>
                 </div>
-
                 {/* Viewport indicator */}
                 <div
                     className="absolute border-2 border-pink-400 bg-pink-400/20 pointer-events-none"
@@ -165,7 +163,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
     );
 };
 
-const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading }) => {
+const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading, clearSessionLoading }) => {
     const containerRef = useRef();
     const contentRef = useRef();
     const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -335,7 +333,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleTouchStart}
             >
-                {loading ? (
+                {loading&&!clearSessionLoading ? (
                     <div className=" md:text-md h-auto items-center justify-center  font-['Unbounded'] text-base font-black text-white mx-2">
                         • • •
                     </div>
@@ -381,7 +379,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                                     <CoupleSeat
                                                         key={current.seatNumber + '-' + next.seatNumber}
                                                         seatColor="bg-yellow-400 group-hover:bg-yellow-500"
-                                                        isTaken={(current.status === 'occupied' || current.status === 'holding')}
+                                                        isTaken={ (current.status === 'occupied' || current.status === 'holding')}
                                                         isSelected={selectedSeats.includes(current.seatNumber) || selectedSeats.includes(next.seatNumber)}
                                                         onClick={() => onClick?.([current.seatNumber, next.seatNumber])}
                                                         seatCol={seats.length}
@@ -394,7 +392,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                                     <Seats
                                                         key={current.seatNumber}
                                                         seatColor={current.category === 'VIP' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
-                                                        isTaken={(current.status === 'occupied' || current.status === 'holding')}
+                                                        isTaken={ (current.status === 'occupied' || current.status === 'holding')}
                                                         isSelected={selectedSeats.includes(current.seatNumber)}
                                                         onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}

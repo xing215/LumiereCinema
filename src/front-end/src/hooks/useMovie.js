@@ -2,37 +2,6 @@ import { useState } from 'react';
 import axios from 'axios';
 import { getApiUrl, buildApiUrl } from '@config/api.config';
 
-/**
- * Movie logic hooks for handling movie-related operations
- */
-
-export const useGetMovieById = () => {
-  const [movie, setMovie] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const getMovieById = async (movieId) => {
-    setLoading(true);
-    setError(null);
-    if (!movieId) {
-      setError('Movie ID is required');
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await axios.get(getMovieApiUrl(movieId));
-      setMovie(response.data);
-    } catch (error) {
-      console.error('Error fetching movie:', error);
-      setError('Failed to fetch movie');
-    } finally {
-      setLoading(false);  
-    }
-  };
-
-  return { movie, getMovieById , error, loading };
-};
-
 export const useSetBranch = () => {
   const [currentBranch, setCurrentBranch] = useState(null);
 
@@ -115,7 +84,7 @@ export const useGetMovieDetail = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getMovieApiUrl(movieId));
+      const response = await axios.get(buildApiUrl(`/api/movies/${movieId}`));
       setMovieDetail(response.data);
       return { success: true, data: response.data };
     } catch (err) {

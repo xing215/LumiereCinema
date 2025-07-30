@@ -20,7 +20,8 @@ const {
   getTicketByCode,
   getAllTickets,
   updateTicket,
-  deleteTicket
+  deleteTicket,
+  calculateDiscountedTotal,
 } = require('../controllers/ticket.controller.js');
 
 // =============================================================================
@@ -48,7 +49,7 @@ router.get('/screen/:scheduleId', getSeatMapBySchedule);
  *         movieTicket?: { schedule, seats }, 
  *         snackTicket?: { snackList: [{ shortname, quantity }] } }
  */
-router.post('/create', createTicket);
+router.post('/create', getUser, createTicket);
 
 // =============================================================================
 // MOVIE TICKET SPECIFIC ROUTES
@@ -66,7 +67,7 @@ router.post('/movie/hold', getUser, holdSeats);
  * Quản lý seat hold (release/extend)
  * Body: { action: 'release'|'extend', extendMinutes?, userId?, sessionId? }
  */
-router.patch('/movie/hold/:holdId', manageSeatHold);
+router.patch('/movie/hold/', getUser, manageSeatHold);
 
 /**
  * DELETE /movie/hold/bulk
@@ -120,7 +121,7 @@ router.get('/:branchId/snacks', getSnacksByBranch);
  * Đặt trước snacks tạm thời
  * Body: { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
  */
-router.post('/snack/reserve', reserveSnacks);
+router.post('/snack/reserve', getUser, reserveSnacks);
 
 /**
  * POST /snack/create
@@ -128,7 +129,7 @@ router.post('/snack/reserve', reserveSnacks);
  * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, 
  *         snackList: [{ shortname, quantity }] }
  */
-router.post('/snack/create', createSnackTicket);
+router.post('/snack/create', getUser, createSnackTicket);
 
 /**
  * GET /snack/admin/all
@@ -176,5 +177,12 @@ router.post('/cache/cleanup', protect, restrictTo('administrator'), cleanupCache
  * Body: { routes: [{ branchId, scheduleId }] }
  */
 router.post('/cache/preload', protect, restrictTo('administrator'), preloadCache);
+
+/**
+ * GET /calculate-discounted-total
+ * Tính tổng tiền sau khi áp dụng khuyến mãi
+ * Query: { user, promotionCode, snackTotal, movieTotal, session = null }
+ */
+router.post('/calculate-discounted', getUser, calculateDiscountedTotal);
 
 module.exports = router;

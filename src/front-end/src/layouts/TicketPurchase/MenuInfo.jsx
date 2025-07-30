@@ -28,8 +28,12 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
         setCustomerInfo(newInfo);
         
         // Update both ticket types with customer info
-        updateMovieTicket({ noLoginCustomerInfo: newInfo });
+        if(updateMovieTicket) {
+            updateMovieTicket({ noLoginCustomerInfo: newInfo });
+        }
+        if (updateSnackTicket) {
         updateSnackTicket({ noLoginCustomerInfo: newInfo });
+        }
     };
 
     const canProceed = customerInfo.name && customerInfo.phone && customerInfo.email;

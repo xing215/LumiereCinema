@@ -3,12 +3,13 @@ import { toPng } from "html-to-image";
 import TicketDetail from "@/components/UI/TicketDetail";
 import QRCode from "react-qr-code";
 
-const MenuTicketDisplay = ({ movieTicketData, snackTicketData }) => {
+const MenuTicketDisplay = ({ movieTicketData, snackTicketData, ticket, ticketLoading }) => {
     const qrParentRef = useRef(null);
     const ticketDetailRef = useRef(null);
     const captureRef = useRef(null);
     const [qrSize, setQrSize] = useState(90);
     const [maxHeight, setMaxHeight] = useState(undefined);
+    const [capturing, setCapturing] = useState(false);
 
     useEffect(() => {
         function updateSize() {
@@ -50,80 +51,42 @@ const MenuTicketDisplay = ({ movieTicketData, snackTicketData }) => {
         return () => window.removeEventListener("resize", handleResize);
     }, [maxHeight]);
 
-    const handleDownload = async () => {
-        if (!captureRef.current) {
-            console.error("Capture element not found");
-            return;
-        }
+const handleDownload = async () => {
+    if (!captureRef.current || ticketLoading) {
+        console.error("Capture element not found or loading");
+        return;
+    }
 
-        console.log("Starting download...");
+    console.log("Starting download...");
+    setCapturing(true);
 
-        try {
-            // Hide ActionButtons during capture - use a more specific selector
+    try {
+
+          // Hide ActionButtons during capture - use a more specific selector
             const buttonContainers = captureRef.current.querySelectorAll('button');
             const buttonOriginalDisplays = [];
             buttonContainers.forEach((container, index) => {
                 buttonOriginalDisplays[index] = container.style.display;
                 container.style.display = 'none';
             });
+        // Ensure the capture element has proper dimensions
+        const rect = captureRef.current.getBoundingClientRect();
 
-            // Find ALL elements with background that need modification
-            const bgElements = captureRef.current.querySelectorAll('[class*="bg-zinc-300"]');
-            const textElements = captureRef.current.querySelectorAll('[class*="text-white"]');
-            
-            console.log("Found elements:", {
-                backgrounds: bgElements.length,
-                textElements: textElements.length,
-                hiddenButtons: buttonContainers.length
-            });
+        console.log("Capture dimensions:", rect);
+        // Perform the capture with background layer
+        const dataUrl = await toPng(captureRef.current, {
+            quality: 1.0,
+            pixelRatio: 2,
+            width: rect.width,
+            height: rect.height,
+            overflow: 'hidden',
+            style: {
+                transform: 'scale(1)',
+                transformOrigin: 'top left'
+            }
+        });
 
-            // Store original styles
-            const originalStyles = [];
-            
-            // Modify background elements with consistent styling
-            bgElements.forEach((el, index) => {
-                originalStyles[index] = {
-                    element: el,
-                    className: el.className,
-                    style: el.getAttribute('style') || ''
-                };
-                
-                // Apply consistent styling to all background elements
-                el.style.backgroundColor = '#070A32';  // Use white background instead
-                el.style.opacity = '1';
-                el.style.mixBlendMode = 'normal';
-                el.style.pointerEvents = 'auto';
-                // Remove any existing background classes that might interfere
-                el.style.background = '#070A32';
-            });
-
-            // Store original text styles (but do not change text color)
-            const originalTextStyles = [];
-            textElements.forEach((el, index) => {
-                originalTextStyles[index] = {
-                    element: el,
-                    style: el.getAttribute('style') || ''
-                };
-            });
-
-            // Ensure the capture element has proper dimensions
-            const rect = captureRef.current.getBoundingClientRect();
-
-
-            // Perform the capture with white background
-            const dataUrl = await toPng(captureRef.current, {
-                quality: 1.0,
-                pixelRatio: 2,
-                width: rect.width,
-                height: rect.height,
-                style: {
-                    transform: 'scale(1)',
-                    transformOrigin: 'top left'
-                }
-            });
-
-
-            // Restore button visibility
+        // Restore button visibility
             buttonContainers.forEach((container, index) => {
                 if (buttonOriginalDisplays[index]) {
                     container.style.display = buttonOriginalDisplays[index];
@@ -132,86 +95,78 @@ const MenuTicketDisplay = ({ movieTicketData, snackTicketData }) => {
                 }
             });
 
-            // Restore original styles
-            originalStyles.forEach(({ element, className, style }) => {
-                element.className = className;
-                if (style) {
-                    element.setAttribute('style', style);
-                } else {
-                    element.removeAttribute('style');
-                }
-            });
+        // Create and trigger download
+        const link = document.createElement("a");
+        link.download = "ticket.png";
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-            originalTextStyles.forEach(({ element, style }) => {
-                if (style) {
-                    element.setAttribute('style', style);
-                } else {
-                    element.removeAttribute('style');
-                }
-            });
+        console.log("Download completed");
 
-            // Create and trigger download
-            const link = document.createElement("a");
-            link.download = "ticket.png";
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+    } catch (err) {
+        console.error("Download failed:", err);
+    } finally {
+        setCapturing(false);
+    }
+};
 
-            console.log("Download completed");
-
-        } catch (err) {
-            console.error("Download failed:", err);
-            
-            // Restore styles on error (failsafe)
-            const buttonContainersErr = captureRef.current.querySelectorAll('button');
-            buttonContainersErr.forEach(el => {
-                el.style.removeProperty('display');
-            });
-            const bgElements = captureRef.current.querySelectorAll('[class*="bg-zinc-300"]');
-            bgElements.forEach(el => {
-                el.style.backgroundColor = '';
-                el.style.opacity = '';
-                el.style.mixBlendMode = '';
-                el.style.pointerEvents = '';
-                el.style.background = '';
-            });
-            const textElements = captureRef.current.querySelectorAll('[class*="text-white"]');
-            // No need to restore text color since it was not changed
-        }
-    };
+    const LoadingIndicator = () => (
+        <div className="flex items-center justify-center h-full">
+            <div className="text-white text-2xl p-5 font-bold font-['Unbounded'] animate-pulse">
+                • • •
+            </div>
+        </div>
+    );
 
     const ActionButtons = () => (
         <>
-            <button
-                className="group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300"
+            {!capturing&&<button
+                className={`group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300 ${
+                    ticketLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                disabled={ticketLoading}
                 // onClick={handleReturnHome}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: ticketLoading ? "not-allowed" : "pointer" }}
             >
-                <div className="absolute h-full w-full rounded-xl mix-blend-screen bg-zinc-300/30 transition-all duration-300 group-hover:bg-zinc-400/30" />
+                <div className={`absolute h-full w-full rounded-xl mix-blend-screen bg-zinc-300/30 transition-all duration-300 ${
+                    !ticketLoading ? 'group-hover:bg-zinc-400/30' : ''
+                }`} />
                 <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']">
                     RETURN HOME
                 </span>
             </button>
+}{!capturing&&
             <button
-                className="group relative flex aspect-auto w-72 h-9 flex-row items-center justify-center transition-all duration-300"
+                className={`group relative flex aspect-auto w-72 h-9 flex-row items-center justify-center transition-all duration-300 ${
+                    ticketLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
                 onClick={handleDownload}
-                style={{ cursor: "pointer" }}
+                disabled={ticketLoading}
+                style={{ cursor: ticketLoading ? "not-allowed" : "pointer" }}
             >
-                <div className="absolute h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 group-hover:bg-purple-600" />
+                <div className={`absolute h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 ${
+                    !ticketLoading ? 'group-hover:bg-purple-600' : ''
+                }`} />
                 <span className="relative z-10 w-60 text-center text-white text-base font-bold font-['Unbounded']">
                     DOWNLOAD
                 </span>
             </button>
+}
         </>
     );
+
+    const {movieTicket, snackTicket} = ticket.data
+    console.log("Movie Ticket:", movieTicket);
+    console.log("Snack Ticket:", snackTicket);
 
     return (
         <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
             <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]"
             ref={captureRef}>
                 {/* Background layer */}
-                <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
+                <div className={`pointer-events-none absolute inset-0 z-0 rounded-xl ${capturing ? 'bg-slate-950' : 'bg-zinc-300/30 mix-blend-color-dodge'}  lg:[transform:translate3d(0,0,0)]`} />
                 {/* Main content */}
                 <div className="relative flex flex-1 flex-col items-center justify-center px-2 sm:px-4 md:px-8">
                     <div className="w-auto inline-flex justify-start items-start gap-3.5 py-5 md:hidden">
@@ -227,32 +182,48 @@ const MenuTicketDisplay = ({ movieTicketData, snackTicketData }) => {
                                 ref={qrParentRef}
                                 style={maxHeight ? { height: maxHeight + 'px' } : { height: 'auto' }}
                             >
-                                <div className="w-[90%] flex flex-col justify-center items-center py-2">
-                                    <div className="h-auto text-center justify-start text-white text-base font-black font-['Unbounded']">
-                                        TICKET
-                                    </div>
-                                    <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
-                                        <QRCode value={JSON.stringify("hehehe")} size={qrSize} />
-                                    </div>
-                                </div>
-                                <div className="w-[90%] flex flex-col justify-center items-center py-2">
-                                    <div className="h-auto text-center justify-start text-white text-base font-black font-['Unbounded']">
-                                        SNACK
-                                    </div>
-                                    <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
-                                        <QRCode value={JSON.stringify("hehehe")} size={qrSize} />
-                                    </div>
-                                </div>
+                                {ticketLoading ? (
+                                    <LoadingIndicator />
+                                ) : (
+                                    <>
+                                        {movieTicket?.ticketCode ? (
+                                            <div className="w-[90%] flex flex-col justify-center items-center py-2">
+                                                <div className="h-auto text-center justify-start text-white text-base font-black font-['Unbounded']">
+                                                    TICKET
+                                                </div>
+                                                <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
+                                                    <QRCode value={JSON.stringify(movieTicket?.ticketCode)} size={qrSize} />
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                        {snackTicket?.snackTicketCode ? (
+                                            <div className="w-[90%] flex flex-col justify-center items-center py-2">
+                                                <div className="h-auto text-center justify-start text-white text-base font-black font-['Unbounded']">
+                                                    SNACK
+                                                </div>
+                                                <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
+                                                    <QRCode value={JSON.stringify(snackTicket?.snackTicketCode)} size={qrSize} />
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                    </>
+                                )}
                             </div>
                             <div
                                 className="h-full w-[90vw] md:w-[48vw] pb-5 md:pb-0"
                                 ref={ticketDetailRef}
                                 style={maxHeight ? { height: maxHeight + 'px' } : { height: 'auto' }}
                             >
-                                <TicketDetail
-                                    movieTicketData={movieTicketData}
-                                    snackTicketData={snackTicketData}
-                                />
+                                {ticketLoading ? (
+                                    <div className="flex items-center justify-center h-full min-h-[200px] rounded-xl bg-zinc-300/30 mix-blend-color-dodge">
+                                        <LoadingIndicator />
+                                    </div>
+                                ) : (
+                                    <TicketDetail
+                                        movieTicketData={movieTicketData}
+                                        snackTicketData={snackTicketData}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
