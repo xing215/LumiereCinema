@@ -31,25 +31,33 @@ const MovieCardContainer = ({ movies, loading }) => {
 };
 
 const MainBody = () => {
-    const { fetchNowShowing, movies:nowShowingMovies, loading:loadingNowShowing } = useFetchNowShowing();
-    const { fetchComingSoon, movies:upcomingMovies, loading:loadingUpcoming } = useFetchComingSoon();
-    let allMovies = [...nowShowingMovies, ...upcomingMovies];
-    let allLoading = loadingNowShowing || loadingUpcoming;
+    const { fetchNowShowing, movies: nowShowingMovies, loading: loadingNowShowing } = useFetchNowShowing();
+    const { fetchComingSoon, movies: upcomingMovies, loading: loadingUpcoming } = useFetchComingSoon();
+    const [movieStatusFilter, setMovieStatusFilter] = useState("all");
+
     useEffect(() => {
         fetchNowShowing();
         fetchComingSoon();
-        allMovies = [...nowShowingMovies, ...upcomingMovies];
-        allLoading = loadingNowShowing || loadingUpcoming;
     }, []);
 
+    // Combine and filter movies based on status filter
+    let allMovies = [...nowShowingMovies, ...upcomingMovies];
+    let filteredMovies = allMovies;
+    if (movieStatusFilter === "now") {
+        filteredMovies = allMovies.filter(m => m.status === "Now Showing");
+    } else if (movieStatusFilter === "up") {
+        filteredMovies = allMovies.filter(m => m.status === "Upcoming");
+    }
+    let allLoading = loadingNowShowing || loadingUpcoming;
 
     return (
         <div className="relative flex w-[75%] flex-col pt-20 md:pt-30 lg:pt-35 xl:pt-40">
             <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">MOVIES</div>
             <div className="flex w-full justify-between gap-1 py-3 md:justify-start md:gap-2 md:py-6 lg:gap-3 lg:py-8 xl:gap-4 xl:py-10">
                 <BranchFilterButton />
+                <MovieStatusFilterButton value={movieStatusFilter} onChange={setMovieStatusFilter} />
             </div>
-            <MovieCardContainer movies={allMovies} loading={allLoading} />
+            <MovieCardContainer movies={filteredMovies} loading={allLoading} />
             <div className="h-5 w-full sm:h-10 md:h-20 lg:h-25" />
 
             <div className="absolute top-80 right-[-50px] z-10 h-[200px] w-[100px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] md:top-100 md:right-[-140px] md:h-[300px] md:w-[150px] lg:right-[-200px] lg:h-[400px] lg:w-[200px] xl:top-150 xl:right-[-300px] xl:h-[488px] xl:w-[315px]" />
