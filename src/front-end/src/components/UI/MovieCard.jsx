@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ticketImg from '@assets/img/cineticket.png';
 import { useNavigate } from 'react-router-dom';
-import { getMovieDetailsPath, getBuyTicketPath } from '@/routes/routeConfig';
+import { getMovieDetailsPath, getBuyTicketPath } from '@routes/routeConfig';
 function BuyTicketButton({ movieId, branchId= undefined }) {
     const navigate = useNavigate();
     return (
@@ -98,7 +98,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                     <span
                         className="cursor-pointer hover:underline hover:text-yellow-300 transition-colors duration-150"
                         onClick={() => {
-                            if (movie?._id) navigate(getMovieDetailsPath(movie._id));
+                            if (movie?._id) navigate(getMovieDetailsPath(movie._id, selectedBranch?._id));
                         }}
                     >
                         {movie?.title || 'An error occured'}
@@ -121,7 +121,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                     </div>
                 </div>
             </div>
-            { showOverlay && <BuyTicketButton movieId={movie?._id} branchId={selectedBranch} /> }
+            { showOverlay && <BuyTicketButton movieId={movie?._id} branchId={selectedBranch?._id} /> }
         </div>
     );
 };

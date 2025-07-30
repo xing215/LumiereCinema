@@ -339,6 +339,10 @@ export const getBuyTicketPath = (movieId, branchId = undefined) => {
     return path;
 };
 
-export const getMovieDetailsPath = (movieId) => {
-    return `${ROUTES.MOVIE_DETAILS}?id=${movieId}`;
+export const getMovieDetailsPath = (movieId, branchId = undefined) => {
+    let path = `${ROUTES.MOVIE_DETAILS}?movieId=${movieId}`;
+    if (branchId !== undefined) {
+        path += `&branchId=${branchId}`;
+    }
+    return path;
 };
