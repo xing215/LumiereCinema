@@ -74,7 +74,10 @@ const snackTicketSchema = new mongoose.Schema({
     enum: ['Confirmed','CheckedIn', 'Cancelled'], 
     default: 'Confirmed',
   },
-
+  lastScanAt: {
+    type: Date,
+    default: null
+  },
   ticketType: {
     type: String,
     enum: ['Snack'],
