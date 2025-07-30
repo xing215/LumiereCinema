@@ -58,7 +58,8 @@ const EditableCell = ({
     // Focus input when editing starts
     useEffect(() => {
         if (isEditing) {
-            if (fieldType === 'date' && datePickerRef.current) {
+            if (fieldType === 'date') {
+                // For date picker, focus and open calendar after a short delay
                 setTimeout(() => {
                     if (datePickerRef.current) {
                         datePickerRef.current.setFocus();
@@ -98,22 +99,6 @@ const EditableCell = ({
                 }
             }
         }, 100);
-    };
-
-    // Handle input focus to prevent mobile keyboard
-    const handleDateInputFocus = (e) => {
-        // On mobile devices, blur immediately to prevent keyboard
-        if (window.innerWidth <= 768) {
-            e.target.blur();
-        }
-        // Set readonly attribute dynamically
-        e.target.setAttribute('readonly', 'readonly');
-    };
-
-    // Handle input click to ensure calendar opens
-    const handleDateInputClick = (e) => {
-        // Remove readonly temporarily to allow calendar interaction
-        e.target.removeAttribute('readonly');
     };
 
     const handleKeyDown = (e) => {
@@ -195,11 +180,11 @@ const EditableCell = ({
                         dropdownMode="select"
                         maxDate={new Date()} // Prevent future dates for movie releases
                         minDate={new Date('1900-01-01')} // Reasonable minimum date
-                        autoFocus
                         shouldCloseOnSelect={true}
                         onClickOutside={handleSave}
-                        onFocus={handleDateInputFocus}
-                        onClick={handleDateInputClick}
+                        openToDate={selectedDate || new Date()}
+                        autoFocus={true}
+                        wrapperClassName="datepicker-wrapper"
                     />
                 </div>
             );
