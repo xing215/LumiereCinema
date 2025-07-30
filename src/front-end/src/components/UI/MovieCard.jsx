@@ -49,7 +49,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
         document.addEventListener('touchstart', handleTouch, { passive: true });
         return () => document.removeEventListener('touchstart', handleTouch);
     }, [showOverlay]);
-    console.log('MovieCard rendered for:', movie);
+    
     const linkImg = movie?.posterURL || fallbackImg;
     return (
         <div

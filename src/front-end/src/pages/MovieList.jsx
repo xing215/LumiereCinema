@@ -61,11 +61,11 @@ const MainBody = () => {
         filteredMovies = filteredMovies.filter(m => m.status === "Upcoming");
     }
     let allLoading = loadingNowShowing || loadingUpcoming;
-    console.log('Selected Branch:', selectedBranch);
+    
     return (
         <div className="relative flex w-[75%] flex-col pt-20 md:pt-30 lg:pt-35 xl:pt-40">
             <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">MOVIES</div>
-            <div className="flex w-full justify-between gap-1 py-3 md:justify-start md:gap-2 md:py-6 lg:gap-3 lg:py-8 xl:gap-4 xl:py-10">
+            <div className="flex flex-col w-full gap-y-2 py-3 sm:flex-row sm:gap-x-2 sm:gap-y-0 md:py-6 lg:gap-x-3 lg:py-8 xl:gap-x-4 xl:py-10">
                 <ChooseCinemaButton
                     onClick={() => setIsCinemaPopupOpen(true)}
                     label={selectedBranch?.name || 'All Cinemas'}
@@ -108,7 +108,7 @@ export default MovieListPage;
 
 export const ChooseCinemaButton = ({ onClick, label, loading, branches, error }) => (
     <button
-        className="group relative flex h-auto w-[80vw] items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
+        className="group relative flex h-11 w-full items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
         onClick={loading || branches.length === 0 || error ? () => {} : onClick}
     >
         <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] group-hover:bg-zinc-300/70 z-0" />

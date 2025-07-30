@@ -17,26 +17,27 @@ const MovieStatusFilterButton = ({ value, onChange }) => {
     };
 
     return (
-        <div className="relative h-6 w-[49%] md:h-7 md:w-40 lg:h-8 lg:w-50 xl:h-9 xl:w-60">
-            <CustomDropdown
-                value={movieStatusFilter}
-                onChange={handleStatusChange}
-                name="movieStatus"
-                placeholder="Status"
-                options={statusOptions}
-                bgColor="indigo-700 backdrop-blur-[50px]"
-                inputBgColor="purple-400 backdrop-blur-[10px]"
-                hoverColor="pink-500"
-                borderColor="purple-500"
-                textColor="white"
-                height="h-full"
-                textAlign="center"
-                inputTextSize="text-base md:text-md font-bold"
-                optionTextSize="text-base md:text-md font-bold"
-                width="w-40 md:w-56"
-                forceFillLabel={true}
-            />
-        </div>
+        <CustomDropdown
+            name="discount"
+            placeholder=""
+            value={movieStatusFilter}
+            onChange={handleStatusChange}
+            bgColor="indigo-700 backdrop-blur-[30px]"
+            inputBgColor="pink-400"
+            variant={'figma'}
+            hoverColor="purple-600"
+            borderColor=""
+            textColor="white"
+            dropdownTextColor="white"
+            height="h-11"
+            inputTextSize="text-md"
+            optionTextSize="text-sm"
+            openDirection='down'
+            textAlign="center"
+            width="w-full md:w-[calc(100vw*0.28)] lg:w-[calc(70vw*0.28)]"
+            options={statusOptions}
+            forceFillLabel={true}
+        />
     );
 };
 
