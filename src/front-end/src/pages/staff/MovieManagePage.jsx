@@ -56,6 +56,7 @@ const MovieManagePage = () => {
     const [tickedMovies, setTickedMovies] = useState(new Set());
     const [showConfirmDeleteMovies, setShowConfirmDeleteMovies] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     
     // State for tracking newly uploaded movies (for review)
     const [newlyUploadedMovies, setNewlyUploadedMovies] = useState(new Set());
@@ -106,7 +107,9 @@ const MovieManagePage = () => {
 
     // Handle saving inline edit
     const handleSaveEdit = async (rowIndex, columnIndex, newValue) => {
-        const movie = movies[rowIndex];
+        // Get all movies (filtered + review) to find correct movie
+        const allFilteredMovies = [...reviewMovies, ...existingMovies];
+        const movie = allFilteredMovies[rowIndex];
         const fieldName = columnFieldMapping[columnIndex];
         
         if (movie && fieldName) {
@@ -129,16 +132,56 @@ const MovieManagePage = () => {
 
     // Handle status/visibility toggle from ActiveButton
     const onStatusChange = async (rowIndex, newIsHidden) => {
-        const result = await updateStatus(movies, setMovies, rowIndex, 'isHidden', newIsHidden);
+        // Get all movies (filtered + review) to find correct movie
+        const allFilteredMovies = [...reviewMovies, ...existingMovies];
+        
+        // We need to update the status in the original movies array, not the filtered one
+        // Find the movie in the original array by ID
+        const targetMovie = allFilteredMovies[rowIndex];
+        if (!targetMovie) return;
+        
+        const originalIndex = movies.findIndex(movie => movie._id === targetMovie._id);
+        if (originalIndex === -1) return;
+        
+        const result = await updateStatus(movies, setMovies, originalIndex, 'isHidden', newIsHidden);
         
         if (!result.success) {
             alert(`Failed to update visibility: ${result.error}`);
         }
     };
 
-    // Separate movies into newly uploaded and existing
-    const existingMovies = movies?.filter(movie => !newlyUploadedMovies.has(movie._id)) || [];
-    const reviewMovies = movies?.filter(movie => newlyUploadedMovies.has(movie._id)) || [];
+    // Handle search functionality
+    const handleSearch = (term) => {
+        setSearchTerm(term);
+    };
+
+    // Filter movies based on search term
+    const filterMovies = (moviesList) => {
+        if (!searchTerm.trim()) {
+            return moviesList;
+        }
+        
+        const searchLower = searchTerm.toLowerCase();
+        return moviesList.filter(movie => {
+            // Search in movie title
+            const titleMatch = movie.title?.toLowerCase().includes(searchLower);
+            
+            // Search in genre
+            let genreMatch = false;
+            if (Array.isArray(movie.genre)) {
+                genreMatch = movie.genre.some(g => g.toLowerCase().includes(searchLower));
+            } else if (movie.genre) {
+                genreMatch = movie.genre.toLowerCase().includes(searchLower);
+            }
+            
+            return titleMatch || genreMatch;
+        });
+    };
+
+    // Separate movies into newly uploaded and existing with search filter
+    const filteredMovies = filterMovies(movies || []);
+    const existingMovies = filteredMovies.filter(movie => !newlyUploadedMovies.has(movie._id));
+    const reviewMovies = filteredMovies.filter(movie => newlyUploadedMovies.has(movie._id));
 
     // Create rows for existing movies
     const existingMovieRows = existingMovies.map((movie, index) => [
@@ -185,8 +228,10 @@ const MovieManagePage = () => {
     const allMovieRows = [...reviewMovieRows, ...existingMovieRows];
 
     const handleDelete = async () => {
+        // Get all movies (filtered + review) to find correct IDs
+        const allFilteredMovies = [...reviewMovies, ...existingMovies];
         const selectedMovieIds = Array.from(tickedMovies).map(index => {
-            return movies[index]?.id || movies[index]?._id;
+            return allFilteredMovies[index]?.id || allFilteredMovies[index]?._id;
         }).filter(Boolean);
         
         try {
@@ -353,7 +398,7 @@ const MovieManagePage = () => {
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
-                <SearchButton />
+                <SearchButton onSearch={handleSearch} placeholder="Search by movie title or genre..." />
                 {showReviewMode ? (
                     <ReviewButtons 
                         onConfirm={handleConfirmReview}
