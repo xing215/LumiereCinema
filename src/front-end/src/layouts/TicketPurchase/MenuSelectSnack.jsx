@@ -115,6 +115,7 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket, m
                                                 : 0) || 0
                                         }
                                         img={snack.imageURL || Combo1}
+                                        stock={snack.stock || 0}
                                     />
                                 ));
                             })()

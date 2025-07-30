@@ -1,6 +1,8 @@
 import TicketDetail from '@components/UI/TicketDetail';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@routes/routeConfig';
 
 const InputField = ({ label, name, type = 'text', value, onChange, required = true }) => (
     <div>
@@ -47,6 +49,7 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
         }
     };
 
+    const navigate = useNavigate()
     return (
         <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
             <div className="relative flex h-full w-full min-h-auto flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[75vw] ">
@@ -96,7 +99,8 @@ const MenuInfo = ({ onNext, onBack, movieTicketData, snackTicketData, updateMovi
                         />
                         <div className="absolute bottom-0 justify-start pb-4 text-center md:pb-0.5">
                             <span className="font-['Libre_Franklin'] text-[13px] font-normal text-white md:text-[12px] lg:text-[13px]">Join our lunar point system? </span>
-                            <span className="font-['Libre_Franklin'] text-[13px] font-bold text-white md:text-[12px] lg:text-[13px]">Register an account.</span>
+                            <span className="font-['Libre_Franklin'] text-[13px] cursor-pointer font-bold text-white hover:underline md:text-[12px] lg:text-[13px]"
+                            onClick={() => navigate(ROUTES.REGISTER)}>Register an account.</span>
                         </div>
                     </div>
                 </div>

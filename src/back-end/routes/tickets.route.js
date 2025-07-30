@@ -33,7 +33,7 @@ const {
  * Lấy danh sách lịch chiếu theo branch, ngày và phim
  * Query: ?date=YYYY-MM-DD&movieId=ObjectId (movieId optional)
  */
-router.get('/:branchId/schedule', getSchedulesByBranch);
+router.get('/:branchId/schedule',getUser, getSchedulesByBranch);
 
 /**
  * GET /screen/:scheduleId

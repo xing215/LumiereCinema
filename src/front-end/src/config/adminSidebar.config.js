@@ -68,7 +68,7 @@ export const sidebarConfig = {
             id: 'sell-ticket',
             label: 'Sell ticket',
             icon: Ticket,
-            path: '#',
+            path: '/staff/sell-ticket',
             description: 'Sell movie tickets',
             permissions: ['tickets'],
             badge: null,

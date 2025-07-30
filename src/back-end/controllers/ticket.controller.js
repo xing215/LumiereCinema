@@ -25,10 +25,11 @@ const getSchedulesByBranch = async (req, res) => {
 
     const { branchId } = req.params;
     const { movieId } = req.query;
-
-    // Validate branchId format
-    if (!mongoose.Types.ObjectId.isValid(branchId)) {
-      return res.status(400).json({ error: 'Invalid branch ID format' });
+    const userId = req.user && req.user?.id ? req.user?.id : null;
+    //find user by userId
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId).lean();
     }
     // Validate movieId if provided
     if (movieId && !mongoose.Types.ObjectId.isValid(movieId)) {
@@ -46,6 +47,11 @@ const getSchedulesByBranch = async (req, res) => {
     }
 
     // Build aggregation pipeline for all schedules of the movie in the branch
+    const now = new Date();
+    const isCashier = user && user.roles && user.roles.includes('cashier');
+    const timeMatch = isCashier
+      ? { endTime: { $gt: now } }
+      : { startTime: { $gt: now } };
     const pipeline = [
       { $match: { branch: new mongoose.Types.ObjectId(branchId), isActive: true } },
       {
@@ -56,7 +62,8 @@ const getSchedulesByBranch = async (req, res) => {
             {
               $match: {
                 $expr: { $eq: ['$screen', '$$screenId'] },
-                ...(movieId ? { movie: new mongoose.Types.ObjectId(movieId) } : {})
+                ...(movieId ? { movie: new mongoose.Types.ObjectId(movieId) } : {}),
+                ...timeMatch // Match by startTime or endTime depending on user role
               }
             },
             { $sort: { startTime: 1 } }

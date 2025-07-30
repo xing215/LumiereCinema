@@ -23,6 +23,7 @@ import TicketPurchase from '@pages/TicketPurchase';
 import AboutUs from '@/pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
+import SellTicket from '@pages/staff/SellTicket.jsx';
 
 import Developing from '@/pages/others/Developing.jsx';
 import NotFound from '@/pages/others/NotFound.jsx';
@@ -64,6 +65,7 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+    STAFF_SELL_TICKET: '/staff/sell-ticket',
 
     // Other pages
     DEVELOPING: '/developing',
@@ -262,6 +264,13 @@ export const routeConfig = [
         type: 'public',
         requiresAuth: false
     },
+    {
+        path: ROUTES.STAFF_SELL_TICKET,
+        component: SellTicket,
+        type: 'staff',
+        requiresAuth: true,
+        allowedRoles: ['cashier']
+    }
 ];
 
 // Helper function to check if user has required roles

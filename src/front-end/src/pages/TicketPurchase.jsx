@@ -17,6 +17,7 @@ import { useUser } from '@contexts/UserContext';
 import { useStartHoldSession, useClearSession, useCreateTicket } from '@hooks/useTicket';
 import { useGetSnacks } from '@hooks/useBranch';
 import { useGetSeatsBySchedule } from '@hooks/useTicket';
+import { ROUTES } from '@routes/routeConfig';
 
 
 
@@ -117,6 +118,9 @@ const TicketPurchase = () => {
             console.log('Movie detail:', movieDetail);
             console.log('Movie ticket data before update:', error);
             
+        } else {
+            navigate(ROUTES.MOVIES)
+            alert('Invalid movie.')
         }
         
         if (branchId && branchId !== 'null') {
@@ -137,7 +141,7 @@ const TicketPurchase = () => {
                     }
                 }
             });
-        }
+        } 
     }, [movieDetail]);
 
     // Update both ticket data when branch is fetched

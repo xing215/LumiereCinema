@@ -28,23 +28,58 @@ const getNowShowingMovies = async (req, res) => {
         const movies = await Movie.find({ 
             isHidden: false
         });
-        
-        // Filter in JavaScript to match virtual property logic exactly
-        const nowShowingMovies = movies.filter(movie => {
-            const releaseDate = new Date(movie.releaseDate);
-            return !movie.isHidden && releaseDate <= now;
-        })
-        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
-        .map(movie => ({
-            _id: movie._id,
-            title: movie.title,
-            posterURL: movie.posterURL,
-            duration: movie.duration,
-            genre: movie.genre,
-            ageRating: movie.ageRating,
-            ratingsAverage: movie.ratingsAverage,
-            releaseDate: movie.releaseDate
-        }));        // 3. Save result to cache for next time
+
+        // For each movie, find the closest schedule and remaining seats
+        const SeatHold = require('../models/SeatHold');
+        const nowShowingMovies = await Promise.all(
+            movies
+                .filter(movie => {
+                    const releaseDate = new Date(movie.releaseDate);
+                    return !movie.isHidden && releaseDate <= now;
+                })
+                .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+                .map(async (movie) => {
+                    // Find the closest upcoming schedule for this movie
+                    const closestSchedule = await Schedule.findOne({
+                        movie: movie._id,
+                        startTime: { $gte: now }
+                    })
+                    .sort({ startTime: 1 })
+                    .populate('screen', 'screenName size');
+
+                    let remainingSeats = null;
+                    if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
+                        // Calculate total seats from screen size
+                        const { rows, columns } = closestSchedule.screen.size;
+                        const totalSeats = rows * columns;
+                        // Occupied seats
+                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat) ? closestSchedule.OccupiedSeat.length : 0;
+                        // Held seats (not expired)
+                        const heldSeatsCount = await SeatHold.countDocuments({
+                            schedule: closestSchedule._id,
+                            expiresAt: { $gt: new Date() }
+                        });
+                        remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
+                    }
+
+                    return {
+                        _id: movie._id,
+                        title: movie.title,
+                        posterURL: movie.posterURL,
+                        duration: movie.duration,
+                        genre: movie.genre,
+                        ageRating: movie.ageRating,
+                        ratingsAverage: movie.ratingsAverage,
+                        releaseDate: movie.releaseDate,
+                        closestSchedule: closestSchedule ? {
+                            _id: closestSchedule._id,
+                            startTime: closestSchedule.startTime
+                        } : null,
+                        remainingSeats
+                    };
+                })
+        );
+        // 3. Save result to cache for next time
         await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
             EX: DEFAULT_EXPIRATION,
         });
@@ -80,20 +115,55 @@ const getUpcomingMovies = async (req, res) => {
         const movies = await Movie.find({ 
             isHidden: false
         });
-        
-        // Filter in JavaScript to match virtual property logic exactly
-        const upcomingMovies = movies.filter(movie => {
-            const releaseDate = new Date(movie.releaseDate);
-            return !movie.isHidden && releaseDate > now;
-        })
-        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
-        .map(movie => ({
-            _id: movie._id,
-            title: movie.title,
-            posterURL: movie.posterURL,
-            releaseDate: movie.releaseDate,
-            genre: movie.genre
-        }));        // 3. Save to cache
+
+        // For each upcoming movie, find the closest schedule and remaining seats
+        const SeatHold = require('../models/SeatHold');
+        const upcomingMovies = await Promise.all(
+            movies
+                .filter(movie => {
+                    const releaseDate = new Date(movie.releaseDate);
+                    return !movie.isHidden && releaseDate > now;
+                })
+                .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+                .map(async (movie) => {
+                    // Find the closest upcoming schedule for this movie
+                    const closestSchedule = await Schedule.findOne({
+                        movie: movie._id,
+                        startTime: { $gte: now }
+                    })
+                    .sort({ startTime: 1 })
+                    .populate('screen', 'screenName size');
+
+                    let remainingSeats = null;
+                    if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
+                        // Calculate total seats from screen size
+                        const { rows, columns } = closestSchedule.screen.size;
+                        const totalSeats = rows * columns;
+                        // Occupied seats
+                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat) ? closestSchedule.OccupiedSeat.length : 0;
+                        // Held seats (not expired)
+                        const heldSeatsCount = await SeatHold.countDocuments({
+                            schedule: closestSchedule._id,
+                            expiresAt: { $gt: new Date() }
+                        });
+                        remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
+                    }
+
+                    return {
+                        _id: movie._id,
+                        title: movie.title,
+                        posterURL: movie.posterURL,
+                        releaseDate: movie.releaseDate,
+                        genre: movie.genre,
+                        closestSchedule: closestSchedule ? {
+                            _id: closestSchedule._id,
+                            startTime: closestSchedule.startTime
+                        } : null,
+                        remainingSeats
+                    };
+                })
+        );
+        // 3. Save to cache
         await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
             EX: DEFAULT_EXPIRATION,
         });

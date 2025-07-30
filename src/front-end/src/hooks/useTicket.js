@@ -83,6 +83,7 @@ export const useApplyPromotion = () => {
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid promotion code';
+      setAppliedPromotion(null);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
