@@ -215,10 +215,10 @@ const searchMovies = async (req, res) => {
  */
 const getAllMovies = async (req, res) => {
     try {
-        // Get all movies (no need to filter isHidden since we do hard delete)
+        // Get all movies including isHidden field for management
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title description posterURL trailerURL duration genre ageRating ratingsAverage releaseDate status createdAt');
+            .select('title description posterURL trailerURL duration genre ageRating ratingsAverage releaseDate isHidden createdAt');
         
         res.status(200).json(movies);
     } catch (error) {

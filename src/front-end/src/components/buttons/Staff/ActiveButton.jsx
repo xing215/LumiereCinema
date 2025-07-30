@@ -1,7 +1,7 @@
 import { Square, SquareCheckBig } from 'lucide-react';
 
 const ActiveButton = ({ 
-    isHidden = true, 
+    isHidden = false, 
     onToggle, 
     disabled = false,
     activeLabel = 'Active',

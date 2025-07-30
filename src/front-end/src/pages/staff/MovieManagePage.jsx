@@ -129,7 +129,7 @@ const MovieManagePage = () => {
         movie.posterURL || '', // Use posterURL (capital URL)
         { 
             type: 'ActiveButton', 
-            isHidden: movie.isHidden,
+            isHidden: movie.isHidden || false,
             rowIndex: index,
             isUpdating: updatingRows.has(index)
         }, 
@@ -250,7 +250,7 @@ const MovieManagePage = () => {
         { width: 'w-40', truncate: true },     // Genre - wider for comma-separated genres
         { width: 'w-20', truncate: false },    // Duration - small column for numbers
         { width: 'w-24', truncate: false },    // Age Rating - moderate width
-        { width: 'w-20', truncate: true },    // Trailer - button column
+        { width: 'w-40', truncate: true },    // Trailer - button column
         { width: 'w-40', truncate: true },    // Poster - button column
         { width: 'w-20', truncate: false },    // ActiveButton - ActiveButton toggle column
         { width: 'w-24', truncate: false }     // Preview - action column
