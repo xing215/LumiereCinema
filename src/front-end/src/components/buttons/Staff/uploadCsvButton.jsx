@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { showUploadError } from '@utils/sweetalert';
 
 const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = false }) => {
     const fileInputRef = useRef(null);
@@ -19,7 +20,7 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
         // Check file type
         const fileExtension = file.name.split('.').pop().toLowerCase();
         if (!['xlsx', 'xls', 'csv'].includes(fileExtension)) {
-            alert('Please upload a valid Excel (.xlsx, .xls) or CSV file');
+            showUploadError('Please upload a valid Excel (.xlsx, .xls) or CSV file');
             return;
         }
 
@@ -40,7 +41,7 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
             console.log('First row example:', jsonData[0]);
             
             if (jsonData.length === 0) {
-                alert('The file appears to be empty or has no valid data');
+                showUploadError('The file appears to be empty or has no valid data');
                 return;
             }
 
@@ -59,7 +60,7 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
 
         } catch (error) {
             console.error('Error processing file:', error);
-            alert('Error processing file. Please check the file format and try again.');
+            showUploadError('Error processing file. Please check the file format and try again.');
         } finally {
             setIsProcessing(false);
             // Reset file input

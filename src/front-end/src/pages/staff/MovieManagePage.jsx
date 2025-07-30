@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import StaffLayout from '@layouts/StaffLayout';
 import MobileNotSupported from '@components/display/MobileNotSupported';
 import SearchButton from '@components/buttons/Staff/SearchButton';
-import ConfirmationModal from '@components/display/Modal/Confirmation';
 import ManageTable from '@components/UI/ManageTable';
 import DeleteButton from '@components/buttons/Staff/DeleteButton';
 import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton';
@@ -12,6 +11,24 @@ import ConfirmButton from '@components/buttons/Staff/ConfirmButton';
 import CancelButton from '@components/buttons/Staff/CancelButton';
 import { useGetMovies, useRemoveMovie, useUpdateMovie, useAddMovie } from '@hooks/useAdmin';
 import { useInlineEdit, useStatusUpdate } from '@hooks/useInlineEdit';
+import {
+    showDeleteConfirmation,
+    showDeletingMovies,
+    showMoviesDeleted,
+    showUploadLoading,
+    showUploadResults,
+    showUploadConfirmation,
+    showAddingMovies,
+    showMoviesAdded,
+    showCancellingUpload,
+    showUploadCancelled,
+    showProcessingVisibility,
+    showMovieShown,
+    showMovieHidden,
+    showUploadError,
+    closeSwal,
+    forceCloseSwal
+} from '@utils/sweetalert';
 
 
 const IntegratedButton = ({ onImportData, isLoading = false }) => (
@@ -54,7 +71,6 @@ const MovieManagePage = () => {
     const { updateStatus, updatingRows } = useStatusUpdate(updateMovie);
     
     const [tickedMovies, setTickedMovies] = useState(new Set());
-    const [showConfirmDeleteMovies, setShowConfirmDeleteMovies] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -81,6 +97,13 @@ const MovieManagePage = () => {
         };
 
         fetchMovies();
+    }, []);
+
+    // Cleanup SweetAlert on component unmount
+    useEffect(() => {
+        return () => {
+            forceCloseSwal();
+        };
     }, []);
 
     // Define which columns are editable (by index) and their corresponding field names
@@ -143,10 +166,26 @@ const MovieManagePage = () => {
         const originalIndex = movies.findIndex(movie => movie._id === targetMovie._id);
         if (originalIndex === -1) return;
         
-        const result = await updateStatus(movies, setMovies, originalIndex, 'isHidden', newIsHidden);
-        
-        if (!result.success) {
-            alert(`Failed to update visibility: ${result.error}`);
+        try {
+            // Show processing message
+            showProcessingVisibility();
+            
+            const result = await updateStatus(movies, setMovies, originalIndex, 'isHidden', newIsHidden);
+            
+            if (result.success) {
+                // Show appropriate success message
+                if (newIsHidden) {
+                    showMovieHidden(targetMovie.title);
+                } else {
+                    showMovieShown(targetMovie.title);
+                }
+            } else {
+                closeSwal();
+                showUploadError(result.error || 'Failed to update visibility');
+            }
+        } catch (error) {
+            closeSwal();
+            showUploadError(error.message || 'Failed to update visibility');
         }
     };
 
@@ -227,7 +266,7 @@ const MovieManagePage = () => {
     // Combine with review movies at the top
     const allMovieRows = [...reviewMovieRows, ...existingMovieRows];
 
-    const handleDelete = async () => {
+    const handleDeleteConfirm = async () => {
         // Get all movies (filtered + review) to find correct IDs
         const allFilteredMovies = [...reviewMovies, ...existingMovies];
         const selectedMovieIds = Array.from(tickedMovies).map(index => {
@@ -235,6 +274,9 @@ const MovieManagePage = () => {
         }).filter(Boolean);
         
         try {
+            // Show deleting progress
+            showDeletingMovies(selectedMovieIds.length);
+            
             // Delete each selected movie
             for (const movieId of selectedMovieIds) {
                 await removeMovie(movieId);
@@ -243,22 +285,36 @@ const MovieManagePage = () => {
             // Refresh the movie list
             await getMovies();
             setTickedMovies(new Set());
-            setShowConfirmDeleteMovies(false);
+            
+            // Show success message
+            showMoviesDeleted(selectedMovieIds.length);
         } catch (error) {
             console.error('Failed to delete movies:', error);
+            closeSwal();
+            showUploadError(error.message || 'Failed to delete movies');
+        }
+    };
+
+    const handleDeleteClick = async () => {
+        const confirmResult = await showDeleteConfirmation(tickedMovies.size);
+        if (confirmResult.isConfirmed) {
+            await handleDeleteConfirm();
         }
     };
 
     // Import movies from Excel - upload directly and track for review
     const handleImportData = async (parsedData) => {
         if (!parsedData || parsedData.length === 0) {
-            alert('No valid data found in the file');
+            showUploadError('No valid data found in the file');
             return;
         }
 
         setImportLoading(true);
         
         try {
+            // Show upload loading
+            showUploadLoading();
+            
             let successCount = 0;
             let errorCount = 0;
             const errors = [];
@@ -309,37 +365,56 @@ const MovieManagePage = () => {
                 }
             }
 
-            // Show results
-            let message = `Upload completed!\nSuccessfully uploaded: ${successCount} movies`;
-            if (errorCount > 0) {
-                message += `\nFailed: ${errorCount} movies`;
-                if (errors.length > 0) {
-                    message += `\n\nErrors:\n${errors.join('\n')}`;
-                }
-            }
-            alert(message);
-
-            // Refresh movies and set review mode
-            await getMovies();
+            // Close loading and show results
+            closeSwal();
             
-            if (uploadedMovieIds.length > 0) {
-                setNewlyUploadedMovies(new Set(uploadedMovieIds));
-                setShowReviewMode(true);
+            // Show upload results
+            const uploadResult = await showUploadResults(successCount, errorCount, errors);
+            
+            if (uploadResult.isConfirmed && uploadedMovieIds.length > 0) {
+                // Show confirmation dialog
+                const confirmResult = await showUploadConfirmation(uploadedMovieIds.length);
+                
+                if (confirmResult.isConfirmed) {
+                    showAddingMovies();
+                    // Refresh movies and set review mode
+                    await getMovies();
+                    setNewlyUploadedMovies(new Set(uploadedMovieIds));
+                    setShowReviewMode(true);
+                    closeSwal();
+                    showMoviesAdded(uploadedMovieIds.length);
+                } else {
+                    // User cancelled, remove uploaded movies
+                    showCancellingUpload();
+                    for (const movieId of uploadedMovieIds) {
+                        await removeMovie(movieId);
+                    }
+                    await getMovies();
+                    showUploadCancelled();
+                }
             }
 
         } catch (error) {
             console.error('Import error:', error);
-            alert('An error occurred during import. Please try again.');
+            closeSwal();
+            showUploadError(error.message || 'An error occurred during import');
         } finally {
             setImportLoading(false);
         }
     };
 
     // Confirm review - accept newly uploaded movies
-    const handleConfirmReview = () => {
-        setNewlyUploadedMovies(new Set());
-        setShowReviewMode(false);
-        alert('Movies have been confirmed and are now live!');
+    const handleConfirmReview = async () => {
+        try {
+            showAddingMovies();
+            setNewlyUploadedMovies(new Set());
+            setShowReviewMode(false);
+            closeSwal();
+            showMoviesAdded(newlyUploadedMovies.size);
+        } catch (error) {
+            closeSwal();
+            showUploadError('Failed to confirm movies');
+        }
     };
 
     // Cancel review - delete newly uploaded movies
@@ -348,6 +423,8 @@ const MovieManagePage = () => {
         
         setImportLoading(true);
         try {
+            showCancellingUpload();
+            
             // Delete all newly uploaded movies
             for (const movieId of newlyUploadedMovies) {
                 await removeMovie(movieId);
@@ -357,11 +434,13 @@ const MovieManagePage = () => {
             await getMovies();
             setNewlyUploadedMovies(new Set());
             setShowReviewMode(false);
-            alert('Newly uploaded movies have been removed.');
+            
+            showUploadCancelled();
             
         } catch (error) {
             console.error('Error canceling review:', error);
-            alert('Failed to remove some movies. Please try again.');
+            closeSwal();
+            showUploadError('Failed to remove some movies. Please try again.');
         } finally {
             setImportLoading(false);
         }
@@ -399,6 +478,7 @@ const MovieManagePage = () => {
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} placeholder="Search by movie title or genre..." />
+                
                 {showReviewMode ? (
                     <ReviewButtons 
                         onConfirm={handleConfirmReview}
@@ -407,21 +487,13 @@ const MovieManagePage = () => {
                     />
                 ) : tickedMovies.size > 0 ? (
                     <DeleteButton 
-                        onClicked={() => setShowConfirmDeleteMovies(true)} 
+                        onClicked={handleDeleteClick} 
                         disabled={removeLoading}
                     />
                 ) : (
                     <IntegratedButton 
                         onImportData={handleImportData}
                         isLoading={loading || importLoading || addLoading}
-                    />
-                )}
-                {showConfirmDeleteMovies && (
-                    <ConfirmationModal 
-                        item={tickedMovies.size} 
-                        handleDelete={handleDelete} 
-                        onClose={() => setShowConfirmDeleteMovies(false)}
-                        loading={removeLoading}
                     />
                 )}
                 {loading ? (
