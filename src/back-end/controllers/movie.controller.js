@@ -112,7 +112,7 @@ const getUpcomingMovies = async (req, res) => {
  */
 const getMovieDetails = async (req, res) => {
     // Cache key will be unique for each movie, e.g., 'movie:6860b11d3d13366261a33aca'
-    const cacheKey = `movie:${req.params.id}`;
+    const cacheKey = `movie:${req.params.movieId}`;
 
     try {
         const cachedMovie = await redisClient.get(cacheKey);
@@ -122,8 +122,9 @@ const getMovieDetails = async (req, res) => {
         }
 
         // Cache miss - fetch from database
-        const movie = await Movie.findById(req.params.id);
+        const movie = await Movie.findById(req.params.movieId);
 
+        
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
@@ -215,10 +216,9 @@ const searchMovies = async (req, res) => {
  */
 const getAllMovies = async (req, res) => {
     try {
-        // Get all movies (no need to filter isHidden since we do hard delete)
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title description posterURL trailerURL duration genre ageRating ratingsAverage releaseDate status isHidden createdAt');
+            .select('title posterURL duration genre isHidden ageRating ratingsAverage releaseDate createdAt');
         
         res.status(200).json(movies);
     } catch (error) {
@@ -302,7 +302,7 @@ const updateMovie = async (req, res) => {
 };
 
 /**
- * @desc    Delete movie (hard delete - permanently remove from database)
+ * @desc    Delete movie (soft delete by setting isHidden to true)
  * @route   DELETE /api/movies/:movieId
  * @access  Administrator
  */
@@ -310,30 +310,31 @@ const deleteMovie = async (req, res) => {
     try {
         const { movieId } = req.params;
         
-        // Check if movie exists first
-        const movie = await Movie.findById(movieId);
-        if (!movie) {
-            return res.status(404).json({ message: 'Movie not found.' });
-        }
-        
-        // Check if movie has any active schedules
+        // Check if movie has any schedules
         const hasSchedules = await Schedule.findOne({ movie: movieId });
         if (hasSchedules) {
-            return res.status(400).json({ 
-                message: 'Cannot delete movie. Movie has active schedules. Please remove all schedules first.',
-                action: 'delete_blocked'
+            // Get movie info before response
+            const movie = await Movie.findById(movieId);
+            if (!movie) {
+                return res.status(404).json({ message: 'Movie not found.' });
+            }            
+            // If movie has schedules, soft delete by setting isHidden to true
+            return res.status(200).json({
+                message: 'Movie has active schedules. Performing soft delete by hiding movie.',
+                action: 'soft_delete'
             });
         }
         
-        // Check if movie has any ratings
-        const hasRatings = await MovieRating.findOne({ movieId: movieId });
-        if (hasRatings) {
-            // Delete all ratings for this movie first
-            await MovieRating.deleteMany({ movieId: movieId });
-        }
+        // If no schedules, perform soft delete by setting isHidden to true
+        const movie = await Movie.findByIdAndUpdate(
+            movieId, 
+            { isHidden: true }, 
+            { new: true }
+        );
         
-        // Perform hard delete - permanently remove from database
-        await Movie.findByIdAndDelete(movieId);
+        if (!movie) {
+            return res.status(404).json({ message: 'Movie not found.' });
+        }
         
         // Clear related cache
         await redisClient.del('movies:now-showing');
@@ -341,12 +342,8 @@ const deleteMovie = async (req, res) => {
         await redisClient.del(`movie:${movieId}`);
         
         res.status(200).json({
-            message: 'Movie has been permanently deleted from database.',
-            action: 'hard_delete',
-            deletedMovie: {
-                id: movie._id,
-                title: movie.title
-            }
+            message: 'Movie has been soft deleted (hidden).',
+            movie
         });
     } catch (error) {
         console.error('Delete Movie Error:', error);
