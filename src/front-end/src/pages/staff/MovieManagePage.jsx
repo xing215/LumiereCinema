@@ -189,8 +189,8 @@ const MovieManagePage = () => {
                         ageRating: movieData.ageRating || 'P',
                         trailerURL: movieData.trailerURL,
                         posterURL: movieData.posterURL,
-                        status: movieData.status || 'Now Showing',
-                        isHidden: movieData.isHidden || false,
+                        // Remove status field - using virtual property based on releaseDate and isHidden
+                        isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true,
                         director: movieData.director || '',
                         cast: movieData.cast || [],
                         language: movieData.language || '',

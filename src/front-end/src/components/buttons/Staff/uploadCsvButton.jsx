@@ -92,6 +92,19 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
         switch (type) {
             case 'movie':
                 return data.map((row, index) => {
+                    // Helper function to safely parse numbers
+                    const parseNumber = (value, defaultValue = 0) => {
+                        if (value === undefined || value === null || value === '') return defaultValue;
+                        const parsed = parseFloat(value);
+                        return isNaN(parsed) ? defaultValue : parsed;
+                    };
+
+                    const parseInteger = (value, defaultValue = 0) => {
+                        if (value === undefined || value === null || value === '') return defaultValue;
+                        const parsed = parseInt(value);
+                        return isNaN(parsed) ? defaultValue : parsed;
+                    };
+
                     return {
                         title: row['Movie Title'] || '',
                         description: row['Description'] || '',
@@ -99,20 +112,21 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
                         genre: typeof row['Genre'] === 'string' 
                             ? row['Genre'].split(',').map(g => g.trim()).filter(Boolean)
                             : [],
-                        duration: parseInt(row['Duration']) || 0,
+                        duration: parseInteger(row['Duration'], 0),
                         ageRating: row['Age Rating'] || '',
                         trailerURL: row['Trailer'] || '',
                         posterURL: row['Poster'] || '',
-                        status: row['Status'] || 'Now Showing',
+                        // Remove status field - no longer needed
                         rowIndex: index,
-                        isHidden: false,
-                        director : row['Director'] || '',
+                        isHidden: true, // Default to true (hidden) as requested
+                        director: row['Director'] || '',
                         cast: typeof row['Cast'] === 'string' 
                             ? row['Cast'].split(',').map(c => c.trim()).filter(Boolean)
                             : [],
                         language: row['Language'] || '',
-                        ratingsAverage: parseFloat(row['Ratings Average']) || 0,
-                        ratingsQuantity: parseInt(row['Ratings Quantity']) || 0,
+                        // Fix number parsing for ratings
+                        ratingsAverage: parseNumber(row['Ratings Average'], 0),
+                        ratingsQuantity: parseInteger(row['Ratings Quantity'], 0),
                     };
                 });
             default:
