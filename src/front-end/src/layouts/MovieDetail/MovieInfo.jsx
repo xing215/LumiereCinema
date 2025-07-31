@@ -65,7 +65,7 @@ const MovieInfo = ({ movieId, branchId }) => {
                         <div className="h-2 w-full" />
                         <div className="flex gap-2 md:gap-4 lg:gap-6 xl:gap-8">
                             <BuyATicketButton movieId={movieId} branchId={branchId} />
-                            <WishlistButton />
+                            <WishlistButton movie={movieDetail}/>
                         </div>
                     </div>
                 </div>
