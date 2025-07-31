@@ -11,7 +11,7 @@ const MainBody = () => {
     const movieId = searchParams.get("movieId");
     const branchId = searchParams.get("branchId");
     return (
-        <div className="relative flex w-[80%] flex-col items-center justify-center bg-slate-950">
+        <div className="relative flex w-[80%] flex-col items-center bg-slate-950">
             <TrailerVideo movieId={movieId} />
             <MovieInfo movieId={movieId} branchId={branchId} />
             <div className="w-full lg:h-10" />
