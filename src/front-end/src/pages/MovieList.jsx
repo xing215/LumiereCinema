@@ -84,6 +84,11 @@ const MainBody = () => {
                 }}
                 cinemas={branches}
                 selectedCinema={selectedBranch}
+                getAllCinemas={true}
+                getAllCinemasClick={() => {
+                    setSelectedBranch(null);
+                    setIsCinemaPopupOpen(false);
+                }}
             />
             <MovieCardContainer movies={filteredMovies} loading={allLoading} selectedBranch={selectedBranch} />
             <div className="h-5 w-full sm:h-10 md:h-20 lg:h-25" />
