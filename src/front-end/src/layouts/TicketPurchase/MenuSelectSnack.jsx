@@ -96,7 +96,7 @@ const MenuSelectSnack = ({ onNext, onBack, snackTicketData, updateSnackTicket, m
 
     return (
         <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
-            <div className="relative flex h-full w-full flex-row min-h-[300px] justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
+            <div className="relative flex h-full w-full flex-row min-h-[400px] justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
                 {/* Background layer */}
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 {/* Main content */}

@@ -130,7 +130,7 @@ const handleDownload = async () => {
         return(
         <>
             {!capturing&&<button
-                className={`group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300 ${
+                className={`group relative flex aspect-auto w-full h-9 flex-row items-center justify-center transition-all duration-300 ${
                     ticketLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
                 disabled={ticketLoading}
@@ -140,14 +140,14 @@ const handleDownload = async () => {
                 <div className={`absolute h-full w-full rounded-xl mix-blend-screen bg-zinc-300/30 transition-all duration-300 ${
                     !ticketLoading ? 'group-hover:bg-zinc-400/30' : ''
                 }`} />
-                <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']"
+                <span className="relative z-10 w-[35%] text-center text-white text-xs font-bold font-['Unbounded']"
                 onClick={handleReturnHome}>
                     RETURN HOME
                 </span>
             </button>
 }{!capturing&&
             <button
-                className={`group relative flex aspect-auto w-72 h-9 flex-row items-center justify-center transition-all duration-300 ${
+                className={`group relative flex aspect-auto w-[50%] h-9 flex-row items-center justify-center transition-all duration-300 ${
                     ticketLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
                 onClick={handleDownload}
@@ -177,7 +177,7 @@ const handleDownload = async () => {
                 <div className={`pointer-events-none absolute inset-0 z-0 rounded-xl ${capturing ? 'bg-slate-950' : 'bg-zinc-300/30 mix-blend-color-dodge'}  lg:[transform:translate3d(0,0,0)]`} />
                 {/* Main content */}
                 <div className="relative flex flex-1 flex-col items-center justify-center px-2 sm:px-4 md:px-8">
-                    <div className="w-auto inline-flex justify-start items-start gap-3.5 py-5 md:hidden">
+                    <div className="w-auto max-w-screen inline-flex justify-start items-start gap-3.5 py-5 md:hidden">
                         <ActionButtons />
                     </div>
                     <div>

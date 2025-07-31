@@ -56,18 +56,18 @@ const GetLocationButton = ({onClick}) => {
     return (
         <button className="relative flex flex-row cursor-pointer h-auto w-[90%] z-10 rounded-2xl py-3 mb-1 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] justify-center items-center bg-pink-400 p-2 text-white hover:bg-purple-700" 
         onClick={onClick}>
-            <Locate className="h-full w-[5%] md:w-[10%]"/>
-            <span className="relative text-sm md:text-md font-['Unbounded'] text-center h-auto w-[75%] font-semibold">Use Current Location</span>
+            <Locate className="h-full w-[5%]"/>
+            <span className="relative text-xs md:text-md font-['Unbounded'] text-center h-auto w-[75%] font-semibold">Use Current Location</span>
         </button>
     );
 };
 
 const UnselectCinemaButton = ({onClick}) => {
     return (
-        <button className="relative flex flex-row cursor-pointer h-auto w-[90%] z-10 rounded-2xl py-4 mb-3 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] justify-center items-center bg-pink-400 p-2 text-white hover:bg-purple-700" 
+        <button className="relative flex flex-row cursor-pointer h-auto w-[90%] z-10 rounded-2xl py-3 mb-1 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] justify-center items-center bg-pink-400 p-2 text-white hover:bg-purple-700" 
         onClick={onClick}>
             {/* <Locate className="h-full w-[5%] md:w-[10%]"/> */}
-            <span className="relative text-sm md:text-md font-['Unbounded'] text-center h-auto w-full font-semibold">Unselect Cinema</span>
+            <span className="relative text-xs md:text-md font-['Unbounded'] text-center h-auto w-full font-semibold">Unselect Cinema</span>
         </button>
     );
 };

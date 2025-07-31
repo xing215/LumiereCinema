@@ -422,7 +422,7 @@ const IntegratedMap = ({
 
     return (
         <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
-            <div className=" mt-[1%] ml-0 md:ml-3 relative z-10 w-[95%] md:w-[25%] h-[30%] md:h-[98%] pt-2">
+            <div className=" mt-[1%] ml-0 md:ml-3 relative z-10 w-[95%] md:w-[25%] h-[40%] md:h-[98%] pt-2">
                 <LocationTable
                     cinemas={filteredCinemas}
                     curlocation={userLocation}
