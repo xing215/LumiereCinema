@@ -179,7 +179,7 @@ const EditableCell = ({
                         showMonthDropdown
                         dropdownMode="select"
                         maxDate={new Date(new Date().getFullYear() + 10, 11, 31)} // Allow up to 10 years in the future
-                        minDate={new Date('1900-01-01')} // Reasonable minimum date
+                        minDate={minDate} // Use configurable minimum date
                         shouldCloseOnSelect={true}
                         onClickOutside={handleSave}
                         openToDate={selectedDate || new Date()}
