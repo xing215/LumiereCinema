@@ -135,6 +135,17 @@ const DropdownTemplate = ({ text, className, value, onChange, options, disabled 
     );
 };
 
+// Role display mapping
+const roleDisplayMap = {
+    customer: 'Customer',
+    cashier: 'Cashier',
+    checkincounter: 'Check-in Counter',
+    branchmanager: 'Branch Manager',
+    administrator: 'Administrator'
+};
+
+const getRoleDisplay = (role) => roleDisplayMap[role] || role;
+
 const EditAccountInformationModal = ({ 
     onClose, 
     handleConfirm, 

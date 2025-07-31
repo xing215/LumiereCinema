@@ -134,12 +134,20 @@ export const useAccountManagement = () => {
             return 'No Branch';
         };
 
-        // Format roles with capitalized first letter
+        // Role display mapping for UI
+        const roleDisplayMap = {
+            customer: 'Customer',
+            cashier: 'Cashier',
+            checkincounter: 'Check-in Counter',
+            branchmanager: 'Branch Manager',
+            administrator: 'Administrator'
+        };
+        const getRoleDisplay = (role) => roleDisplayMap[role] || role;
+
+        // Format roles for display in table
         const formatRoles = (roles) => {
             if (!roles || !Array.isArray(roles)) return 'Customer';
-            return roles.map(role => 
-                role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
-            ).join(', ');
+            return roles.map(getRoleDisplay).join(', ');
         };
 
         // Format loyalty rank (only show rank, not points)
