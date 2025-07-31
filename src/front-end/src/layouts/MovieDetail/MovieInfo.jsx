@@ -70,7 +70,8 @@ const MovieInfo = ({ movieId, branchId }) => {
                         <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.genre?.join(', ') || ''}</p>
                         <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.duration ? `${movieDetail.duration}'` : ''}{movieDetail?.ageRating ? ` - ${movieDetail.ageRating}` : ""}</p>
                         <div className="w-full md:h-2 xl:h-4" />
-                        <Rating rated={movieDetail?.averageRating || 0} user={movieDetail?.ratingCount || 0} />
+                        {/* movieDetail?.ratingsAverage */}
+                        <Rating rated={3.3 || 0} user={movieDetail?.ratingsQuantity || 0} />
                         <div className="h-2 w-full" />
                         <div className="flex gap-2 md:gap-4 lg:gap-6 xl:gap-8">
                             {Array.isArray(movieDetail?.branches) && movieDetail.branches.length > 0 && (
