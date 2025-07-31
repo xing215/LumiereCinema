@@ -14,7 +14,8 @@ function BuyTicketButton({ movieId, branchId= undefined }) {
                 md:w-[calc(100%-1.5rem)] md:h-11
                 lg:w-[calc(100%-2rem)] lg:h-12
                 xl:w-[calc(100%-2.5rem)] xl:h-14
-                bg-zinc-300/30 rounded-xl flex items-center justify-center transition-all duration-200 overflow-visible relative"
+                bg-zinc-300/30 rounded-xl flex items-center justify-center transition-all duration-200 overflow-visible relative
+                hover:cursor-pointer hover:bg-zinc-300/50"
             onClick={() => navigate(getBuyTicketPath(movieId, branchId))}
         >
             <span className="text-white font-unbounded font-bold text-[11px] sm:text-xs md:text-sm lg:text-base xl:text-lg tracking-widest">BUY<br/>TICKET</span>
@@ -32,6 +33,13 @@ import { useGetWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks
 
 
 const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
+    if (!movie || !movie._id) {
+        return (
+            <div className="flex items-center justify-center h-full w-full">
+                <span className="text-white">Movie data not available</span>
+            </div>
+        );
+    }
     const [showOverlay, setShowOverlay] = useState(false);
     const [, forceUpdate] = useState(0); // for global overlay state
     const cardRef = useRef(null);
