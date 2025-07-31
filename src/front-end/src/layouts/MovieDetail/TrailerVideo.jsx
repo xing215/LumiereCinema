@@ -47,7 +47,7 @@ export const TrailerVideo = ({ videoYouTube }) => {
             </div>
             <div className="absolute left-0 h-full w-[5%] bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
             <div className="absolute right-0 h-full w-[5%] bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 h-[50%] w-full bg-gradient-to-t from-slate-950 to-transparent blur-xs pointer-events-none" />
+            <div className="absolute -bottom-5 h-[50%] w-full bg-gradient-to-t from-slate-950 to-transparent blur-xs pointer-events-none" />
         </div>
     );
 };
