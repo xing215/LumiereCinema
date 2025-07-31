@@ -255,19 +255,22 @@ export const useAccountManagement = () => {
                 return;
             }
 
+            const rolesArray = Array.from(roles).map(roleIndex => {
+                switch(roleIndex) {
+                    case 1: return 'customer';
+                    case 2: return 'cashier';
+                    case 3: return 'checkincounter';
+                    case 4: return 'branchmanager';
+                    case 5: return 'administrator';
+                    default: return 'customer';
+                }
+            });
+
             const accountData = {
                 ...newAccountData,
-                roles: Array.from(roles).map(roleIndex => {
-                    switch(roleIndex) {
-                        case 1: return 'customer';
-                        case 2: return 'cashier';
-                        case 3: return 'checkincounter';
-                        case 4: return 'branchmanager';
-                        case 5: return 'administrator';
-                        default: return 'customer';
-                    }
-                }),
-                branch: newAccountData.branch || user?.branch?._id
+                roles: rolesArray,
+                // If customer role only, set branch to null; otherwise use selected branch
+                branch: rolesArray.includes('customer') && rolesArray.length === 1 ? null : newAccountData.branch
             };
 
             showAddingItems();
@@ -337,18 +340,22 @@ export const useAccountManagement = () => {
                 return;
             }
 
+            const rolesArray = Array.from(roles).map(roleIndex => {
+                switch(roleIndex) {
+                    case 1: return 'customer';
+                    case 2: return 'cashier';
+                    case 3: return 'checkincounter';
+                    case 4: return 'branchmanager';
+                    case 5: return 'administrator';
+                    default: return 'customer';
+                }
+            });
+
             const updateData = {
                 ...editAccountData,
-                roles: Array.from(roles).map(roleIndex => {
-                    switch(roleIndex) {
-                        case 1: return 'customer';
-                        case 2: return 'cashier';
-                        case 3: return 'checkincounter';
-                        case 4: return 'branchmanager';
-                        case 5: return 'administrator';
-                        default: return 'customer';
-                    }
-                })
+                roles: rolesArray,
+                // If customer role only, set branch to null; otherwise use selected branch
+                branch: rolesArray.includes('customer') && rolesArray.length === 1 ? null : editAccountData.branch
             };
 
             showLoading('Updating account...');

@@ -162,17 +162,26 @@ const updateUserDetails = async (req, res) => {
     await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
 
     if (req.body.updateData.email) {
-      if (await User.findOne({ email: req.body.updateData.email })) {
+      const existingUser = await User.findOne({ 
+        email: req.body.updateData.email,
+        _id: { $ne: req.body.userId } // Exclude current user
+      });
+      if (existingUser) {
         return res.status(400).json({ message: 'Email already in use.' });
       }
     }
     if (req.body.updateData.phone) {
-      if (await User.findOne({ phone: req.body.updateData.phone })) {
+      const existingUser = await User.findOne({ 
+        phone: req.body.updateData.phone,
+        _id: { $ne: req.body.userId } // Exclude current user
+      });
+      if (existingUser) {
         return res.status(400).json({ message: 'Phone number already in use.' });
       }
     }
     if (req.body.updateData.branch) {
-      if (!await Branch.findById(req.body.updateData.branch)) {
+      const branchExists = await Branch.findById(req.body.updateData.branch);
+      if (!branchExists) {
         return res.status(400).json({ message: 'Branch does not exist.' });
       }
     }
