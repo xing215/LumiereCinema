@@ -15,7 +15,7 @@ const MainBody = () => {
             <TrailerVideo movieId={movieId} />
             <MovieInfo movieId={movieId} branchId={branchId} />
             <div className="w-full lg:h-10" />
-            <Suggestion />
+            <Suggestion currentMovieId={movieId} />
             <div className="absolute top-1/2 right-[-50px] z-20 h-[200px] w-[100px] -translate-y-1/2 rotate-[150deg] transform bg-sky-400/60 mix-blend-lighten blur-[100px] md:right-[-140px] md:h-[300px] md:w-[150px] lg:right-[-200px] lg:h-[400px] lg:w-[200px] xl:right-[-300px] xl:h-[488px] xl:w-[315px]" />
         </div>
     );
