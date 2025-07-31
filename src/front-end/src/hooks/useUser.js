@@ -185,7 +185,7 @@ export const useRateMovie = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/user/ratings', { movieId, rating }, {
+      const response = await axios.post(getApiUrl('rateMovie'), { movieId, rating }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -210,13 +210,11 @@ export const useGetMyRatings = () => {
   const getMyRatings = async (movieId = null) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const url = movieId ? `/api/user/ratings/${movieId}` : '/api/user/ratings';
+      const url = getApiUrlWithParams('getRatingMovie', { movieId: movieId});
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
       if (movieId) {
         setRatings(prev => ({ ...prev, [movieId]: response.data }));
       } else {

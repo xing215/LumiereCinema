@@ -7,7 +7,7 @@ import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
-import MovieDetail from '@/pages/MovieDetail';
+import MovieDetail from '@pages/MovieDetail';
 import CheckInCounterPage from '@pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from '@pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from '@pages/staff/PromotionManagePage.jsx';
@@ -21,14 +21,14 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
-import AboutUs from '@/pages/AboutUs';
+import AboutUs from '@pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
 import LunarPointsPage from '@pages/LunarPoints.jsx';
-import WatchHistoryPage from '@/pages/WatchHistory';
+import WatchHistoryPage from '@pages/WatchHistory';
 
-import Developing from '@/pages/others/Developing.jsx';
-import NotFound from '@/pages/others/NotFound.jsx';
+import Developing from '@pages/others/Developing.jsx';
+import NotFound from '@pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {

@@ -27,10 +27,11 @@ const movieSchema = new mongoose.Schema({
     default: 'P'
   },
   
-  ratingsAverage: { type: Number, default: 0, min: 0, max: 5 },
-  ratingsQuantity: { type: Number, default: 0 },
+  // ratingsAverage: { type: Number, default: 0, min: 0, max: 5 },
+  // ratingsQuantity: { type: Number, default: 0 },
   
 }, { timestamps: true });
+
 
 // Add virtual properties for status based on current date
 movieSchema.virtual('status').get(function() {

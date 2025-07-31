@@ -168,6 +168,25 @@ const getMovieDetails = async (req, res) => {
             return res.status(404).json({ message: 'Movie not found.' });
         }
 
+        // Calculate ratingsAverage and ratingsQuantity from MovieRating
+        const ratingStats = await MovieRating.aggregate([
+            { $match: { movie: movie._id } },
+            {
+                $group: {
+                    _id: '$movie',
+                    ratingsQuantity: { $sum: 1 },
+                    ratingsAverage: { $avg: '$star' }
+                }
+            }
+        ]);
+
+        let ratingsAverage = 0;
+        let ratingsQuantity = 0;
+        if (ratingStats.length > 0) {
+            ratingsAverage = ratingStats[0].ratingsAverage || 0;
+            ratingsQuantity = ratingStats[0].ratingsQuantity || 0;
+        }
+
         // Find all schedules for this movie, populate screen.branch
         const schedules = await Schedule.find({ movie: movie._id })
             .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
@@ -180,15 +199,17 @@ const getMovieDetails = async (req, res) => {
         });
         const branches = Array.from(branchSet);
 
-        // Build response object (keep all movie fields, add branches)
+        // Build response object (keep all movie fields, add branches, ratingsAverage, ratingsQuantity)
         const movieObj = movie.toObject();
         movieObj.branches = branches;
+        movieObj.ratingsAverage = ratingsAverage;
+        movieObj.ratingsQuantity = ratingsQuantity;
 
         // Save to cache with 1 hour expiration
         await redisClient.set(cacheKey, JSON.stringify(movieObj), {
             EX: DETAIL_CACHE_EXPIRATION,
         });
-
+        console.log('Movie details cached:', movieObj);
         res.status(200).json(movieObj);
     } catch (error) {
         console.error('Get Movie Details Error:', error);
