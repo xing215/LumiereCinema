@@ -110,7 +110,10 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                     <span
                         className="cursor-pointer hover:underline hover:text-yellow-300 transition-colors duration-150"
                         onClick={() => {
-                            if (movie?._id) navigate(getMovieDetailsPath(movie._id, selectedBranch?._id));
+                            if (movie?._id) {
+                                const url = getMovieDetailsPath(movie._id, selectedBranch?._id);
+                                window.location.replace(url);
+                            }
                         }}
                     >
                         {movie?.title || 'An error occured'}
