@@ -5,7 +5,7 @@ export const TrailerVideo = () => {
             <div className="relative w-full">
                 <video
                     src={trailerVideo}
-                    autoPlay
+                    // autoPlay
                     // muted
                     loop
                     className="h-full w-full object-contain"
