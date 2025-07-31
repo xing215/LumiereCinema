@@ -49,7 +49,8 @@ const CustomDropdown = ({
     inputTextSize = 'text-sm sm:text-base md:text-lg', // Custom text size for input
     optionTextSize = 'text-sm sm:text-base md:text-lg', // Custom text size for options
     allowOtherInput = false, // Allow custom text input
-    forceFillLabel = false // Force fill label even if value is empty
+    forceFillLabel = false, // Force fill label even if value is empty
+    width = 'w-full' // New: custom width
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
@@ -143,7 +144,7 @@ const CustomDropdown = ({
     };
 
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className={`relative ${width}`} ref={dropdownRef}>
             {allowOtherInput ? (
                 <div className="relative">
                     <input
@@ -190,7 +191,7 @@ const CustomDropdown = ({
 
             {isOpen && (
                 <div
-                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-20 overflow-hidden rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}
+                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 overflow-hidden rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}
                 >
                     {filteredOptions.length > 0 ? (
                         filteredOptions.map((option, index) => (

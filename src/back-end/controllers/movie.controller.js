@@ -21,36 +21,54 @@ const getNowShowingMovies = async (req, res) => {
         if (cachedMovies) {
             // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }        // 2. Cache miss - fetch from database
-        // Use date-based query instead of status field
+        }
+        // 2. Cache miss - fetch from database
         const now = new Date();
-        // Use the same logic as virtual property for consistency
-        const movies = await Movie.find({ 
-            isHidden: false
-        });
-        
+        const movies = await Movie.find({ isHidden: false });
         // Filter in JavaScript to match virtual property logic exactly
         const nowShowingMovies = movies.filter(movie => {
             const releaseDate = new Date(movie.releaseDate);
             return !movie.isHidden && releaseDate <= now;
         })
-        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
-        .map(movie => ({
-            _id: movie._id,
-            title: movie.title,
-            posterURL: movie.posterURL,
-            duration: movie.duration,
-            genre: movie.genre,
-            ageRating: movie.ageRating,
-            ratingsAverage: movie.ratingsAverage,
-            releaseDate: movie.releaseDate
-        }));        // 3. Save result to cache for next time
-        await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
-            EX: DEFAULT_EXPIRATION,
+        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+
+        // For each movie, find all schedules and collect unique branch IDs
+        const movieIds = nowShowingMovies.map(m => m._id);
+        // Get all schedules for these movies, populate screen.branch
+        const schedules = await Schedule.find({ movie: { $in: movieIds } })
+            .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+
+        // Map: movieId -> Set of branchIds
+        const movieToBranches = {};
+        schedules.forEach(sch => {
+            const mId = String(sch.movie);
+            const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+            if (branchId) {
+                if (!movieToBranches[mId]) movieToBranches[mId] = new Set();
+                movieToBranches[mId].add(branchId);
+            }
         });
 
-        res.status(200).json(nowShowingMovies);
+        // Add branches array to each movie
+        const result = nowShowingMovies.map(movie => {
+            const mId = String(movie._id);
+            const branches = movieToBranches[mId] ? Array.from(movieToBranches[mId]) : [];
+            return {
+                _id: movie._id,
+                title: movie.title,
+                posterURL: movie.posterURL,
+                duration: movie.duration,
+                genre: movie.genre,
+                ageRating: movie.ageRating,
+                ratingsAverage: movie.ratingsAverage,
+                releaseDate: movie.releaseDate,
+                status: movie.status,
+                branches
+            };
+        });
 
+        await redisClient.set(cacheKey, JSON.stringify(result), { EX: DEFAULT_EXPIRATION });
+        res.status(200).json(result);
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
@@ -64,7 +82,6 @@ const getNowShowingMovies = async (req, res) => {
  */
 
 const getUpcomingMovies = async (req, res) => {
-    // Define unique cache key for "upcoming"
     const cacheKey = 'movies:upcoming';
 
     try {
@@ -73,32 +90,50 @@ const getUpcomingMovies = async (req, res) => {
         if (cachedMovies) {
             // Cache hit
             return res.status(200).json(JSON.parse(cachedMovies));
-        }        // 2. Cache miss - fetch from database
-        // Use date-based query instead of status field
+        }
+        // 2. Cache miss - fetch from database
         const now = new Date();
-        // Use the same logic as virtual property for consistency
-        const movies = await Movie.find({ 
-            isHidden: false
-        });
-        
+        const movies = await Movie.find({ isHidden: false });
         // Filter in JavaScript to match virtual property logic exactly
         const upcomingMovies = movies.filter(movie => {
             const releaseDate = new Date(movie.releaseDate);
             return !movie.isHidden && releaseDate > now;
         })
-        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
-        .map(movie => ({
-            _id: movie._id,
-            title: movie.title,
-            posterURL: movie.posterURL,
-            releaseDate: movie.releaseDate,
-            genre: movie.genre
-        }));        // 3. Save to cache
-        await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
-            EX: DEFAULT_EXPIRATION,
+        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
+
+        // For each movie, find all schedules and collect unique branch IDs
+        const movieIds = upcomingMovies.map(m => m._id);
+        const schedules = await Schedule.find({ movie: { $in: movieIds } })
+            .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+
+        // Map: movieId -> Set of branchIds
+        const movieToBranches = {};
+        schedules.forEach(sch => {
+            const mId = String(sch.movie);
+            const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+            if (branchId) {
+                if (!movieToBranches[mId]) movieToBranches[mId] = new Set();
+                movieToBranches[mId].add(branchId);
+            }
         });
 
-        res.status(200).json(upcomingMovies);
+        // Add branches array to each movie
+        const result = upcomingMovies.map(movie => {
+            const mId = String(movie._id);
+            const branches = movieToBranches[mId] ? Array.from(movieToBranches[mId]) : [];
+            return {
+                _id: movie._id,
+                title: movie.title,
+                posterURL: movie.posterURL,
+                releaseDate: movie.releaseDate,
+                genre: movie.genre,
+                status: movie.status,
+                branches
+            };
+        });
+
+        await redisClient.set(cacheKey, JSON.stringify(result), { EX: DEFAULT_EXPIRATION });
+        res.status(200).json(result);
     } catch (error) {
         console.error('Get Upcoming Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
