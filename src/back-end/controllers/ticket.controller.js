@@ -504,6 +504,8 @@ const holdSeats = async (req, res) => {
         expiresAt: { $gt: new Date() }
       }).session(session).lean();
 
+      console.log('Existing holds:', existingHolds);  
+
       // Handle existing holds
       if (existingHolds.length > 0) {
         if (replaceExisting) {
@@ -830,7 +832,17 @@ const createSnackTicket = async (req, res) => {
       snackList 
     } = req.body;
 
-    const customer = req.user && req.user?.id ? req.user?.id : null;
+    const userId = req.user && req.user?.id ? req.user?.id : null;
+    const user = await User.findById(userId);
+
+    if (user) {
+      if (user.roles.includes('cashier')) {
+        customer = null
+      } else {
+        customer = userId; // Use userId as customer if not a cashier
+      }
+    }
+
 
     // Validate snackList is provided
     if (!snackList || !Array.isArray(snackList) || snackList.length === 0) {
@@ -848,7 +860,7 @@ const createSnackTicket = async (req, res) => {
         noLoginCustomerInfo, 
         branch, 
         snackList, 
-        seller 
+        seller,
       });
 
       // ===== Calculate total and update stock =====
@@ -920,7 +932,7 @@ const createSnackTicket = async (req, res) => {
 
 // ======= EXISTING SUB FUNCTIONS =======
 
-const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList = [], seller }) => {
+const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList = [] }) => {
   let user = null;
 
   if (customer) {
@@ -939,13 +951,6 @@ const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snac
 
   const branchData = await Branch.findById(branch);
   if (!branchData) throw { status: 404, message: 'Branch not found.' };
-
-  if (seller) {
-    const staff = await User.findById(seller);
-    if (!staff || !staff.roles.includes('cashier')) {
-      throw { status: 400, message: 'Invalid seller.' };
-    }
-  }
 
   return { user, branchData };
 };
@@ -996,13 +1001,29 @@ const calculateTotalAndUpdateStock = async (snackList, branchId, session = null)
 const calculateDiscountedTotal = async (req, res) => {
   try {
     console.log('Calculate Discounted Total Request:', req.body);
-    const { promotionCode, snackTotal, movieTotal } = req.body;
-    const userId = req.user && req.user?.id ? req.user?.id : null;
+    console.log('User Info:', req.user);
+    const { promotionCode, snackTotal, movieTotal, noLoginCustomerInfo } = req.body;
+    let userId = req.user && req.user?.id ? req.user?.id : null;
     let user = null;
     if (userId) {
-      user = await User.findById(userId);
-      // handle not found, locked, etc.
+      const userBody = await User.findById(userId);
+      if (userBody && userBody.roles.includes('cashier')) {
+        user = null; // If cashier, do not use userId as customer
+      } else {
+        user = userBody; // Use userId as customer if not a cashier
+      }
     }
+    
+    if (!user && noLoginCustomerInfo && noLoginCustomerInfo.phone) {
+      const foundUser = await User.findOne({ phone: noLoginCustomerInfo.phone });
+      if (foundUser) {
+        user = foundUser
+      } else {
+        user = null
+    }
+  }
+    console.log('User ID:', userId);
+    console.log(user ? 'Customer found:' : 'No customer found, using noLoginCustomerInfo:', user);
 
     // console.log('User:', user);
 
@@ -1049,6 +1070,9 @@ const calculateDiscountedTotal = async (req, res) => {
         if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
+        if (!user && promotion.appliedLoyaltyRank ) {
+          throw new Error('Promotion not applicable for your loyalty rank.');
+        }
         snackDiscount = Math.min(snackTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
       } catch (error) {
         snackError = error.message;
@@ -1069,6 +1093,9 @@ const calculateDiscountedTotal = async (req, res) => {
           throw new Error('Promotion has no remaining uses.');
         }
         if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
+          throw new Error('Promotion not applicable for your loyalty rank.');
+        }
+        if (!user && promotion.appliedLoyaltyRank ) {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
         movieDiscount = Math.min(movieTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
@@ -1200,12 +1227,25 @@ const createTicket = async (req, res) => {
       snackTicket 
     } = req.body;
 
-    let customer = req.user && req.user?.id ? req.user?.id : null;
-    // If noLoginCustomerInfo has phone, try to find user by phone
+    console.log('Create Ticket Request:', req.body);
+
+    let userId = req.user && req.user?.id ? req.user?.id : null;
+    let customer = null;
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user && user.roles.includes('cashier')) {
+        customer = null; // If cashier, do not use userId as customer
+      } else {
+        customer = user; // Use userId as customer if not a cashier
+      }
+    }
+
     if (!customer && noLoginCustomerInfo && noLoginCustomerInfo.phone) {
       const foundUser = await User.findOne({ phone: noLoginCustomerInfo.phone });
       if (foundUser) {
         customer = foundUser._id;
+      } else {
+        customer = null; // No existing user found, use noLoginCustomerInfo
       }
     }
     console.log(req.body)
@@ -1226,7 +1266,6 @@ const createTicket = async (req, res) => {
         noLoginCustomerInfo, 
         branch, 
         snackList: snackTicket?.snackList || [], 
-        seller 
       });
 
       let createdMovieTicket = null;
@@ -1271,7 +1310,7 @@ const createTicket = async (req, res) => {
           throw { status: 400, message: 'Movie ticket total is required and must be a number' };
         }
         createdMovieTicket = new Ticket({
-          customer: customer || null,
+          ...(customer ? { customer } : { noLoginCustomerInfo }),
           seller: seller || null,
           branch,
           schedule,

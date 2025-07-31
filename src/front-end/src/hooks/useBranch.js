@@ -274,6 +274,7 @@ export const useGetSnacks = () => {
   const { currentBranch } = useSetCurrentBranch();
 
   const getSnacks = async (branchId = currentBranch) => {
+    console.log('Fetching snacks for branch:', branchId);
     if (!branchId) {
       setError('No branch selected');
       return { success: false, error: 'No branch selected' };

@@ -18,7 +18,6 @@ const SeatName = ({ type, text, isCouple = false }) => (
 const SeatsScreen = ({
     seats = [],
     loading = false,
-    onSeatSelect,
     movieTicketData,
     updateMovieTicket,
     onNext,
@@ -51,14 +50,17 @@ const SeatsScreen = ({
         if (newSelectedSeats.length > (movieTicketData.adultTickets + movieTicketData.discountedTickets)) {
             alert('Please add more tickets');
         } else {
-            if (newSelectedSeats.length < movieTicketData.discountedTickets)
-                updateMovieTicket({total: newSelectedSeats.length * 45000});
-            else
-                updateMovieTicket({ total: movieTicketData.discountedTickets*45000 + (newSelectedSeats.length - movieTicketData.discountedTickets) * 80000 });
+            console.log('Selected seats:', newSelectedSeats);
+            console.log('Current movie ticket data:', movieTicketData);
             updateMovieTicket({ seats: newSelectedSeats });
         }
     };
 
+    useEffect(() => {
+        updateMovieTicket({ total: movieTicketData?.adultTickets * 80000 + movieTicketData?.discountedTickets * 45000 });
+    }, [movieTicketData?.adultTickets, movieTicketData?.discountedTickets]);
+
+    
     const canProceed = movieTicketData?.seats.length > 0;
 
     const handleNext = () => {
@@ -112,7 +114,7 @@ const SeatsScreen = ({
                         // max={Infinity}
                     />
                     </div>
-                    <div className="flex flex-row flex-wrap gap-4 items-center justify-center w-full">
+                    <div className="flex flex-row pt-5 flex-wrap gap-4 items-center justify-center w-full">
                         <SeatName type="Normal" text="Normal Seat" />
                         <SeatName type="Taken" text="Taken Seat" />
                         <SeatName type="Couple" text="Couple Seat" isCouple={true} />

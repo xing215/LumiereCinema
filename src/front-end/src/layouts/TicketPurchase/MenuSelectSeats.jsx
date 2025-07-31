@@ -124,13 +124,13 @@ if (seats && seats.seatsByRow) {
         if (newSelectedSeats.length > (movieTicketData.adultTickets + movieTicketData.discountedTickets)) {
             alert('Please add more tickets');
         } else {
-            if (newSelectedSeats.length < movieTicketData.discountedTickets)
-                updateMovieTicket({total: newSelectedSeats.length * 45000});
-            else
-                updateMovieTicket({ total: movieTicketData.discountedTickets*45000 + (newSelectedSeats.length - movieTicketData.discountedTickets) * 80000 });
             updateMovieTicket({ seats: newSelectedSeats });
         }
     };
+
+    useEffect(() => {
+        updateMovieTicket({ total: movieTicketData?.adultTickets * 80000 + movieTicketData?.discountedTickets * 45000 });
+    }, [movieTicketData?.adultTickets, movieTicketData?.discountedTickets]);
 
     // Check if user can proceed
     const canProceed = movieTicketData?.seats.length > 0;

@@ -47,7 +47,7 @@ const MovieList = ({ movies, loading, onMovieSelect }) => {
     <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
       <div className="flex items-start justify-center h-[80vh] rounded-xl overflow-hidden  w-[90%] relative">
         <div className="absolute pointer-events-none inset-0 w-full h-full bg-zinc-300/30 mix-blend-color-dodge"/>
-        <div className="flex flex-row flex-wrap gap-4 items-start justify-center w-full h-auto max-h-full py-4 px-6 overflow-y-scroll">
+        <div className="flex flex-row flex-wrap gap-4 items-start justify-start w-full h-auto max-h-full py-4 px-6 overflow-y-scroll">
           {loading ? <div className="md:text-md h-auto items-center justify-center  font-['Unbounded'] text-base font-black text-white mx-2"> • • •</div> : 
           sortedMovies.map((movie) => (
             <MovieCard key={movie._id} movie={movie} onSelect={onMovieSelect} />
