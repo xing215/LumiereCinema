@@ -100,6 +100,9 @@ const MovieManagePage = () => {
         genre: '',
         duration: '',
         ageRating: 'P',
+        director: '',
+        cast: '',
+        language: '',
         trailerURL: '',
         posterURL: ''
     });
@@ -133,7 +136,7 @@ const MovieManagePage = () => {
     }, []);
 
     // Define which columns are editable (by index) and their corresponding field names
-    const editableColumns = [1, 2, 3, 4, 5, 6, 7, 8]; // Movie Title, Description, Release Date, Genre, Duration, Age Rating, Trailer, Poster (excluding Visible since it uses ActiveButton)
+    const editableColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // Movie Title, Description, Release Date, Genre, Duration, Age Rating, Director, Cast, Language, Trailer, Poster (excluding Visible since it uses ActiveButton)
     const columnFieldMapping = {
         1: 'title',
         2: 'description', 
@@ -141,21 +144,29 @@ const MovieManagePage = () => {
         4: 'genre',
         5: 'duration',
         6: 'ageRating',
-        7: 'trailerURL',
-        8: 'posterURL',
-        9: 'isHidden' // Add isHidden field mapping for ActiveButton
+        7: 'director',
+        8: 'cast',
+        9: 'language',
+        10: 'trailerURL',
+        11: 'posterURL',
+        12: 'isHidden' // Add isHidden field mapping for ActiveButton
     };
 
     // Handle starting inline edit
     const handleStartEdit = (rowIndex, columnIndex, currentValue) => {
         // Allow editing without expansion requirement and if not already updating and column is editable
         if (editableColumns.includes(columnIndex) && !isUpdating) {
-            // If adding movie and this is the first row, allow editing
-            if (isAddingMovie && rowIndex === 0) {
-                startEdit(rowIndex, columnIndex, currentValue);
-            } else if (!isAddingMovie) {
-                startEdit(rowIndex, columnIndex, currentValue);
+            // If adding movie, only allow editing row 0 (the new movie row)
+            if (isAddingMovie) {
+                if (rowIndex === 0) {
+                    startEdit(rowIndex, columnIndex, currentValue);
+                }
+                // Ignore clicks on existing movie rows when in add mode
+                return;
             }
+            
+            // Normal editing mode - allow editing any row
+            startEdit(rowIndex, columnIndex, currentValue);
         }
     };
 
@@ -164,6 +175,7 @@ const MovieManagePage = () => {
         // Check if this is the new movie row (index 0 when adding)
         if (isAddingMovie && rowIndex === 0) {
             handleNewMovieFieldChange(columnIndex, newValue);
+            cancelEdit(); // Clear edit state immediately after updating new movie data
             return;
         }
         
@@ -176,10 +188,12 @@ const MovieManagePage = () => {
         if (movie && fieldName) {
             const movieId = movie.id || movie._id;
             
-            // Special handling for genre field (convert comma-separated string to array)
+            // Special handling for genre and cast fields (convert comma-separated string to array)
             let processedValue = newValue;
             if (fieldName === 'genre') {
                 processedValue = newValue.split(',').map(g => g.trim()).filter(Boolean);
+            } else if (fieldName === 'cast') {
+                processedValue = newValue.split(',').map(c => c.trim()).filter(Boolean);
             }
             
             try {
@@ -189,6 +203,16 @@ const MovieManagePage = () => {
                 // Could add toast notification here for user feedback
             }
         }
+    };
+
+    // Handle canceling inline edit with special logic for add movie mode
+    const handleCancelEdit = () => {
+        // Always clear the edit state regardless of context
+        cancelEdit();
+        
+        // If we're in add movie mode and editing the new movie row,
+        // we don't need any special handling - just clear the edit state
+        // The edit state should never leak to existing movie rows
     };
 
     // Handle new movie field changes
@@ -204,6 +228,9 @@ const MovieManagePage = () => {
 
     // Start adding new movie
     const handleStartAddMovie = () => {
+        // Clear any active edit state first
+        cancelEdit();
+        
         setIsAddingMovie(true);
         setNewMovieData({
             title: '',
@@ -212,6 +239,9 @@ const MovieManagePage = () => {
             genre: '',
             duration: '',
             ageRating: 'P',
+            director: '',
+            cast: '',
+            language: '',
             trailerURL: '',
             posterURL: ''
         });
@@ -219,6 +249,9 @@ const MovieManagePage = () => {
 
     // Cancel adding new movie
     const handleCancelAddMovie = () => {
+        // Clear any active edit state first
+        cancelEdit();
+        
         setIsAddingMovie(false);
         setNewMovieData({
             title: '',
@@ -227,6 +260,9 @@ const MovieManagePage = () => {
             genre: '',
             duration: '',
             ageRating: 'P',
+            director: '',
+            cast: '',
+            language: '',
             trailerURL: '',
             posterURL: ''
         });
@@ -252,19 +288,22 @@ const MovieManagePage = () => {
                 genre: newMovieData.genre ? newMovieData.genre.split(',').map(g => g.trim()).filter(Boolean) : [],
                 duration: newMovieData.duration ? parseInt(newMovieData.duration) : 0,
                 ageRating: newMovieData.ageRating || 'P',
+                director: newMovieData.director.trim(),
+                cast: newMovieData.cast ? newMovieData.cast.split(',').map(c => c.trim()).filter(Boolean) : [],
+                language: newMovieData.language.trim(),
                 trailerURL: newMovieData.trailerURL.trim(),
                 posterURL: newMovieData.posterURL.trim(),
                 isHidden: true, // Default to hidden
-                director: '',
-                cast: [],
-                language: '',
-                ratingsAverage: 0,
-                ratingsQuantity: 0
+                ratingsAverage: 0,  // Always default to 0
+                ratingsQuantity: 0  // Always default to 0
             };
 
             const result = await addMovie(movieToAdd);
 
             if (result.success) {
+                // Clear any active edit state first
+                cancelEdit();
+                
                 // Refresh movies list
                 await getMovies();
                 
@@ -277,6 +316,9 @@ const MovieManagePage = () => {
                     genre: '',
                     duration: '',
                     ageRating: 'P',
+                    director: '',
+                    cast: '',
+                    language: '',
                     trailerURL: '',
                     posterURL: ''
                 });
@@ -373,6 +415,9 @@ const MovieManagePage = () => {
         Array.isArray(movie.genre) ? movie.genre.join(', ') : (movie.genre || ''),
         movie.duration || '',
         movie.ageRating || '',
+        movie.director || 'N/A',
+        Array.isArray(movie.cast) ? movie.cast.join(', ') : (movie.cast || 'N/A'),
+        movie.language || 'N/A',
         movie.trailerURL || '',
         movie.posterURL || '',
         { 
@@ -393,6 +438,9 @@ const MovieManagePage = () => {
         Array.isArray(movie.genre) ? movie.genre.join(', ') : (movie.genre || ''),
         movie.duration || '',
         movie.ageRating || '',
+        movie.director || 'N/A',
+        Array.isArray(movie.cast) ? movie.cast.join(', ') : (movie.cast || 'N/A'),
+        movie.language || 'N/A',
         movie.trailerURL || '',
         movie.posterURL || '',
         { 
@@ -418,6 +466,9 @@ const MovieManagePage = () => {
             newMovieData.genre,
             newMovieData.duration,
             newMovieData.ageRating,
+            newMovieData.director,
+            newMovieData.cast,
+            newMovieData.language,
             newMovieData.trailerURL,
             newMovieData.posterURL,
             { 
@@ -503,14 +554,14 @@ const MovieManagePage = () => {
                         genre: movieData.genre,
                         duration: movieData.duration,
                         ageRating: movieData.ageRating || 'P',
-                        trailerURL: movieData.trailerURL,
-                        posterURL: movieData.posterURL,
-                        isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true,
                         director: movieData.director || '',
                         cast: movieData.cast || [],
                         language: movieData.language || '',
-                        ratingsAverage: movieData.ratingsAverage || 0,
-                        ratingsQuantity: movieData.ratingsQuantity || 0
+                        trailerURL: movieData.trailerURL,
+                        posterURL: movieData.posterURL,
+                        isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true,
+                        ratingsAverage: 0,  // Always default to 0
+                        ratingsQuantity: 0  // Always default to 0
                     };
 
                     const result = await addMovie(movieToAdd);
@@ -612,20 +663,23 @@ const MovieManagePage = () => {
         }
     };
 
-    const header = ['', 'Movie Title', 'Description', 'Release Date', 'Genre', 'Duration (min)', 'Age Rating', 'Trailer', 'Poster', 'Active', 'Preview'];
+    const header = ['', 'Movie Title', 'Description', 'Release Date', 'Genre', 'Duration', 'Age Rating', 'Director', 'Cast', 'Language', 'Trailer', 'Poster', 'Active', 'Preview'];
 
-    // Configuration for Movie table columns without ID column
+    // Configuration for Movie table columns
     const movieColumnConfig = [
         { width: 'w-12', truncate: false },    // TickButton - checkbox column
-        { width: 'w-52', truncate: true },     // Movie Title - wider since no ID column
-        { width: 'w-80', truncate: true },     // Description - largest column, truncated
-        { width: 'w-40', truncate: false },    // Release Date - date column
-        { width: 'w-40', truncate: true },     // Genre - wider for comma-separated genres
+        { width: 'w-48', truncate: true },     // Movie Title
+        { width: 'w-64', truncate: true },     // Description - largest column, truncated
+        { width: 'w-32', truncate: false },    // Release Date - date column
+        { width: 'w-32', truncate: true },     // Genre - comma-separated genres
         { width: 'w-20', truncate: false },    // Duration - small column for numbers
-        { width: 'w-24', truncate: false },    // Age Rating - moderate width
-        { width: 'w-40', truncate: true },    // Trailer - button column
-        { width: 'w-40', truncate: true },    // Poster - button column
-        { width: 'w-20', truncate: false },    // ActiveButton - ActiveButton toggle column
+        { width: 'w-20', truncate: false },    // Age Rating
+        { width: 'w-36', truncate: true },     // Director
+        { width: 'w-48', truncate: true },     // Cast - comma-separated names
+        { width: 'w-28', truncate: true },     // Language
+        { width: 'w-32', truncate: true },     // Trailer
+        { width: 'w-32', truncate: true },     // Poster
+        { width: 'w-20', truncate: false },    // ActiveButton - toggle column
         { width: 'w-24', truncate: false }     // Preview - action column
     ];
     const formatReleaseDate = (dateString) => {
@@ -684,7 +738,7 @@ const MovieManagePage = () => {
                         editingCell={editingCell}
                         onStartEdit={handleStartEdit}
                         onSaveEdit={handleSaveEdit}
-                        onCancelEdit={cancelEdit}
+                        onCancelEdit={handleCancelEdit}
                         isUpdating={isUpdating}
                         onStatusChange={onStatusChange}
                         reviewMovieIds={newlyUploadedMovies} // Pass review movie IDs for special handling

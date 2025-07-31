@@ -218,7 +218,7 @@ const getAllMovies = async (req, res) => {
         // Get all movies including isHidden field for management
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title description posterURL trailerURL duration genre ageRating ratingsAverage releaseDate isHidden createdAt');
+            .select('title description posterURL trailerURL duration genre ageRating director cast language ratingsAverage releaseDate isHidden createdAt');
         
         res.status(200).json(movies);
     } catch (error) {
@@ -242,7 +242,26 @@ const addMovie = async (req, res) => {
             return res.status(400).json({ message: 'Movie with this title already exists.' });
         }
 
-        const newMovie = new Movie(movieData);
+        // Prepare movie data with defaults
+        const movieToAdd = {
+            title: movieData.title,
+            description: movieData.description,
+            posterURL: movieData.posterURL,
+            trailerURL: movieData.trailerURL || '',
+            releaseDate: movieData.releaseDate,
+            duration: movieData.duration,
+            genre: movieData.genre || [],
+            director: movieData.director || '',
+            cast: movieData.cast || [],
+            language: movieData.language || '',
+            ageRating: movieData.ageRating || 'P',
+            // Set default values
+            ratingsAverage: 0,
+            ratingsQuantity: 0,
+            isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true
+        };
+
+        const newMovie = new Movie(movieToAdd);
         await newMovie.save();
         
         // Clear cache to update with new data
@@ -258,6 +277,14 @@ const addMovie = async (req, res) => {
         // MongoDB duplicate key error
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Movie with this title already exists.' });
+        }
+        // Validation error
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                message: 'Validation failed.',
+                errors: validationErrors
+            });
         }
         res.status(500).json({ message: 'Server error occurred.' });
     }
