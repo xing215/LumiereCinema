@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
-import { getApiUrl } from '@config/api.config';
+import { getApiUrl, getApiUrlWithParams, getActivationApiUrl } from '@config/api.config';
+import { useError } from '@contexts/ErrorContext';
 
 /**
  * Authentication hooks for handling user login, registration, logout, and password management
@@ -33,6 +34,26 @@ export const useLogin = () => {
   };
 
   return { loginUser, loading, error };
+};
+
+export const useAuthInterceptor = () => {
+  const { logout } = useUser();
+  const { showError } = useError();
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          logout();
+          showError('', 'You have to login to access this resource.');
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [logout]);
 };
 
 export const useRegister = () => {
@@ -83,7 +104,7 @@ export const useLogout = () => {
 };
 
 
-export const useResetPassword = () => {
+export const useForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -108,7 +129,7 @@ export const useResetPassword = () => {
   return { resetPassword, loading, error, success };
 };
 
-export const useStaffResetPassword = () => {
+export const useStaffForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -131,6 +152,58 @@ export const useStaffResetPassword = () => {
   };
 
   return { resetPassword, loading, error, success };
+};
+
+// Hook for both user and staff password reset
+export const useResetPassword = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const resetPassword = async (token, newPassword, retypeNewPassword) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const response = await axios.post(getApiUrl('resetPassword'), token, newPassword, retypeNewPassword);
+      setSuccess(true);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Password reset request failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { resetPassword, loading, error, success };
+};
+
+export const useActivateAccount = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const activateAccount = async (activateToken) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    
+    try {
+      const response = await axios.post(getActivationApiUrl(activateToken));
+      setSuccess(true);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Account activation failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { activateAccount, loading, error, success };
 };
 
 export const useChangePassword = () => {

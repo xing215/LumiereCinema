@@ -41,9 +41,7 @@ const SliderButtonInactive2 = (props) => {
 };
 
 const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDate = null }) => {
-    console.log('Rendering DateSlider with uniqueDates:', uniqueDates);
-    console.log('Selected viewingDate:', viewingDate);
-    console.log('Selected schedule date:', selectedScheduleDate);
+
 
     const VISIBLE_DATES = 5; 
     const [isDragging, setIsDragging] = useState(false);
@@ -51,8 +49,17 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
     const [dragOffset, setDragOffset] = useState(0);
     const [previewIndex, setPreviewIndex] = useState(null); 
     const [isMouseDown, setIsMouseDown] = useState(false); 
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
     
     const selectedIndex = uniqueDates.findIndex(date => date.date === viewingDate);
+    
+    // Detect touch device
+    useEffect(() => {
+        const checkTouchDevice = () => {
+            return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        };
+        setIsTouchDevice(checkTouchDevice());
+    }, []);
     
     const getTransformOffset = useCallback(() => {
         const isMobile = window.innerWidth < 768; 
@@ -66,10 +73,10 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
         return -offset + dragOffset; 
     }, [selectedIndex, dragOffset]);
 
-    // =============================== HANDLE DRAGGING =============================== 
+    // =============================== HANDLE DRAGGING (Desktop only) =============================== 
 
     const handleDesktopDragStart = useCallback((e) => {
-        if (window.innerWidth < 768) return;
+        if (window.innerWidth < 768 || isTouchDevice) return;
         
         setIsMouseDown(true);
         setIsDragging(false); // Reset dragging state
@@ -79,10 +86,10 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
         
         // Prevent text selection
         e.preventDefault();
-    }, []);
+    }, [isTouchDevice]);
 
     const handleDesktopDragMove = useCallback((e) => {
-        if (window.innerWidth < 768 || !isMouseDown) return;
+        if (window.innerWidth < 768 || !isMouseDown || isTouchDevice) return;
         
         e.preventDefault();
         const currentX = e.clientX;
@@ -105,10 +112,10 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
             
             setPreviewIndex(newPreviewIndex);
         }
-    }, [isMouseDown, isDragging, dragStart, selectedIndex, uniqueDates.length]);
+    }, [isMouseDown, isDragging, dragStart, selectedIndex, uniqueDates.length, isTouchDevice]);
 
     const handleDesktopDragEnd = useCallback(() => {
-        if (window.innerWidth < 768) return;
+        if (window.innerWidth < 768 || isTouchDevice) return;
         
         if (isDragging && previewIndex !== null && previewIndex !== selectedIndex) {
             const newDate = uniqueDates[previewIndex];
@@ -122,10 +129,12 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
         setIsDragging(false);
         setDragOffset(0);
         setPreviewIndex(null);
-    }, [isDragging, previewIndex, selectedIndex, uniqueDates, onDateSelect]);
+    }, [isDragging, previewIndex, selectedIndex, uniqueDates, onDateSelect, isTouchDevice]);
 
-    // Handle mouse events globally when dragging
+    // Handle mouse events globally when dragging (Desktop only)
     useEffect(() => {
+        if (isTouchDevice) return;
+        
         const handleMouseMove = (e) => handleDesktopDragMove(e);
         const handleMouseUp = () => handleDesktopDragEnd();
 
@@ -140,7 +149,7 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
             document.removeEventListener('mouseup', handleMouseUp);
             document.removeEventListener('mouseleave', handleMouseUp);
         };
-    }, [isMouseDown, handleDesktopDragMove, handleDesktopDragEnd]);
+    }, [isMouseDown, handleDesktopDragMove, handleDesktopDragEnd, isTouchDevice]);
 
     // Handle button clicks - prevent click when dragging
     const handleButtonClick = useCallback((dateObj) => {
@@ -152,7 +161,8 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
     return (
         <div className="flex h-auto w-auto flex-col items-center justify-center">
             <div className="flex flex-row items-center justify-center gap-2">
-                <div className={`relative scale-90 md:hidden ${selectedIndex > 0 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
+                {/* Show arrows on mobile OR touch devices */}
+                <div className={`relative scale-90 ${window.innerWidth < 768 || isTouchDevice ? 'block' : 'hidden'} ${selectedIndex > 0 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
                     <BackNaviButton
                         onClick={() => {
                             if (selectedIndex > 0) {
@@ -168,9 +178,9 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
                         className={`absolute left-2 md:left-1 flex flex-row items-center gap-4 transition-transform duration-500 ease-in-out ${isDragging ? 'transition-none' : ''}`}
                         style={{
                             transform: `translateX(${getTransformOffset()}px)`,
-                            cursor: isDragging ? 'grabbing' : 'grab'
+                            cursor: isDragging ? 'grabbing' : isTouchDevice ? 'default' : 'grab'
                         }}
-                        onMouseDown={handleDesktopDragStart}
+                        onMouseDown={isTouchDevice ? undefined : handleDesktopDragStart}
                     >
                         {uniqueDates.map((dateObj, index) => {
                             // Calculate distance from original selected date for opacity
@@ -215,7 +225,8 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
                     </div>
                 </div>
                 
-                <div className={`relative rotate-180 md:hidden scale-90 ${selectedIndex < uniqueDates.length - 1 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
+                {/* Show arrows on mobile OR touch devices */}
+                <div className={`relative rotate-180 scale-90 ${window.innerWidth < 768 || isTouchDevice ? 'block' : 'hidden'} ${selectedIndex < uniqueDates.length - 1 ? 'opacity-80' : 'opacity-0 pointer-events-none'}`}>
                     <BackNaviButton
                         onClick={() => {
                             if (selectedIndex < uniqueDates.length - 1) {
@@ -227,15 +238,15 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
                 </div>
             </div>
             
-            <div className="hidden flex-row items-center justify-center gap-3 pt-3 md:flex md:gap-2 md:pt-2 transition-all duration-300">
+            <div className="flex-row items-center justify-center gap-3 pt-3 flex md:gap-2 md:pt-2 transition-all duration-300">
                 <div className="h-[3px] w-3 bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
                 <div className="justify-start text-center font-['Unbounded'] text-[10px] font-semibold text-white sm:text-[12px]">
-                    {viewingDate ? new Date(uniqueDates.find(d => d.date === viewingDate)?.date + 'T00:00:00.000Z')?.toLocaleDateString('en-US', {
+                    {uniqueDates.length > 0 ? viewingDate ? new Date(uniqueDates.find(d => d.date === viewingDate)?.date + 'T00:00:00.000Z')?.toLocaleDateString('en-US', {
                         weekday: 'long',
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric'
-                    }) || 'Viewing showtimes' : 'Viewing showtimes'}
+                    }) || 'Viewing showtimes' : 'Viewing showtimes' : 'No showtimes available'}
                 </div>
                 <div className="h-[3px] w-3 bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
             </div>

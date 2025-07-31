@@ -7,8 +7,6 @@ const redis = require('redis');
 const connectDB = async () => {
   try {
     // Đã xóa các options không cần thiết
-    console.log('Connecting to MongoDB...');
-    console.log(process.env.MONGO_URI || process.env.MONGODB_URI);
     await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI);
     console.log('MongoDB Connected... ✅');
   } catch (err) {

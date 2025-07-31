@@ -1,11 +1,13 @@
 import LandingPage from '@pages/LandingPage';
 import Registration from '@pages/Registration';
+import ActivateAccount from '@pages/ActivateAccount.jsx';
 import Login from '@pages/Login';
 import StaffLogin from '@pages/staff/Login';
-import StaffResetPwd from '@pages/staff/ResetPwd';
+import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
+import MovieDetail from '@/pages/MovieDetail';
 import CheckInCounterPage from '@pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from '@pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from '@pages/staff/PromotionManagePage.jsx';
@@ -19,27 +21,42 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
+import AboutUs from '@/pages/AboutUs';
+import SnackPurchase from '@pages/SnackPurchase.jsx';
+import UserProfile from '@pages/UserProfile.jsx';
+
+import Developing from '@/pages/others/Developing.jsx';
+import NotFound from '@/pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
     // Public routes
     HOME: '/',
     REGISTER: '/register',
+    ACTIVATION: '/activate',
     LOGIN: '/login',
     RESET_PASSWORD: '/reset-password',
     RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
+    MOVIE_DETAILS: '/movie', // ?id=...
+    MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
+    ABOUT_US: '/about-us',
+    BUY_SNACK: '/buy-snack',
 
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
+    PROFILE: '/user-profile',
+    WISHLIST: '/developing',
+    WATCH_HISTORY: '/developing',
+    LUNAR_POINT: '/developing',
     
     // Staff routes
     STAFF_ROOT: '/staff',
     STAFF_LOGIN: '/staff/login',
     STAFF_RESET_PASSWORD: '/staff/reset-password',
-    STAFF_RESET_PASSWORD_CONFIRM: '/staff/reset-password/confirm',
+    STAFF_RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     STAFF_CHANGE_PASSWORD: '/staff/change-password',
     STAFF_CHECKIN: '/staff/checkin',
     STAFF_SCHEDULE: '/staff/schedule',
@@ -50,6 +67,10 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+
+    // Other pages
+    DEVELOPING: '/developing',
+    NOT_FOUND: '/404'
 };
 
 // Route configuration
@@ -64,6 +85,12 @@ export const routeConfig = [
     {
         path: ROUTES.REGISTER,
         component: Registration,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.ACTIVATION,
+        component: ActivateAccount,
         type: 'public',
         requiresAuth: false
     },
@@ -92,12 +119,42 @@ export const routeConfig = [
         requiresAuth: false
     },
     {
+        path: ROUTES.MOVIE_DETAILS,
+        component: MovieDetail,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.MOVIE_DETAILS,
+        component: MovieDetail,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
         path: ROUTES.BUY_TICKET,
         component: TicketPurchase,
         type: 'public',
         requiresAuth: false
     },
-    
+    {
+        path: ROUTES.BUY_SNACK,
+        component: SnackPurchase,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.DEVELOPING,
+        component: Developing,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.NOT_FOUND,
+        component: NotFound,
+        type: 'public',
+        requiresAuth: false
+    },
+
     // Customer protected routes - require authentication but not staff roles
     {
         path: ROUTES.CHANGE_PASSWORD,
@@ -106,7 +163,14 @@ export const routeConfig = [
         requiresAuth: true,
         allowedRoles: ['customer'] // Only customers can access this
     },
-    
+    {
+        path: ROUTES.PROFILE,
+        component: UserProfile,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
     // Staff public routes - accessible to all staff without authentication
     {
         path: ROUTES.STAFF_LOGIN,
@@ -116,7 +180,7 @@ export const routeConfig = [
     },
     {
         path: ROUTES.STAFF_RESET_PASSWORD,
-        component: StaffResetPwd,
+        component: StaffForgotPwd,
         type: 'staff-public',
         requiresAuth: false
     },
@@ -207,6 +271,12 @@ export const routeConfig = [
         requiresAuth: true,
         allowedRoles: ['branchmanager']
     },
+    {
+        path: ROUTES.ABOUT_US,
+        component: AboutUs,
+        type: 'public',
+        requiresAuth: false
+    },
 ];
 
 // Helper function to check if user has required roles
@@ -266,4 +336,33 @@ export const getRedirectPath = (isAuthenticated, userRoles, route) => {
     }
     
     return null; // No redirect needed
+};
+
+export const getMovieListPath = (status = undefined, branchId = undefined) => {
+    let path = ROUTES.MOVIES;
+    if (status) {
+        path += `?status=${status}`;
+        if (branchId !== undefined) {
+            path += `&branchId=${branchId}`;
+        }
+    } else if (branchId !== undefined) {
+        path += `?branchId=${branchId}`;
+    }
+    return path;
+}
+
+export const getBuyTicketPath = (movieId, branchId = undefined) => {
+    let path = `${ROUTES.BUY_TICKET}?movieId=${movieId}`;
+    if (branchId !== undefined) {
+        path += `&branchId=${branchId}`;
+    }
+    return path;
+};
+
+export const getMovieDetailsPath = (movieId, branchId = undefined) => {
+    let path = `${ROUTES.MOVIE_DETAILS}?movieId=${movieId}`;
+    if (branchId !== undefined) {
+        path += `&branchId=${branchId}`;
+    }
+    return path;
 };

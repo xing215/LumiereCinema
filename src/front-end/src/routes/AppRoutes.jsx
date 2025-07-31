@@ -1,8 +1,16 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {React, useEffect} from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import ProtectedRoute from '@components/ProtectedRoute.jsx';
-import { routeConfig, getRedirectPath } from '@routes/routeConfig.js';
+import { ROUTES, routeConfig, getRedirectPath } from '@routes/routeConfig.js';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 // Loading component
 const LoadingSpinner = () => (
@@ -46,6 +54,7 @@ const RouteHandler = ({ route }) => {
 const AppRoutes = () => {
     return (
         <Router>
+            <ScrollToTop />
             <Routes>
                 {routeConfig.map((route, index) => (
                     <Route
@@ -54,6 +63,8 @@ const AppRoutes = () => {
                         element={<RouteHandler route={route} />}
                     />
                 ))}
+                {/* Fallback route for 404 Not Found */}
+                <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
             </Routes>
         </Router>
     );

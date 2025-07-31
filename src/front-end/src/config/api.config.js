@@ -63,14 +63,17 @@ const API_CONFIG = {
     // Auth endpoints
     login: '/api/auth/login',
     register: '/api/auth/register',
+    activateAccount: '/api/auth/activate',
     logout: '/api/auth/logout',
     changePassword: '/api/auth/change-password',
     forgotPassword: '/api/auth/forgot-password',
     resetPassword: '/api/auth/reset-password',
+    userProfile: '/api/users/me',
     
     // Staff auth endpoints
     staffLogin: '/api/auth/staff/login',
     staffForgotPassword: '/api/auth/staff/forgot-password',
+  
     
     // Movie endpoints
     nowShowingMovies: '/api/movies/now-showing',
@@ -84,16 +87,23 @@ const API_CONFIG = {
     updateMovie: '/api/movies', // PUT/PATCH + /:movieId
     deleteMovie: '/api/movies', // DELETE + /:movieId
     
+    // Wishlist endpoints
+    wishlist: '/api/users/wishlist', // GET
+    addToWishlist: '/api/users/wishlist/:movieId', // POST + /:movieId
+    removeFromWishlist: '/api/users/wishlist/:movieId', // DELETE + /:movieId
+
     // Report endpoints
-    branches: '/api/reports/branches',
-    branch: '/api/reports/branch',
+    reportBranches: '/api/reports/branches',
+    reportBranch: '/api/reports/branch',
     revenueSummary: '/api/reports/revenue-summary',
     
     // Branch endpoints (snack management)
+    branches: '/api/branches/available', //
     getSnacks: '/api/branches', // + /:branchId/snacks
     createSnack: '/api/branches', // POST + /:branchId/snacks
     editSnack: '/api/branches', // PATCH + /:branchId/snacks/:snackId
     deleteSnack: '/api/branches', // DELETE + /:branchId/snacks/:snackId
+    branch: '/api/branches', // + /:branchId
     
     // Ticket endpoints
     createTicket: '/api/tickets/snacks',
@@ -101,6 +111,8 @@ const API_CONFIG = {
     getTicketByCode: '/api/tickets/snacks/admin', // + /:ticketCode
     updateTicket: '/api/tickets/snacks/admin', // PATCH + /:ticketCode
     deleteTicket: '/api/tickets/snacks/admin', // DELETE + /:ticketCode
+    holdSeat: '/api/tickets/movie/hold',
+    checkDiscountedTotal: '/api/tickets/calculate-discounted',
   }
 };
 
@@ -160,6 +172,13 @@ export const getApiUrlWithParams = (endpointName, params = {}) => {
   return url;
 };
 
+export const getActivationApiUrl = (token) => {
+  const baseURL = getApiUrl('activateAccount');
+  if (!token) {
+    return baseURL;
+  }
+  return `${baseURL}/${token}`;
+};
 /**
  * Helper function to build URLs for specific movie operations
  * @param {string} movieId - The movie ID

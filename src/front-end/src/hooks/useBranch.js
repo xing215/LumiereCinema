@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { getApiUrl, getBranchSnackApiUrl } from '@config/api.config';
+import { getApiUrl, buildApiUrl } from '@config/api.config';
 import { useUser } from '@contexts/UserContext';
 
 /**
@@ -21,7 +21,7 @@ export const useFetchBranches = () => {
       const response = await axios.get(getApiUrl('branches'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBranches(response.data);
+      setBranches(response.data.branches || []);
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
@@ -33,6 +33,34 @@ export const useFetchBranches = () => {
   };
 
   return { fetchBranches, branches, loading, error };
+};
+
+export const useGetBranchById = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+  const [branch, setBranch] = useState(null);
+
+  const getBranchById = async (branchId) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get(buildApiUrl(`/api/branches/${branchId}`), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBranch(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch branch';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getBranchById, branch, loading, error };
 };
 
 export const useSetCurrentBranch = () => {
@@ -140,38 +168,44 @@ export const useRemoveScreen = () => {
 };
 
 export const useGetSchedules = () => {
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [schedules, setSchedules] = useState([]);
   const { token } = useUser();
-  const { currentBranch } = useSetCurrentBranch();
-
-  const getSchedules = async (date, branchId = currentBranch) => {
-    if (!branchId) {
-      setError('No branch selected');
-      return { success: false, error: 'No branch selected' };
-    }
-
+  const fetchSchedules = async (movieId, branchId) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.get(`/api/branches/${branchId}/schedules`, {
+      const url = buildApiUrl(`/api/tickets/${branchId}/schedule`);
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { date }
+        params: movieId ? { movieId } : {}
       });
-      setSchedules(response.data);
-      return { success: true, data: response.data };
+      const screens = response.data.screens || [];
+    const allSchedules = screens.flatMap(screen =>
+      (screen.schedules || []).map(schedule => ({
+        _id: schedule._id,
+        movie: schedule.movie,
+        screen: {
+          _id: screen._id,
+          name: screen.screenInfo?.screenName || screen.screenName,
+          totalSeats: screen.screenInfo?.totalSeats || screen.totalSeats,
+        },
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        availableSeatsCount: schedule.seatInfo?.availableSeatsCount || 0,
+      }))
+    );
+    setSchedules(allSchedules);
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch schedules';
       setError(errorMessage);
-      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
-  return { getSchedules, schedules, loading, error };
+  return { schedules, loading, error, fetchSchedules };
 };
 
 export const useUpdateSchedule = () => {
@@ -249,7 +283,7 @@ export const useGetSnacks = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getBranchSnackApiUrl(branchId), {
+      const response = await axios.get(buildApiUrl(`/api/branches/${branchId}/snacks`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSnacks(response.data);

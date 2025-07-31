@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { getApiUrl, getMovieApiUrl } from '@config/api.config';
-
-/**
- * Movie logic hooks for handling movie-related operations
- */
+import { getApiUrl, buildApiUrl } from '@config/api.config';
 
 export const useSetBranch = () => {
   const [currentBranch, setCurrentBranch] = useState(null);
@@ -88,7 +84,7 @@ export const useGetMovieDetail = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getMovieApiUrl(movieId));
+      const response = await axios.get(buildApiUrl(`/api/movies/${movieId}`));
       setMovieDetail(response.data);
       return { success: true, data: response.data };
     } catch (err) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ResetPwdForm = ({ resetPwdHook }) => {
+const ForgotPwdForm = ({ forgotPwdHook }) => {
     const [formData, setFormData] = useState({
         email: '',
     });
@@ -9,7 +9,7 @@ const ResetPwdForm = ({ resetPwdHook }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
-    const hook = resetPwdHook
+    const hook = forgotPwdHook
     const { resetPassword, loading, error, success } = hook;
 
     // Validation patterns
@@ -70,7 +70,7 @@ const ResetPwdForm = ({ resetPwdHook }) => {
         try {
             const response = await resetPassword(formData.email);
             setMessage(response.data?.message || 'If the email exists, a password reset link has been sent.');
-            setIsSuccess(response.success);
+            setIsSuccess(true);
         } catch (error) {
             console.error('Reset password error:', error);
             setMessage(error?.error || 'An error occurred. Please try again.');
@@ -126,4 +126,4 @@ const ResetPwdForm = ({ resetPwdHook }) => {
     );
 };
 
-export default ResetPwdForm;
+export default ForgotPwdForm;

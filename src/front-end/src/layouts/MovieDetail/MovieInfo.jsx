@@ -11,7 +11,7 @@ const Description = ({ scripts }) => {
         </div>
     );
 };
-const MovieInfo = () => {
+const MovieInfo = ({ movieId, branchId }) => {
     return (
         <div className="relative z-20 flex w-full flex-col bg-slate-950">
             <div className="relative flex w-full gap-5 md:gap-12">
@@ -35,9 +35,9 @@ const MovieInfo = () => {
                     <Rating rated={3.6} user={100} />
 
                     <div className="h-2 w-full" />
-
+                
                     <div className="flex gap-2 md:gap-4 lg:gap-6 xl:gap-8">
-                        <BuyATicketButton />
+                        <BuyATicketButton movieId={movieId} branchId={branchId} />
                         <WishlistButton />
                     </div>
                 </div>

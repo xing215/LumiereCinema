@@ -35,7 +35,7 @@ const movieSchema = new mongoose.Schema({
 // Add virtual properties for status based on current date
 movieSchema.virtual('status').get(function() {
   const now = new Date();
-  const releaseDate = new Date(this.releaseDate);
+  const releaseDate = new Date(this.releaseDate); 
   
   if (this.isHidden) {
     return 'Archived';

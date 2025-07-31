@@ -8,7 +8,9 @@ import DeleteButton from '@components/buttons/Staff/DeleteButton.jsx';
 import AddButton from '@components/buttons/Staff/AddButton.jsx';
 import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
-
+import { useEffect } from 'react'; 
+import { useUser } from '@contexts/UserContext';
+import { useGetBranchById } from '@hooks/useBranch'; 
 const ScreenManagePage = () => {
     const [tickedScreens, setTickedScreens] = useState(new Set());
     const [screenRows, setScreenRows] = useState(Array.from({ length: 10 }, () => ['TickButton', 1, 1, 10, 20, 'ActiveButton', 'EditSeatButton']));
@@ -30,7 +32,14 @@ const ScreenManagePage = () => {
         )
     }
     const screenColumnConfig = null
-
+    const { user } = useUser();
+        const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
+        
+        useEffect(() => {
+            if (user && user.roles?.includes('branchmanager') && user.branch) {
+                getBranchById(user.branch._id);
+            }
+        }, [user]);
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
@@ -39,7 +48,7 @@ const ScreenManagePage = () => {
                 {showConfirmDeleteScreen && <ConfirmationModal item={tickedScreens.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteScreen(false)} />}
                 <ManageTable data={screenRows} anyTicked={tickedScreens} setTickedRows={setTickedScreens} onEditSeat={setEditedScreenIndex} header={header} columnConfig={screenColumnConfig}/>
                 {editedScreenIndex !== null && <EditSeatModal screenData={screenRows[editedScreenIndex]} onClose={() => setEditedScreenIndex(null)} />}
-                <SelectBranchButton />
+                <SelectBranchButton isLoading={branchLoading} branchName={userBranch?.name} />
             </MobileNotSupported>
             <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Screens</div>
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />

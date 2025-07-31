@@ -32,6 +32,7 @@ const Registration = () => {
     if (isAuthenticated) {
         return null;
     }
+    
 
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden bg-slate-950">
