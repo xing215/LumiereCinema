@@ -30,6 +30,7 @@ function BuyTicketButton({ movieId, branchId= undefined }) {
 import { Heart } from 'lucide-react';
 import fallbackImg from '@assets/img/PosterNotFound.png';
 import { useGetWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useUser';
+import ErrorModal from '@layouts/Error.jsx';
 
 
 const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
@@ -47,10 +48,11 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     const navigate = useNavigate();
 
     // Wishlist hooks
-    const { getWishlist, wishlist, loading: wishlistLoading } = useGetWishlist();
-    const { addToWishlist, loading: addLoading } = useAddToWishlist();
-    const { removeFromWishlist, loading: removeLoading } = useRemoveFromWishlist();
+    const { getWishlist, wishlist, loading: wishlistLoading, error: wishlistError } = useGetWishlist();
+    const { addToWishlist, loading: addLoading, error: addError } = useAddToWishlist();
+    const { removeFromWishlist, loading: removeLoading, error: removeError } = useRemoveFromWishlist();
     const [wishlistFetched, setWishlistFetched] = useState(false);
+    const [showAuthError, setShowAuthError] = useState(false);
 
     useEffect(() => {
         if (!wishlistFetched) {
@@ -71,12 +73,26 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
 
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
+        // If not logged in (cannot fetch wishlist), show error modal
+        if ((wishlistError && (!wishlist.wishlist || wishlist.wishlist.length === 0)) ||
+            (wishlistError && (wishlistError.toString().includes('401') || wishlistError.toString().includes('403')))) {
+            setShowAuthError(true);
+            return;
+        }
         if (!movie?._id) return;
         if (isInWishlist(movie._id)) {
-            await removeFromWishlist(movie._id);
+            const result = await removeFromWishlist(movie._id);
+            if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
+                setShowAuthError(true);
+                return;
+            }
             await getWishlist();
         } else {
-            await addToWishlist(movie._id);
+            const result = await addToWishlist(movie._id);
+            if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
+                setShowAuthError(true);
+                return;
+            }
             await getWishlist();
         }
     };
@@ -97,13 +113,17 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     
     const linkImg = movie?.posterURL || fallbackImg;
     return (
-        <div
-            ref={cardRef}
-            className={`relative group h-full aspect-[300/470] justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'}`}
-            onMouseEnter={() => setShowOverlay(true)}
-            onMouseLeave={() => setShowOverlay(false)}
-            onTouchStart={() => setShowOverlay(true)}
-        >
+        <>
+            {showAuthError && (
+                <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />
+            )}
+            <div
+                ref={cardRef}
+                className={`relative group h-full aspect-[300/470] justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'}`}
+                onMouseEnter={() => setShowOverlay(true)}
+                onMouseLeave={() => setShowOverlay(false)}
+                onTouchStart={() => setShowOverlay(true)}
+            >
             <div className="relative h-full w-full overflow-hidden rounded-sm md:rounded-lg lg:rounded-xl xl:rounded-2xl">
                 <img
                     src={linkImg}
@@ -169,8 +189,11 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                     </div>
                 </div>
             </div>
-            { showOverlay && <BuyTicketButton movieId={movie?._id} branchId={selectedBranch?._id} /> }
-        </div>
+            { showOverlay && Array.isArray(movie.branches) && movie.branches.length > 0 && (
+                <BuyTicketButton movieId={movie?._id} branchId={selectedBranch?._id} />
+            ) }
+            </div>
+        </>
     );
 };
 

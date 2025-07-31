@@ -97,6 +97,11 @@ export const useGetWishlist = () => {
   const { token } = useUser();
 
   const getWishlist = async () => {
+    if (!token) {
+      setWishlist([]);
+      setError('You must be logged in to view wishlist');
+      return { success: false, error: 'You must be logged in to view wishlist' };
+    }
     setLoading(true);
     setError(null);
     try {

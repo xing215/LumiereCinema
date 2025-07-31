@@ -16,7 +16,7 @@ const NowShowing = () => {
             <Label />
             <NowShowingMovieFrame />
             <div className="relative h-2 w-screen bg-transparent sm:h-4 lg:h-6 xl:h-10" />
-            <SeeMoreButton />
+            <SeeMoreButton statusFilter="now" />
             <div className="relative h-3 w-screen bg-transparent sm:h-6 lg:h-9 xl:h-15" />
         </section>
     );
