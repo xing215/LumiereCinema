@@ -64,6 +64,7 @@ const MovieManagePage = () => {
         header,
         movieColumnConfig,
         editableColumns,
+        fieldTypes,
         
         // State
         loading,
@@ -145,6 +146,7 @@ const MovieManagePage = () => {
                         onSaveEdit={handleSaveEdit}
                         onCancelEdit={handleCancelEdit}
                         isUpdating={isUpdating}
+                        fieldTypes={fieldTypes}
                         onStatusChange={onStatusChange}
                     />
                 )}
