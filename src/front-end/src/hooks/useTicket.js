@@ -141,7 +141,9 @@ export const useCreateTicket = () => {
         ticketData.movieTicket = {
             schedule: movieTicketData.schedule._id,
             seats: movieTicketData.seats,
-            total: movieTicketData.total || 0
+            total: movieTicketData.total || 0,
+            adultTickets: movieTicketData.adultTickets || 0,
+            discountedTickets: movieTicketData.discountedTickets || 0
         };
     }
 

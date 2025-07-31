@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from "react";
 import { toPng } from "html-to-image";
 import TicketDetail from "@/components/UI/TicketDetail";
 import QRCode from "react-qr-code";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from '@routes/routeConfig';
 
 const MenuTicketDisplay = ({ movieTicketData, snackTicketData, ticket, ticketLoading }) => {
     const qrParentRef = useRef(null);
@@ -120,7 +122,12 @@ const handleDownload = async () => {
         </div>
     );
 
-    const ActionButtons = () => (
+    const ActionButtons = () => {
+        const navigate = useNavigate();
+        const handleReturnHome = () => {
+            navigate(ROUTES.HOME);
+        };
+        return(
         <>
             {!capturing&&<button
                 className={`group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300 ${
@@ -133,7 +140,8 @@ const handleDownload = async () => {
                 <div className={`absolute h-full w-full rounded-xl mix-blend-screen bg-zinc-300/30 transition-all duration-300 ${
                     !ticketLoading ? 'group-hover:bg-zinc-400/30' : ''
                 }`} />
-                <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']">
+                <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']"
+                onClick={handleReturnHome}>
                     RETURN HOME
                 </span>
             </button>
@@ -155,7 +163,7 @@ const handleDownload = async () => {
             </button>
 }
         </>
-    );
+    );}
 
     const {movieTicket, snackTicket} = ticket.data
     console.log("Movie Ticket:", movieTicket);
