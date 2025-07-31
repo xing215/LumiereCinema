@@ -22,9 +22,9 @@ const LandingPage = () => {
             <Header />
             <main className="flex flex-col gap-0">
                 <Banner />
-                <NowShowing />
+                {/* <NowShowing /> */}
                 <Maps cinemas={branches} />
-                <UpComing />
+                {/* <UpComing /> */}
                 <Footer />
             </main>
             <ChatBot />
