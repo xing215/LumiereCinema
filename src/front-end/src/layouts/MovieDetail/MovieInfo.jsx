@@ -3,11 +3,11 @@ import Rating from '@components/display/Rating.jsx';
 import WishlistButton from '@components/buttons/wishlistButton.jsx';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routeConfig';
-import ErrorModal from '@layouts/Error';
 import { useEffect, useState } from 'react';
 import { useGetMovieDetail } from '@hooks/useMovie';
 import PosterFallback from '@assets/img/PosterNotFound.png';
 import BPoster from '@components/UI/BPoster';
+import { TrailerVideo } from '@layouts/MovieDetail/TrailerVideo.jsx';
 
 const Description = ({ scripts }) => {
     return (
@@ -48,6 +48,7 @@ const MovieInfo = ({ movieId, branchId }) => {
     
     return (
         <>
+            <TrailerVideo videoYouTube={movieDetail?.trailerURL} />
             <div className="relative z-20 flex w-full flex-col bg-slate-950">
                 <div className="relative flex w-full flex-row gap-5 md:gap-12 items-center">
                     {/* Poster */}

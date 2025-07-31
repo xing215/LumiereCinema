@@ -1,6 +1,5 @@
 import Header from '@layouts/LandingPage/Header.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
-import { TrailerVideo } from '@layouts/MovieDetail/TrailerVideo.jsx';
 import MovieInfo from '@layouts/MovieDetail/MovieInfo.jsx';
 import Suggestion from '@layouts/MovieDetail/Suggestion.jsx';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -12,7 +11,6 @@ const MainBody = () => {
     const branchId = searchParams.get("branchId");
     return (
         <div className="relative flex w-[80%] flex-col items-center bg-slate-950">
-            <TrailerVideo movieId={movieId} />
             <MovieInfo movieId={movieId} branchId={branchId} />
             <div className="w-full lg:h-10" />
             <Suggestion currentMovieId={movieId} />
