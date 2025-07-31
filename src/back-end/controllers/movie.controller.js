@@ -74,6 +74,7 @@ const getNowShowingMovies = async (req, res) => {
                     return {
                         _id: movie._id,
                         title: movie.title,
+                        description: movie.description,
                         posterURL: movie.posterURL,
                         duration: movie.duration,
                         genre: movie.genre,
@@ -171,6 +172,7 @@ const getUpcomingMovies = async (req, res) => {
                     return {
                         _id: movie._id,
                         title: movie.title,
+                        description: movie.description,
                         posterURL: movie.posterURL,
                         releaseDate: movie.releaseDate,
                         genre: movie.genre,
