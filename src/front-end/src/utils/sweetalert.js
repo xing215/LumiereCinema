@@ -324,40 +324,73 @@ export const showUploadLoading = () => {
 };
 
 export const showUploadResults = (successCount = 0, errorCount = 0, errors = []) => {
+    // Ensure any previous loading state is cleared
+    Swal.close();
+    
     const hasErrors = errorCount > 0;
-    const title = hasErrors ? 'Upload Completed with Issues' : 'Upload Successful!';
     
-    let text = `Successfully processed: ${successCount} movies`;
     if (hasErrors) {
-        text += `\nFailed to process: ${errorCount} movies`;
-        if (errors.length > 0) {
-            text += `\n\nErrors:\n${errors.slice(0, 3).join('\n')}`;
-            if (errors.length > 3) {
-                text += `\n... and ${errors.length - 3} more errors`;
+        // Show errors only - use default SweetAlert config
+        return Swal.fire({
+            title: 'Validation Failed',
+            text: `Successfully validated: ${successCount} movies\nFailed validation: ${errorCount} movies\n\n` +
+                  (errors.length > 0 ? `Errors:\n${errors.slice(0, 3).join('\n')}` + 
+                  (errors.length > 3 ? `\n... and ${errors.length - 3} more errors` : '') : ''),
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            showLoaderOnConfirm: false,
+            preConfirm: false,
+            showClass: {
+                popup: 'swal2-show',
+                backdrop: 'swal2-backdrop-show',
+                icon: 'swal2-icon-show'
             }
-        }
+        });
+    } else {
+        // Show success - use default SweetAlert config only
+        return Swal.fire({
+            title: 'Validation Successful!',
+            text: `${successCount} movies are ready for review.\n\nClick OK to proceed to review mode.`,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            focusConfirm: true,
+            buttonsStyling: true,
+            showLoaderOnConfirm: false,
+            preConfirm: false,
+            showClass: {
+                popup: 'swal2-show',
+                backdrop: 'swal2-backdrop-show',
+                icon: 'swal2-icon-show'
+            }
+        });
     }
-    
-    return Swal.fire({
-        ...customSwalOptions,
-        icon: hasErrors ? 'warning' : 'success',
-        title,
-        text,
-        confirmButtonText: 'OK',
-        iconColor: hasErrors ? '#f59e0b' : '#10b981'
-    });
 };
 
 export const showUploadConfirmation = (movieCount = 0) => {
+    // Ensure any previous loading state is cleared
+    Swal.close();
+    
+    // Use completely basic SweetAlert without any custom styling
     return Swal.fire({
-        ...customSwalOptions,
-        icon: 'question',
-        title: 'Confirm Movie Upload',
-        text: `Do you want to add ${movieCount} movies to the database?`,
+        title: 'Validation Successful!',
+        text: `${movieCount} movies are ready for review. Click OK to proceed to review mode.`,
+        icon: 'success',
         showCancelButton: true,
-        confirmButtonText: 'Add Movies',
+        confirmButtonText: 'OK',
         cancelButtonText: 'Cancel',
-        iconColor: '#8b5cf6'
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+        focusConfirm: true,
+        reverseButtons: false,
+        showLoaderOnConfirm: false,
+        showLoaderOnDeny: false,
+        allowEnterKey: true
     });
 };
 
@@ -427,8 +460,17 @@ export const showUploadError = (error = 'Unknown error occurred') => {
 
 // Close current SweetAlert
 export const closeSwal = () => {
-    Swal.close();
-    showOtherModals(); // Ensure other modals are shown back
+    try {
+        // Hide loading if it's showing
+        Swal.hideLoading();
+        // Close the modal
+        Swal.close();
+        showOtherModals(); // Ensure other modals are shown back
+    } catch (error) {
+        // Fallback to just close
+        Swal.close();
+        showOtherModals();
+    }
 };
 
 // Force close all SweetAlert instances and show modals
