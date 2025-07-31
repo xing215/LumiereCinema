@@ -80,12 +80,15 @@ const DatePickerTemplate = ({ text, className, value, onChange, disabled = false
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
             <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
                 <div className="relative">
+                    <div className="absolute top-1/2 left-3 -translate-y-1/2 transform pointer-events-none z-10">
+                        <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    </div>
                     <DatePicker
                         ref={datePickerRef}
                         selected={selectedDate}
                         onChange={handleDateChange}
                         dateFormat="dd/MM/yyyy"
-                        className="h-10 w-full rounded-lg px-3 pr-10 bg-zinc-300 bg-opacity-70 text-black shadow-sm font-['Unbounded'] text-base transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder:text-gray-500"
+                        className="h-10 w-full rounded-lg pl-10 pr-8 bg-zinc-300 bg-opacity-70 text-black shadow-sm font-['Unbounded'] text-base transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder:text-gray-500"
                         calendarClassName="react-datepicker-custom"
                         showPopperArrow={false}
                         autoComplete="off"
@@ -99,9 +102,6 @@ const DatePickerTemplate = ({ text, className, value, onChange, disabled = false
                         minDate={new Date('1900-01-01')}
                         shouldCloseOnSelect={true}
                     />
-                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform pointer-events-none">
-                        <CalendarIcon className="h-4 w-4 text-gray-500" />
-                    </div>
                 </div>
             </div>
         </div>
