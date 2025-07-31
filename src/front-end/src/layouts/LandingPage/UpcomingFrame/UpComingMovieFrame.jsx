@@ -23,6 +23,18 @@ const UpComingFrame = () => {
     const scrollRef = React.useRef(null);
     const scrollByAmount = 350;
     const [showScrollButtons, setShowScrollButtons] = React.useState(false);
+
+    // When showScrollButtons changes from false to true, trigger a scroll event to update overlays
+    React.useEffect(() => {
+        if (showScrollButtons && scrollRef.current) {
+            // Wait for DOM update
+            setTimeout(() => {
+                if (scrollRef.current) {
+                    scrollRef.current.dispatchEvent(new Event('scroll'));
+                }
+            }, 0);
+        }
+    }, [showScrollButtons]);
     // Check if scrolling is needed
     React.useEffect(() => {
         const checkScroll = () => {
@@ -98,14 +110,22 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
     const cardRef = React.useRef(null);
     const [overlayOpacity, setOverlayOpacity] = React.useState(0);
     React.useEffect(() => {
+        let rafId;
         const checkOverlay = () => {
             if (!cardRef.current || !scrollRef.current) return;
             const cardRect = cardRef.current.getBoundingClientRect();
             const cardWidth = cardRect.width;
-            const visibleWidth = Math.max(0, cardRect.right - cardRect.left);
-            // Calculate percent out of logical area (0 = fully in, 1 = fully out)
-            let percentOut = 1 - visibleWidth / cardWidth;
-            percentOut = Math.max(0, Math.min(1, percentOut));
+            if (cardWidth === 0) {
+                rafId = requestAnimationFrame(checkOverlay);
+                return;
+            }
+            const windowWidth = window.innerWidth;
+            // Calculate how much of the card is out of the viewport (left or right)
+            let outLeft = Math.max(0, 0 - cardRect.left);
+            let outRight = Math.max(0, cardRect.right - windowWidth);
+            let out = Math.min(Math.max(outLeft, outRight) + 10, cardWidth);
+            let percentOut = Math.min(1, out / cardWidth);
+            console.log(`Card ${cardIdx} width ${cardWidth} out ${out}`, );
             setOverlayOpacity(percentOut);
         };
         checkOverlay();
@@ -118,6 +138,7 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             if (scrollRef.current) {
                 scrollRef.current.removeEventListener('scroll', checkOverlay);
             }
+            if (rafId) cancelAnimationFrame(rafId);
         };
     }, [scrollRef]);
     return (
@@ -126,7 +147,7 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             {overlayOpacity > 0 && (
                 <div
                     className="absolute inset-0 z-20 pointer-events-none rounded-xl"
-                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity * 0.6})` }}
+                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
                 />
             )}
         </div>
