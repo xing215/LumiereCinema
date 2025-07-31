@@ -14,12 +14,12 @@ function BuyTicketButton({ movieId, branchId= undefined }) {
                 md:w-[calc(100%-1.5rem)] md:h-11
                 lg:w-[calc(100%-2rem)] lg:h-12
                 xl:w-[calc(100%-2.5rem)] xl:h-14
-                mix-blend-color-dodge bg-zinc-300/30 rounded-xl flex items-center justify-center transition-all duration-200 overflow-visible relative"
+                bg-zinc-300/30 rounded-xl flex items-center justify-center transition-all duration-200 overflow-visible relative"
             onClick={() => navigate(getBuyTicketPath(movieId, branchId))}
         >
             <span className="text-white font-unbounded font-bold text-[11px] sm:text-xs md:text-sm lg:text-base xl:text-lg tracking-widest">BUY<br/>TICKET</span>
             <img
-                className="pointer-events-none absolute right-0 -ml-25 top-1/2 -translate-y-[60%] opacity-100 w-1/3 h-auto origin-center rotate-[-56.11deg] z-10 scale-100 hover:scale-110 transition-transform duration-200"
+                className="pointer-events-none absolute right-0 -ml-25 top-1/2 -translate-y-[60%] opacity-100 mix-blend-normal w-1/3 h-auto origin-center rotate-[-56.11deg] z-10 scale-100 hover:scale-110 transition-transform duration-200"
                 src={ticketImg}
                 alt="Cinema Ticket"
             />
