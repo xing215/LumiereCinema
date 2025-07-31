@@ -1,5 +1,6 @@
 import CancelButton from '@components/buttons/Staff/CancelButton.jsx';
 import ConfirmButton from '@components/buttons/Staff/ConfirmButton.jsx';
+import CustomDropdown from '@components/UI/CustomDropdown.jsx';
 import { Box, Square, SquareCheckBig } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -36,22 +37,28 @@ const BoxTemplate = ({ text, className, value, onChange, type = "text", disabled
     );
 };
 
-const SelectTemplate = ({ text, className, value, onChange, options, disabled = false }) => {
+const DropdownTemplate = ({ text, className, value, onChange, options, disabled = false, placeholder }) => {
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
-            <select
-                value={value || ''}
-                onChange={(e) => onChange && onChange(e.target.value)}
-                disabled={disabled}
-                className="relative h-10 w-full rounded-xl bg-zinc-300/70 px-3 text-black disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </select>
+            <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+                <CustomDropdown
+                    value={value || ''}
+                    onChange={(e) => onChange && onChange(e.target.value)}
+                    options={options}
+                    placeholder={placeholder || `Select ${text.toLowerCase()}`}
+                    name={text.toLowerCase()}
+                    bgColor="zinc-300"
+                    inputBgColor="zinc-300"
+                    textColor="black"
+                    bgOpacity="bg-opacity-70"
+                    height="h-10"
+                    textAlign="left"
+                    inputTextSize="text-base"
+                    optionTextSize="text-base"
+                    borderColor=""
+                />
+            </div>
         </div>
     );
 };
@@ -143,7 +150,7 @@ const EditAccountInformationModal = ({
                             value={accountData?.birthday || ''} 
                             onChange={(value) => handleFieldChange('birthday', value)}
                         />
-                        <SelectTemplate 
+                        <DropdownTemplate 
                             text="Gender" 
                             className="w-[35%]" 
                             value={accountData?.gender || 'male'} 
@@ -175,7 +182,7 @@ const EditAccountInformationModal = ({
                         />
                     )}
                     {chosenRole.has(1) ? null : (
-                        <SelectTemplate 
+                        <DropdownTemplate 
                             text="Branch" 
                             className="w-[100%]" 
                             value={
@@ -184,13 +191,11 @@ const EditAccountInformationModal = ({
                                     : accountData?.branch || ''
                             } 
                             onChange={(value) => handleFieldChange('branch', value)}
-                            options={[
-                                { value: '', label: 'Select Branch' },
-                                ...branches.map(branch => ({
-                                    value: branch._id,
-                                    label: branch.name
-                                }))
-                            ]}
+                            placeholder="Select Branch"
+                            options={branches.map(branch => ({
+                                value: branch._id,
+                                label: branch.name
+                            }))}
                         />
                     )}
                 </div>
