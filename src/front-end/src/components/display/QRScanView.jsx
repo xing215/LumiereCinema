@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X } from 'lucide-react';
 
 const QrScannerView = ({ onScanSuccess, onClose }) => {
     const readerId = "qr-code-reader-container";
@@ -11,44 +10,45 @@ const QrScannerView = ({ onScanSuccess, onClose }) => {
         latestCallbacks.current.onClose = onClose;
     }, [onScanSuccess, onClose]);
 
+    const html5QrCodeRef = useRef(null);
+    const isScannerRunningRef = useRef(false);
+
     useEffect(() => {
         const html5QrCode = new Html5Qrcode(readerId, { verbose: false });
-        let isScannerRunning = false;
+        html5QrCodeRef.current = html5QrCode;
+        isScannerRunningRef.current = false;
 
         const startScanner = async () => {
-            if (isScannerRunning) return;
+            if (isScannerRunningRef.current) return;
             try {
                 await html5QrCode.start(
                     { facingMode: "environment" },
                     {
                         fps: 10,
-                        // THAY ĐỔI QUAN TRỌNG: Tắt khung ngắm mặc định của thư viện
-                        qrbox: null 
+                        qrbox: null
                     },
                     (decodedText, decodedResult) => {
                         latestCallbacks.current.onScanSuccess(decodedText);
                     },
                     (errorMessage) => { /* Bỏ qua lỗi */ }
                 );
-                isScannerRunning = true;
+                isScannerRunningRef.current = true;
             } catch (err) {
                 console.error("Không thể khởi động camera.", err);
             }
         };
 
-        // Đợi 550ms để CSS transition của container hoàn thành rồi mới bật camera
         const startTimeout = setTimeout(() => {
             startScanner();
         }, 550);
 
-        // Hàm dọn dẹp
         return () => {
             clearTimeout(startTimeout);
             const cleanup = async () => {
-                if (isScannerRunning) {
-                    isScannerRunning = false;
+                if (isScannerRunningRef.current && html5QrCodeRef.current) {
+                    isScannerRunningRef.current = false;
                     try {
-                        await html5QrCode.stop();
+                        await html5QrCodeRef.current.stop();
                     } catch (err) {
                         console.warn("Cảnh báo khi dừng camera:", err);
                     }
@@ -59,20 +59,30 @@ const QrScannerView = ({ onScanSuccess, onClose }) => {
     }, []);
 
     return (
-        <div className="relative h-full w-full overflow-hidden rounded-lg bg-black">
+        <div className="relative h-full w-full overflow-hidden rounded-lg">
             <div id={readerId} className="h-full w-full"></div>
             
-            <button
-                onClick={() => latestCallbacks.current.onClose()}
-                className="absolute top-2 right-2 z-20 rounded-full bg-red-500/80 p-1.5 text-white transition hover:bg-red-600"
-            >
-                <X size={24} />
-            </button>
-
+                <button
+                    onClick={async () => {
+                        // Stop scanning before closing
+                        if (isScannerRunningRef.current && html5QrCodeRef.current) {
+                            try {
+                                await html5QrCodeRef.current.stop();
+                            } catch (err) {
+                                console.warn("Cảnh báo khi dừng camera:", err);
+                            }
+                            isScannerRunningRef.current = false;
+                        }
+                        latestCallbacks.current.onClose();
+                    }}
+                    className="absolute top-2 right-2 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-3 aspect-square"
+                >
+                    ×
+                </button>
             {/* Lớp phủ viewfinder CSS CỦA BẠN */}
             <div className="absolute inset-0 z-10 pointer-events-none">
-                <div className="absolute inset-0 border-[40px] border-black/30 md:border-[50px]"></div>
-                <div className="absolute top-1/2 left-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2" style={{ aspectRatio: '1 / 1' }}>
+                <div className="absolute inset-0 border-[40px] border-black/30 md:border-[60px]"></div>
+                <div className="absolute top-1/2 left-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 aspect-square">
                     <div className="absolute -top-1 -left-1 h-12 w-12 border-t-4 border-l-4 border-white"></div>
                     <div className="absolute -top-1 -right-1 h-12 w-12 border-t-4 border-r-4 border-white"></div>
                     <div className="absolute -bottom-1 -left-1 h-12 w-12 border-b-4 border-l-4 border-white"></div>

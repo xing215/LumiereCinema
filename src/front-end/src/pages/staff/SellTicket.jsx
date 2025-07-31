@@ -1,4 +1,4 @@
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
 import { useFetchNowShowing, useFetchComingSoon } from '@hooks/useMovie';
@@ -17,6 +17,8 @@ import SnackList from '@/layouts/SellTicket/SnacksList';
 import BackwardButton from '@components/buttons/backwardButton2.jsx';
 import Payment from '@/layouts/SellTicket/Payment';
 import TicketDetail from '@components/UI/TicketDetail.jsx';
+import { useUser } from '@contexts/UserContext.jsx';
+
 const InputSeller = ({ value, onBlur, onChange }) => {
     return (
         <div className='absolute right-[5%] top-[4%] flex flex-row items-center justify-center md:w-[50%] lg:w-[25%] min-w-[260px]'>
@@ -45,7 +47,8 @@ const SellTicket = () => {
         PAYMENT: 4,
         TICKET_DISPLAY: 5
     };
-
+    const { user } = useUser();
+    const cashierBranchId = useMemo(() => user?.branch?._id, [user]);
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.MOVIE_LIST);
     // Movie ticket data state
     const [movieTicketData, setMovieTicketData] = useState({
@@ -139,8 +142,10 @@ const SellTicket = () => {
     const [displayedMovies, setDisplayedMovies] = useState([]);
 
     useEffect(() => {
-        getBranchById('6860b849b285c0004c37d9c2');
-    }, []);
+        if (user && cashierBranchId) {
+            getBranchById(cashierBranchId);
+        }
+    }, [cashierBranchId]);
 
     useEffect(() => {
         if (branch) {
@@ -420,7 +425,6 @@ const handleFilterChange = (filter) => {
                             loading={nowShowingLoading || comingSoonLoading}
                             onMovieSelect={onMovieSelect}
                         />
-                        <SelectBranchButton />
                     </>
                 );
             case MENU_STEPS.SCHEDULE:
@@ -516,6 +520,7 @@ case MENU_STEPS.PAYMENT:
                 <InputSeller value={employeeId || ''} onChange={handleEmployeeIdChange} onBlur={handleEmployeeIdBlur}/>
                 {/* Step-based menu render */}
                 {renderCurrentMenu()}
+                <SelectBranchButton isLoading={branchLoading} branchName={branch?.name} />
             </MobileNotSupported>
 
             {/* Background blur effects */}

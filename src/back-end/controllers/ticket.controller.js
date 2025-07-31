@@ -1274,7 +1274,7 @@ const createTicket = async (req, res) => {
 
       // ===== Process Movie Ticket =====
       if (movieTicket) {
-        const { schedule, seats, total: movieTicketTotal } = movieTicket;
+        const { schedule, seats, total: movieTicketTotal, discountedTickets,  adultTickets } = movieTicket;
         // Validate movie ticket data
         if (!schedule || !seats || !Array.isArray(seats) || seats.length === 0) {
           throw { status: 400, message: 'Movie ticket requires schedule and seats array' };
@@ -1316,7 +1316,9 @@ const createTicket = async (req, res) => {
           schedule,
           seats,
           total: movieTicketTotal,
-          status: 'Confirmed'
+          status: 'Confirmed',
+          discountedTickets,
+          adultTickets
         });
         await createdMovieTicket.save({ session });
         totalAmount += movieTicketTotal;

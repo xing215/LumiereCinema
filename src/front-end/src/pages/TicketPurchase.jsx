@@ -375,13 +375,13 @@ useEffect(() => {
                 alert('Your seat selection have been occupied by other customers. Please adjust your selection.');
                 setCurrentStep(MENU_STEPS.SEATS)
                 fetchSeats(movieTicketData.schedule._id)
-                setMovieTicketData({seats:[]})
+                updateMovieTicket({seats:[]})
                 return
             } else if (ticketError.includes('snack')) {
                 alert('Your snack selection exceeds available stock. Please adjust your order.');
                 setCurrentStep(MENU_STEPS.SNACK)
                 getSnacks(snackTicketData?.branch?._id)
-                setSnackTicketData({snackList:[]})
+                updateSnackTicket({snackList:[]})
                 return
             }
             alert('An error occurred while creating your ticket. Please try again.');

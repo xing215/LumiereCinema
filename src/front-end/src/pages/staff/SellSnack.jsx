@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
 import SnackList from '@/layouts/SellTicket/SnacksList';
@@ -7,6 +7,9 @@ import TicketDetail from '@components/UI/TicketDetail.jsx';
 import { useGetBranchById } from '@hooks/useBranch';
 import { useCreateTicket, useGetSnacksByBranch } from '@hooks/useTicket';
 import BackwardButton from '@components/buttons/backwardButton2.jsx';
+import { useUser } from '@contexts/UserContext.jsx';
+import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
+
 
 const InputSeller = ({ value, onBlur, onChange }) => (
     <div className='absolute right-[5%] top-[4%] flex flex-row items-center justify-center md:w-[50%] lg:w-[25%] min-w-[260px]'>
@@ -30,6 +33,11 @@ const MENU_STEPS = {
 };
 
 const SellSnack = () => {
+    const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
+
+    const { user } = useUser();    
+    const cashierBranchId = useMemo(() => user?.branch?._id, [user]);
+
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.SNACK);
 
     const [snackTicketData, setSnackTicketData] = useState({
@@ -63,13 +71,15 @@ const SellSnack = () => {
         console.log('Updated snack ticket data:', { ...snackTicketData, ...updates });
     };
 
-    const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
     const { getSnacks, snacks, loading: snacksLoading, error: snacksError } = useGetSnacksByBranch();
     const { createTicket, ticket, loading: ticketLoading, error: ticketError } = useCreateTicket();
 
     useEffect(() => {
-        getBranchById('6860b849b285c0004c37d9c2');
-    }, []);
+        console.log(user, cashierBranchId);
+        if (user && cashierBranchId) {
+            getBranchById(cashierBranchId);
+        }
+    }, [cashierBranchId]);
 
     useEffect(() => {
         if (branch) {
@@ -221,6 +231,7 @@ case MENU_STEPS.PAYMENT:
                 }
                 <InputSeller value={employeeId || ''} onChange={handleEmployeeIdChange} onBlur={handleEmployeeIdBlur} />
                 {renderCurrentMenu()}
+                <SelectBranchButton isLoading={branchLoading} branchName={branch?.name} />
             </MobileNotSupported>
             {/* Background blur effects */}
             <div className="tranform absolute top-0 left-1/5 h-52 w-52 -translate-y-1/2 rounded-full bg-sky-400/60 mix-blend-lighten blur-[100px]" />

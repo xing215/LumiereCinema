@@ -1,38 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
-import { Camera } from 'lucide-react';
+import { Camera, User } from 'lucide-react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import { useGetTicketDetailsByCode } from '@hooks/useTicket';
 import QrScannerView from '@components/display/QRScanView';
 
 const TicketDetails = ({ ticket, loading, error, isScannerVisible }) => {
     if (loading) {
-        return <p className="font-unbounded text-xl md:text-2xl font-bold text-white">Searching for ticket...</p>;
+        return <p className="font-unbounded text-xl md:text-2xl font-bold text-white">SEARCHING...</p>;
     }
     if (error) {
         return <p className="font-unbounded text-xl md:text-2xl font-bold text-red-500">{error}</p>;
     }
     if (!ticket) {
-        return <p className="font-unbounded text-xl md:text-2xl font-bold text-gray-400">Please enter a ticket code to check</p>;
+        return <p className="font-unbounded text-xl md:text-2xl pb-2 font-bold text-gray-400">ENTER TICKET CODE</p>;
     }
 
     if (ticket.ticketType === 'Movie') {
+        console.log(ticket);
         return (
             <>
-                <p className="font-unbounded flex-nowrap pb-2 text-2xl font-black text-white md:pb-4 md:text-4xl">TICKET DETAILS</p>
-                <p className={`font-unbounded py-1 text-base font-bold md:py-4 md:text-2xl ${ticket.status === 'Confirmed' ? 'text-green-400' : 'text-red-400'}`}>VALIDITY: {ticket.status.toUpperCase()}</p>
-                <p className="font-unbounded py-1 text-base font-bold text-white md:py-4 md:text-2xl mb-4">LAST SCAN: {ticket.lastScanAt ? dayjs(ticket.lastScanAt).format('HH:mm DD/MM/YYYY') : 'NONE'}</p>
+                <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">TICKET DETAILS</p>
+                <p className={`font-unbounded py-1 text-base font-bold md:text-xl lg:text-2xl ${ticket.status === 'Confirmed' ? 'text-green-400' : 'text-red-400'}`}>VALIDITY: {ticket.status.toUpperCase()}</p>
+                <p className="font-unbounded py-1 text-base font-bold text-white md:text-lg w-[90%] md:w-auto lg:text-xl">
+                    <span className="block md:inline">LAST SCAN:</span>
+                    <span className="block md:inline">{ticket.lastScanAt ? dayjs(ticket.lastScanAt).format('DD/MM/YYYY - HH:mm') : 'NONE'}</span>
+                </p>
                 
-                <div className={` flex w-[90%] flex-col overflow-y-auto py-1 md:gap-2 md:py-4 lg:w-[80%] ${isScannerVisible ? 'gap-y-2' : 'gap-y-6'}`}>
-                    <p className="font-unbounded flex-shrink-0 text-start text-xs font-semibold text-white md:text-base">Ticket ID: {ticket.ticketCode}</p>
-                    <p className="font-unbounded flex-shrink-0 text-start text-xs font-semibold text-white md:text-base">Movie: {ticket.schedule.movie.title}</p>
-                    <p className="font-unbounded flex-shrink-0 text-start text-xs font-semibold text-white md:text-base">Date: {dayjs(ticket.schedule.startTime).format('DD/MM/YYYY')}</p>
+                <div className={` flex w-[90%] flex-col h-auto py-1 md:gap-2 lg:w-[80%] ${isScannerVisible ? 'gap-y-1' : 'gap-y-2'}`}>
+                    <p className="font-unbounded flex-shrink-0 text-start text-sm font-semibold text-white md:text-sm lg:text-base">Ticket ID: {ticket.ticketCode}</p>
+                    <p className="font-unbounded flex-shrink-0 text-start text-sm font-semibold text-white md:text-sm lg:text-base">Movie: {ticket.schedule.movie.title}</p>
+                    <p className="font-unbounded flex-shrink-0 text-start text-sm font-semibold text-white md:text-sm lg:text-base">Date: {dayjs(ticket.schedule.startTime).format('DD/MM/YYYY')}</p>
                     
-                    <div className={`grid w-full grid-cols-1 gap-x-4 pt-2 md:grid-cols-2 md:gap-2 ${isScannerVisible ? 'gap-y-2' : 'gap-y-6'}`}>
-                        <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Time: {dayjs(ticket.schedule.startTime).format('HH:mm')} - {dayjs(ticket.schedule.endTime).format('HH:mm')}</p>
-                        <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Cinema: {ticket.schedule.screen.screenName}</p>
-                        <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Ticket: {ticket.seats.length} ticket(s)</p>
-                        <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Seat: {ticket.seats.join(', ')}</p>
+                    <div className={`grid w-full grid-cols-1 gap-x-4 pt-2 md:grid-cols-2 pb-3 md:gap-2 ${isScannerVisible ? 'gap-y-1' : 'gap-y-2'}`}>
+                        <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Time: {dayjs(ticket.schedule.startTime).format('HH:mm')} - {dayjs(ticket.schedule.endTime).format('HH:mm')}</p>
+                        <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Cinema: {ticket.schedule.screen.screenName}</p>
+                        <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Ticket: {ticket.adultTickets !== undefined && ticket.discountedTickets !== undefined ? (ticket.adultTickets > 0  ? `${ticket.adultTickets} Adult Ticket(s)` : '') + (ticket.adultTickets > 0 && ticket.discountedTickets > 0 ? `, ` : '' ) + (ticket.discountedTickets>0 ? `${ticket.discountedTickets} Student/Elder Ticket(s)` : '') : `${ticket.seats.length} ticket(s)`}</p>
+                        <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Seat: {ticket.seats.join(', ')}</p>
                     </div>
                 </div>
             </>
@@ -40,26 +44,26 @@ const TicketDetails = ({ ticket, loading, error, isScannerVisible }) => {
     } else if (ticket.ticketType === 'Snack') {
         return (
             <>
-                <p className="font-unbounded flex-nowrap pb-2 text-2xl font-black text-white md:pb-4 md:text-4xl">SNACK TICKET DETAILS</p>
-                <p className={`font-unbounded py-1 text-base font-bold md:py-4 md:text-2xl ${ticket.status === 'Confirmed' ? 'text-green-400' : 'text-yellow-400'}`}>VALIDITY: {ticket.status.toUpperCase()}</p>
-                <p className="font-unbounded py-1 text-base font-bold text-white md:py-4 md:text-2xl">LAST SCAN: {ticket.lastScanAt ? dayjs(ticket.lastScanAt).format('HH:mm DD/MM/YYYY') : 'NONE'}</p>
-                <div className={`flex w-[90%] flex-col overflow-y-auto py-1 md:gap-2 md:py-4 lg:w-[80%] ${isScannerVisible ? 'gap-y-2' : 'gap-y-6'}`}>
-                    <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Ticket ID: {ticket.snackTicketCode}</p>
-                    <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Branch: {ticket.branch.name}</p>
-                    <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Date: {dayjs(ticket.createdAt).format('DD/MM/YYYY')}</p>
-                    <div className="grid w-full grid-cols-1 gap-1 pt-2 md:gap-2">
-                        <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Items:</p>
-                        <ul className="list-disc pl-5 text-left text-xs font-semibold text-white md:text-base">
-                            {ticket.snackList.map(item => (
-                                <li key={item.snack?._id || item._id}>{item.snack?.name || 'Snack'} x {item.quantity}</li>
-                            ))}
-                        </ul>
+                <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">SNACK TICKET DETAILS</p>
+                <p className={`font-unbounded py-1 text-base font-bold md:text-xl lg:py-4 lg:text-2xl ${ticket.status === 'Confirmed' ? 'text-green-400' : 'text-yellow-400'}`}>VALIDITY: {ticket.status.toUpperCase()}</p>
+               <p className="font-unbounded py-1 text-base font-bold text-white md:text-lg w-[90%] md:w-auto lg:text-xl">
+                    <span className="block md:inline">LAST SCAN:</span>
+                    <span className="block md:inline">{ticket.lastScanAt ? dayjs(ticket.lastScanAt).format('DD/MM/YYYY - HH:mm') : 'NONE'}</span>
+                </p>
+                <div className={`flex w-[90%] flex-col overflow-y-auto py-1 md:gap-2 md:py-4 lg:w-[80%] ${isScannerVisible ? 'gap-y-1' : 'gap-y-2'}`}>
+                    <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Ticket ID: {ticket.snackTicketCode}</p>
+                    <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Branch: {ticket.branch.name}</p>
+                    <p className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">Date: {dayjs(ticket.createdAt).format('DD/MM/YYYY')}</p>
+                    <div className="grid w-full grid-cols-1  pb-3 gap-1 pt-2 md:gap-2">
+                        <span className="font-unbounded text-start text-sm font-semibold text-white md:text-sm lg:text-base">
+                            Items: {ticket.snackList.map(item => `${item.quantity} ${item.snack?.name || 'Snack'}`).join(', ')}
+                        </span>
                     </div>
                 </div>
             </>
         );
     }
-    return <p className="font-unbounded text-xl md:text-2xl font-bold text-red-500">Unknown Ticket Type</p>;
+    return <p className="font-unbounded text-xl md:text-2xl font-bold text-red-500">UNKNOWN TICKET TYPE</p>;
 };
 
 
@@ -83,18 +87,22 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
             handleSearch(ticketCode);
+            inputRef.current.blur(); // Remove focus from input after search
         }
     };
 
     const handleScanSuccess = (decodedText) => {
-        setTicketCode(decodedText);
-        handleSearch(decodedText);
+        const cleanedCode = decodedText.replace(/"/g, "");
+        setTicketCode(cleanedCode);
+        handleSearch(cleanedCode);
     };
+
+    const inputRef = useRef(null);
 
     return (
         <StaffLayout>
-            <div className="relative z-10 h-full w-full">
-                <div className="absolute top-0 h-[10%] w-full md:top-0 md:h-[20%] lg:h-[13%]">
+            <div className="flex flex-col transition-all duration-500 relative z-10 h-full w-full justify-start pt-[20%] md:pt-[7%] lg:pt-[5%] md:pb-[5%] items-center">
+                <div className="absolute top-0 h-[10%] w-full md:-top-6 md:h-[20%] lg:h-[13%]">
                     <div className="relative h-full w-full">
                         <p className="font-unbounded text-md absolute top-1/3 left-1/2 -translate-x-1/2 translate-y-1/2 transform font-bold text-nowrap text-white md:translate-y-1/2 md:text-2xl">
                             {dayjs(now).format('DD/MM/YYYY - HH:mm:ss')}
@@ -102,11 +110,11 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
                     </div>
                 </div>
 
-                <div className="absolute top-1/2 left-1/2 flex h-[85%] w-[90%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-4 rounded-xl bg-blue-800/30 p-4 mix-blend-color-dodge md:h-[70%] md:flex-row md:items-start md:gap-8">
+                <div className="flex h-auto w-[90%] flex-col items-center justify-center gap-4 rounded-xl bg-blue-800/30 p-4 mix-blend-color-dodge md:h-full md:flex-row md:items-start md:gap-8">
                 
                     <div className={`
                         flex-shrink-0 overflow-hidden transition-all duration-500 ease-in-out
-                        ${isScannerVisible ? 'w-full h-[30%] opacity-100 md:h-full md:w-1/2' : 'h-0 w-0 opacity-0'}
+                        ${isScannerVisible ? 'w-full aspect-square opacity-100 md:h-full md:w-1/2' : 'h-0 w-0 opacity-0'}
                     `}>
                         {isScannerVisible && (
                             <div className="relative h-full w-full">
@@ -125,14 +133,14 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
                         <div className="flex h-full w-full flex-col items-center justify-center overflow-hidden">
                             {/* THAY ĐỔI 2: Truyền isScannerVisible xuống cho TicketDetails */}
                             <TicketDetails ticket={ticket} loading={loading} error={error} isScannerVisible={isScannerVisible} />
-                            <div className="relative mt-auto flex w-full flex-shrink-0 items-center gap-2 pt-3 md:gap-4 md:pt-8 lg:w-[80%]">
-                                <p className="font-unbounded text-start text-xs font-semibold text-white md:text-base">Ticket:</p>
+                            <div className="relative mt-auto flex w-full flex-shrink-0 items-center gap-2 md:gap-4 md:pt-8 lg:w-[80%]">
+                                <p className="font-unbounded text-start text-sm font-semibold text-white md:text-base">Ticket:</p>
                                 <input
+                                    ref={inputRef}
                                     type="text"
                                     value={ticketCode}
                                     onChange={(e) => setTicketCode(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    placeholder="Enter ticket code or use camera..."
+                                    onKeyDown={handleKeyPress}
                                     className="relative isolate h-8 w-full rounded-xl bg-zinc-100 px-3 text-black md:h-8 lg:h-9"
                                 />
                                 <Camera 
