@@ -128,6 +128,7 @@ const DropdownTemplate = ({ text, className, value, onChange, options, disabled 
                     inputTextSize="text-base"
                     optionTextSize="text-base"
                     borderColor=""
+                    forceFillLabel={true}
                 />
             </div>
         </div>
@@ -162,10 +163,10 @@ const EditAccountInformationModal = ({
                 }
             });
             setChosenRole(roleIndices);
-        } else {
+        } else if (!isEdit) {
             setChosenRole(new Set([1])); // Default to customer for new accounts
         }
-    }, [isEdit, accountData]);
+    }, [isEdit, accountData?.roles]); // Only depend on roles, not entire accountData
 
     const handleChosenRole = (roleIndex) => {
         setChosenRole((prev) => {
@@ -200,6 +201,13 @@ const EditAccountInformationModal = ({
         { value: 'female', label: 'Female' },
         { value: 'other', label: 'Other' }
     ];
+
+    // Debug: Log branch data
+    console.log('Branch debug:', {
+        accountDataBranch: accountData?.branch,
+        branchesLength: branches.length,
+        branchOptions: branches.map(branch => ({ value: branch._id, label: branch.name }))
+    });
 
     return (
         <div className="absolute inset-0 z-50 bg-slate-900/10 backdrop-blur-[20px]">
