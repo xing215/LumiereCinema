@@ -77,6 +77,18 @@ const ticketSchema = new mongoose.Schema({
     enum: ['Movie'],
     default: 'Movie',
     immutable: true
+  },
+
+  adultTickets : {
+    type: Number,
+    required: true,
+    min: 0
+  },
+
+  discountedTickets : {
+    type: Number,
+    required: true,
+    min: 0
   }
 
 }, { timestamps: true }); // Use timestamps for CreatedDate (createdAt) and LastAccess (updatedAt)
