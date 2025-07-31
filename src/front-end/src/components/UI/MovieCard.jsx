@@ -189,7 +189,9 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                     </div>
                 </div>
             </div>
-            { showOverlay && <BuyTicketButton movieId={movie?._id} branchId={selectedBranch?._id} /> }
+            { showOverlay && Array.isArray(movie.branches) && movie.branches.length > 0 && (
+                <BuyTicketButton movieId={movie?._id} branchId={selectedBranch?._id} />
+            ) }
             </div>
         </>
     );
