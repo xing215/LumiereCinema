@@ -64,13 +64,13 @@ export const useInlineEdit = (updateFunction, refreshFunction, items, setItems) 
                 cancelEdit();
             } else {
                 console.error('Failed to update:', result.error);
-                alert(`Failed to update: ${result.error || 'Unknown error'}`);
+                showUploadError(`Failed to update: ${result.error || 'Unknown error'}`);
                 // Reset value on failure
                 cancelEdit();
             }
         } catch (error) {
             console.error('Error updating field:', error);
-            alert(`Error updating field: ${error.message || 'Unknown error'}`);
+            showUploadError(`Error updating field: ${error.message || 'Unknown error'}`);
             // Reset value on error
             cancelEdit();
         } finally {
