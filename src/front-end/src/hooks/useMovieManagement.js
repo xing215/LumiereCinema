@@ -203,6 +203,24 @@ export const useMovieManagement = () => {
 
     const header = ['', 'Movie Title', 'Description', 'Release Date', 'Genre', 'Duration', 'Age Rating', 'Director', 'Cast', 'Language', 'Trailer', 'Poster', 'Active', 'Preview'];
 
+    // Field types configuration for EditableCell
+    const fieldTypes = {
+        0: 'text',   // TickButton (not editable)
+        1: 'text',   // Movie Title - text
+        2: 'text',   // Description - text
+        3: 'date',   // Release Date - date picker
+        4: 'text',   // Genre - text (comma-separated)
+        5: 'number', // Duration - number
+        6: 'text',   // Age Rating - text
+        7: 'text',   // Director - text
+        8: 'text',   // Cast - text (comma-separated)
+        9: 'text',   // Language - text
+        10: 'text',  // Trailer URL - text
+        11: 'text',  // Poster URL - text
+        12: 'text',  // Active (not typically editable directly)
+        13: 'text'   // Preview (not editable)
+    };
+
     const movieColumnConfig = [
         { width: 'w-12', truncate: false },    // TickButton - checkbox column
         { width: 'w-48', truncate: true },     // Movie Title
@@ -768,6 +786,7 @@ export const useMovieManagement = () => {
         header,
         movieColumnConfig,
         editableColumns,
+        fieldTypes,
         
         // State
         loading,

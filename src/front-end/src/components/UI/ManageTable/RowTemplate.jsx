@@ -206,7 +206,7 @@ const RowTemplate = (props) => {
                                         <span>Edit</span>
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <EditButton />
+                                            <EditButton onClick={() => props.onEdit?.(props.rowIndex)} />
                                         </div>
                                     )
                                 ) : value === 'EditSeatButton' ? (
@@ -258,7 +258,7 @@ const RowTemplate = (props) => {
                                             className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
                                             tooltipText={tooltipText}
                                             shouldTruncate={shouldTruncateText && !props.isExpanded}
-                                            fieldType={props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : (index === 3 ? 'date' : 'text')}
+                                            fieldType={(props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : 'text') }
                                         />
                                     ) : (
                                         <span

@@ -2,36 +2,79 @@ import { useState } from 'react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
 import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
-import ConfirmationModal from '@components/display/Modal/Confirmation.jsx';
 import ManageTable from '@components/UI/ManageTable.jsx';
 import EditAccountInformationModal from '@components/display/Modal/EditAccountInformationModal.jsx';
 import DeleteButton from '@components/buttons/Staff/DeleteButton.jsx';
 import AddButton from '@components/buttons/Staff/AddButton.jsx';
+import { useAccountManagement } from '@hooks/useAccountManagement';
 
 const AccountManagePage = () => {
-    const [tickedAccounts, setTickedAccounts] = useState(new Set());
-    const [accountRows, setAccountRows] = useState(Array.from({ length: 10 }, () => ['TickButton', '001', 'Nguyễn Thiên Nhã Trân', 'TinaLe@Danang2023.com.vn.edu', '091666666', 'EditButton']));
-    const [showConfirmDeleteAccount, setShowConfirmDeleteAccount] = useState(false);
-    const [editedAccountIndex, setEditedAccountIndex] = useState(null);
+    const {
+        // Data
+        accountRows,
+        accountsLoading,
+        accountsError,
+        branches,
+        branchesLoading,
+        branchesError,
+        
+        // UI state
+        tickedAccounts,
+        setTickedAccounts,
+        
+        // Add account state
+        isAddingAccount,
+        newAccountData,
+        setNewAccountData,
+        
+        // Edit account state
+        isEditingAccount,
+        editingAccountData,
+        editAccountData,
+        setEditAccountData,
+        
+        // Actions
+        handleDeleteAccounts,
+        handleSearch,
+        
+        // Modal actions
+        handleOpenAddModal,
+        handleCloseAddModal,
+        handleConfirmAddAccount,
+        handleOpenEditModal,
+        handleCloseEditModal,
+        handleConfirmEditAccount,
+        
+        // Configuration
+        header,
+        accountColumnConfig,
+        
+        // Loading state
+        isLoading
+    } = useAccountManagement();
 
-    const handleDelete = () => {
-        setAccountRows((prev) => prev.filter((_, index) => !tickedAccounts.has(index)));
-        setTickedAccounts(new Set());
-        setShowConfirmDeleteAccount(false);
+    const handleAddAccountDataChange = (field, value) => {
+        setNewAccountData(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
-    const header = ['TickButton', 'ID', 'Name', 'Email', 'Phone', 'EditButton'];
-    const accountColumnConfig = [
-        { width: 'w-12', truncate: false }, //Tick Button
-        { width: 'w-12', truncate: false }, //ID
-        { width: 'w-50', truncate: true }, //Name
-        { width: 'w-40', truncate: true }, //Mail
-    ];
+    const handleEditAccountDataChange = (field, value) => {
+        setEditAccountData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     const Button = () => {
         return (
             <div className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl hover:cursor-pointer">
-                {tickedAccounts.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteAccount(true)}/> : <AddButton text="Add Account"/>}
+                {tickedAccounts.size > 0 ? (
+                    <DeleteButton onClicked={handleDeleteAccounts} />
+                ) : (
+                    <AddButton text="Add Account" onClick={handleOpenAddModal} />
+                )}
             </div>
         )
     }
@@ -39,11 +82,43 @@ const AccountManagePage = () => {
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
-                <SearchButton />
+                <SearchButton onSearch={handleSearch} />
                 <Button/>
-                {showConfirmDeleteAccount && <ConfirmationModal item={tickedAccounts.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteAccount(false)} />}
-                {editedAccountIndex !== null && <EditAccountInformationModal onClose={() => setEditedAccountIndex(null)} handleConfirm={() => setEditedAccountIndex(null)} />}
-                <ManageTable data={accountRows} anyTicked={tickedAccounts} setTickedRows={setTickedAccounts} onEdit={setEditedAccountIndex} header={header} columnConfig={accountColumnConfig}/>
+                
+                {/* Add Account Modal */}
+                {isAddingAccount && (
+                    <EditAccountInformationModal 
+                        onClose={handleCloseAddModal}
+                        handleConfirm={handleConfirmAddAccount}
+                        isEdit={false}
+                        accountData={newAccountData}
+                        onDataChange={handleAddAccountDataChange}
+                        isLoading={isLoading}
+                        branches={branches}
+                    />
+                )}
+                
+                {/* Edit Account Modal */}
+                {isEditingAccount && (
+                    <EditAccountInformationModal 
+                        onClose={handleCloseEditModal}
+                        handleConfirm={handleConfirmEditAccount}
+                        isEdit={true}
+                        accountData={editAccountData}
+                        onDataChange={handleEditAccountDataChange}
+                        isLoading={isLoading}
+                        branches={branches}
+                    />
+                )}
+                
+                <ManageTable 
+                    data={accountRows} 
+                    anyTicked={tickedAccounts} 
+                    setTickedRows={setTickedAccounts} 
+                    onEdit={handleOpenEditModal} 
+                    header={header} 
+                    columnConfig={accountColumnConfig}
+                />
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Accounts</div>
                 <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
                 <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />

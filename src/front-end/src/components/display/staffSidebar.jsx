@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Menu, Film } from 'lucide-react';
 import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
 import sidebarConfig, {filterMenuItems, getUserRoleInfo} from '@config/adminSidebar.config.js';
+import { showConfirmation, showSuccess } from '@utils/sweetalert';
 
 const StaffSidebar = ({
     isCollapsed = false,
@@ -61,15 +62,26 @@ const StaffSidebar = ({
         onToggle();
     };
 
-    const handleItemClick = (item) => {
+    const handleItemClick = async (item) => {
         // Handle logout action
         if (item.action === 'logout') {
-            // Add logout logic here
-            if (window.confirm('Are you sure you want to logout?')) {
-                // Use the UserContext logout function
-                logout();
-                // Redirect to root path
-                navigate(ROUTES.HOME);
+            try {
+                const confirmResult = await showConfirmation(
+                    'Confirm Logout',
+                    'Are you sure you want to logout?',
+                    'Logout',
+                    'Cancel'
+                );
+                
+                if (confirmResult.isConfirmed) {
+                    // Use the UserContext logout function
+                    logout();
+                    // Redirect to root path
+                    navigate(ROUTES.HOME);
+
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
             }
             return;
         }
