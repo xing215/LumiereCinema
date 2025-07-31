@@ -26,6 +26,8 @@ import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
 import LunarPointsPage from '@pages/LunarPoints.jsx';
 import WatchHistoryPage from '@pages/WatchHistory';
+import SellTicket from '@pages/staff/SellTicket.jsx';
+import SellSnack from '@pages/staff/SellSnack.jsx';
 
 import Developing from '@pages/others/Developing.jsx';
 import NotFound from '@pages/others/NotFound.jsx';
@@ -68,6 +70,8 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+    STAFF_SELL_TICKET: '/staff/sell-ticket',
+    STAFF_SELL_SNACK: '/staff/sell-snack',
 
     // Other pages
     DEVELOPING: '/developing',
@@ -294,6 +298,20 @@ export const routeConfig = [
         type: 'public',
         requiresAuth: false
     },
+    {
+        path: ROUTES.STAFF_SELL_TICKET,
+        component: SellTicket,
+        type: 'staff',
+        requiresAuth: true,
+        allowedRoles: ['cashier']
+    },
+    {
+        path: ROUTES.STAFF_SELL_SNACK,
+        component: SellSnack,
+        type: 'staff',
+        requiresAuth: true,
+        allowedRoles: ['cashier']
+    }
 ];
 
 // Helper function to check if user has required roles

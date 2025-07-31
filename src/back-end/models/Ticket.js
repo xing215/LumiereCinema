@@ -15,10 +15,17 @@ const ticketSchema = new mongoose.Schema({
     ref: 'User'
   },
 
+  // Guest customer information
+  noLoginCustomerInfo: {
+    name: { type: String },
+    phone: { type: String },
+    email: { type: String },
+  },
+
   // Staff member who sold the ticket (for counter sales)
   seller: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', 
+    type: String,
+    default: null,
   },
 
   // Branch reference for quick queries without populate
@@ -74,6 +81,17 @@ const ticketSchema = new mongoose.Schema({
 
 }, { timestamps: true }); // Use timestamps for CreatedDate (createdAt) and LastAccess (updatedAt)
 
+
+// Custom validation: must have either customer or complete guest info
+ticketSchema.pre('validate', function (next) {
+  const hasCustomer = !!this.customer;
+  const info = this.noLoginCustomerInfo || {};
+  const hasGuestInfo = info.name;
+  if (!hasCustomer && !hasGuestInfo) {
+    return next(new Error('Customer information is required: either a logged-in customer or full name, email, and phone number must be provided.'));
+  }
+  next();
+});
 
 // Auto-generate ticketCode
 ticketSchema.pre('validate', function(next) {

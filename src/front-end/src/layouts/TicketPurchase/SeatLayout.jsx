@@ -1,7 +1,9 @@
 import screen from '@assets/img/Screen.svg';
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 
 export const Seats = ({  seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
+
+    const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -9,7 +11,7 @@ export const Seats = ({  seatColor, isTaken = false, isSelected, onClick, seatCo
     };
 
     return (
-        <div className={`w-[${(seatCol > seatRow ? 100/seatCol : 100/seatRow)}%] min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
+        <div className={`${seatSize} min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
         onClick={handleClick}>
             <div className={`h-full z-1 md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}/>
             <div className={`h-[20%] z-1 w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}/>
@@ -17,18 +19,22 @@ export const Seats = ({  seatColor, isTaken = false, isSelected, onClick, seatCo
     );
 }
 
-export const CoupleSeat = ({ seatSize, seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor=true }) => {
+export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor=true }) => {
     const handleClick = () => {
         if (onClick) {
             onClick();
         }
     }; 
 
+    const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)*2).toString() + '%]';
+    const seatSizeforsmall = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
+
+
     return (
-        <div className={`w-[${(seatCol > seatRow ? 100/seatCol : 100/seatRow)*2}%] min-w-[68px] group relative flex flex-row gap-2 ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
+        <div className={`${seatSize} min-w-[68px] group relative flex flex-row gap-2 ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
         onClick={handleClick}>
-            <Seats seatSize={seatSize} seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor}/>
-            <Seats seatSize={seatSize} seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor}/>
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
             <div className={`absolute inset-0 flex z-0 r-[50%] md:h-[55%] w-5 h-[75%] top-1 mx-auto items-center transition-colors justify-center ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`}/>
         </div>
     );
@@ -329,7 +335,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
             />
             <div 
                 ref={containerRef}
-                className={`w-full h-full overflow-hidden ring-1 ring-white rounded-xl relative ${needsPanning ? 'cursor-grab active:cursor-grabbing' : ' flex justify-center items-center'}`}
+                className={`w-full h-full overflow-hidden  rounded-xl relative ${needsPanning ? 'cursor-grab active:cursor-grabbing ring-1 ring-white' : ' flex justify-center items-center'}`}
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleTouchStart}
             >
@@ -340,7 +346,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                 ) : (
                     <div 
                         ref={contentRef}
-                        className={`flex flex-row rounded-sm gap-2 z-10 min-w-max${needsPanning ? ' p-8' : ''}`}
+                        className={`flex flex-row rounded-sm gap-2 z-10 min-w-max ${needsPanning ? ' p-8' : ''}`}
                         style={{
                             transform: `translate(${transform.x}px, ${transform.y}px)`,
                             transition: isDragging ? 'none' : 'transform 0.2s ease-out'

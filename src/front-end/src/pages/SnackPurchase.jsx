@@ -7,7 +7,7 @@ import MenuSelectSnack from '@layouts/TicketPurchase/MenuSelectSnack.jsx';
 import MenuInfo from '@layouts/TicketPurchase/MenuInfo.jsx';
 import MenuPayment from '@layouts/TicketPurchase/MenuPayment.jsx';
 import MenuTicketDisplay from '@layouts/TicketPurchase/MenuTicketDisplay.jsx';
-import { useCreateTicket } from '@hooks/useTicket';
+import { useCreateTicket, useGetSnacksByBranch } from '@hooks/useTicket';
 import MenuSelectCinema from '@/layouts/TicketPurchase/MenuSelectCinema';
 import Footer from '@layouts/LandingPage/Footer.jsx';
 import { useGetBranchById } from '@/hooks/useBranch';
@@ -31,8 +31,8 @@ const SnackPurchase = () => {
 
     // Hooks for fetching branch data
     const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
-    const { getSnacks, snacks, loading: snacksLoading, error: snacksError } = useGetSnacks();
-    
+    const { getSnacks, snacks, loading: snacksLoading, error: snacksError } = useGetSnacksByBranch();
+
 
     const passedNoLoginCustomerInfo = locationHook.state?.noLoginCustomerInfo || {
         name: null,
@@ -192,6 +192,7 @@ const SnackPurchase = () => {
                         onNext={handlePaymentComplete} 
                         onBack={goToPreviousStep}
                         snackTicketData={snackTicketData}
+                        updateSnackTicket={updateSnackTicket}
                         loading={ticketLoading}
                     />
                 );

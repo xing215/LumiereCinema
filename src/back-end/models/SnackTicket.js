@@ -50,8 +50,8 @@ const snackTicketSchema = new mongoose.Schema({
 
   // SellerId: Reference to cashier (if purchased at counter)
   seller: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
+    default: null,
   },
 
   // Reference to promotion program (if any)
@@ -92,7 +92,7 @@ snackTicketSchema.pre('validate', function (next) {
   const hasCustomer = !!this.customer;
   const info = this.noLoginCustomerInfo || {};
 
-  const hasGuestInfo = info.name && info.email && info.phone;
+  const hasGuestInfo = info.name;
 
   if (!hasCustomer && !hasGuestInfo) {
     return next(new Error('Customer information is required: either a logged-in customer or full name, email, and phone number must be provided.'));

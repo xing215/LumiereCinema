@@ -14,9 +14,9 @@ import { useGetBranchById } from '@hooks/useBranch';
 // Add movie hook import (assuming it exists)
 import { useGetMovieDetail } from '@hooks/useMovie';
 import { useUser } from '@contexts/UserContext';
-import { useStartHoldSession, useClearSession, useCreateTicket } from '@hooks/useTicket';
-import { useGetSnacks } from '@hooks/useBranch';
+import { useStartHoldSession, useClearSession, useCreateTicket, useGetSnacksByBranch } from '@hooks/useTicket';
 import { useGetSeatsBySchedule } from '@hooks/useTicket';
+import { ROUTES } from '@routes/routeConfig';
 
 
 
@@ -41,7 +41,7 @@ const TicketPurchase = () => {
     const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
     const  { getMovieDetail, movieDetail, loading: movieLoading, error: movieError } = useGetMovieDetail();
     const { seats, loading: seatsLoading, error:SeatsError, fetchSeats } = useGetSeatsBySchedule();
-    const { getSnacks, snacks, loading: snacksLoading, error: snacksError } = useGetSnacks();
+    const { getSnacks, snacks, loading: snacksLoading, error: snacksError } = useGetSnacksByBranch();
 
 
 
@@ -117,6 +117,9 @@ const TicketPurchase = () => {
             console.log('Movie detail:', movieDetail);
             console.log('Movie ticket data before update:', error);
             
+        } else {
+            navigate(ROUTES.MOVIES)
+            alert('Invalid movie.')
         }
         
         if (branchId && branchId !== 'null') {
@@ -137,7 +140,7 @@ const TicketPurchase = () => {
                     }
                 }
             });
-        }
+        } 
     }, [movieDetail]);
 
     // Update both ticket data when branch is fetched
@@ -218,33 +221,39 @@ const TicketPurchase = () => {
 
     // Navigation methods
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.SCREEN);
-    const { startHoldSession, holdSeatData, loading, error } = useStartHoldSession();
+    const { startHoldSession, holdSeatData, clearHoldSeatData, loading, error } = useStartHoldSession();
     const [startedHoldSession, setStartedHoldSession] = useState(false);
     const { clearSession, loading:clearSessionLoading } = useClearSession();
 
     function handleExpire() {
         console.log('Session expired, clearing session...', holdSeatData);
         setStartedHoldSession(false);
-        setCurrentStep(MENU_STEPS.SEATS)
+        
         
         // clearSession();
         alert('Your session has expired. Please select your seats again.');
         updateMovieTicket({
             seats: [],
         });
-        
+        setCurrentStep(MENU_STEPS.SEATS)
+        clearHoldSeatData();
     }
 
     useEffect(() => {
         if (startedHoldSession) {
             setStartedHoldSession(false);
             clearSession();
+            updateMovieTicket({
+                promotion: null,
+            discount: 0
+            });
         }
     }, [movieTicketData.seats]);
 
 useEffect(() => {
     async function holdSessionIfNeeded() {
         if (currentStep === MENU_STEPS.PAYMENT && !startedHoldSession){
+            console.log('Starting hold session for seats:', movieTicketData.seats);
             await startHoldSession({ scheduleId: movieTicketData.schedule._id, seatNumbers: movieTicketData.seats});
             await getSnacks(snackTicketData?.branch?._id);
         }
@@ -263,13 +272,7 @@ useEffect(() => {
                 alert('Your seat selection have been occupied by other customers. Please adjust your selection.');
                 setCurrentStep(MENU_STEPS.SEATS)
                 fetchSeats(movieTicketData.schedule._id)
-                setMovieTicketData({seats:[]})
-                return
-            } else if (error.includes('snack')) {
-                alert('Your snack selection exceeds available stock. Please adjust your order.');
-                setCurrentStep(MENU_STEPS.SNACK)
-                getSnacks(snackTicketData?.branch?._id)
-                setSnackTicketData({snackList:[]})
+                updateMovieTicket({seats:[]})
                 return
             }
             alert('An error occurred while creating your ticket. Please try again.');
@@ -300,7 +303,7 @@ useEffect(() => {
             });
             if (changed) {
                 alert('Some snacks in your selection exceed available stock and have been adjusted.');
-                updateSnackTicket({ snackList: newSnackList });
+                updateSnackTicket({ snackList: newSnackList, promotion: null, discount: 0 });
             }
         }
     }
@@ -344,6 +347,12 @@ useEffect(() => {
             return;
         }
     }, [isAuthenticated]);
+
+    useEffect(() => {
+        // Reset promotion and discount if noLoginCustomerInfo changes
+        updateMovieTicket({ promotion: null, discount: 0 });
+        updateSnackTicket({ promotion: null, discount: 0 });
+    }, [movieTicketData.noLoginCustomerInfo, snackTicketData.noLoginCustomerInfo]);
 
         
 

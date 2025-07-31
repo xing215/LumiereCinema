@@ -24,51 +24,78 @@ const getNowShowingMovies = async (req, res) => {
         }
         // 2. Cache miss - fetch from database
         const now = new Date();
-        const movies = await Movie.find({ isHidden: false });
-        // Filter in JavaScript to match virtual property logic exactly
-        const nowShowingMovies = movies.filter(movie => {
-            const releaseDate = new Date(movie.releaseDate);
-            return !movie.isHidden && releaseDate <= now;
-        })
-        .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
-
-        // For each movie, find all schedules and collect unique branch IDs
-        const movieIds = nowShowingMovies.map(m => m._id);
-        // Get all schedules for these movies, populate screen.branch
-        const schedules = await Schedule.find({ movie: { $in: movieIds } })
-            .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
-
-        // Map: movieId -> Set of branchIds
-        const movieToBranches = {};
-        schedules.forEach(sch => {
-            const mId = String(sch.movie);
-            const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
-            if (branchId) {
-                if (!movieToBranches[mId]) movieToBranches[mId] = new Set();
-                movieToBranches[mId].add(branchId);
-            }
+        // Use the same logic as virtual property for consistency
+        const movies = await Movie.find({ 
+            isHidden: false
         });
 
-        // Add branches array to each movie
-        const result = nowShowingMovies.map(movie => {
-            const mId = String(movie._id);
-            const branches = movieToBranches[mId] ? Array.from(movieToBranches[mId]) : [];
-            return {
-                _id: movie._id,
-                title: movie.title,
-                posterURL: movie.posterURL,
-                duration: movie.duration,
-                genre: movie.genre,
-                ageRating: movie.ageRating,
-                ratingsAverage: movie.ratingsAverage,
-                releaseDate: movie.releaseDate,
-                status: movie.status,
-                branches
-            };
+        // For each movie, find the closest schedule and remaining seats
+        const SeatHold = require('../models/SeatHold');
+        const nowShowingMovies = await Promise.all(
+            movies
+                .filter(movie => {
+                    const releaseDate = new Date(movie.releaseDate);
+                    return !movie.isHidden && releaseDate <= now;
+                })
+                .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+                .map(async (movie) => {
+                    // Find the closest upcoming schedule for this movie
+                    const closestSchedule = await Schedule.findOne({
+                        movie: movie._id,
+                        startTime: { $gte: now }
+                    })
+                    .sort({ startTime: 1 })
+                    .populate('screen', 'screenName size branch');
+
+                    let remainingSeats = null;
+                    if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
+                        // Calculate total seats from screen size
+                        const { rows, columns } = closestSchedule.screen.size;
+                        const totalSeats = rows * columns;
+                        // Occupied seats
+                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat) ? closestSchedule.OccupiedSeat.length : 0;
+                        // Held seats (not expired)
+                        const heldSeatsCount = await SeatHold.countDocuments({
+                            schedule: closestSchedule._id,
+                            expiresAt: { $gt: new Date() }
+                        });
+                        remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
+                    }
+
+                    // Find all schedules for this movie to collect branch IDs
+                    const allSchedules = await Schedule.find({ movie: movie._id }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    const branchSet = new Set();
+                    allSchedules.forEach(sch => {
+                        const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+                        if (branchId) branchSet.add(branchId);
+                    });
+                    const branches = Array.from(branchSet);
+
+                    return {
+                        _id: movie._id,
+                        title: movie.title,
+                        posterURL: movie.posterURL,
+                        duration: movie.duration,
+                        genre: movie.genre,
+                        ageRating: movie.ageRating,
+                        ratingsAverage: movie.ratingsAverage,
+                        releaseDate: movie.releaseDate,
+                        closestSchedule: closestSchedule ? {
+                            _id: closestSchedule._id,
+                            startTime: closestSchedule.startTime
+                        } : null,
+                        remainingSeats,
+                        branches
+                    };
+                })
+        );
+        // 3. Save result to cache for next time
+        await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
+            EX: DEFAULT_EXPIRATION,
         });
 
-        await redisClient.set(cacheKey, JSON.stringify(result), { EX: DEFAULT_EXPIRATION });
-        res.status(200).json(result);
+        res.status(200).json(nowShowingMovies);
+
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
@@ -93,47 +120,74 @@ const getUpcomingMovies = async (req, res) => {
         }
         // 2. Cache miss - fetch from database
         const now = new Date();
-        const movies = await Movie.find({ isHidden: false });
-        // Filter in JavaScript to match virtual property logic exactly
-        const upcomingMovies = movies.filter(movie => {
-            const releaseDate = new Date(movie.releaseDate);
-            return !movie.isHidden && releaseDate > now;
-        })
-        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
-
-        // For each movie, find all schedules and collect unique branch IDs
-        const movieIds = upcomingMovies.map(m => m._id);
-        const schedules = await Schedule.find({ movie: { $in: movieIds } })
-            .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
-
-        // Map: movieId -> Set of branchIds
-        const movieToBranches = {};
-        schedules.forEach(sch => {
-            const mId = String(sch.movie);
-            const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
-            if (branchId) {
-                if (!movieToBranches[mId]) movieToBranches[mId] = new Set();
-                movieToBranches[mId].add(branchId);
-            }
+        // Use the same logic as virtual property for consistency
+        const movies = await Movie.find({ 
+            isHidden: false
         });
 
-        // Add branches array to each movie
-        const result = upcomingMovies.map(movie => {
-            const mId = String(movie._id);
-            const branches = movieToBranches[mId] ? Array.from(movieToBranches[mId]) : [];
-            return {
-                _id: movie._id,
-                title: movie.title,
-                posterURL: movie.posterURL,
-                releaseDate: movie.releaseDate,
-                genre: movie.genre,
-                status: movie.status,
-                branches
-            };
+        // For each upcoming movie, find the closest schedule and remaining seats
+        const SeatHold = require('../models/SeatHold');
+        const upcomingMovies = await Promise.all(
+            movies
+                .filter(movie => {
+                    const releaseDate = new Date(movie.releaseDate);
+                    return !movie.isHidden && releaseDate > now;
+                })
+                .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+                .map(async (movie) => {
+                    // Find the closest upcoming schedule for this movie
+                    const closestSchedule = await Schedule.findOne({
+                        movie: movie._id,
+                        startTime: { $gte: now }
+                    })
+                    .sort({ startTime: 1 })
+                    .populate('screen', 'screenName size branch');
+
+                    let remainingSeats = null;
+                    if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
+                        // Calculate total seats from screen size
+                        const { rows, columns } = closestSchedule.screen.size;
+                        const totalSeats = rows * columns;
+                        // Occupied seats
+                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat) ? closestSchedule.OccupiedSeat.length : 0;
+                        // Held seats (not expired)
+                        const heldSeatsCount = await SeatHold.countDocuments({
+                            schedule: closestSchedule._id,
+                            expiresAt: { $gt: new Date() }
+                        });
+                        remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
+                    }
+
+                    // Find all schedules for this movie to collect branch IDs
+                    const allSchedules = await Schedule.find({ movie: movie._id }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    const branchSet = new Set();
+                    allSchedules.forEach(sch => {
+                        const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+                        if (branchId) branchSet.add(branchId);
+                    });
+                    const branches = Array.from(branchSet);
+
+                    return {
+                        _id: movie._id,
+                        title: movie.title,
+                        posterURL: movie.posterURL,
+                        releaseDate: movie.releaseDate,
+                        genre: movie.genre,
+                        closestSchedule: closestSchedule ? {
+                            _id: closestSchedule._id,
+                            startTime: closestSchedule.startTime
+                        } : null,
+                        remainingSeats,
+                        branches
+                    };
+                })
+        );
+        // 3. Save to cache
+        await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
+            EX: DEFAULT_EXPIRATION,
         });
 
-        await redisClient.set(cacheKey, JSON.stringify(result), { EX: DEFAULT_EXPIRATION });
-        res.status(200).json(result);
+        res.status(200).json(upcomingMovies);
     } catch (error) {
         console.error('Get Upcoming Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
