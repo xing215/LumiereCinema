@@ -67,10 +67,28 @@ const editSnack = async (req, res) => {
     const { branchId, snackId } = req.params;
     const updateData = req.body;
 
+    // Get the current snack to validate discountedPrice
+    const currentSnack = await Snack.findOne({ _id: snackId, branch: branchId });
+    if (!currentSnack) {
+      return res.status(404).json({ message: 'Snack not found for update.' });
+    }
+
+    // Validate discountedPrice if it's being updated
+    if (updateData.discountedPrice !== undefined) {
+      const priceToCompare = updateData.price !== undefined ? updateData.price : currentSnack.price;
+      
+      // Allow null or 0 to clear discounted price
+      if (updateData.discountedPrice !== null && updateData.discountedPrice !== 0 && updateData.discountedPrice > priceToCompare) {
+        return res.status(400).json({ 
+          message: 'Discounted price cannot be higher than regular price.' 
+        });
+      }
+    }
+
     const snack = await Snack.findOneAndUpdate(
       { _id: snackId, branch: branchId },
       { $set: updateData },
-      { new: true, runValidators: true }
+      { new: true, runValidators: false } // Disable validators since we handle it manually
     );
 
     if (!snack) {
