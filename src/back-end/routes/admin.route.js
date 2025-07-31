@@ -12,6 +12,7 @@ const {
   updateUserStatus,
   deleteUser,
   getAllPromotions,
+  getPromotionBannerList,
   getPromotionByCode,
   createPromotion,
   updatePromotion,
@@ -34,6 +35,7 @@ router.delete('/users/:userId', protect, restrictTo('administrator'), deleteUser
 
 // Quản lý promotion
 router.get('/promotions/all', protect, restrictTo('administrator'), getAllPromotions);
+router.get('/promotions/banner', getPromotionBannerList);
 router.get('/promotions/:promotionCode', protect, restrictTo('administrator'), getPromotionByCode);
 router.post('/promotions', protect, restrictTo('administrator'), createPromotion);
 router.patch('/promotions/:promotionCode', protect, restrictTo('administrator'), updatePromotion);

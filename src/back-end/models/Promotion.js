@@ -30,6 +30,11 @@ const promotionSchema = new mongoose.Schema({
     min: 0
   },
 
+  bannerImage: {
+    type: String,
+    default: null, // Optional banner image URL
+  },
+  
   appliedProduct: {
     type: String, // Store 'productType' (example: 'Movie', 'Snack', 'All')
     enum: ['Movie', 'Snack', 'All'], // Only applies to this product type

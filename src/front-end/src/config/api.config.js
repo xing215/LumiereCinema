@@ -75,6 +75,8 @@ const API_CONFIG = {
     staffLogin: '/api/auth/staff/login',
     staffForgotPassword: '/api/auth/staff/forgot-password',
   
+    // Promotion endpoints
+    promotionBanner: '/api/admin/promotions/banner',
     
     // Movie endpoints
     nowShowingMovies: '/api/movies/now-showing',

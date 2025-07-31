@@ -318,6 +318,24 @@ const getPromotionByCode = async (req, res) => {
   }
 };
 
+const getPromotionBannerList = async (req, res) => {
+  try {
+    const cached = await redisClient.get('promotionBannerList');
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+    const promotions = await Promotion.find({ bannerImage: { $ne: null }, isActive: true });
+    if (!promotions || promotions.length === 0) {
+      return res.status(404).json({ message: 'No promotions with banners found.' });
+    }
+    await redisClient.set('promotionBannerList', JSON.stringify(promotions.map(p => p.bannerImage)), { EX: 3600 });
+    res.status(200).json(promotions.map(p => p.bannerImage));
+  } catch (error) {
+    console.error('Error getting promotion banners:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
 // Khi tạo, cập nhật, xóa promotion thì xóa cache liên quan
 const createPromotion = async (req, res) => {
   try {
@@ -655,6 +673,7 @@ module.exports = {
   updateUserStatus,
   deleteUser,
   getAllPromotions,
+  getPromotionBannerList,
   getPromotionByCode,
   createPromotion,
   updatePromotion,
