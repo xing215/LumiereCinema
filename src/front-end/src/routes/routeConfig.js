@@ -331,6 +331,19 @@ export const getRedirectPath = (isAuthenticated, userRoles, route) => {
     return null; // No redirect needed
 };
 
+export const getMovieListPath = (status = undefined, branchId = undefined) => {
+    let path = ROUTES.MOVIES;
+    if (status) {
+        path += `?status=${status}`;
+        if (branchId !== undefined) {
+            path += `&branchId=${branchId}`;
+        }
+    } else if (branchId !== undefined) {
+        path += `?branchId=${branchId}`;
+    }
+    return path;
+}
+
 export const getBuyTicketPath = (movieId, branchId = undefined) => {
     let path = `${ROUTES.BUY_TICKET}?movieId=${movieId}`;
     if (branchId !== undefined) {
