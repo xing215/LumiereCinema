@@ -93,4 +93,7 @@ export {
 } from './useAdmin';
 
 // Export inline editing hook
-export { useInlineEdit } from './useInlineEdit';
+export { useInlineEdit, useStatusUpdate } from './useInlineEdit';
+
+// Export movie management hook (comprehensive admin hook with validation)
+export { useMovieManagement } from './useMovieManagement';

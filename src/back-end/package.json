@@ -4,7 +4,9 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "concurrently \"C:\\Program Files\\Redis\\redis-server.exe\" \"nodemon app.js\""
+    "dev": "concurrently \"redis-server\" \"nodemon app.js\"",
+    "dev:windows": "concurrently \"C:\\Program Files\\Redis\\redis-server.exe\" \"nodemon app.js\"",
+    "dev:linux": "concurrently \"redis-server\" \"nodemon app.js\""
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

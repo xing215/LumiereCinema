@@ -1,43 +1,52 @@
-import { useState, useEffect } from 'react';
 import { Square, SquareCheckBig } from 'lucide-react';
 
-const ActiveButton = ({ status = 'Upcoming', onStatusChange, disabled = false }) => {
-    // Map status to checked state
-    const getCheckedState = (status) => {
-        return status === 'Now Showing';
-    };
-
-    const [checked, setChecked] = useState(getCheckedState(status));
-
-    // Update checked state when status prop changes
-    useEffect(() => {
-        setChecked(getCheckedState(status));
-    }, [status]);
+const ActiveButton = ({ 
+    isHidden = false, 
+    onToggle, 
+    disabled = false,
+    activeLabel = 'Active',
+    inactiveLabel = 'Hidden',
+    size = 'h-5 w-5',
+    isUpdating = false,
+    isRowTicked = false
+}) => {
+    // Đơn giản: isHidden = false → checked = true
+    
+    const checked = !isHidden;
 
     const handleClick = () => {
-        if (disabled) return;
+        if (disabled || isUpdating) return;
         
-        const newChecked = !checked;
-        setChecked(newChecked);
+        // Toggle isHidden: false → true, true → false
+        const newIsHidden = !isHidden;
         
-        // Determine new status based on checked state
-        // Unchecked (Inactive) = Upcoming, Checked (Active) = Now Showing
-        const newStatus = newChecked ? 'Now Showing' : 'Upcoming';
-        
-        // Call parent callback if provided
-        if (onStatusChange) {
-            onStatusChange(newStatus);
+        // Gọi callback để update database
+        if (onToggle) {
+            onToggle(newIsHidden);
         }
     };
+
+    // Determine display labels
+    const currentLabel = checked ? activeLabel : inactiveLabel;
+    const nextLabel = checked ? inactiveLabel : activeLabel;
 
     return (
         <button 
             onClick={handleClick} 
-            className={`h-5 w-5 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-            disabled={disabled}
-            title={`Status: ${status} (Click to toggle)`}
+            className={`${size} ${disabled || isUpdating ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+            disabled={disabled || isUpdating}
+            title={
+                isUpdating ? 'Updating...' :
+                disabled ? 'Disabled' :
+                `Current: ${currentLabel} (Click to ${nextLabel})`
+            }
         >
-            {checked ? <SquareCheckBig className="h-full w-full" /> : <Square className="h-full w-full" />}
+            {isUpdating ? (
+                <span className="inline-block w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+            ) : checked ? 
+                <SquareCheckBig className="h-full w-full text-green-600" /> : 
+                <Square className={`h-full w-full ${isRowTicked ? 'text-white' : 'text-gray-400'}`} />
+            }
         </button>
     );
 };
