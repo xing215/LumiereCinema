@@ -69,6 +69,7 @@ const API_CONFIG = {
     forgotPassword: '/api/auth/forgot-password',
     resetPassword: '/api/auth/reset-password',
     userProfile: '/api/users/me',
+    watchHistory: '/api/users/watch-history',
     
     // Staff auth endpoints
     staffLogin: '/api/auth/staff/login',

@@ -73,10 +73,13 @@ export const useGetWatchHistory = () => {
     setError(null);
     
     try {
-      const response = await axios.get('/api/user/watch-history', {
+      const response = await axios.get(getApiUrl('watchHistory'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setWatchHistory(response.data);
+      const watchHistoryData = response.data.watchHistory || response.data;
+      console.log('Watch History Data:', watchHistoryData);
+      setWatchHistory(watchHistoryData);
+      
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch watch history';

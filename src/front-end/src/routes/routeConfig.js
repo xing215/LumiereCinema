@@ -24,6 +24,7 @@ import AboutUs from '@/pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
 import LunarPointsPage from '@pages/LunarPoints.jsx';
+import WatchHistoryPage from '@/pages/WatchHistory';
 
 import Developing from '@/pages/others/Developing.jsx';
 import NotFound from '@/pages/others/NotFound.jsx';
@@ -152,6 +153,14 @@ export const routeConfig = [
     {
         path: ROUTES.PROFILE,
         component: UserProfile,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
+    {
+        path: ROUTES.WATCH_HISTORY,
+        component: WatchHistoryPage,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']

@@ -6,6 +6,6 @@ const Label = ({ text, pt = '' }) => {
     );
 };
 
-export const Title = ({ text }) => <Label text={text} pt="pt-12 sm:pt-18 lg:pt-26" />;
+export const Title = ({ text }) => <Label text={text} pt="pt-12 sm:pt-18 lg:pt-30" />;
 
 export default Label;

@@ -7,17 +7,17 @@ const { redisClient } = require('../config/redis.config');
 
 const getProfile = async (req, res) => {
   try {
-    const cachedUser = await redisClient.get(`user:${req.user.id}`);
-    if (cachedUser) {
-      return res.status(200).json(JSON.parse(cachedUser));
-    }
+    // const cachedUser = await redisClient.get(`user:${req.user.id}`);
+    // if (cachedUser) {
+    //   return res.status(200).json(JSON.parse(cachedUser));
+    // }
 
       const userId = req.user.id;
       const user = await User.findById(userId).select('-hashedPassword -branch -roles -wishlist -watchHistory -lastAccess -lastOrder -isLocked -passwordResetToken -passwordResetExpires'); // Exclude password
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
-    await redisClient.set(`user:${req.user.id}`, JSON.stringify(user), { EX: 3600 }); // Cache user profile for 1 hour
+    //await redisClient.set(`user:${req.user.id}`, JSON.stringify(user), { EX: 3600 }); // Cache user profile for 1 hour
     res.status(200).json(user);
   } catch (error) {
     console.error('Error getting profile:', error);
@@ -227,13 +227,32 @@ const getWatchHistory = async (req, res) => {
       return res.status(200).json({ watchHistory: JSON.parse(cachedHistory) });
     }
 
-    const user = await User.findById(userId).populate('watchHistory');
+    const user = await User.findById(userId).populate({
+      path: 'watchHistory',
+      populate: [
+        {
+          path: 'schedule',
+          populate: [
+            { path: 'movie', select: 'title duration genre poster' },
+            { path: 'screen', select: 'screenName capacity screenType' }
+          ]
+        },
+        {
+          path: 'branch',
+          select: 'name address phone location'
+        }
+      ]
+    });
+
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    await redisClient.set(cacheKey, JSON.stringify(user.watchHistory), { EX: 3600 }); // Cache for 1 hour
-    res.status(200).json({ watchHistory: user.watchHistory });
+    // Filter out null tickets (in case some tickets were deleted)
+    const validWatchHistory = user.watchHistory.filter(ticket => ticket !== null);
+
+    await redisClient.set(cacheKey, JSON.stringify(validWatchHistory), { EX: 3600 }); // Cache for 1 hour
+    res.status(200).json({ watchHistory: validWatchHistory });
   } catch (error) {
     console.error('Error getting watch history:', error);
     res.status(500).json({ message: 'Server error', error });
