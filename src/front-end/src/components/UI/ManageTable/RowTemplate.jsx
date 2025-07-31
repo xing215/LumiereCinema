@@ -105,12 +105,20 @@ const RowTemplate = (props) => {
         };
     }, [expandTimeout]);
 
+    // Check if this is a review row
+    const isReviewRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'ReviewIndicator';
+    
+    // Check if this is an add movie row
+    const isAddRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'AddIndicator';
+
     return (
         <div className="z-10 flex flex-col">
             <div
                 className={`relative flex items-center gap-5 pl-[3%] pr-[3%] lg:py-3 xl:gap-2 xl:py-5 transition-all duration-300 
                     ${props.checked ? 'bg-zinc-400' : ''} 
                     ${props.isExpanded ? 'bg-zinc-300 shadow-md' : ''} 
+                    ${isReviewRow ? 'bg-orange-50 border-l-4 border-orange-500 shadow-lg' : ''} 
+                    ${isAddRow ? 'bg-green-50 border-l-4 border-green-500 shadow-lg' : ''} 
                     ${!props.isHeader ? 'hover:bg-gray-50 cursor-pointer' : ''}
                     ${!hasColumnConfig ? 'justify-between' : ''}
                     ${hasColumnConfig ? 'min-w-max' : 'w-full'}`}
@@ -131,16 +139,42 @@ const RowTemplate = (props) => {
                             key={index}
                             className={`${columnWidth} ${hasColumnConfig ? 'flex-shrink-0' : ''} flex ${props.isExpanded ? 'items-start' : 'items-center'} ${index === 1 ? 'justify-start' : 'justify-center'}`}
                         >
-                            <div className={`font-libre-franklin w-full lg:text-lg xl:text-xl ${index === 1 ? 'text-left' : 'text-center'} justify-center
-                                ${props.isHeader ? 'font-bold' : 'font-medium'} 
-                                ${shouldTruncateText ? 'truncate' : ''} 
-                                ${props.isExpanded && !props.isHeader ? 'whitespace-normal break-words py-2' : ''}`}>
+                            <div 
+                                className={`font-libre-franklin w-full lg:text-lg xl:text-xl text-center justify-center
+                                    ${props.isHeader ? 'font-bold' : 'font-medium'} 
+                                    ${props.isExpanded && !props.isHeader ? 'whitespace-normal break-words py-2' : ''}`}
+                                style={shouldTruncateText ? {
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                } : {}}
+                            >
                                 {value === 'TickButton' ? (
                                     props.isHeader ? (
                                         <span></span>
                                     ) : (
                                         <div className="tick-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
                                             <TickButton check={props.checked} onTick={props.onTicked} />
+                                        </div>
+                                    )
+                                ) : value && typeof value === 'object' && value.type === 'ReviewIndicator' ? (
+                                    props.isHeader ? (
+                                        <span></span>
+                                    ) : (
+                                        <div className="flex justify-center w-full">
+                                            <span className="px-2 py-1 text-xs font-bold text-white bg-blue-500 rounded-full animate-pulse">
+                                                REVIEW
+                                            </span>
+                                        </div>
+                                    )
+                                ) : value && typeof value === 'object' && value.type === 'AddIndicator' ? (
+                                    props.isHeader ? (
+                                        <span></span>
+                                    ) : (
+                                        <div className="flex justify-center w-full">
+                                            <span className="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full animate-pulse">
+                                                NEW
+                                            </span>
                                         </div>
                                     )
                                 ) : value === 'ActiveButton' ? (
@@ -153,13 +187,17 @@ const RowTemplate = (props) => {
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'ActiveButton' ? (
                                     props.isHeader ? (
-                                        <span>Status</span>
+                                        <span>Active</span>
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
                                             <ActiveButton 
-                                                status={value.status}
-                                                onStatusChange={(newStatus) => props.onStatusChange?.(value.rowIndex, newStatus)}
-                                                disabled={props.isUpdating}
+                                                isHidden={value.isHidden}
+                                                onToggle={(newIsHidden) => props.onStatusChange?.(value.rowIndex, newIsHidden)}
+                                                disabled={value.disabled || props.isUpdating}
+                                                activeLabel="Visible"
+                                                inactiveLabel="Hidden"
+                                                isUpdating={value.isUpdating || false}
+                                                isRowTicked={props.checked}
                                             />
                                         </div>
                                     )
@@ -184,7 +222,26 @@ const RowTemplate = (props) => {
                                         <span>Preview</span>
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <PreviewButton onClick={() => props.onPreview?.(props.rowIndex)} />
+                                            <PreviewButton 
+                                                onClick={() => props.onPreview?.(props.rowIndex)} 
+                                                disabled={isReviewRow}
+                                            />
+                                        </div>
+                                    )
+                                ) : value && typeof value === 'object' && value.type === 'ReviewLabel' ? (
+                                    props.isHeader ? (
+                                        <span>Preview</span>
+                                    ) : (
+                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                            <PreviewButton/>
+                                        </div>
+                                    )
+                                ) : value && typeof value === 'object' && value.type === 'AddLabel' ? (
+                                    props.isHeader ? (
+                                        <span>Preview</span>
+                                    ) : (
+                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                            <PreviewButton/>
                                         </div>
                                     )
                                 ) : (
@@ -196,13 +253,22 @@ const RowTemplate = (props) => {
                                             onStartEdit={() => props.onStartEdit?.(props.rowIndex, index, value)}
                                             onSave={(newValue) => props.onSaveEdit?.(props.rowIndex, index, newValue)}
                                             onCancel={props.onCancelEdit}
-                                            disabled={props.isUpdating}
+                                            disabled={false}
                                             isUpdating={props.isUpdating && props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
                                             className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
+                                            tooltipText={tooltipText}
+                                            shouldTruncate={shouldTruncateText && !props.isExpanded}
+                                            fieldType={index === 3 ? 'date' : 'text'}
                                         />
                                     ) : (
-                                        <span title={tooltipText} className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}>
-                                            {value}
+                                        <span
+                                            title={tooltipText}
+                                            className={`
+                                                ${props.isExpanded ? 'whitespace-normal leading-relaxed' : ''} 
+                                                ${shouldTruncateText && !props.isExpanded ? 'truncate block' : ''}
+                                            `}
+                                        >
+                                           {value}
                                         </span>
                                     )
                                 )}

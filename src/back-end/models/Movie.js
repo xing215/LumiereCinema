@@ -10,15 +10,15 @@ const movieSchema = new mongoose.Schema({
   releaseDate: { type: Date, required: true },
   duration: { type: Number, required: true }, // Duration in minutes
   genre: { type: [String], required: true },
-  director: { type: String, required: true, trim: true },
-  cast: { type: [String], required: true },
-  language: { type: String},
+  director: { type: String, default: '', trim: true },
+  cast: { type: [String], default: [] },
+  language: { type: String, default: '' },
 
   // Soft delete flag - true means movie is hidden/deleted
   isHidden: { 
     type: Boolean, 
     required: true, 
-    default: false 
+    default: true  // Changed to true as requested
   },
   ageRating: { 
     type: String, 
