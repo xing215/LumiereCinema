@@ -24,6 +24,8 @@ import TicketPurchase from '@pages/TicketPurchase';
 import AboutUs from '@/pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
+import LunarPointsPage from '@pages/LunarPoints.jsx';
+import WatchHistoryPage from '@/pages/WatchHistory';
 
 import Developing from '@/pages/others/Developing.jsx';
 import NotFound from '@/pages/others/NotFound.jsx';
@@ -48,9 +50,9 @@ export const ROUTES = {
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
     PROFILE: '/user-profile',
-    WISHLIST: '/developing',
-    WATCH_HISTORY: '/developing',
-    LUNAR_POINT: '/developing',
+    WISHLIST: '/wishlist',
+    WATCH_HISTORY: '/watch-history',
+    LUNAR_POINT: '/lunar-points',
     
     // Staff routes
     STAFF_ROOT: '/staff',
@@ -166,6 +168,22 @@ export const routeConfig = [
     {
         path: ROUTES.PROFILE,
         component: UserProfile,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
+    {
+        path: ROUTES.WATCH_HISTORY,
+        component: WatchHistoryPage,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
+    {
+        path: ROUTES.LUNAR_POINT,
+        component: LunarPointsPage,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']

@@ -1,5 +1,7 @@
 import { useFetchProfile } from "@hooks/useUser";  
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom"; 
+import { ROUTES } from '@routes/routeConfig'; 
 
 const MenuItems = ({name, onclick, hide=false, blur=false}) => {
 return (
@@ -17,14 +19,63 @@ return (
 
 const SideBar = ({in_lunar_point=false}) => {
     const { fetchProfile, profile, loading, error } = useFetchProfile();
+    const navigate = useNavigate();
+
     useEffect(() => {
         fetchProfile();
     }, []);
+    
     function toTitleCase(str) {
-  return str?.replace(/\w\S*/g, (txt) =>
-    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-  );
-}
+        return str?.replace(/\w\S*/g, (txt) =>
+            txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        );
+    }
+
+    // Helper functions - THÊM MỚI
+    const getNextTierTarget = (rank) => {
+        switch (rank) {
+            case 'SILVER':
+                return 500;
+            case 'GOLD':
+                return 1500;
+            case 'PLATINUM':
+                return 1500;
+            default:
+                return 500;
+        }
+    };
+
+    const getProgressPercentage = (rank, lunarPoints) => {
+        const points = lunarPoints || 0;
+        const target = getNextTierTarget(rank);
+        return Math.min((points / target) * 100, 100);
+    };
+
+    const handleMenuClick = (menuName) => {
+        switch (menuName) {
+            case 'Information':
+                navigate(ROUTES.PROFILE);
+                break;
+            case 'Wishlist':
+                navigate(ROUTES.WISHLIST);
+                break;
+            case 'Watch history':
+                navigate(ROUTES.WATCH_HISTORY);
+                break;
+            case 'Lunar points':
+                navigate(ROUTES.LUNAR_POINT);
+                break;
+            default:
+                break;
+        }
+    };
+
+    // Computed values - THÊM MỚI
+    const currentRank = profile?.loyaltyRank?.rank;
+    const currentPoints = profile?.loyaltyRank?.lunarPoints || 0;
+    const targetPoints = getNextTierTarget(currentRank);
+    const progressPercentage = getProgressPercentage(currentRank, currentPoints);
+
     return (
         <div className="relative w-full h-auto rounded-xl overflow-hidden">
             {/* Header background overlays */}
@@ -42,25 +93,32 @@ const SideBar = ({in_lunar_point=false}) => {
             </div>
             </div>
             {loading ? null : <>
-            <MenuItems name="Information" onclick={() => console.log("Profile clicked")} hide={true} />
-            <MenuItems name="Wishlist" onclick={() => console.log("Wishlist clicked")} />
-            <MenuItems name="Watch history" onclick={() => console.log("Settings clicked")} />
-            <MenuItems name="Lunar points" onclick={() => console.log("Settings clicked")} blur={true} />
+            <MenuItems name="Information" onclick={() => handleMenuClick("Information")} hide={true} />
+            <MenuItems name="Wishlist" onclick={() => handleMenuClick("Wishlist")} />
+            <MenuItems name="Watch history" onclick={() => handleMenuClick("Watch history")} />
+            <MenuItems name="Lunar points" onclick={() => handleMenuClick("Lunar points")} blur={true} />
             </>}
-
 
 
             {loading ? null : in_lunar_point ? null : <>
-            <div className="relative w-full h-7"/>
-            <div className="absolute right-2 bottom-2 text-right text-white text-[8px] font-light font-['Unbounded']">
-                {profile?.loyaltyRank?.lunarPoints || 0}/{profile?.loyaltyRank?.rank === 'SILVER' ? '500' : '1000'}
-            </div>
+                <div className="relative w-full h-7"/>
+                {/* Points Counter */}
+                <div className="absolute right-2 bottom-3 text-right text-white text-[8px] font-light font-['Unbounded']">
+                    {currentPoints}/{targetPoints}
+                </div>
 
-            <div className="absolute h-1 w-full bottom-0 bg-gradient-to-r from-pink-400 via-sky-400 to-amber-300" />
-            <div className={`absolute h-1 w-[${100 - (profile?.loyaltyRank?.lunarPoints || 0) / (profile?.loyaltyRank?.rank === 'SILVER' ? 500 : 1000) * 100}%] right-0 bottom-0 bg-slate-950`} />
+                {/* Progress Bar - LUNARPOINTS */}
+                <div className="absolute bottom-0 left-0 right-0 h-1">
+                    {/* Background */}
+                    <div className="w-full h-full bg-slate-950"></div>
+                    
+                    {/* Progress Fill */}
+                    <div 
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-pink-400 via-sky-400 to-amber-300 transition-all duration-500 ease-in-out"
+                        style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                </div>
             </>}
-            
-        
         </div>
     );
 };
