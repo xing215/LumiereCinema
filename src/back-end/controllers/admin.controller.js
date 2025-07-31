@@ -202,7 +202,7 @@ const updateUserDetails = async (req, res) => {
 const updateUserRoles = async (req, res) => {
   try {
     const allowedFields = ['roles'];
-    const validRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
+    const validRoles = ['customer', 'cashier', 'checkincounter', 'branchmanager', 'administrator'];
     const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
