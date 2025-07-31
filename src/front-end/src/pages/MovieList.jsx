@@ -89,8 +89,8 @@ const MainBody = () => {
     let allLoading = loadingNowShowing || loadingUpcoming;
     
     return (
-        <div className="relative flex w-[75%] flex-col pt-20 md:pt-30 lg:pt-35 xl:pt-40">
-            <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">MOVIES</div>
+        <div className="relative w-full max-w-7xl mx-auto flex flex-col min-h-[60vh] pt-20">
+            <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl mt-8 mb-4">MOVIES</div>
             <div className="flex flex-col w-full gap-y-2 py-3 sm:flex-row sm:gap-x-2 sm:gap-y-0 md:py-6 lg:gap-x-3 lg:py-8 xl:gap-x-4 xl:py-10">
                 <ChooseCinemaButton
                     onClick={() => setIsCinemaPopupOpen(true)}
