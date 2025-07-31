@@ -1,8 +1,11 @@
 import CancelButton from '@components/buttons/Staff/CancelButton.jsx';
 import ConfirmButton from '@components/buttons/Staff/ConfirmButton.jsx';
 import CustomDropdown from '@components/UI/CustomDropdown.jsx';
-import { Box, Square, SquareCheckBig } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Box, Square, SquareCheckBig, CalendarIcon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@styles/datepicker.css';
 
 const TickButton = ({ onTick, check }) => {
     return (
@@ -21,7 +24,7 @@ const Role = ({ index, role, isChecked, onTick }) => {
     );
 };
 
-const BoxTemplate = ({ text, className, value, onChange, type = "text", disabled = false }) => {
+const InputTemplate = ({ text, className, value, onChange, type = "text", disabled = false }) => {
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
@@ -30,9 +33,77 @@ const BoxTemplate = ({ text, className, value, onChange, type = "text", disabled
                 value={value || ''}
                 onChange={(e) => onChange && onChange(e.target.value)}
                 disabled={disabled}
-                className="relative h-10 w-full rounded-xl bg-zinc-300/70 px-3 text-black placeholder:text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`h-10 w-full rounded-lg px-3 bg-zinc-300 bg-opacity-70 text-black shadow-sm font-['Unbounded'] text-base transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder:text-gray-500 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 placeholder={disabled ? "Read-only" : `Enter ${text.toLowerCase()}`}
             />
+        </div>
+    );
+};
+
+const DatePickerTemplate = ({ text, className, value, onChange, disabled = false }) => {
+    const [selectedDate, setSelectedDate] = useState(null);
+    const datePickerRef = useRef(null);
+
+    // Convert string date to Date object
+    useEffect(() => {
+        if (value) {
+            try {
+                const date = new Date(value);
+                if (!isNaN(date.getTime())) {
+                    setSelectedDate(date);
+                } else {
+                    setSelectedDate(null);
+                }
+            } catch (error) {
+                setSelectedDate(null);
+            }
+        } else {
+            setSelectedDate(null);
+        }
+    }, [value]);
+
+    const handleDateChange = (date) => {
+        setSelectedDate(date);
+        if (onChange) {
+            if (date) {
+                // Convert to YYYY-MM-DD format
+                const formattedDate = date.toISOString().split('T')[0];
+                onChange(formattedDate);
+            } else {
+                onChange('');
+            }
+        }
+    };
+
+    return (
+        <div className={`relative justify-start text-start ${className || ''}`}>
+            <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
+            <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+                <div className="relative">
+                    <DatePicker
+                        ref={datePickerRef}
+                        selected={selectedDate}
+                        onChange={handleDateChange}
+                        dateFormat="dd/MM/yyyy"
+                        className="h-10 w-full rounded-lg px-3 pr-10 bg-zinc-300 bg-opacity-70 text-black shadow-sm font-['Unbounded'] text-base transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder:text-gray-500"
+                        calendarClassName="react-datepicker-custom"
+                        showPopperArrow={false}
+                        autoComplete="off"
+                        placeholderText={`Select ${text.toLowerCase()}`}
+                        isClearable
+                        todayButton="Today"
+                        showYearDropdown
+                        showMonthDropdown
+                        dropdownMode="select"
+                        maxDate={new Date()}
+                        minDate={new Date('1900-01-01')}
+                        shouldCloseOnSelect={true}
+                    />
+                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform pointer-events-none">
+                        <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
@@ -135,7 +206,7 @@ const EditAccountInformationModal = ({
             <div className="fixed inset-[10%] flex items-center justify-center gap-[5%] rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px] lg:bg-slate-900/60 xl:bg-slate-900">
                 <div className="relative flex h-full w-[60%] flex-col items-start justify-center gap-4">
                     <div className="relative flex w-full gap-4">
-                        <BoxTemplate 
+                        <InputTemplate 
                             text="Name" 
                             className="w-[100%]" 
                             value={accountData?.name || ''} 
@@ -143,29 +214,28 @@ const EditAccountInformationModal = ({
                         />
                     </div>
                     <div className="relative flex w-full gap-4">
-                        <BoxTemplate 
+                        <DatePickerTemplate 
                             text="Birthday" 
-                            className="w-[60%]" 
-                            type="date"
+                            className="w-[60%] lg:w-[70%]" 
                             value={accountData?.birthday || ''} 
                             onChange={(value) => handleFieldChange('birthday', value)}
                         />
                         <DropdownTemplate 
                             text="Gender" 
-                            className="w-[35%]" 
+                            className="w-[35%] lg:w-[25%]" 
                             value={accountData?.gender || 'male'} 
                             onChange={(value) => handleFieldChange('gender', value)}
                             options={genderOptions}
                         />
                     </div>
-                    <BoxTemplate 
+                    <InputTemplate 
                         text="Email" 
                         className="w-[100%]" 
                         type="email"
                         value={accountData?.email || ''} 
                         onChange={(value) => handleFieldChange('email', value)}
                     />
-                    <BoxTemplate 
+                    <InputTemplate 
                         text="Phone Number" 
                         className="w-[100%]" 
                         type="tel"
@@ -173,7 +243,7 @@ const EditAccountInformationModal = ({
                         onChange={(value) => handleFieldChange('phone', value)}
                     />
                     {!isEdit && (
-                        <BoxTemplate 
+                        <InputTemplate 
                             text="Password" 
                             className="w-[100%]" 
                             type="password"
