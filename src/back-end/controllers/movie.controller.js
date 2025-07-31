@@ -45,7 +45,7 @@ const getNowShowingMovies = async (req, res) => {
                         startTime: { $gte: now }
                     })
                     .sort({ startTime: 1 })
-                    .populate('screen', 'screenName size');
+                    .populate('screen', 'screenName size branch');
 
                     let remainingSeats = null;
                     if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
@@ -62,6 +62,15 @@ const getNowShowingMovies = async (req, res) => {
                         remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
                     }
 
+                    // Find all schedules for this movie to collect branch IDs
+                    const allSchedules = await Schedule.find({ movie: movie._id }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    const branchSet = new Set();
+                    allSchedules.forEach(sch => {
+                        const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+                        if (branchId) branchSet.add(branchId);
+                    });
+                    const branches = Array.from(branchSet);
+
                     return {
                         _id: movie._id,
                         title: movie.title,
@@ -75,7 +84,8 @@ const getNowShowingMovies = async (req, res) => {
                             _id: closestSchedule._id,
                             startTime: closestSchedule.startTime
                         } : null,
-                        remainingSeats
+                        remainingSeats,
+                        branches
                     };
                 })
         );
