@@ -3,6 +3,7 @@ import MovieCard from '@components/UI/MovieCard.jsx';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
 import ForwardButton from '@components/buttons/forwardButton.jsx';
 import { useFetchComingSoon } from '@hooks/useMovie';
+import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 
 const UpComingFrame = () => {
     const { fetchComingSoon, movies: upcomingMovies, loading } = useFetchComingSoon();
@@ -29,8 +30,14 @@ const UpComingFrame = () => {
         };
     }, [upcomingMovies]);
 
+    // Hide the component if not loading and no movies
+    if (!loading && (!upcomingMovies || upcomingMovies.length === 0)) {
+        return null;
+    }
     return (
         <div className="relative w-screen bg-transparent flex flex-col items-center py-8">
+            <div className="justify-start text-center font-['Unbounded'] text-sm font-bold text-white md:text-2xl lg:text-4xl xl:text-5xl">UPCOMING MOVIES</div>
+            <div className="h-4 w-full" />
             <div className="relative w-screen flex items-center">
                 {/* Backward Button (md and up) */}
                 {showScrollButtons && (
@@ -58,9 +65,7 @@ const UpComingFrame = () => {
                                 scrollRef={scrollRef}
                             />
                         ))
-                    ) : (
-                        <div className="text-center text-gray-300 text-lg font-[Merriweather Sans]">No movies found.</div>
-                    )}
+                    ) : null}
                 </div>
                 {/* Forward Button (md and up) */}
                 {showScrollButtons && (
@@ -68,6 +73,9 @@ const UpComingFrame = () => {
                         <ForwardButton onClick={handleScrollRight} position="absolute" />
                 </div>
                 )}
+            </div>
+            <div className="flex justify-center items-center mt-4">
+                <SeeMoreButton statusFilter="up" />
             </div>
         </div>
     );
