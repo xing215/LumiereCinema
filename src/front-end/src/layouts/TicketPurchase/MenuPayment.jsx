@@ -90,7 +90,7 @@ const Timer = ({ timeLeft, isExpired }) => {
 };
 
 
-const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateSnackTicket, updateMovieTicket, sessionExpiresAt, loading, onExpire, isSession }) => {
+const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateSnackTicket=() => {}, updateMovieTicket=() => {}, sessionExpiresAt, loading, onExpire, isSession }) => {
     const [discountValue, setDiscountValue] = useState('');
     const [selectedPayment, setSelectedPayment] = useState('');
     const [timeLeft, setTimeLeft] = useState(null);
@@ -131,16 +131,18 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateS
     };
 
     const handleDiscountBlurOrEnter = async (e) => {
-        console.log('Handling discount blur or enter:', e);
- // Ensure input loses focus
-        if (discountValue.trim()) {
-            await applyPromotion({
-                promotionCode: discountValue.trim(),
-                snackTotal: snackTicketData?.total,
-                movieTotal: movieTicketData?.total
-            });
+        if (!discountValue.trim()) {
+            // If input is empty, reset promotion and discount
+            updateMovieTicket({ promotion: null, discount: 0 });
+            updateSnackTicket({ promotion: null, discount: 0 });
+            return;
         }
-        
+        await applyPromotion({
+            promotionCode: discountValue.trim(),
+            snackTotal: snackTicketData?.total,
+            movieTotal: movieTicketData?.total,
+            noLoginCustomerInfo: movieTicketData?.noLoginCustomerInfo || snackTicketData?.noLoginCustomerInfo
+        });
     };
 
     useEffect(() => {
@@ -152,8 +154,15 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateS
             }
             if (finalMovieDiscount !== 0) {
                 updateMovieTicket({promotion: appliedPromotion.promotion, discount: finalMovieDiscount });
-        }
             }
+            if (finalSnackDiscount === 0) {
+                // If both discounts are 0, reset promotion
+                updateSnackTicket({ promotion: null, discount: 0 });
+            }
+            if (finalMovieDiscount === 0) {
+                updateMovieTicket({ promotion: null, discount: 0 });
+            }
+        }
         if (error) {
             alert(`Error applying promotion`);
             setDiscountValue('');
@@ -197,12 +206,12 @@ const MenuPayment = ({ onNext, onBack, movieTicketData, snackTicketData, updateS
                 <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
 
                 {/* Poster */}
-                <div className="hidden md:block md:h-auto md:w-auto md:max-w-[300px] md:min-w-[200px]">
+                <div className="hidden md:block md:h-auto md:w-[50%] md:max-w-[350px] md:min-w-[200px]">
                     <TicketDetail movieTicketData={movieTicketData} snackTicketData={snackTicketData} />
                 </div>
 
                 {/* Main content */}
-                <div className="relative flex min-w-[55vw] flex-1 flex-col items-center justify-between">
+                <div className="relative flex w-[50%] flex-1 flex-col items-center justify-between">
                     {/* Timer - positioned at top */}
                     <div className="hidden w-full md:flex justify-center pt-4 pb-2">
                         <Timer timeLeft={timeLeft} isExpired={isExpired} />
