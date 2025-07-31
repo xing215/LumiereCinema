@@ -11,7 +11,7 @@ const customSwalOptions = {
         cancelButton: 'swal-custom-cancel',
         actions: 'swal-custom-actions'
     },
-    // Remove the didOpen and didClose to prevent issues
+    // Include didOpen and didClose for functionality in showLoading
     backdrop: true,
     allowOutsideClick: true,
     allowEscapeKey: true
