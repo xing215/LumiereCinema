@@ -26,6 +26,7 @@ import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
 import LunarPointsPage from '@pages/LunarPoints.jsx';
 import WatchHistoryPage from '@/pages/WatchHistory';
+import WishlistPage from '@/pages/Wishlist.jsx';
 
 import Developing from '@/pages/others/Developing.jsx';
 import NotFound from '@/pages/others/NotFound.jsx';
@@ -184,6 +185,14 @@ export const routeConfig = [
     {
         path: ROUTES.LUNAR_POINT,
         component: LunarPointsPage,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
+    {
+        path: ROUTES.WISHLIST,
+        component: WishlistPage,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']
