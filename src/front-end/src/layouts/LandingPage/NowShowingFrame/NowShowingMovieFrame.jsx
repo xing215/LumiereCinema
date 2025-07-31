@@ -105,15 +105,8 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
         const checkOverlay = () => {
             if (!cardRef.current || !scrollRef.current) return;
             const cardRect = cardRef.current.getBoundingClientRect();
-            const scrollRect = scrollRef.current.getBoundingClientRect();
             const cardWidth = cardRect.width;
-            // Define the logical visible area (screen minus padding on both sides)
-            const logicalLeft = scrollRect.left;
-            const logicalRight = scrollRect.right;
-            // Calculate visible width inside logical area
-            const visibleLeft = Math.max(cardRect.left, logicalLeft);
-            const visibleRight = Math.min(cardRect.right, logicalRight);
-            const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+            const visibleWidth = Math.max(0, cardRect.right - cardRect.left);
             // Calculate percent out of logical area (0 = fully in, 1 = fully out)
             let percentOut = 1 - visibleWidth / cardWidth;
             percentOut = Math.max(0, Math.min(1, percentOut));

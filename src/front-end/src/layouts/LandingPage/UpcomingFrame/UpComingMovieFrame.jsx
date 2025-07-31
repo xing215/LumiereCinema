@@ -6,6 +6,18 @@ import { useFetchComingSoon } from '@hooks/useMovie';
 import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 
 const UpComingFrame = () => {
+    // Scroll handlers for navigation buttons
+    const handleScrollLeft = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: -scrollByAmount, behavior: 'smooth' });
+        }
+    };
+
+    const handleScrollRight = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: scrollByAmount, behavior: 'smooth' });
+        }
+    };
     const { fetchComingSoon, movies: upcomingMovies, loading } = useFetchComingSoon();
     React.useEffect(() => { fetchComingSoon(); }, []);
     const scrollRef = React.useRef(null);
@@ -85,20 +97,12 @@ const UpComingFrame = () => {
 const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
     const cardRef = React.useRef(null);
     const [overlayOpacity, setOverlayOpacity] = React.useState(0);
-    const SCREEN_PADDING = 60;
     React.useEffect(() => {
         const checkOverlay = () => {
             if (!cardRef.current || !scrollRef.current) return;
             const cardRect = cardRef.current.getBoundingClientRect();
-            const scrollRect = scrollRef.current.getBoundingClientRect();
             const cardWidth = cardRect.width;
-            // Define the logical visible area (screen minus padding on both sides)
-            const logicalLeft = scrollRect.left + SCREEN_PADDING;
-            const logicalRight = scrollRect.right - SCREEN_PADDING;
-            // Calculate visible width inside logical area
-            const visibleLeft = Math.max(cardRect.left, logicalLeft);
-            const visibleRight = Math.min(cardRect.right, logicalRight);
-            const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+            const visibleWidth = Math.max(0, cardRect.right - cardRect.left);
             // Calculate percent out of logical area (0 = fully in, 1 = fully out)
             let percentOut = 1 - visibleWidth / cardWidth;
             percentOut = Math.max(0, Math.min(1, percentOut));
