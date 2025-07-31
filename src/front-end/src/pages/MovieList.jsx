@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@layouts/LandingPage/Header';
 import Footer from '@layouts/LandingPage/Footer';
 import MovieCard from '@components/UI/MovieCard';
@@ -33,9 +34,13 @@ const MovieCardContainer = ({ movies, loading, selectedBranch }) => {
 };
 
 const MainBody = () => {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { fetchNowShowing, movies: nowShowingMovies, loading: loadingNowShowing } = useFetchNowShowing();
     const { fetchComingSoon, movies: upcomingMovies, loading: loadingUpcoming } = useFetchComingSoon();
-    const [movieStatusFilter, setMovieStatusFilter] = useState("all");
+    // Set initial filter from URL param if present
+    const initialStatus = searchParams.get('status') || 'all';
+    const [movieStatusFilter, setMovieStatusFilter] = useState(initialStatus);
 
     // Branch selection state
     const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
@@ -45,6 +50,24 @@ const MainBody = () => {
     useEffect(() => {
         fetchBranches();
     }, []);
+
+    // When status param changes in URL, update filter
+    useEffect(() => {
+        const urlStatus = searchParams.get('status') || 'all';
+        if (urlStatus !== movieStatusFilter) {
+            setMovieStatusFilter(urlStatus);
+        }
+        // eslint-disable-next-line
+    }, [searchParams]);
+
+    // On mount, check for branchId in URL and set selectedBranch accordingly
+    useEffect(() => {
+        const branchId = searchParams.get('branchId');
+        if (branchId && branches && branches.length > 0) {
+            const found = branches.find(b => String(b._id) === String(branchId));
+            if (found) setSelectedBranch(found);
+        }
+    }, [branches, searchParams]);
 
     useEffect(() => {
         fetchNowShowing();
@@ -73,13 +96,26 @@ const MainBody = () => {
                     branches={branches}
                     error={branchError}
                 />
-                <MovieStatusFilterButton value={movieStatusFilter} onChange={setMovieStatusFilter} />
+                <MovieStatusFilterButton
+                    value={movieStatusFilter}
+                    onChange={val => {
+                        setMovieStatusFilter(val);
+                        // Update URL with status param
+                        const params = new URLSearchParams(window.location.search);
+                        params.set('status', val);
+                        navigate({ search: params.toString() }, { replace: true });
+                    }}
+                />
             </div>
             <CinemaPopUp
                 isOpen={isCinemaPopupOpen}
                 onClose={() => setIsCinemaPopupOpen(false)}
                 onCinemaSelect={branch => {
                     setSelectedBranch(branch);
+                    // Update URL with branchId
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('branchId', branch._id);
+                    navigate({ search: params.toString() }, { replace: true });
                     setIsCinemaPopupOpen(false);
                 }}
                 cinemas={branches}
@@ -87,6 +123,10 @@ const MainBody = () => {
                 getAllCinemas={true}
                 getAllCinemasClick={() => {
                     setSelectedBranch(null);
+                    // Remove branchId from URL
+                    const params = new URLSearchParams(window.location.search);
+                    params.delete('branchId');
+                    navigate({ search: params.toString() }, { replace: true });
                     setIsCinemaPopupOpen(false);
                 }}
             />
