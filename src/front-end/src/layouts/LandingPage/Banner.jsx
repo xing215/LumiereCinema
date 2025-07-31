@@ -37,8 +37,8 @@ const Label = () => {
 };
 
 const Banner = () => (
-    <section className="no-scrollbar relative z-10 w-screen justify-center gap-8 overflow-x-hidden overflow-y-visible bg-slate-950 lg:pt-3">
-        <div className="relative w-screen">
+    <section className="relative z-10 w-full gap-8 bg-slate-950 lg:pt-3">
+        <div className="relative w-full">
             {/*Left*/}
             <div className="absolute top-0 left-0 z-15 h-full w-30 bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-60 lg:w-95" />
             {/*Right*/}
@@ -47,7 +47,7 @@ const Banner = () => (
             <ForwardButton />
             <BackwardButton />
             {/*Bottom*/}
-            <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-screen bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-20 xl:blur-md" />
+            <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-20 xl:blur-md" />
             <Decoration1 />
             <Decoration2 />
         </div>

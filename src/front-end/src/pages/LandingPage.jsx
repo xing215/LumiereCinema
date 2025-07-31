@@ -18,15 +18,13 @@ const LandingPage = () => {
 
 
     return (
-        <div className="no-scrollbar min-h-screen w-screen overflow-hidden bg-slate-950">
+        <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
-            <main className="flex flex-col gap-0">
-                <Banner />
-                <NowShowing />
-                <Maps cinemas={branches} />
-                <UpComing />
-                <Footer />
-            </main>
+            <Banner />
+            <NowShowing />
+            <Maps cinemas={branches} />
+            <UpComing />
+            <Footer />
             <ChatBot />
         </div>
     );

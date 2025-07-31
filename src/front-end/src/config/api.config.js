@@ -88,6 +88,10 @@ const API_CONFIG = {
     updateMovie: '/api/movies', // PUT/PATCH + /:movieId
     deleteMovie: '/api/movies', // DELETE + /:movieId
     
+    // User endpoints
+    rateMovie: '/api/users/rate',
+    getRatingMovie: '/api/users/rating/:movieId', // + /:movieId
+
     // Wishlist endpoints
     wishlist: '/api/users/wishlist', // GET
     addToWishlist: '/api/users/wishlist/:movieId', // POST + /:movieId

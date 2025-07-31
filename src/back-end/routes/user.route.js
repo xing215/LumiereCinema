@@ -21,8 +21,8 @@ router.patch('/me', protect, restrictTo('customer'), updateProfile);
 router.put('/me', protect, restrictTo('customer'), updateProfile);
 
 // // Movie rating
-// router.post('/rate', rateMovie);
-// router.get('/rating/:movieId', getRatingMovie);
+router.post('/rate', protect, restrictTo('customer'), rateMovie);
+router.get('/rating/:movieId', protect, restrictTo('customer'), getRatingMovie);
 
 // Wishlist
 router.post('/wishlist/:movieId', protect, restrictTo('customer'), addToWishlist);
