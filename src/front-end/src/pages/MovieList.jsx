@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@layouts/LandingPage/Header';
 import Footer from '@layouts/LandingPage/Footer';
 import MovieCard from '@components/UI/MovieCard';
 import CinemaPopUp from '@components/UI/CinemaPopUp';
 import { useFetchBranches } from '@/hooks/useBranch';
-import CinemaPopUp from '@components/UI/CinemaPopUp';
-import { useFetchBranches } from '@/hooks/useBranch';
 import MovieStatusFilterButton from '@components/buttons/movieStatusFilterButton';
 import { useFetchNowShowing, useFetchComingSoon } from '@hooks/useMovie';
 
-const MovieCardContainer = ({ movies, loading, selectedBranch }) => {
 const MovieCardContainer = ({ movies, loading, selectedBranch }) => {
     if (loading) {
         return (
@@ -27,13 +23,7 @@ const MovieCardContainer = ({ movies, loading, selectedBranch }) => {
                 movies.map((movie, index) => (
                     <MovieCard 
                         key={`${movie._id || index}-${selectedBranch?._id || 'all'}`}
-                        key={`${movie._id || index}-${selectedBranch?._id || 'all'}`}
                         movie={movie}
-                        page="MovieList"
-                        selectedBranch={selectedBranch}
-                    />
-                ))
-            ) : null}
                         page="MovieList"
                         selectedBranch={selectedBranch}
                     />
@@ -78,60 +68,12 @@ const MainBody = () => {
             if (found) setSelectedBranch(found);
         }
     }, [branches, searchParams]);
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const { fetchNowShowing, movies: nowShowingMovies, loading: loadingNowShowing } = useFetchNowShowing();
-    const { fetchComingSoon, movies: upcomingMovies, loading: loadingUpcoming } = useFetchComingSoon();
-    // Set initial filter from URL param if present
-    const initialStatus = searchParams.get('status') || 'all';
-    const [movieStatusFilter, setMovieStatusFilter] = useState(initialStatus);
-
-    // Branch selection state
-    const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
-    const [selectedBranch, setSelectedBranch] = useState(null);
-    const { fetchBranches, branches, loading: branchLoading, error: branchError } = useFetchBranches();
-
-    useEffect(() => {
-        fetchBranches();
-    }, []);
-
-    // When status param changes in URL, update filter
-    useEffect(() => {
-        const urlStatus = searchParams.get('status') || 'all';
-        if (urlStatus !== movieStatusFilter) {
-            setMovieStatusFilter(urlStatus);
-        }
-        // eslint-disable-next-line
-    }, [searchParams]);
-
-    // On mount, check for branchId in URL and set selectedBranch accordingly
-    useEffect(() => {
-        const branchId = searchParams.get('branchId');
-        if (branchId && branches && branches.length > 0) {
-            const found = branches.find(b => String(b._id) === String(branchId));
-            if (found) setSelectedBranch(found);
-        }
-    }, [branches, searchParams]);
 
     useEffect(() => {
         fetchNowShowing();
         fetchComingSoon();
     }, []);
 
-
-    // Combine and filter movies based on status filter and selected branch
-    let allMovies = [...nowShowingMovies, ...upcomingMovies];
-    let filteredMovies = allMovies;
-    if (movieStatusFilter === "now") {
-        filteredMovies = filteredMovies.filter(m => m.status === "Now Showing");
-    } else if (movieStatusFilter === "up") {
-        filteredMovies = filteredMovies.filter(m => m.status === "Upcoming");
-    }
-    if (selectedBranch && selectedBranch._id) {
-        filteredMovies = filteredMovies.filter(m => Array.isArray(m.branches) && m.branches.includes(String(selectedBranch._id)));
-    }
-    let allLoading = loadingNowShowing || loadingUpcoming;
-    
 
     // Combine and filter movies based on status filter and selected branch
     let allMovies = [...nowShowingMovies, ...upcomingMovies];
@@ -198,36 +140,6 @@ const MainBody = () => {
             ) : (
                 <MovieCardContainer movies={filteredMovies} loading={allLoading} selectedBranch={selectedBranch} />
             )}
-            <CinemaPopUp
-                isOpen={isCinemaPopupOpen}
-                onClose={() => setIsCinemaPopupOpen(false)}
-                onCinemaSelect={branch => {
-                    setSelectedBranch(branch);
-                    // Update URL with branchId
-                    const params = new URLSearchParams(window.location.search);
-                    params.set('branchId', branch._id);
-                    navigate({ search: params.toString() }, { replace: true });
-                    setIsCinemaPopupOpen(false);
-                }}
-                cinemas={branches}
-                selectedCinema={selectedBranch}
-                getAllCinemas={true}
-                getAllCinemasClick={() => {
-                    setSelectedBranch(null);
-                    // Remove branchId from URL
-                    const params = new URLSearchParams(window.location.search);
-                    params.delete('branchId');
-                    navigate({ search: params.toString() }, { replace: true });
-                    setIsCinemaPopupOpen(false);
-                }}
-            />
-            {filteredMovies.length === 0 && !allLoading ? (
-                <p className="mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl font-[Merriweather Sans]">
-                    No movies found for the selected filter.
-                </p>
-            ) : (
-                <MovieCardContainer movies={filteredMovies} loading={allLoading} selectedBranch={selectedBranch} />
-            )}
             <div className="h-5 w-full sm:h-10 md:h-20 lg:h-25" />
 
             <div className="absolute top-80 right-[-50px] z-10 h-[200px] w-[100px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] md:top-100 md:right-[-140px] md:h-[300px] md:w-[150px] lg:right-[-200px] lg:h-[400px] lg:w-[200px] xl:top-150 xl:right-[-300px] xl:h-[488px] xl:w-[315px]" />
@@ -248,17 +160,6 @@ const MovieListPage = () => {
 
 export default MovieListPage;
 
-export const ChooseCinemaButton = ({ onClick, label, loading, branches, error }) => (
-    <button
-        className="group relative flex h-11 w-full items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
-        onClick={loading || branches.length === 0 || error ? () => {} : onClick}
-    >
-        <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] group-hover:bg-zinc-300/70 z-0" />
-        <div className="relative flex w-full items-center justify-center md:text-md h-auto text-white text-base font-bold font-['Unbounded'] z-10">
-            {((loading || branches.length === 0 || error) ? '• • •' : (label ? label.toUpperCase() : 'CHOOSE CINEMA'))}
-        </div>
-    </button>
-);
 export const ChooseCinemaButton = ({ onClick, label, loading, branches, error }) => (
     <button
         className="group relative flex h-11 w-full items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
