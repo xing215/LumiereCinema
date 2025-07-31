@@ -75,13 +75,16 @@ const MainBody = () => {
     }, []);
 
 
-    // Combine and filter movies based on status filter
+    // Combine and filter movies based on status filter and selected branch
     let allMovies = [...nowShowingMovies, ...upcomingMovies];
     let filteredMovies = allMovies;
     if (movieStatusFilter === "now") {
         filteredMovies = filteredMovies.filter(m => m.status === "Now Showing");
     } else if (movieStatusFilter === "up") {
         filteredMovies = filteredMovies.filter(m => m.status === "Upcoming");
+    }
+    if (selectedBranch && selectedBranch._id) {
+        filteredMovies = filteredMovies.filter(m => Array.isArray(m.branches) && m.branches.includes(String(selectedBranch._id)));
     }
     let allLoading = loadingNowShowing || loadingUpcoming;
     
@@ -130,7 +133,13 @@ const MainBody = () => {
                     setIsCinemaPopupOpen(false);
                 }}
             />
-            <MovieCardContainer movies={filteredMovies} loading={allLoading} selectedBranch={selectedBranch} />
+            {filteredMovies.length === 0 && !allLoading ? (
+                <p className="mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl font-[Merriweather Sans]">
+                    No movies found for the selected filter.
+                </p>
+            ) : (
+                <MovieCardContainer movies={filteredMovies} loading={allLoading} selectedBranch={selectedBranch} />
+            )}
             <div className="h-5 w-full sm:h-10 md:h-20 lg:h-25" />
 
             <div className="absolute top-80 right-[-50px] z-10 h-[200px] w-[100px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] md:top-100 md:right-[-140px] md:h-[300px] md:w-[150px] lg:right-[-200px] lg:h-[400px] lg:w-[200px] xl:top-150 xl:right-[-300px] xl:h-[488px] xl:w-[315px]" />
