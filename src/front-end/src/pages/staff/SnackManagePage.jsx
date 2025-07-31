@@ -1,4 +1,3 @@
-import React from 'react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
 import ManageTable from '@components/UI/ManageTable.jsx';
@@ -7,7 +6,7 @@ import AddButton from '@components/buttons/Staff/AddButton.jsx';
 import ConfirmButton from '@components/buttons/Staff/ConfirmButton.jsx';
 import CancelButton from '@components/buttons/Staff/CancelButton.jsx';
 import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
-import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
+import BranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import { useUser } from '@contexts/UserContext';
 import { useSnackManagement } from '@hooks/useSnackManagement'; 
 
@@ -127,7 +126,7 @@ const SnackManagePage = () => {
                 
                 {/* Branch selector */}
                 {user?.roles?.includes('branchmanager') && user?.branch && (
-                    <SelectBranchButton 
+                    <BranchButton 
                         isLoading={branchLoading && !userBranch && !user?.branch?.name} 
                         branchName={userBranch?.name || user?.branch?.name || 'Unknown Branch'} 
                     />
