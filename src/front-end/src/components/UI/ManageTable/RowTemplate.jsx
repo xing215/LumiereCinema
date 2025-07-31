@@ -258,7 +258,7 @@ const RowTemplate = (props) => {
                                             className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
                                             tooltipText={tooltipText}
                                             shouldTruncate={shouldTruncateText && !props.isExpanded}
-                                            fieldType={index === 3 ? 'date' : 'text'}
+                                            fieldType={props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : (index === 3 ? 'date' : 'text')}
                                         />
                                     ) : (
                                         <span

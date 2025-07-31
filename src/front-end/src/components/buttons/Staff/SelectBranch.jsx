@@ -1,7 +1,6 @@
-import React from 'react';
 import { useUser } from '@contexts/UserContext';
 
-const SelectBranchButton = ({ isLoading, branchName, clickable = false }) => {
+const BranchButton = ({ isLoading, branchName, clickable = false }) => {
     const { user } = useUser();
 
     const roles = user?.roles || [];
@@ -23,4 +22,4 @@ const SelectBranchButton = ({ isLoading, branchName, clickable = false }) => {
     );
 };
 
-export default SelectBranchButton;
+export default BranchButton;

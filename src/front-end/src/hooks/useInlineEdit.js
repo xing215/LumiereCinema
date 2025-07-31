@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import Swal from 'sweetalert2';
 
 /**
  * Custom hook for managing inline editing functionality
@@ -64,13 +65,23 @@ export const useInlineEdit = (updateFunction, refreshFunction, items, setItems) 
                 cancelEdit();
             } else {
                 console.error('Failed to update:', result.error);
-                showUploadError(`Failed to update: ${result.error || 'Unknown error'}`);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: `Failed to update: ${result.error || 'Unknown error'}`,
+                    confirmButtonColor: '#EF4444'
+                });
                 // Reset value on failure
                 cancelEdit();
             }
         } catch (error) {
             console.error('Error updating field:', error);
-            showUploadError(`Error updating field: ${error.message || 'Unknown error'}`);
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Error',
+                text: `Error updating field: ${error.message || 'Unknown error'}`,
+                confirmButtonColor: '#EF4444'
+            });
             // Reset value on error
             cancelEdit();
         } finally {
