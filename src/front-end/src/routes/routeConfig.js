@@ -42,7 +42,6 @@ export const ROUTES = {
     RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
     MOVIE_DETAILS: '/movie', // ?id=...
-    MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
     ABOUT_US: '/about-us',

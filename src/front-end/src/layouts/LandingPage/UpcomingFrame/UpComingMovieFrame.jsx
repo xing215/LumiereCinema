@@ -3,8 +3,21 @@ import MovieCard from '@components/UI/MovieCard.jsx';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
 import ForwardButton from '@components/buttons/forwardButton.jsx';
 import { useFetchComingSoon } from '@hooks/useMovie';
+import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 
 const UpComingFrame = () => {
+    // Scroll handlers for navigation buttons
+    const handleScrollLeft = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: -scrollByAmount, behavior: 'smooth' });
+        }
+    };
+
+    const handleScrollRight = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: scrollByAmount, behavior: 'smooth' });
+        }
+    };
     const { fetchComingSoon, movies: upcomingMovies, loading } = useFetchComingSoon();
     React.useEffect(() => { fetchComingSoon(); }, []);
     const scrollRef = React.useRef(null);
@@ -29,8 +42,14 @@ const UpComingFrame = () => {
         };
     }, [upcomingMovies]);
 
+    // Hide the component if not loading and no movies
+    if (!loading && (!upcomingMovies || upcomingMovies.length === 0)) {
+        return null;
+    }
     return (
         <div className="relative w-screen bg-transparent flex flex-col items-center py-8">
+            <div className="justify-start text-center font-['Unbounded'] text-sm font-bold text-white md:text-2xl lg:text-4xl xl:text-5xl">UPCOMING MOVIES</div>
+            <div className="h-4 w-full" />
             <div className="relative w-screen flex items-center">
                 {/* Backward Button (md and up) */}
                 {showScrollButtons && (
@@ -58,9 +77,7 @@ const UpComingFrame = () => {
                                 scrollRef={scrollRef}
                             />
                         ))
-                    ) : (
-                        <div className="text-center text-gray-300 text-lg font-[Merriweather Sans]">No movies found.</div>
-                    )}
+                    ) : null}
                 </div>
                 {/* Forward Button (md and up) */}
                 {showScrollButtons && (
@@ -68,6 +85,9 @@ const UpComingFrame = () => {
                         <ForwardButton onClick={handleScrollRight} position="absolute" />
                 </div>
                 )}
+            </div>
+            <div className="flex justify-center items-center mt-4">
+                <SeeMoreButton statusFilter="up" />
             </div>
         </div>
     );
@@ -77,20 +97,12 @@ const UpComingFrame = () => {
 const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
     const cardRef = React.useRef(null);
     const [overlayOpacity, setOverlayOpacity] = React.useState(0);
-    const SCREEN_PADDING = 60;
     React.useEffect(() => {
         const checkOverlay = () => {
             if (!cardRef.current || !scrollRef.current) return;
             const cardRect = cardRef.current.getBoundingClientRect();
-            const scrollRect = scrollRef.current.getBoundingClientRect();
             const cardWidth = cardRect.width;
-            // Define the logical visible area (screen minus padding on both sides)
-            const logicalLeft = scrollRect.left + SCREEN_PADDING;
-            const logicalRight = scrollRect.right - SCREEN_PADDING;
-            // Calculate visible width inside logical area
-            const visibleLeft = Math.max(cardRect.left, logicalLeft);
-            const visibleRight = Math.min(cardRect.right, logicalRight);
-            const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+            const visibleWidth = Math.max(0, cardRect.right - cardRect.left);
             // Calculate percent out of logical area (0 = fully in, 1 = fully out)
             let percentOut = 1 - visibleWidth / cardWidth;
             percentOut = Math.max(0, Math.min(1, percentOut));

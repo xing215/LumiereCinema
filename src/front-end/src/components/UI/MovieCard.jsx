@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import ticketImg from '@assets/img/cineticket.png';
 import { useNavigate } from 'react-router-dom';
 import { getMovieDetailsPath, getBuyTicketPath } from '@routes/routeConfig';
+import fallbackImg from '@assets/img/PosterNotFound.png';
+import WishlistButton from '@components/buttons/wishlistButton.jsx';
 function BuyTicketButton({ movieId, branchId= undefined }) {
     const navigate = useNavigate();
     return (
@@ -27,10 +29,6 @@ function BuyTicketButton({ movieId, branchId= undefined }) {
         </button>
     );
 }
-import { Heart } from 'lucide-react';
-import fallbackImg from '@assets/img/PosterNotFound.png';
-import { useGetWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useUser';
-import ErrorModal from '@layouts/Error.jsx';
 
 
 const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
@@ -47,55 +45,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     const cardId = useRef(uuidv4());
     const navigate = useNavigate();
 
-    // Wishlist hooks
-    const { getWishlist, wishlist, loading: wishlistLoading, error: wishlistError } = useGetWishlist();
-    const { addToWishlist, loading: addLoading, error: addError } = useAddToWishlist();
-    const { removeFromWishlist, loading: removeLoading, error: removeError } = useRemoveFromWishlist();
-    const [wishlistFetched, setWishlistFetched] = useState(false);
-    const [showAuthError, setShowAuthError] = useState(false);
 
-    useEffect(() => {
-        if (!wishlistFetched) {
-            getWishlist();
-            setWishlistFetched(true);
-        }
-    }, [wishlistFetched, getWishlist]);
-
-    const isInWishlist = (movieId) => {
-        return (
-            wishlist.wishlist &&
-            Array.isArray(wishlist.wishlist) &&
-            wishlist.wishlist.some(item => {
-                return String(item._id) === String(movieId);
-            })
-        );
-    };
-
-    const handleWishlistClick = async (e) => {
-        e.stopPropagation();
-        // If not logged in (cannot fetch wishlist), show error modal
-        if ((wishlistError && (!wishlist.wishlist || wishlist.wishlist.length === 0)) ||
-            (wishlistError && (wishlistError.toString().includes('401') || wishlistError.toString().includes('403')))) {
-            setShowAuthError(true);
-            return;
-        }
-        if (!movie?._id) return;
-        if (isInWishlist(movie._id)) {
-            const result = await removeFromWishlist(movie._id);
-            if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
-                setShowAuthError(true);
-                return;
-            }
-            await getWishlist();
-        } else {
-            const result = await addToWishlist(movie._id);
-            if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
-                setShowAuthError(true);
-                return;
-            }
-            await getWishlist();
-        }
-    };
 
     useEffect(() => {
         const handleTouch = (e) => {
@@ -114,9 +64,6 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     const linkImg = movie?.posterURL || fallbackImg;
     return (
         <>
-            {showAuthError && (
-                <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />
-            )}
             <div
                 ref={cardRef}
                 className={`relative group h-full aspect-[300/470] justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'}`}
@@ -178,14 +125,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                                 return `${day}/${month}`;
                             })() : ''}
                         </span>
-                        <Heart
-                            size={24}
-                            strokeWidth={2.2}
-                            className={`ml-2 text-white stroke-white w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10 transition-colors duration-150 cursor-pointer ${isInWishlist(movie._id) ? 'fill-red-500' : 'fill-transparent'}`}
-                            onClick={handleWishlistClick}
-                            aria-label={isInWishlist(movie._id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                            disabled={addLoading || removeLoading || wishlistLoading}
-                        />
+                        <WishlistButton movie={movie} />
                     </div>
                 </div>
             </div>

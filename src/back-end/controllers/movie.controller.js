@@ -159,7 +159,6 @@ const getMovieDetails = async (req, res) => {
         // Cache miss - fetch from database
         const movie = await Movie.findById(req.params.movieId);
 
-        
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
@@ -169,12 +168,28 @@ const getMovieDetails = async (req, res) => {
             return res.status(404).json({ message: 'Movie not found.' });
         }
 
+        // Find all schedules for this movie, populate screen.branch
+        const schedules = await Schedule.find({ movie: movie._id })
+            .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+
+        // Collect unique branch IDs
+        const branchSet = new Set();
+        schedules.forEach(sch => {
+            const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+            if (branchId) branchSet.add(branchId);
+        });
+        const branches = Array.from(branchSet);
+
+        // Build response object (keep all movie fields, add branches)
+        const movieObj = movie.toObject();
+        movieObj.branches = branches;
+
         // Save to cache with 1 hour expiration
-        await redisClient.set(cacheKey, JSON.stringify(movie), {
+        await redisClient.set(cacheKey, JSON.stringify(movieObj), {
             EX: DETAIL_CACHE_EXPIRATION,
         });
 
-        res.status(200).json(movie);
+        res.status(200).json(movieObj);
     } catch (error) {
         console.error('Get Movie Details Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });

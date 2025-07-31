@@ -4,10 +4,6 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
-// 2. Bây giờ mới test env variables
-console.log('MONGO_URI:', process.env.MONGO_URI ? 'LOADED' : 'NOT LOADED');
-console.log('MONGO_URI value:', process.env.MONGO_URI);
-
 const express = require('express');
 const cors = require('cors');
 
