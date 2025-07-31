@@ -45,7 +45,7 @@ const MovieInfo = ({ movieId, branchId }) => {
             navigate(ROUTES.NOT_FOUND, { replace: true });
         }
     }, [error, navigate]);
-
+    
     return (
         <>
             <div className="relative z-20 flex w-full flex-col bg-slate-950">
@@ -72,7 +72,9 @@ const MovieInfo = ({ movieId, branchId }) => {
                         <Rating rated={movieDetail?.averageRating || 0} user={movieDetail?.ratingCount || 0} />
                         <div className="h-2 w-full" />
                         <div className="flex gap-2 md:gap-4 lg:gap-6 xl:gap-8">
-                            <BuyATicketButton movieId={movieId} branchId={branchId} />
+                            {Array.isArray(movieDetail?.branches) && movieDetail.branches.length > 0 && (
+                                <BuyATicketButton movieId={movieId} branchId={branchId} />
+                            )}
                             <WishlistButton movie={movieDetail}/>
                         </div>
                     </div>
