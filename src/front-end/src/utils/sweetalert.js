@@ -328,15 +328,35 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
     Swal.close();
     
     const hasErrors = errorCount > 0;
+    const hasValidMovies = successCount > 0;
     
-    if (hasErrors) {
+    if (hasErrors && !hasValidMovies) {
+        // Only errors, no valid movies - show error dialog with OK button
         const title = 'Validation Failed';
-        let text = '';
+        let text = `❌ Failed validation: ${errorCount} movies\n\n`;
         
-        if (successCount > 0) {
-            text += `✅ Successfully validated: ${successCount} movies\n`;
+        if (errors.length > 0) {
+            text += 'Common errors found:\n';
+            text += errors.slice(0, 3).map(error => `• ${error}`).join('\n');
+            if (errors.length > 3) {
+                text += `\n• ... and ${errors.length - 3} more errors`;
+            }
         }
+        
+        return Swal.fire({
+            ...customSwalOptions,
+            title,
+            text,
+            icon: 'error',
+            confirmButtonText: 'OK',
+            iconColor: '#ef4444'
+        });
+    } else if (hasErrors && hasValidMovies) {
+        // Mixed results - some valid, some invalid - show warning with option to proceed
+        const title = 'Partial Validation Success';
+        let text = `✅ Successfully validated: ${successCount} movies\n`;
         text += `❌ Failed validation: ${errorCount} movies\n\n`;
+        text += 'Do you want to proceed with the valid movies only?\n\n';
         
         if (errors.length > 0) {
             text += 'Common errors found:\n';
@@ -351,10 +371,13 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
             title,
             text,
             icon: 'warning',
-            confirmButtonText: 'OK',
+            showCancelButton: true,
+            confirmButtonText: 'Proceed with Valid Movies',
+            cancelButtonText: 'Cancel Upload',
             iconColor: '#f59e0b'
         });
     } else {
+        // All valid - show success confirmation
         return Swal.fire({
             ...customSwalOptions,
             title: 'Validation Successful!',

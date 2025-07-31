@@ -616,25 +616,37 @@ const MovieManagePage = () => {
             closeSwal();
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            if (validationResult.hasErrors) {
-                // Show validation errors and stop here
-                await showUploadResults(validationResult.validMovies.length, validationResult.errors.length, validationResult.errors);
-                setImportLoading(false);
-                return;
-            }
-            
+            // Check if we have any valid movies
             if (validationResult.validMovies.length === 0) {
-                showUploadError('No valid movies found to import');
+                // No valid movies found - show only errors
+                await showUploadResults(0, validationResult.errors.length, validationResult.errors);
                 setImportLoading(false);
                 return;
             }
             
-            // Show upload success confirmation
-            const confirmResult = await showUploadConfirmation(validationResult.validMovies.length);
-            
-            if (confirmResult.isConfirmed) {
-                setReviewMovies(validationResult.validMovies);
-                setShowReviewMode(true);
+            // We have some valid movies
+            if (validationResult.hasErrors) {
+                // Show validation results with both valid and invalid movies
+                // Ask user if they want to proceed with valid movies only
+                const confirmResult = await showUploadResults(
+                    validationResult.validMovies.length, 
+                    validationResult.errors.length, 
+                    validationResult.errors
+                );
+                
+                if (confirmResult.isConfirmed) {
+                    // User wants to proceed with valid movies only
+                    setReviewMovies(validationResult.validMovies);
+                    setShowReviewMode(true);
+                }
+            } else {
+                // All movies are valid - show confirmation and proceed
+                const confirmResult = await showUploadConfirmation(validationResult.validMovies.length);
+                
+                if (confirmResult.isConfirmed) {
+                    setReviewMovies(validationResult.validMovies);
+                    setShowReviewMode(true);
+                }
             }
 
         } catch (error) {
