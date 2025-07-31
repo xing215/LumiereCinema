@@ -28,6 +28,8 @@ function BuyTicketButton({ movieId, branchId= undefined }) {
 }
 import { Heart } from 'lucide-react';
 import fallbackImg from '@assets/img/PosterNotFound.png';
+import { useGetWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useUser';
+
 
 const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     const [showOverlay, setShowOverlay] = useState(false);
@@ -35,6 +37,41 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     const cardRef = useRef(null);
     const cardId = useRef(uuidv4());
     const navigate = useNavigate();
+
+    // Wishlist hooks
+    const { getWishlist, wishlist, loading: wishlistLoading } = useGetWishlist();
+    const { addToWishlist, loading: addLoading } = useAddToWishlist();
+    const { removeFromWishlist, loading: removeLoading } = useRemoveFromWishlist();
+    const [wishlistFetched, setWishlistFetched] = useState(false);
+
+    useEffect(() => {
+        if (!wishlistFetched) {
+            getWishlist();
+            setWishlistFetched(true);
+        }
+    }, [wishlistFetched, getWishlist]);
+
+    const isInWishlist = (movieId) => {
+        return (
+            wishlist.wishlist &&
+            Array.isArray(wishlist.wishlist) &&
+            wishlist.wishlist.some(item => {
+                return String(item._id) === String(movieId);
+            })
+        );
+    };
+
+    const handleWishlistClick = async (e) => {
+        e.stopPropagation();
+        if (!movie?._id) return;
+        if (isInWishlist(movie._id)) {
+            await removeFromWishlist(movie._id);
+            await getWishlist();
+        } else {
+            await addToWishlist(movie._id);
+            await getWishlist();
+        }
+    };
 
     useEffect(() => {
         const handleTouch = (e) => {
@@ -113,10 +150,13 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                                 return `${day}/${month}`;
                             })() : ''}
                         </span>
-                        <Heart 
-                            size={24} 
-                            strokeWidth={2.2} 
-                            className="ml-2 text-white stroke-white fill-transparent w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10" 
+                        <Heart
+                            size={24}
+                            strokeWidth={2.2}
+                            className={`ml-2 text-white stroke-white w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10 transition-colors duration-150 cursor-pointer ${isInWishlist(movie._id) ? 'fill-red-500' : 'fill-transparent'}`}
+                            onClick={handleWishlistClick}
+                            aria-label={isInWishlist(movie._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                            disabled={addLoading || removeLoading || wishlistLoading}
                         />
                     </div>
                 </div>
