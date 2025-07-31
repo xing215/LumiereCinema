@@ -85,7 +85,8 @@ const getNowShowingMovies = async (req, res) => {
                             startTime: closestSchedule.startTime
                         } : null,
                         remainingSeats,
-                        branches
+                        branches,
+                        status: movie.status
                     };
                 })
         );
@@ -178,7 +179,8 @@ const getUpcomingMovies = async (req, res) => {
                             startTime: closestSchedule.startTime
                         } : null,
                         remainingSeats,
-                        branches
+                        branches,
+                        status: movie.status
                     };
                 })
         );
