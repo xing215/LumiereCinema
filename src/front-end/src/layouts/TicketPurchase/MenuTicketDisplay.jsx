@@ -194,6 +194,9 @@ const handleDownload = async () => {
                                                 <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
                                                     <QRCode value={JSON.stringify(movieTicket?.ticketCode)} size={qrSize} />
                                                 </div>
+                                                <div className="h-auto text-center justify-start text-white text-sm font-bold font-['Libre Franklin']">
+                                                    {movieTicket?.ticketCode}
+                                                </div>
                                             </div>
                                         ) : null}
                                         {snackTicket?.snackTicketCode ? (
@@ -201,8 +204,11 @@ const handleDownload = async () => {
                                                 <div className="h-auto text-center justify-start text-white text-base font-black font-['Unbounded']">
                                                     SNACK
                                                 </div>
-                                                <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
+                                                <div className="bg-white pt-1 px-1 rounded-lg border-4 border-white flex items-center justify-center">
                                                     <QRCode value={JSON.stringify(snackTicket?.snackTicketCode)} size={qrSize} />
+                                                </div>
+                                                <div className="h-auto text-center justify-start text-white text-sm font-bold font-['Libre Franklin']">
+                                                    {snackTicket?.snackTicketCode}
                                                 </div>
                                             </div>
                                         ) : null}

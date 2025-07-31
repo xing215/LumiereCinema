@@ -4,7 +4,7 @@ const BranchButton = ({ isLoading, branchName, clickable = false }) => {
     const { user } = useUser();
 
     const roles = user?.roles || [];
-    if (!roles.includes('branchmanager')) {
+    if (!roles.includes('branchmanager') && !roles.includes('cashier')) {
         return null;
     }
 
