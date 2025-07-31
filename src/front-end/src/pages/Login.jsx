@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext';
 import { ROUTES } from '@/routes/routeConfig';
 import Header from '@layouts/LandingPage/Header';
@@ -9,23 +9,31 @@ import Footer from '@layouts/LandingPage/Footer';
 
 const Login = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user, isAuthenticated, isLoading } = useUser();
 
     // Redirect if already logged in
     useEffect(() => {
         if (!isLoading && isAuthenticated && user) {
+            let returnTo = searchParams.get('returnTo');
+            if (returnTo && typeof returnTo === 'string') {
+                returnTo = decodeURIComponent(returnTo);
+                if (returnTo.startsWith('/')) {
+                    navigate(returnTo, { replace: true });
+                    return;
+                }
+            }
             const userRoles = user.roles || [];
             const hasStaffRole = userRoles.some(role => 
                 ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role)
             );
-            
             if (hasStaffRole) {
                 navigate(ROUTES.STAFF_ROOT);
             } else {
                 navigate(ROUTES.HOME);
             }
         }
-    }, [isAuthenticated, isLoading, user, navigate]);
+    }, [isAuthenticated, isLoading, user, navigate, searchParams]);
 
     // Show loading while checking authentication
     if (isLoading) {

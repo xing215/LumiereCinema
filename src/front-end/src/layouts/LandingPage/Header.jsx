@@ -27,7 +27,8 @@ const Header = () => {
         if (isAuthenticated) {
             navigate(ROUTES.PROFILE);
         } else {
-            navigate(ROUTES.LOGIN);
+            const currentPath = window.location.pathname + window.location.search;
+            navigate(`${ROUTES.LOGIN}?returnTo=${encodeURIComponent(currentPath)}`);
         }
     };
 
