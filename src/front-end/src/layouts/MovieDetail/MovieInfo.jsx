@@ -57,7 +57,15 @@ const MovieInfo = ({ movieId, branchId }) => {
                     {/* Info */}
                     <div className="font-unbounded flex flex-1 flex-col text-left text-white gap-2">
                         <p className="text-lg font-black leading-normal [text-shadow:_0px_4px_4px_rgb(0_0_0_/_0.25)] sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl">{movieDetail?.title || ''}</p>
-                        <p className="text-[10px] font-black sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.releaseDate ? new Date(movieDetail.releaseDate).toLocaleDateString() : ''}</p>
+                        <p className="text-[10px] font-black sm:text-[12px] md:text-sm xl:text-base">{
+                            movieDetail?.releaseDate ? (() => {
+                                const d = new Date(movieDetail.releaseDate);
+                                if (isNaN(d)) return '';
+                                const day = d.getDate().toString().padStart(2, '0');
+                                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                                return `${day}/${month}`;
+                            })() : ''
+                        }</p>
                         <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.genre?.join(', ') || ''}</p>
                         <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.duration ? `${movieDetail.duration}'` : ''}{movieDetail?.ageRating ? ` - ${movieDetail.ageRating}` : ""}</p>
                         <div className="w-full md:h-2 xl:h-4" />
