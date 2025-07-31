@@ -20,7 +20,7 @@ const MainBody = () => {
 };
 const MovieDetail = () => {
     return (
-        <div className="flex w-screen flex-col items-center justify-center overflow-x-hidden bg-slate-950">
+        <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
             <MainBody />
             <Footer />
