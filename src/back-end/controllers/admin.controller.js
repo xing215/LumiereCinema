@@ -118,7 +118,9 @@ const getAllProfiles = async (req, res) => {
     if (userList) {
       return res.status(200).json(JSON.parse(userList));
     }
-    const users = await User.find().select('-password -wishlist -watchHistory -branch -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const users = await User.find()
+      .populate('branch', 'name location')
+      .select('-password -wishlist -watchHistory -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!users || users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
     }
@@ -646,6 +648,25 @@ const updateBranchStatus = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get all branches
+ * @route   GET /api/admin/branches
+ * @access  Administrator, BranchManager
+ */
+const getAllBranches = async (req, res) => {
+  try {
+    const branches = await Branch.find({ isActive: true }).select('_id name address city');
+    
+    res.status(200).json(branches);
+  } catch (error) {
+    console.error('Error fetching branches:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch branches',
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createUser,
   getAllProfiles,
@@ -663,4 +684,5 @@ module.exports = {
   updateBranch,
   deleteBranch,
   updateBranchStatus,
+  getAllBranches,
 };

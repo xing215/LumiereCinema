@@ -16,6 +16,7 @@ const {
   createPromotion,
   updatePromotion,
   deletePromotion,
+  getAllBranches,
   createBranch,
   updateBranch,
   deleteBranch,
@@ -40,6 +41,7 @@ router.patch('/promotions/:promotionCode', protect, restrictTo('administrator'),
 router.delete('/promotions/:promotionCode', protect, restrictTo('administrator'), deletePromotion);
 
 // Quản lý branch
+router.get('/branches', protect, restrictTo('administrator', 'branchmanager'), getAllBranches);
 router.post('/branches', protect, restrictTo('administrator'), createBranch);
 router.patch('/branches/:branchId', protect, restrictTo('administrator'), updateBranch);
 router.delete('/branches/:branchId', protect, restrictTo('administrator'), deleteBranch);
