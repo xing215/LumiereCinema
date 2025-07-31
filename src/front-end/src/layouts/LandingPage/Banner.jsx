@@ -37,7 +37,7 @@ const Label = () => {
 };
 
 const Banner = () => (
-    <section className="no-scrollbar relative z-10 w-screen justify-center gap-8 overflow-x-hidden overflow-y-visible bg-slate-950 lg:pt-3">
+    <section className="no-scrollbar relative z-10 w-screen justify-center gap-8 bg-slate-950 lg:pt-3">
         <div className="relative w-screen">
             {/*Left*/}
             <div className="absolute top-0 left-0 z-15 h-full w-30 bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-60 lg:w-95" />

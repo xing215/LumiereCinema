@@ -115,7 +115,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     return (
         <>
             {showAuthError && (
-                <ErrorModal errorMsg="You have to login to use this feature." onClose={() => setShowAuthError(false)} />
+                <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />
             )}
             <div
                 ref={cardRef}

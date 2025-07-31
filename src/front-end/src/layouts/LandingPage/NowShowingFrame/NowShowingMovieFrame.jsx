@@ -35,16 +35,11 @@ const NowShowingFrame = () => {
     return (
         <div className="relative w-screen bg-transparent flex flex-col items-center py-8">
             <div className="relative w-screen flex items-center">
-                {/* Left Gradient Overlay (md and up) */}
-                <div className="pointer-events-none absolute left-0 top-0 h-full w-16 md:w-24 z-20 bg-gradient-to-r from-black/90 via-black/70 to-transparent hidden md:block" />
-                {/* Right Gradient Overlay (md and up) */}
-                <div className="pointer-events-none absolute right-0 top-0 h-full w-16 md:w-24 z-20 bg-gradient-to-l from-black/90 via-black/70 to-transparent hidden md:block" />
-
                 {/* Backward Button (md and up) */}
                 <div className="hidden md:block mr-4 z-30">
                     <BackwardButton onClick={handleScrollLeft} position="absolute" />
                 </div>
-                {/* Movie Cards Row */}
+                {/* Movie Cards Row with overlay logic */}
                 <div
                     ref={scrollRef}
                     className="flex overflow-x-auto no-scrollbar gap-4 w-full px-2 md:pl-32 md:pr-32 py-2"
@@ -56,9 +51,13 @@ const NowShowingFrame = () => {
                         </div>
                     ) : nowShowingMovies && nowShowingMovies.length > 0 ? (
                         nowShowingMovies.map((movie, idx) => (
-                            <div key={movie._id || idx} className="flex-shrink-0 w-56 md:w-64 lg:w-72">
-                                <MovieCard movie={movie} page="LandingPage" />
-                            </div>
+                            <MovieCardWithOverlay
+                                key={movie._id || idx}
+                                movie={movie}
+                                page="LandingPage"
+                                cardIdx={idx}
+                                scrollRef={scrollRef}
+                            />
                         ))
                     ) : (
                         <div className="text-center text-gray-300 text-lg font-[Merriweather Sans]">No movies found.</div>
@@ -69,6 +68,57 @@ const NowShowingFrame = () => {
                     <ForwardButton onClick={handleScrollRight} position="absolute" />
                 </div>
             </div>
+        </div>
+    );
+};
+
+
+// Helper component to wrap MovieCard and add overlay if >40% out of visible area
+
+const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
+    const cardRef = React.useRef(null);
+    const [overlayOpacity, setOverlayOpacity] = React.useState(0);
+
+    React.useEffect(() => {
+        const checkOverlay = () => {
+            if (!cardRef.current || !scrollRef.current) return;
+            const cardRect = cardRef.current.getBoundingClientRect();
+            const scrollRect = scrollRef.current.getBoundingClientRect();
+            const cardWidth = cardRect.width;
+            // Define the logical visible area (screen minus padding on both sides)
+            const logicalLeft = scrollRect.left;
+            const logicalRight = scrollRect.right;
+            // Calculate visible width inside logical area
+            const visibleLeft = Math.max(cardRect.left, logicalLeft);
+            const visibleRight = Math.min(cardRect.right, logicalRight);
+            const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+            // Calculate percent out of logical area (0 = fully in, 1 = fully out)
+            let percentOut = 1 - visibleWidth / cardWidth;
+            percentOut = Math.max(0, Math.min(1, percentOut));
+            setOverlayOpacity(percentOut);
+        };
+        checkOverlay();
+        window.addEventListener('resize', checkOverlay);
+        if (scrollRef.current) {
+            scrollRef.current.addEventListener('scroll', checkOverlay);
+        }
+        return () => {
+            window.removeEventListener('resize', checkOverlay);
+            if (scrollRef.current) {
+                scrollRef.current.removeEventListener('scroll', checkOverlay);
+            }
+        };
+    }, [scrollRef]);
+
+    return (
+        <div ref={cardRef} className="flex-shrink-0 w-56 md:w-64 lg:w-72 relative">
+            <MovieCard movie={movie} page={page} />
+            {overlayOpacity > 0 && (
+                <div
+                    className="absolute inset-0 z-20 pointer-events-none rounded-xl"
+                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity * 0.6})` }}
+                />
+            )}
         </div>
     );
 };
