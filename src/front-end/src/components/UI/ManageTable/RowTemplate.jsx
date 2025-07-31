@@ -206,7 +206,7 @@ const RowTemplate = (props) => {
                                         <span>Edit</span>
                                     ) : (
                                         <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <EditButton />
+                                            <EditButton onClick={() => props.onEdit?.(props.rowIndex)} />
                                         </div>
                                     )
                                 ) : value === 'EditSeatButton' ? (
