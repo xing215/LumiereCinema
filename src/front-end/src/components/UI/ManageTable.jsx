@@ -16,12 +16,16 @@ const ManageTable = ({
     onSaveEdit,
     onCancelEdit,
     isUpdating,
+    // Field types for EditableCell
+    fieldTypes,
     // Status change prop
-    onStatusChange
+    onStatusChange,
+    // Review mode props
+    reviewMovieIds
 }) => {
     const headerScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
-    const [expandedRow, setExpandedRow] = useState(null); // Track row nào đang expanded
+    const [expandedRow, setExpandedRow] = useState(null);
 
     // Check if column config exists and has content
     const hasColumnConfig = columnConfig && Object.keys(columnConfig).length > 0;
@@ -36,6 +40,12 @@ const ManageTable = ({
             }
             return newSet;
         });
+    };
+
+    // Check if row is in review mode
+    const isReviewRow = (index) => {
+        const row = data[index];
+        return row && row[0] && typeof row[0] === 'object' && row[0].type === 'ReviewIndicator';
     };
 
     // Handle row expand/collapse
@@ -107,7 +117,7 @@ const ManageTable = ({
                             onEdit={onEdit}
                             onEditSeat={onEditSeat}
                             columnConfig={columnConfig}
-                            isExpanded={expandedRow === index}
+                            isExpanded={expandedRow === index || isReviewRow(index)} // Auto-expand review rows
                             onRowClick={() => handleRowClick(index)}
                             // Inline editing props
                             editableFields={editableFields}
@@ -116,6 +126,8 @@ const ManageTable = ({
                             onSaveEdit={onSaveEdit}
                             onCancelEdit={onCancelEdit}
                             isUpdating={isUpdating}
+                            // Field types for EditableCell
+                            fieldTypes={fieldTypes}
                             // Status change prop
                             onStatusChange={onStatusChange}
                         />

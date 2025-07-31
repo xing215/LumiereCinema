@@ -1,13 +1,13 @@
 // app.js
 
-const express = require('express');
-const cors = require('cors');
+// 1. Nạp biến môi trường NGAY ĐẦU TIÊN
 const dotenv = require('dotenv');
-
-// 2. Nạp biến môi trường (LUÔN ĐẶT LÊN ĐẦU)
 dotenv.config();
 
-// 1. Import các hàm kết nối từ file config
+const express = require('express');
+const cors = require('cors');
+
+// 3. Import các hàm kết nối từ file config
 const { connectDB } = require('./config/database.config.js'); 
 const { connectRedis } = require('./config/redis.config.js');
 
@@ -22,17 +22,17 @@ const chatbotRoutes = require('./routes/chatbot.route.js');
 const adminRoutes = require('./routes/admin.route.js');
 const qrRoutes = require('./routes/qr.route.js');
 
-// 3. Thực hiện kết nối tới các cơ sở dữ liệu
+// 4. Thực hiện kết nối tới các cơ sở dữ liệu
 connectDB();
 connectRedis();
 
 const app = express();
 
-// 4. Sử dụng các middleware chung
+// 5. Sử dụng các middleware chung
 app.use(cors());
 app.use(express.json());
 
-// 5. Sử dụng các router
+// 6. Sử dụng các router
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes); 
 app.use('/api/reports', reportRoutes);

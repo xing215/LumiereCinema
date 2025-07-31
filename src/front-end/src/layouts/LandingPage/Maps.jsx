@@ -1,4 +1,6 @@
 import IntegratedMap from '@components/display/IntegratedMap.jsx';
+import { useNavigate } from 'react-router-dom';
+import { getMovieListPath } from '@/routes/routeConfig';
 
 const Label = () => {
     return (
@@ -9,12 +11,15 @@ const Label = () => {
 };
 
 const Maps = ({ cinemas }) => {
+    const navigate = useNavigate();
     return (
         <section className="no-scrollbar relative z-19 flex w-screen flex-col items-center justify-center overflow-y-visible">
             <Label />
             <div className="h-3 w-full lg:h-5 xl:h-10" />
             <div className="h-auto w-auto ">
-                <IntegratedMap cinemas={cinemas} />
+                <IntegratedMap cinemas={cinemas} onClick={(cinema) => {
+                    navigate(getMovieListPath(undefined, cinema._id));
+                }} />
             </div>
             <div className="h-1 w-full md:h-5 lg:h-10 xl:h-15" />
             <div className="absolute bottom-0 left-0 h-30 w-30 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px] lg:h-35 lg:w-35 xl:left-20 xl:h-44 xl:w-44" />

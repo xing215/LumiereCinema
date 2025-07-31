@@ -10,15 +10,15 @@ const movieSchema = new mongoose.Schema({
   releaseDate: { type: Date, required: true },
   duration: { type: Number, required: true }, // Duration in minutes
   genre: { type: [String], required: true },
-  director: { type: String, required: true, trim: true },
-  cast: { type: [String], required: true },
-  language: { type: String},
+  director: { type: String, default: '', trim: true },
+  cast: { type: [String], default: [] },
+  language: { type: String, default: '' },
 
   // Soft delete flag - true means movie is hidden/deleted
   isHidden: { 
     type: Boolean, 
     required: true, 
-    default: false 
+    default: true  // Changed to true as requested
   },
   ageRating: { 
     type: String, 
@@ -27,15 +27,16 @@ const movieSchema = new mongoose.Schema({
     default: 'P'
   },
   
-  ratingsAverage: { type: Number, default: 0, min: 0, max: 5 },
-  ratingsQuantity: { type: Number, default: 0 },
+  // ratingsAverage: { type: Number, default: 0, min: 0, max: 5 },
+  // ratingsQuantity: { type: Number, default: 0 },
   
 }, { timestamps: true });
+
 
 // Add virtual properties for status based on current date
 movieSchema.virtual('status').get(function() {
   const now = new Date();
-  const releaseDate = new Date(this.releaseDate);
+  const releaseDate = new Date(this.releaseDate); 
   
   if (this.isHidden) {
     return 'Archived';

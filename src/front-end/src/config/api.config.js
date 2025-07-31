@@ -69,6 +69,7 @@ const API_CONFIG = {
     forgotPassword: '/api/auth/forgot-password',
     resetPassword: '/api/auth/reset-password',
     userProfile: '/api/users/me',
+    watchHistory: '/api/users/watch-history',
     
     // Staff auth endpoints
     staffLogin: '/api/auth/staff/login',
@@ -87,6 +88,15 @@ const API_CONFIG = {
     updateMovie: '/api/movies', // PUT/PATCH + /:movieId
     deleteMovie: '/api/movies', // DELETE + /:movieId
     
+    // User endpoints
+    rateMovie: '/api/users/rate',
+    getRatingMovie: '/api/users/rating/:movieId', // + /:movieId
+
+    // Wishlist endpoints
+    wishlist: '/api/users/wishlist', // GET
+    addToWishlist: '/api/users/wishlist/:movieId', // POST + /:movieId
+    removeFromWishlist: '/api/users/wishlist/:movieId', // DELETE + /:movieId
+
     // Report endpoints
     reportBranches: '/api/reports/branches',
     reportBranch: '/api/reports/branch',

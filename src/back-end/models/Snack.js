@@ -41,8 +41,13 @@ const snackSchema = new mongoose.Schema({
     type: Number,
     validate: {
       validator: function(value) {
-        return value <= this.price;
-      }
+        // Only validate on new documents or when both price and discountedPrice are being set
+        if (this.isNew || (this.isModified && this.isModified('price'))) {
+          return value === null || value === undefined || value <= this.price;
+        }
+        return true; // Skip validation for updates
+      },
+      message: 'Discounted price cannot be higher than regular price'
     }
   },
   

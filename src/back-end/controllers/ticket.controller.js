@@ -1452,39 +1452,76 @@ const createTicket = async (req, res) => {
 };
 
 
-
-// ======= GET TICKET BY CODE =======
 const getTicketByCode = async (req, res) => {
-  try {
-    const { code } = req.params;
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    try {
+        const { ticketCode } = req.params;
+        let ticket;
+        let Model;
+        let ticketType = '';
 
-    if (isSnack) {
-      const ticket = await SnackTicket.findOne({ snackTicketCode: code })
-        .populate('customer')
-        .populate('branch')
-        .populate('snackList.snack')
-        .populate('promotion');
-      if (!ticket) {
-        return res.status(404).json({ message: 'Snack ticket not found.' });
-      }
+        const movieTicket = await Ticket.findOne({ ticketCode: ticketCode });
+        if (movieTicket) {
+            Model = Ticket;
+            ticketType = 'Movie';
+            ticket = movieTicket;
+        } else {
+            const snackTicket = await SnackTicket.findOne({ snackTicketCode: ticketCode });
+            if (snackTicket) {
+                Model = SnackTicket;
+                ticketType = 'Snack';
+                ticket = snackTicket;
+            }
+        }
 
-      return res.status(200).json(ticket);
+        if (!ticket) {
+            return res.status(404).json({ message: 'Ticket not found.' });
+        }
+
+        const previousScanTimestamp = ticket.lastScanAt || null;
+        const isFirstScan = ticket.status === 'Confirmed';
+        const currentScanTimestamp = new Date();
+
+        if (isFirstScan) {
+            await Model.findByIdAndUpdate(ticket._id, {
+                status: 'CheckedIn',
+                lastScanAt: currentScanTimestamp
+            });
+        } else {
+            await Model.findByIdAndUpdate(ticket._id, {
+                lastScanAt: currentScanTimestamp
+            });
+        }
+
+        let query = Model.findById(ticket._id).populate('branch', 'name address');
+
+        if (ticketType === 'Movie') {
+            query = query.populate({
+                path: 'schedule',
+                populate: [{ path: 'movie', select: 'title' }, { path: 'screen', select: 'screenName' }]
+            });
+        } else if (ticketType === 'Snack') {
+            query = query.populate({
+                path: 'snackList.snack',
+                select: 'name price'
+            });
+        }
+
+        const populatedTicket = await query.lean();
+
+        const finalResponse = {
+            ...populatedTicket,
+            status: isFirstScan ? 'Confirmed' : populatedTicket.status,
+            ticketType: ticketType,
+            lastScanAt: previousScanTimestamp
+        };
+
+        return res.status(200).json(finalResponse);
+
+    } catch (error) {
+        console.error('Get Ticket By Code Error:', error);
+        return res.status(500).json({ message: 'Failed to fetch ticket by code.' });
     }
-
-    if (isMovie) {
-      // TODO: Add handling for MovieTicket if needed
-      return res.status(501).json({ message: 'Movie ticket fetching not implemented yet.' });
-    }
-
-    return res.status(400).json({ message: 'Unknown ticket type in URL.' });
-  } catch (error) {
-    console.error('Get Ticket By Code Error:', error);
-    return res.status(500).json({ message: 'Failed to fetch ticket by code.' });
-  }
 };
-
 // ======= UPDATE TICKET =======
 const updateTicket = async (req, res) => {
   try {

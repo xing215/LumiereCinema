@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext';
 import { useLogin, useStaffLogin } from '@hooks/useAuth';
 import { ROUTES } from '@/routes/routeConfig';
@@ -8,6 +8,7 @@ import HideIcon from '@assets/icons/hide.svg';
 
 const LoginForm = ({ isCustomer = true }) => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { login } = useUser();
     
     // Use different hooks based on user type
@@ -88,12 +89,23 @@ const LoginForm = ({ isCustomer = true }) => {
             : await staffLogin(formData);
         
         if (result.success) {
+            // If returnTo param exists and is a valid string, go there
+            let returnTo = searchParams.get('returnTo');
+            if (returnTo && typeof returnTo === 'string') {
+                returnTo = decodeURIComponent(returnTo);
+                if (returnTo.startsWith('/')) {
+                console.log('Redirecting to:', returnTo);
+                setTimeout(() => {
+                    navigate(returnTo, { replace: true });
+                }, 0);
+                return;
+                }
+            }
             // Navigate based on user role
             const userRoles = result.data.user.roles || [];
             const hasStaffRole = userRoles.some(role => 
                 ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role)
             );
-            
             if (hasStaffRole) {
                 navigate(ROUTES.STAFF_ROOT);
             } else {

@@ -44,6 +44,8 @@ const IntegratedMap = ({
     selectedCinema = null,
     isOpen = true,
     cinemas = [],
+    getAllCinemas = false,
+    getAllCinemasClick = () => {console.log("Get all cinemas clicked");},
 }) => {
     const [maxdistance, setMaxDistance] = useState("");
     const [userLocation, setUserLocation] = useState(null);
@@ -364,7 +366,8 @@ const IntegratedMap = ({
                     selectedlocation={selectedCinema}
                     onHover={setHoveredCinema}
                     getLocation={GetLocation}
-
+                    getAllCinemas={getAllCinemas}
+                    getAllCinemasClick={getAllCinemasClick}
                 />
             </div>
             <div

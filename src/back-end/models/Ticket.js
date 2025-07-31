@@ -68,6 +68,10 @@ const ticketSchema = new mongoose.Schema({
       default: 'Confirmed',
   },
 
+  lastScanAt: {
+    type: Date,
+    default: null
+  },
   ticketType: {
     type: String,
     enum: ['Movie'],

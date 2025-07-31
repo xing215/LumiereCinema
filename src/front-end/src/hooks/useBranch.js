@@ -7,6 +7,12 @@ import { useUser } from '@contexts/UserContext';
  * Branch logic hooks for handling branch-level data operations
  */
 
+// Helper function for snack API URLs
+const getBranchSnackApiUrl = (branchId, snackId = null) => {
+  const baseUrl = buildApiUrl(`/api/branches/${branchId}/snacks`);
+  return snackId ? `${baseUrl}/${snackId}` : baseUrl;
+};
+
 export const useFetchBranches = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -298,7 +304,7 @@ export const useGetSnacks = () => {
     }
   };
 
-  return { getSnacks, snacks, loading, error };
+  return { getSnacks, snacks, setSnacks, loading, error };
 };
 
 export const useUpdateSnack = () => {
@@ -311,12 +317,26 @@ export const useUpdateSnack = () => {
     setError(null);
     
     try {
-      const response = await axios.patch(getBranchSnackApiUrl(branchId, snackId), snackData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      let response;
+      const headers = { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      if (snackId) {
+        // Update existing snack
+        console.log('Updating snack:', snackId, 'in branch:', branchId);
+        response = await axios.patch(getBranchSnackApiUrl(branchId, snackId), snackData, { headers });
+      } else {
+        // Add new snack
+        console.log('Adding new snack to branch:', branchId, 'Data:', snackData);
+        response = await axios.post(getBranchSnackApiUrl(branchId), snackData, { headers });
+      }
+      console.log('Snack operation success:', response.data);
       return { success: true, data: response.data };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to update snack';
+      console.error('Snack operation failed:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update snack';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

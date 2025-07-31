@@ -45,7 +45,7 @@ export const useAuthInterceptor = () => {
       error => {
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           logout();
-          showError('', 'Your session has expired. Please log in again.');
+          showError('', 'You have to login to access this resource.');
         }
         return Promise.reject(error);
       }

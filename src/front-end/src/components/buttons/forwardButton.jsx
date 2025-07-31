@@ -1,10 +1,13 @@
 import backAndForwardButton from '@assets/img/backAndForwardButton.png';
 import ArrowForwardButton from '@assets/img/forwardButton.svg';
 
-const forwardButton = () => {
+
+const forwardButton = ({ onClick, position = 'absolute' }) => {
+    const positionClass = position === 'absolute' ? 'absolute z-50 xl:right-8 lg:right-6 sm:right-3 right-0 top-1/2 -translate-y-1/2' : 'relative z-50';
     return (
         <button
-            className="absolute top-1/2 right-0 z-50 h-[45px] w-[45px] -translate-y-1/2 hover:cursor-pointer sm:right-3 sm:h-[60px] sm:w-[60px] lg:right-6 lg:h-[70px] lg:w-[70px] xl:right-8 xl:h-[80px] xl:w-[80px]"
+            onClick={onClick}
+            className={`${positionClass} h-[45px] w-[45px] hover:cursor-pointer sm:h-[60px] sm:w-[60px] lg:h-[70px] lg:w-[70px] xl:h-[80px] xl:w-[80px]`}
             aria-label="ForwardButton"
         >
             <div className="relative h-full w-full">

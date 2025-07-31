@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
-import { getApiUrl } from '@/config/api.config';
+import { getApiUrl, getApiUrlWithParams } from '@config/api.config';
 
 /**
  * User logic hooks for managing user profile data and user-specific interactions
@@ -73,10 +73,13 @@ export const useGetWatchHistory = () => {
     setError(null);
     
     try {
-      const response = await axios.get('/api/user/watch-history', {
+      const response = await axios.get(getApiUrl('watchHistory'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setWatchHistory(response.data);
+      const watchHistoryData = response.data.watchHistory || response.data;
+      console.log('Watch History Data:', watchHistoryData);
+      setWatchHistory(watchHistoryData);
+      
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch watch history';
@@ -97,11 +100,15 @@ export const useGetWishlist = () => {
   const { token } = useUser();
 
   const getWishlist = async () => {
+    if (!token) {
+      setWishlist([]);
+      setError('You must be logged in to view wishlist');
+      return { success: false, error: 'You must be logged in to view wishlist' };
+    }
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.get('/api/user/wishlist', {
+      const response = await axios.get(getApiUrlWithParams('wishlist'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setWishlist(response.data);
@@ -117,7 +124,6 @@ export const useGetWishlist = () => {
 
   return { getWishlist, wishlist, loading, error };
 };
-
 export const useAddToWishlist = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -126,9 +132,9 @@ export const useAddToWishlist = () => {
   const addToWishlist = async (movieId) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.post('/api/user/wishlist', { movieId }, {
+      const url = getApiUrlWithParams('addToWishlist', { movieId });
+      const response = await axios.post(url, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -143,7 +149,6 @@ export const useAddToWishlist = () => {
 
   return { addToWishlist, loading, error };
 };
-
 export const useRemoveFromWishlist = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -152,9 +157,9 @@ export const useRemoveFromWishlist = () => {
   const removeFromWishlist = async (movieId) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await axios.delete(`/api/user/wishlist/${movieId}`, {
+      const url = getApiUrlWithParams('removeFromWishlist', { movieId });
+      const response = await axios.delete(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -180,7 +185,7 @@ export const useRateMovie = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/user/ratings', { movieId, rating }, {
+      const response = await axios.post(getApiUrl('rateMovie'), { movieId, rating }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -205,13 +210,11 @@ export const useGetMyRatings = () => {
   const getMyRatings = async (movieId = null) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const url = movieId ? `/api/user/ratings/${movieId}` : '/api/user/ratings';
+      const url = getApiUrlWithParams('getRatingMovie', { movieId: movieId});
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
       if (movieId) {
         setRatings(prev => ({ ...prev, [movieId]: response.data }));
       } else {

@@ -113,7 +113,7 @@ export const sidebarConfig = {
             id: 'manage-snack',
             label: 'Manage snack',
             icon: Coffee,
-            path: '#',
+            path: '/staff/snack',
             description: 'Manage snack inventory',
             permissions: ['snacks'],
             badge: null,

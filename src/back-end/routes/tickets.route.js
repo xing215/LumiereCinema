@@ -92,7 +92,7 @@ router.get('/movie/admin/all', protect, restrictTo('administrator'), getAllTicke
  * GET /movie/admin/:ticketCode
  * Lấy movie ticket theo code (Admin only)
  */
-router.get('/movie/admin/:ticketCode', protect, restrictTo('administrator'), getTicketByCode);
+router.get('/movie/admin/:ticketCode', protect, restrictTo('checkincounter'), getTicketByCode);
 
 /**
  * PATCH /movie/admin/:ticketCode

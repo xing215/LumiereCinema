@@ -7,6 +7,7 @@ import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
+import MovieDetail from '@pages/MovieDetail';
 import CheckInCounterPage from '@pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from '@pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from '@pages/staff/PromotionManagePage.jsx';
@@ -20,14 +21,16 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
-import AboutUs from '@/pages/AboutUs';
+import AboutUs from '@pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
+import LunarPointsPage from '@pages/LunarPoints.jsx';
+import WatchHistoryPage from '@pages/WatchHistory';
 import SellTicket from '@pages/staff/SellTicket.jsx';
 import SellSnack from '@pages/staff/SellSnack.jsx';
 
-import Developing from '@/pages/others/Developing.jsx';
-import NotFound from '@/pages/others/NotFound.jsx';
+import Developing from '@pages/others/Developing.jsx';
+import NotFound from '@pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -39,6 +42,7 @@ export const ROUTES = {
     RESET_PASSWORD: '/reset-password',
     RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
+    MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
     ABOUT_US: '/about-us',
@@ -47,9 +51,9 @@ export const ROUTES = {
     // Customer routes
     CHANGE_PASSWORD: '/change-password',
     PROFILE: '/user-profile',
-    WISHLIST: '/developing',
-    WATCH_HISTORY: '/developing',
-    LUNAR_POINT: '/developing',
+    WISHLIST: '/wishlist',
+    WATCH_HISTORY: '/watch-history',
+    LUNAR_POINT: '/lunar-points',
     
     // Staff routes
     STAFF_ROOT: '/staff',
@@ -120,6 +124,18 @@ export const routeConfig = [
         requiresAuth: false
     },
     {
+        path: ROUTES.MOVIE_DETAILS,
+        component: MovieDetail,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
+        path: ROUTES.MOVIE_DETAILS,
+        component: MovieDetail,
+        type: 'public',
+        requiresAuth: false
+    },
+    {
         path: ROUTES.BUY_TICKET,
         component: TicketPurchase,
         type: 'public',
@@ -155,6 +171,22 @@ export const routeConfig = [
     {
         path: ROUTES.PROFILE,
         component: UserProfile,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
+    {
+        path: ROUTES.WATCH_HISTORY,
+        component: WatchHistoryPage,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
+    {
+        path: ROUTES.LUNAR_POINT,
+        component: LunarPointsPage,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']
@@ -339,4 +371,33 @@ export const getRedirectPath = (isAuthenticated, userRoles, route) => {
     }
     
     return null; // No redirect needed
+};
+
+export const getMovieListPath = (status = undefined, branchId = undefined) => {
+    let path = ROUTES.MOVIES;
+    if (status) {
+        path += `?status=${status}`;
+        if (branchId !== undefined) {
+            path += `&branchId=${branchId}`;
+        }
+    } else if (branchId !== undefined) {
+        path += `?branchId=${branchId}`;
+    }
+    return path;
+}
+
+export const getBuyTicketPath = (movieId, branchId = undefined) => {
+    let path = `${ROUTES.BUY_TICKET}?movieId=${movieId}`;
+    if (branchId !== undefined) {
+        path += `&branchId=${branchId}`;
+    }
+    return path;
+};
+
+export const getMovieDetailsPath = (movieId, branchId = undefined) => {
+    let path = `${ROUTES.MOVIE_DETAILS}?movieId=${movieId}`;
+    if (branchId !== undefined) {
+        path += `&branchId=${branchId}`;
+    }
+    return path;
 };

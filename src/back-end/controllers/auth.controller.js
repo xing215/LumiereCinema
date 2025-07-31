@@ -232,7 +232,7 @@ const staffLogin = async (req, res) => {
             return res.status(400).json({ message: 'Please enter email and password.' });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).populate('branch', 'name');
 
         if (!user || !(await bcrypt.compare(password, user.hashedPassword))) {
             return res.status(401).json({ message: 'Email or password is incorrect.' });
@@ -257,7 +257,8 @@ const staffLogin = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                roles: user.roles
+                roles: user.roles,
+                branch: user.branch
             }
         });
 
