@@ -21,7 +21,6 @@ import {
     showUploadConfirmation,
     showAddingMovies,
     showMoviesAdded,
-    showCancellingUpload,
     showUploadCancelled,
     showProcessingVisibility,
     showMovieShown,
@@ -309,7 +308,7 @@ const MovieManagePage = () => {
             }
 
             // Show adding progress
-            showAddingMovies();
+            showAddingMovies(1);
 
             // Prepare movie data for API
             const movieToAdd = {
@@ -653,7 +652,7 @@ const MovieManagePage = () => {
         
         setImportLoading(true);
         try {
-            showAddingMovies();
+            showAddingMovies(reviewMovies.length);
             
             let successCount = 0;
             let errorCount = 0;
@@ -709,8 +708,6 @@ const MovieManagePage = () => {
         if (reviewMovies.length === 0) return;
         
         try {
-            showCancellingUpload();
-            
             // Clear review movies from frontend (no backend deletion needed)
             setReviewMovies([]);
             setShowReviewMode(false);

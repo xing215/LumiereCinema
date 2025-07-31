@@ -320,7 +320,7 @@ export const showConfirmation = (title = 'Are you sure?', text = '', confirmText
 
 // Upload Excel related alerts
 export const showUploadLoading = () => {
-    return showLoading('Uploading Movies...', 'Please wait while we process your Excel file');
+    return showLoading('Validating Movies...', 'Please wait while we validate your Excel file and check for duplicates');
 };
 
 export const showUploadResults = (successCount = 0, errorCount = 0, errors = []) => {
@@ -330,44 +330,40 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
     const hasErrors = errorCount > 0;
     
     if (hasErrors) {
-        // Show errors only - use default SweetAlert config
+        const title = 'Validation Failed';
+        let text = '';
+        
+        if (successCount > 0) {
+            text += `✅ Successfully validated: ${successCount} movies\n`;
+        }
+        text += `❌ Failed validation: ${errorCount} movies\n\n`;
+        
+        if (errors.length > 0) {
+            text += 'Common errors found:\n';
+            text += errors.slice(0, 3).map(error => `• ${error}`).join('\n');
+            if (errors.length > 3) {
+                text += `\n• ... and ${errors.length - 3} more errors`;
+            }
+        }
+        
         return Swal.fire({
-            title: 'Validation Failed',
-            text: `Successfully validated: ${successCount} movies\nFailed validation: ${errorCount} movies\n\n` +
-                  (errors.length > 0 ? `Errors:\n${errors.slice(0, 3).join('\n')}` + 
-                  (errors.length > 3 ? `\n... and ${errors.length - 3} more errors` : '') : ''),
+            ...customSwalOptions,
+            title,
+            text,
             icon: 'warning',
             confirmButtonText: 'OK',
-            allowOutsideClick: true,
-            allowEscapeKey: true,
-            showLoaderOnConfirm: false,
-            preConfirm: false,
-            showClass: {
-                popup: 'swal2-show',
-                backdrop: 'swal2-backdrop-show',
-                icon: 'swal2-icon-show'
-            }
+            iconColor: '#f59e0b'
         });
     } else {
-        // Show success - use default SweetAlert config only
         return Swal.fire({
+            ...customSwalOptions,
             title: 'Validation Successful!',
             text: `${successCount} movies are ready for review.\n\nClick OK to proceed to review mode.`,
             icon: 'success',
             showCancelButton: true,
             confirmButtonText: 'OK',
             cancelButtonText: 'Cancel',
-            allowOutsideClick: true,
-            allowEscapeKey: true,
-            focusConfirm: true,
-            buttonsStyling: true,
-            showLoaderOnConfirm: false,
-            preConfirm: false,
-            showClass: {
-                popup: 'swal2-show',
-                backdrop: 'swal2-backdrop-show',
-                icon: 'swal2-icon-show'
-            }
+            iconColor: '#10b981'
         });
     }
 };
@@ -376,38 +372,63 @@ export const showUploadConfirmation = (movieCount = 0) => {
     // Ensure any previous loading state is cleared
     Swal.close();
     
-    // Use completely basic SweetAlert without any custom styling
+    const title = 'Validation Successful!';
+    const text = movieCount === 1 
+        ? '1 movie is ready for review.\n\nClick OK to proceed to review mode where you can make final edits before adding to the database.'
+        : `${movieCount} movies are ready for review.\n\nClick OK to proceed to review mode where you can make final edits before adding to the database.`;
+    
     return Swal.fire({
-        title: 'Validation Successful!',
-        text: `${movieCount} movies are ready for review. Click OK to proceed to review mode.`,
+        ...customSwalOptions,
+        title,
+        text,
         icon: 'success',
         showCancelButton: true,
-        confirmButtonText: 'OK',
+        confirmButtonText: 'Proceed to Review',
         cancelButtonText: 'Cancel',
-        allowOutsideClick: true,
-        allowEscapeKey: true,
-        focusConfirm: true,
-        reverseButtons: false,
+        iconColor: '#10b981',
         showLoaderOnConfirm: false,
-        showLoaderOnDeny: false,
-        allowEnterKey: true
+        showLoaderOnDeny: false
     });
 };
 
-export const showAddingMovies = () => {
-    return showLoading('Adding Movies...', 'Please wait while we add movies to the database');
+export const showAddingMovies = (count = 0) => {
+    const text = count === 1 
+        ? 'Please wait while we add the movie to the database' 
+        : `Please wait while we add ${count} movies to the database`;
+        
+    return showLoading('Adding Movies...', text);
 };
 
 export const showMoviesAdded = (count = 0) => {
-    return showSuccess('Movies Added Successfully!', `${count} movies have been added to the database`);
-};
-
-export const showCancellingUpload = () => {
-    return showLoading('Cancelling...', 'Please wait while we cancel the upload');
+    const title = count === 1 ? 'Movie Added Successfully!' : 'Movies Added Successfully!';
+    const text = count === 1 
+        ? 'The movie has been added to the database successfully' 
+        : `${count} movies have been added to the database successfully`;
+        
+    return Swal.fire({
+        ...customSwalOptions,
+        icon: 'success',
+        title,
+        text,
+        confirmButtonText: 'Great!',
+        iconColor: '#10b981',
+        timer: 4000,
+        timerProgressBar: true,
+        showConfirmButton: true
+    });
 };
 
 export const showUploadCancelled = () => {
-    return showSuccess('Upload Cancelled', 'Movie upload has been cancelled successfully');
+    return Swal.fire({
+        ...customSwalOptions,
+        icon: 'info',
+        title: 'Upload Cancelled',
+        text: 'The movie upload process has been cancelled successfully. No movies were added to the database.',
+        iconColor: '#3b82f6',
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false
+    });
 };
 
 // Delete related alerts
@@ -455,7 +476,14 @@ export const showMovieHidden = (movieTitle = 'Movie') => {
 
 // Generic upload error
 export const showUploadError = (error = 'Unknown error occurred') => {
-    return showError('Upload Failed', `Failed to upload movies: ${error}`);
+    return Swal.fire({
+        ...customSwalOptions,
+        icon: 'error',
+        title: 'Operation Failed',
+        text: `❌ ${error}\n\nPlease check your data and try again.`,
+        confirmButtonText: 'OK',
+        iconColor: '#ef4444'
+    });
 };
 
 // Close current SweetAlert
@@ -505,7 +533,6 @@ export default {
     showUploadConfirmation,
     showAddingMovies,
     showMoviesAdded,
-    showCancellingUpload,
     showUploadCancelled,
     showDeleteConfirmation,
     showDeletingMovies,
