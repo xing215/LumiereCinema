@@ -218,37 +218,75 @@ const SeatLayout = ({
   console.log('Needs Panning (updated):', needsPanning);
 }, [needsPanning]);
 
+    const originalContentSizeRef = useRef(null);
+
+    useEffect(() => {
+        originalContentSizeRef.current = null;
+        hasCenteredRef.current = false;
+    }, [JSON.stringify(seatMap)]);
+
     useEffect(() => {
         const checkSize = () => {
             if (containerRef.current && contentRef.current) {
                 console.log('Checking size...');
                 console.log('Container:', containerRef.current.getBoundingClientRect());
-                console.log('Content:', contentRef.current.getBoundingClientRect());
+                
                 const containerRect = containerRef.current.getBoundingClientRect();
-                const contentRect = contentRef.current.getBoundingClientRect();
-                const contentStyle = window.getComputedStyle(contentRef.current);
                 
-                const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
-                const paddingRight = parseFloat(contentStyle.paddingRight) || 0;
-                const paddingTop = parseFloat(contentStyle.paddingTop) || 0;
-                const paddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
+                // Get original content dimensions (before any transform)
+                let contentRect;
+                let effectiveContentWidth;
+                let effectiveContentHeight;
                 
-                const effectiveContentWidth = contentRect.width - (paddingLeft + paddingRight);
-                const effectiveContentHeight = contentRect.height - (paddingTop + paddingBottom);
+                if (!originalContentSizeRef.current) {
+                    // First time - store original dimensions
+                    contentRect = contentRef.current.getBoundingClientRect();
+                    const contentStyle = window.getComputedStyle(contentRef.current);
+                    
+                    const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
+                    const paddingRight = parseFloat(contentStyle.paddingRight) || 0;
+                    const paddingTop = parseFloat(contentStyle.paddingTop) || 0;
+                    const paddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
+                    
+                    effectiveContentWidth = contentRect.width - (paddingLeft + paddingRight);
+                    effectiveContentHeight = contentRect.height - (paddingTop + paddingBottom);
+                    
+                    // Store original dimensions
+                    originalContentSizeRef.current = {
+                        width: effectiveContentWidth,
+                        height: effectiveContentHeight
+                    };
+                    
+                    console.log('Stored original content size:', originalContentSizeRef.current);
+                } else {
+                    // Use stored original dimensions
+                    effectiveContentWidth = originalContentSizeRef.current.width;
+                    effectiveContentHeight = originalContentSizeRef.current.height;
+                    console.log('Using stored original content size:', originalContentSizeRef.current);
+                }
+                
                 const exceedsWidth = effectiveContentWidth > containerRect.width;
                 const exceedsHeight = effectiveContentHeight > containerRect.height;
+
+                const widthScale = containerRect.width / (effectiveContentWidth + containerRect.width * 0.1);
+                const heightScale = containerRect.height / (effectiveContentHeight + containerRect.height * 0.1);
+                const scale = Math.max(Math.min(widthScale, heightScale), 1);
+                
                 console.log('Effective Content Size:', effectiveContentWidth, effectiveContentHeight);
                 console.log('Exceeds Width:', exceedsWidth, 'Exceeds Height:', exceedsHeight);
-                
+                console.log('widthScale:', widthScale);
+                console.log('heightScale:', heightScale);
+                console.log('Scale:', scale);
+
                 setNeedsPanning(exceedsWidth || exceedsHeight);
-                console.log('Needs Panning:', needsPanning);
 
                 // Center only once when panning is first needed and not dragging
                 if ((exceedsWidth || exceedsHeight) && !hasCenteredRef.current && !isDragging) {
-                    const centerX = (containerRect.width - effectiveContentWidth) / 2;
-                    const centerY = (containerRect.height - effectiveContentHeight) / 2;
+                    const centerX = (containerRect.width - effectiveContentWidth * scale) / 2;
+                    const centerY = (containerRect.height - effectiveContentHeight * scale) / 2;
                     setTransform(prev => ({
                         ...prev,
+                        scale: scale,
                         x: Math.min(0, centerX),
                         y: Math.min(0, centerY)
                     }));
@@ -260,6 +298,7 @@ const SeatLayout = ({
                     hasCenteredRef.current = false;
                     setTransform(prev => ({
                         ...prev,
+                        scale: scale,
                         x: 0,
                         y: 0
                     }));
@@ -412,10 +451,11 @@ const SeatLayout = ({
                 ) : (
                     <div 
                         ref={contentRef}
-                        className={`flex flex-row rounded-sm gap-2 z-10 min-w-max ${needsPanning ? 'p-8' : ''}`}
+                        className={`flex flex-row rounded-sm duration-300 gap-2 z-10 min-w-max ${needsPanning ? 'p-8' : ''}`}
                         style={{
                             transform: `translate(${transform.x}px, ${transform.y}px)`,
-                            transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+                            transition: isDragging ? 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'transform 0.2s ease-out',
+                            scale: transform.scale
                         }}
                     >
                         {/* Row Labels Column */}

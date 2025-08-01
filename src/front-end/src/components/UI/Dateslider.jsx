@@ -89,29 +89,38 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
                         grabCursor={true}
                         allowTouchMove={true}
                         speed={400}
+                        loop={false}
+                        watchSlidesProgress={true}
                         navigation={{
                             nextEl: '.swiper-button-next-custom',
                             prevEl: '.swiper-button-prev-custom',
                         }}
                         onSwiper={(swiper) => {
                             swiperRef.current = swiper;
+                            // Force initial centering after swiper is ready
+                            setTimeout(() => {
+                                if (selectedIndex >= 0) {
+                                    swiper.slideTo(selectedIndex, 0);
+                                }
+                            }, 100);
                         }}
                         onSlideChange={handleSlideChange}
-                        onActiveIndexChange={(swiper) => {
-                            // Update button opacities based on active slide
-                        }}
-                        className="w-full h-full flex items-center py-2"
+                        className="w-full h-full"
                         breakpoints={{
                             768: {
                                 spaceBetween: 16,
+                                slidesPerView: 5,
+                                centeredSlides: true,
                             },
                             0: {
                                 spaceBetween: 16,
+                                slidesPerView: 5,
+                                centeredSlides: true,
                             }
                         }}
                     >
                         {uniqueDates.map((dateObj, index) => (
-                            <SwiperSlide key={dateObj.date} className="flex justify-center items-center h-full py-1">
+                            <SwiperSlide key={dateObj.date} className="!flex !justify-center !items-center !h-full">
                                 {({ isActive, isPrev, isNext }) => {
                                     // Determine opacity based on slide position
                                     let opacity = 'opacity-30';
@@ -132,7 +141,6 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
                             </SwiperSlide>
                         ))}
                     </Swiper>
-                    
                 </div>
             </div>
             
