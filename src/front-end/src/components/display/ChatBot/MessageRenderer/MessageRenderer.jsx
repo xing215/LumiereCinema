@@ -42,6 +42,29 @@ const MessageRenderer = ({ message, onQuickAction }) => {
         console.log('🎬 Finding schedules for movie:', action.data.movie_title);
         onQuickAction(`Tôi muốn xem lịch chiếu phim ${action.data.movie_title}`);
         break;
+          case 'schedule_conversation':
+        // Bắt đầu cuộc hội thoại về lịch chiếu
+        console.log('🎬 Starting schedule conversation');
+        onQuickAction('Xem lịch chiếu');
+        break;
+        
+      case 'search_conversation':
+        // Bắt đầu cuộc hội thoại tìm kiếm
+        console.log('🎬 Starting search conversation');
+        onQuickAction('Tìm phim hay');
+        break;
+        
+      case 'get_now_showing':
+        // Lấy danh sách phim đang chiếu
+        console.log('🎬 Getting now showing movies');
+        onQuickAction('Phim gì đang chiếu?');
+        break;
+        
+      case 'get_upcoming':
+        // Lấy danh sách phim sắp chiếu
+        console.log('🎬 Getting upcoming movies');
+        onQuickAction('Phim gì sắp chiếu?');
+        break;
           case 'movie_details':
         // Navigate đến trang chi tiết phim với đúng route pattern
         console.log('🎬 Navigating to movie details for ID:', action.data.movie_id);
@@ -124,6 +147,31 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             status={message.botData.status} // Truyền status vào MovieList
           />
         </div>
+      );
+
+    case 'movie_list_for_schedule':
+      return (
+        <div className="space-y-3">
+          {/* Header message */}
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+            {message.message}
+          </div>
+          
+          {/* Movie List với focus vào lịch chiếu */}
+          <MovieList 
+            movies={data} 
+            onAction={handleQuickAction}
+            context="schedule" // Đánh dấu context để MovieList biết ưu tiên button lịch chiếu
+          />
+          
+          {/* Quick Actions */}
+          {(suggestions || []).length > 0 && (
+            <QuickActions 
+              suggestions={suggestions} 
+              onAction={handleQuickAction} 
+            />
+          )}
+        </div>
       );case 'schedule_list':
       return (
         <div className="space-y-3">
@@ -170,7 +218,41 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             />
           )}
         </div>
-      );    default:
+      );
+
+    case 'schedule_conversation':
+      return (
+        <div className="space-y-3">
+          {/* Schedule conversation message */}
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+            {message.message}
+          </div>
+          
+          {/* Quick Actions để người dùng chọn phim */}
+          <QuickActions 
+            suggestions={suggestions}
+            quickActions={message.botData.quick_actions}
+            onAction={handleQuickAction}
+          />
+        </div>
+      );
+
+    case 'search_conversation':
+      return (
+        <div className="space-y-3">
+          {/* Search conversation message */}
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+            {message.message}
+          </div>
+          
+          {/* Quick Actions để người dùng chọn thể loại */}
+          <QuickActions 
+            suggestions={suggestions}
+            quickActions={message.botData.quick_actions}
+            onAction={handleQuickAction}
+          />
+        </div>
+      );default:
       // Fallback cho text message
       return (
         <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">

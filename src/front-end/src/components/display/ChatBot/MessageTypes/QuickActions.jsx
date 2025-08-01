@@ -13,12 +13,10 @@ const QuickActions = ({ suggestions = [], quickActions = [], onAction }) => {
     ...suggestions.map(s => ({ ...s, type: 'suggestion' })),
     ...(Array.isArray(quickActions) ? quickActions.map(qa => ({ ...qa, type: 'action' })) : [])
   ];
-
   if (allActions.length === 0) return null;
 
   return (
     <div className="bg-gray-50 rounded-lg p-3">
-      <p className="text-sm text-gray-600 mb-3">Gợi ý cho bạn:</p>
       <div className="flex flex-wrap gap-2">
         {allActions.map((action, index) => (
           <button

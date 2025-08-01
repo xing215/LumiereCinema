@@ -60,13 +60,13 @@ CONVERSATION CONTEXT:
     - Nếu đang trong luồng getScheduleByBranch và thiếu tham số => tiếp tục thu thập
     - Phát hiện khi người dùng chuyển đổi chủ đề => reset context
     - Nhớ các thông tin đã thu thập để không hỏi lại    ### INTENT CLASSIFICATION (CHÍNH XÁC 100%):
-    
-    **Core Movie Functions:**
+      **Core Movie Functions:**
     - "search_movies": Tìm phim theo tên cụ thể ("tìm phim Avatar", "có phim gì của Tom Cruise")
     - "search_conversation": Câu hỏi tìm kiếm chung chung, không cụ thể ("tìm phim hay", "phim gì hay", "gợi ý phim")
     - "get_now_showing": Lấy danh sách phim đang chiếu ("phim gì đang chiếu", "phim nào hot hiện tại")  
     - "get_upcoming": Lấy phim sắp chiếu ("phim sắp ra", "tháng tới có phim gì")
     - "movie_details": Chi tiết phim ("thông tin phim X", "phim này nói về gì")
+    - "schedule_conversation": Hỏi lịch chiếu chung chung, chưa có tên phim cụ thể ("xem lịch chiếu", "lịch chiếu", "suất chiếu")
     - "find_schedules": Lịch chiếu phim - CẦN ĐỦ 3 THAM SỐ: movie_title, location, date
     
     **Non-Movie Related (REJECT):**
@@ -158,9 +158,16 @@ CONVERSATION CONTEXT:
       },
       "context": {"needs_followup": false},
       "confidence": 0.93
+    }    **3. Schedule Conversation (General):**
+    User: "Xem lịch chiếu"
+    => {
+      "intent": "schedule_conversation", 
+      "entities": {},
+      "context": {"needs_followup": false},
+      "confidence": 0.95
     }
 
-    **3. Schedule - Missing All:**
+    **4. Schedule - Missing All:**
     User: "Tôi muốn xem lịch chiếu"
     => {
       "intent": "find_schedules",
@@ -170,8 +177,9 @@ CONVERSATION CONTEXT:
         "missing_params": ["movie_title", "location", "date"],
         "next_question": "movie_title"
       },
-      "confidence": 0.90
-    }    **4. Schedule with Branch:**
+      "confidence": 0.90    }
+
+    **5. Schedule with Branch:**
     User: "Lịch chiếu phim Avatar ở Nguyễn Văn Cừ"
     => {
       "intent": "find_schedules",
@@ -184,7 +192,7 @@ CONVERSATION CONTEXT:
       "confidence": 0.92
     }
 
-    **5. Schedule with all params:**
+    **6. Schedule with all params:**
     User: "Lịch chiếu Avatar ở Nguyễn Huệ hôm nay"
     => {
       "intent": "find_schedules",
@@ -193,9 +201,10 @@ CONVERSATION CONTEXT:
         "location": "Nguyễn Huệ", 
         "date": "${todayFormatted}"
       },
-      "context": {"needs_followup": false},
-      "confidence": 0.95
-    }    **6. Non-Movie:**
+      "context": {"needs_followup": false},      "confidence": 0.95
+    }
+
+    **7. Non-Movie:**
     User: "Hôm nay thời tiết thế nào?"
     => {
       "intent": "non_movie_related",
@@ -204,7 +213,7 @@ CONVERSATION CONTEXT:
       "confidence": 0.98
     }
 
-    **7. Date Context Examples:**
+    **8. Date Context Examples:**
     User: "Lịch chiếu Avatar hôm nay"
     => {
       "intent": "find_schedules",
@@ -345,8 +354,7 @@ function createFallbackStructure(text) {
  */
 function applyPostProcessingRules(result, userQuery, conversationContext) {
   const lowerQuery = userQuery.toLowerCase().trim();
-  
-  // Rule 1: Context-aware intent correction
+    // Rule 1: Context-aware intent correction
   if (conversationContext && conversationContext.lastIntent === 'find_schedules') {
     const hasScheduleContext = conversationContext.missingParams && conversationContext.missingParams.length > 0;
     
@@ -364,6 +372,16 @@ function applyPostProcessingRules(result, userQuery, conversationContext) {
       if (nextMissingParam === 'movie_title') {
         result.entities.movie_title = userQuery.trim();
       }
+    }
+  }
+
+  // Rule 1.5: Context-aware schedule conversation
+  if (conversationContext && conversationContext.lastIntent === 'schedule_conversation') {
+    if (!['non_movie_related', 'greeting'].includes(result.intent)) {
+      // User đang trả lời tên phim sau khi được hỏi về lịch chiếu
+      result.intent = 'search_for_schedule';
+      result.entities.movie_title = userQuery.trim();
+      result.entities.search_type = 'title';
     }
   }
 
@@ -409,7 +427,6 @@ function performFallbackAnalysis(userQuery, conversationContext) {
     confidence: 0.2,
     fallback: true
   };
-
   // Simple keyword-based intent detection
   if (lowerQuery.includes('phim gì') || lowerQuery.includes('có phim')) {
     result.intent = lowerQuery.includes('sắp') ? 'get_upcoming' : 'get_now_showing';
@@ -420,6 +437,10 @@ function performFallbackAnalysis(userQuery, conversationContext) {
     if (titleMatch && titleMatch[2]) {
       result.entities.movie_title = titleMatch[2].trim();
     }
+  } else if (lowerQuery === 'xem lịch chiếu' || lowerQuery === 'lịch chiếu') {
+    // Nhận diện câu chung chung về lịch chiếu
+    result.intent = 'schedule_conversation';
+    result.confidence = 0.8;
   } else if (lowerQuery.includes('lịch chiếu') || lowerQuery.includes('suất chiếu')) {
     result.intent = 'find_schedules';
     result.context.needs_followup = true;

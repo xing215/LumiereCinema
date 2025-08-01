@@ -114,11 +114,42 @@ const queryChatbot = async (req, res) => {
           finalResponse = ResponseFormatter.formatErrorResponse('api_error');
         }
         break;
-      }
-
-      case 'search_conversation': {
+      }      case 'search_conversation': {
         // Trả lời conversational thay vì tìm kiếm trực tiếp
         finalResponse = ResponseFormatter.formatSearchConversationResponse();
+        break;
+      }      case 'schedule_conversation': {
+        // Hỏi người dùng muốn xem lịch chiếu phim nào
+        finalResponse = ResponseFormatter.formatScheduleConversationResponse();
+        break;
+      }
+
+      case 'search_for_schedule': {
+        // User đã nhập tên phim, tìm và hiển thị top 3 kết quả
+        if (!analysis.entities.movie_title) {
+          finalResponse = ResponseFormatter.formatSmartMissingQuestion('movie_title', { entities: analysis.entities });
+          break;
+        }
+        
+        try {
+          const searchReq = { query: { q: analysis.entities.movie_title } };
+          await movieController.searchMovies(searchReq, mockRes);
+          const movies = capturedData;
+          
+          if (movies && movies.length > 0) {
+            // Format as movie list với context cho schedule
+            const scheduleFocusedMovies = movies.map(movie => ({
+              ...movie,
+              context: 'schedule' // Đánh dấu để frontend biết context
+            }));
+            finalResponse = ResponseFormatter.formatMovieListForSchedule(scheduleFocusedMovies, analysis.entities);
+          } else {
+            finalResponse = ResponseFormatter.formatErrorResponse('movie_not_found');
+          }
+        } catch (error) {
+          console.error('Error searching movies for schedule:', error);
+          finalResponse = ResponseFormatter.formatErrorResponse('api_error');
+        }
         break;
       }
 
