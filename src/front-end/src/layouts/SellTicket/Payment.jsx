@@ -1,10 +1,15 @@
+// =============================================================================
+// IMPORTS
+// =============================================================================
+
 import { useState, useEffect, useRef } from 'react';
 import TicketDetail from '@components/UI/TicketDetail';
 import CustomDropdown from '@components/UI/CustomDropdown.jsx';
-import {useApplyPromotion} from '@hooks/useTicket';
+import { useApplyPromotion } from '@hooks/useTicket';
 
-// Dummy hooks for demonstration, replace with actual imports
-// import { useStartHoldSession, useClearSession } from '...';
+// =============================================================================
+// PAYMENT BUTTON COMPONENT
+// =============================================================================
 
 const PaymentButton = ({ text, selected, onSelect }) => (
     <button 
@@ -13,9 +18,15 @@ const PaymentButton = ({ text, selected, onSelect }) => (
         onClick={onSelect}
     >
         <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
-        <div className="relative py-3 text-center font-['Unbounded'] text-base font-black text-white">{text}</div>
+        <div className="relative py-3 text-center font-['Unbounded'] text-base font-black text-white">
+            {text}
+        </div>
     </button>
 );
+
+// =============================================================================
+// TIMER COMPONENT
+// =============================================================================
 
 const Timer = ({ timeLeft, isExpired }) => {
     const formatTime = (seconds) => {
@@ -24,7 +35,9 @@ const Timer = ({ timeLeft, isExpired }) => {
         const remainingSeconds = seconds % 60;
         return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
+    
     if (timeLeft === null) return null;
+    
     return (
         <div className={`relative w-[95%] md:w-auto rounded-xl px-4 py-2 text-center ${isExpired ? 'bg-red-600/80' : 'bg-zinc-300/80 mix-blend-color-dodge'}`}>
             <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-znc-300/20 mix-blend-color-dodge" />
@@ -40,8 +53,23 @@ const Timer = ({ timeLeft, isExpired }) => {
     );
 };
 
-const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, snackTicketData, updateSnackTicket=() => {}, updateMovieTicket=() => {} }) => {
-    // Defensive defaults for missing props
+// =============================================================================
+// MAIN PAYMENT COMPONENT
+// =============================================================================
+
+const Payment = ({ 
+    createTicket, 
+    sessionExpiresAt, 
+    onExpire, 
+    movieTicketData, 
+    snackTicketData, 
+    updateSnackTicket = () => {}, 
+    updateMovieTicket = () => {} 
+}) => {
+    // =============================================================================
+    // STATE MANAGEMENT
+    // =============================================================================
+
     const safeMovieTicketData = movieTicketData || {};
     const safeSnackTicketData = snackTicketData || {};
     const [selectedPayment, setSelectedPayment] = useState('');
@@ -52,16 +80,26 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
     const customerInputRef = useRef(null);
     const discountInputRef = useRef(null);
 
-    // Import promotion hook
+    // =============================================================================
+    // HOOKS
+    // =============================================================================
+
     const { applyPromotion, appliedPromotion, loading: promotionLoading, error } = useApplyPromotion();
 
-    // Hold seat system timer effect
+    // =============================================================================
+    // TIMER MANAGEMENT EFFECTS
+    // =============================================================================
+    // =============================================================================
+    // TIMER MANAGEMENT EFFECTS
+    // =============================================================================
+
     useEffect(() => {
         if (!sessionExpiresAt) {
             setTimeLeft(null);
             setIsExpired(false);
             return;
         }
+        
         let expiredCalled = false;
         const updateTimer = () => {
             const now = new Date().getTime();
@@ -74,31 +112,35 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
                 if (typeof onExpire === 'function') onExpire();
             }
         };
+        
         updateTimer();
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
     }, [sessionExpiresAt, onExpire]);
 
-    // Promotion application effect
+    // =============================================================================
+    // PROMOTION MANAGEMENT EFFECTS
+    // =============================================================================
+
     useEffect(() => {
         if (appliedPromotion) {
             console.log('Applying promotion:', appliedPromotion);
-            const {snackDiscount: finalSnackDiscount, movieDiscount: finalMovieDiscount} = appliedPromotion;
+            const { snackDiscount: finalSnackDiscount, movieDiscount: finalMovieDiscount } = appliedPromotion;
+            
             if (finalSnackDiscount !== 0) {
-                updateSnackTicket({promotion: appliedPromotion.promotion, discount: finalSnackDiscount });
+                updateSnackTicket({ promotion: appliedPromotion.promotion, discount: finalSnackDiscount });
             }
             if (finalMovieDiscount !== 0) {
-                updateMovieTicket({promotion: appliedPromotion.promotion, discount: finalMovieDiscount });
+                updateMovieTicket({ promotion: appliedPromotion.promotion, discount: finalMovieDiscount });
             }
             if (finalSnackDiscount === 0) {
-                // If snack discount is 0, reset snack promotion
                 updateSnackTicket({ promotion: null, discount: 0 });
             }
             if (finalMovieDiscount === 0) {
-                // If movie discount is 0, reset movie promotion
                 updateMovieTicket({ promotion: null, discount: 0 });
             }
         }
+        
         if (error) {
             console.error('Promotion application error:', error);
             alert(`Error applying promotion`, error);
@@ -107,6 +149,10 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
             updateSnackTicket({ promotion: null, discount: 0 });
         } 
     }, [appliedPromotion, error]);
+
+    // =============================================================================
+    // EVENT HANDLERS
+    // =============================================================================
 
     const handleSelectPayment = async (method) => {
         if (isExpired) {
@@ -125,11 +171,13 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
 
     const handleCustomerInfoBlurOrEnter = async (e) => {
         if (customerInfo.trim()) {
-            updateMovieTicket({ noLoginCustomerInfo: {
-                phone: customerInfo.trim(),
-                name: 'in-store customer',
-                email: null
-            }});
+            updateMovieTicket({ 
+                noLoginCustomerInfo: {
+                    phone: customerInfo.trim(),
+                    name: 'in-store customer',
+                    email: null
+                }
+            });
         }
         discountInputRef.current?.blur();
     };
@@ -140,7 +188,6 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
 
     const handleDiscountBlurOrEnter = async (e) => {
         if (!discountValue.trim()) {
-            // If input is empty, reset promotion and discount
             updateMovieTicket({ promotion: null, discount: 0 });
             updateSnackTicket({ promotion: null, discount: 0 });
             return;
@@ -169,20 +216,31 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
         }
     };
 
+    // =============================================================================
+    // COMPONENT RENDER
+    // =============================================================================
+
     return (
         <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
             <div className="flex items-start justify-center h-[80vh] rounded-xl overflow-hidden w-[90%] relative">
                 <div className="absolute pointer-events-none inset-0 w-full h-full bg-zinc-300/30 mix-blend-color-dodge"/>
+                
                 <div className="flex flex-row w-full h-full">
                     <div className="h-full w-[50%]">
-                        <TicketDetail movieTicketData={safeMovieTicketData} snackTicketData={safeSnackTicketData} isStaff={true} />
+                        <TicketDetail 
+                            movieTicketData={safeMovieTicketData} 
+                            snackTicketData={safeSnackTicketData} 
+                            isStaff={true} 
+                        />
                     </div>
+                    
                     <div className="flex flex-col items-center justify-center gap-3 w-full">
                         <div className="flex w-full justify-center pb-2">
                             <Timer timeLeft={timeLeft} isExpired={isExpired} />
                         </div>
+                        
                         <div className="flex flex-row w-[53%] justify-center items-center">
-                            <div className="w-[35%] text-right mr-2 text-white font-['Unbounded'] text-md font-semibold justify-center items-center ">
+                            <div className="w-[35%] text-right mr-2 text-white font-['Unbounded'] text-md font-semibold justify-center items-center">
                                 CUSTOMER:
                             </div>
                             <input
@@ -199,8 +257,9 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
                                 }}
                             />
                         </div>
+                        
                         <div className="flex flex-row w-[53%] justify-center items-center">
-                            <div className="w-[35%] text-right mr-2 text-white font-['Unbounded'] text-md font-semibold justify-center items-center ">
+                            <div className="w-[35%] text-right mr-2 text-white font-['Unbounded'] text-md font-semibold justify-center items-center">
                                 DISCOUNT:
                             </div>
                             <input
@@ -217,6 +276,7 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
                                 }}
                             />
                         </div>
+                        
                         <PaymentButton 
                             text="MOMO" 
                             selected={selectedPayment === 'MOMO'} 

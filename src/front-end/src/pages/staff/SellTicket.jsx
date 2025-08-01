@@ -1,23 +1,34 @@
+// =============================================================================
+// IMPORTS
+// =============================================================================
+
+// React core
 import { useState, useEffect, useMemo } from 'react';
+
+// Layout and UI components
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
-import { useFetchNowShowing, useFetchComingSoon } from '@hooks/useMovie';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import CustomDropdown from "@/components/UI/CustomDropdown";
-// Additional hooks from TicketPurchase
-import { useGetBranchById } from '@hooks/useBranch';
-import { useGetMovieDetail } from '@hooks/useMovie';
-import { useStartHoldSession, useClearSession, useCreateTicket, useGetSnacksByBranch} from '@hooks/useTicket';
-import { useGetSchedules } from '@hooks/useBranch';
-import { useGetSeatsBySchedule } from '@hooks/useTicket';
+import BackwardButton from '@components/buttons/backwardButton2.jsx';
+import TicketDetail from '@components/UI/TicketDetail.jsx';
+
+// Feature-specific components
 import MovieList from '@layouts/SellTicket/MovieList';
 import Schedule from '@layouts/SellTicket/Schedule';
 import SeatsScreen from '@layouts/SellTicket/SeatsScreen';
 import SnackList from '@/layouts/SellTicket/SnacksList';
-import BackwardButton from '@components/buttons/backwardButton2.jsx';
 import Payment from '@/layouts/SellTicket/Payment';
-import TicketDetail from '@components/UI/TicketDetail.jsx';
+
+// Hooks
+import { useFetchNowShowing, useFetchComingSoon, useGetMovieDetail } from '@hooks/useMovie';
+import { useGetBranchById, useGetSchedules } from '@hooks/useBranch';
+import { useStartHoldSession, useClearSession, useCreateTicket, useGetSnacksByBranch, useGetSeatsBySchedule } from '@hooks/useTicket';
 import { useUser } from '@contexts/UserContext.jsx';
+
+// =============================================================================
+// EMPLOYEE INPUT COMPONENT
+// =============================================================================
 
 const InputSeller = ({ value, onBlur, onChange }) => {
     return (
@@ -36,9 +47,15 @@ const InputSeller = ({ value, onBlur, onChange }) => {
     );
 };
 
-const SellTicket = () => {
+// =============================================================================
+// MAIN SELL TICKET COMPONENT
+// =============================================================================
 
-    // Step-based menu rendering (similar to TicketPurchase)
+const SellTicket = () => {
+    // =============================================================================
+    // CONSTANTS AND CONFIGURATION
+    // =============================================================================
+
     const MENU_STEPS = {
         MOVIE_LIST: 0,
         SCHEDULE: 1,
@@ -47,9 +64,27 @@ const SellTicket = () => {
         PAYMENT: 4,
         TICKET_DISPLAY: 5
     };
+
+    // =============================================================================
+    // CONTEXT AND USER DATA
+    // =============================================================================
+
     const { user } = useUser();
     const cashierBranchId = useMemo(() => user?.branch?._id, [user]);
+
+    // =============================================================================
+    // STATE MANAGEMENT
+    // =============================================================================
+
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.MOVIE_LIST);
+    const [employeeId, setEmployeeId] = useState('');
+    const [startedHoldSession, setStartedHoldSession] = useState(false);
+    const [sessionExpiresAt, setSessionExpiresAt] = useState(null);
+
+    // Movie filter state
+    const [selectedFilter, setSelectedFilter] = useState('NOW SHOWING');
+    const [displayedMovies, setDisplayedMovies] = useState([]);
+
     // Movie ticket data state
     const [movieTicketData, setMovieTicketData] = useState({
         customer: null,
@@ -118,16 +153,10 @@ const SellTicket = () => {
         discounted: 0
     });
 
-    // Update functions
-    const updateMovieTicket = (updates) => {
-        setMovieTicketData(prev => ({ ...prev, ...updates }));
-        console.log('Updated movie ticket data:', { ...movieTicketData, ...updates });
-    };
-    const updateSnackTicket = (updates) => {
-        setSnackTicketData(prev => ({ ...prev, ...updates }));
-        console.log('Updated snack ticket data:', { ...snackTicketData, ...updates });
-    };
-    // Example usage of hooks (not for menu navigation)
+    // =============================================================================
+    // HOOK DECLARATIONS
+    // =============================================================================
+
     const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
     const { getMovieDetail, movieDetail, loading: movieLoading, error: movieError } = useGetMovieDetail();
     const { seats, loading: seatsLoading, error: seatsError, fetchSeats } = useGetSeatsBySchedule();
@@ -135,11 +164,27 @@ const SellTicket = () => {
     const { startHoldSession, holdSeatData, clearHoldSeatData, loading: holdLoading, error: holdError } = useStartHoldSession();
     const { clearSession, loading: clearSessionLoading } = useClearSession();
     const { createTicket, ticket, loading: ticketLoading, error: ticketError } = useCreateTicket();
-
     const { fetchNowShowing, movies: nowShowingMovies, loading: nowShowingLoading } = useFetchNowShowing();
     const { fetchComingSoon, movies: comingSoonMovies, loading: comingSoonLoading } = useFetchComingSoon();
-    const [selectedFilter, setSelectedFilter] = useState('NOW SHOWING');
-    const [displayedMovies, setDisplayedMovies] = useState([]);
+    const { fetchSchedules, schedules, loading: schedulesLoading, error: schedulesError } = useGetSchedules();
+
+    // =============================================================================
+    // DATA UPDATE FUNCTIONS
+    // =============================================================================
+
+    const updateMovieTicket = (updates) => {
+        setMovieTicketData(prev => ({ ...prev, ...updates }));
+        console.log('Updated movie ticket data:', { ...movieTicketData, ...updates });
+    };
+
+    const updateSnackTicket = (updates) => {
+        setSnackTicketData(prev => ({ ...prev, ...updates }));
+        console.log('Updated snack ticket data:', { ...snackTicketData, ...updates });
+    };
+
+    // =============================================================================
+    // INITIALIZATION EFFECTS
+    // =============================================================================
 
     useEffect(() => {
         if (user && cashierBranchId) {
@@ -155,17 +200,6 @@ const SellTicket = () => {
             console.log('Error fetching branch:', branchError);
         }
     }, [branch]);
-
-const handleFilterChange = (filter) => {
-        setSelectedFilter(filter);
-        if (filter === 'NOW SHOWING') {
-            setDisplayedMovies(nowShowingMovies);
-        } else if (filter === 'UPCOMING') {
-            setDisplayedMovies(comingSoonMovies);
-        } else if (filter === 'ALL MOVIES') {
-            setDisplayedMovies([...nowShowingMovies, ...comingSoonMovies]);
-        }
-    }
 
     useEffect(() => {
         fetchNowShowing();
@@ -208,7 +242,34 @@ const handleFilterChange = (filter) => {
         }
     }, [nowShowingMovies]);
 
-    const { fetchSchedules, schedules, loading: schedulesLoading, error: schedulesError } = useGetSchedules();
+    // =============================================================================
+    // EVENT HANDLERS
+    // =============================================================================
+
+    const handleFilterChange = (filter) => {
+        setSelectedFilter(filter);
+        if (filter === 'NOW SHOWING') {
+            setDisplayedMovies(nowShowingMovies);
+        } else if (filter === 'UPCOMING') {
+            setDisplayedMovies(comingSoonMovies);
+        } else if (filter === 'ALL MOVIES') {
+            setDisplayedMovies([...nowShowingMovies, ...comingSoonMovies]);
+        }
+    };
+
+    const handleEmployeeIdChange = (e) => {
+        setEmployeeId(e.target.value);
+    };
+
+    const handleEmployeeIdBlur = () => {
+        if (employeeId.trim() === '') {
+            setEmployeeId('');
+        } else {
+            updateMovieTicket({ seller: employeeId });
+            updateSnackTicket({ seller: employeeId });
+        }
+    };
+
     const onMovieSelect = async (movie) => {
         try {
             console.log('Selected movie:', movie);
@@ -266,40 +327,46 @@ const handleFilterChange = (filter) => {
         }
     };
 
-
-    const [employeeId, setEmployeeId] = useState('');
-    const handleEmployeeIdChange = (e) => {
-        setEmployeeId(e.target.value);
-    };
-    const handleEmployeeIdBlur = () => {
-        if (employeeId.trim() === '') {
-            setEmployeeId('');
-        } else {
-            updateMovieTicket({ seller: employeeId });
-            updateSnackTicket({ seller: employeeId });
-        }
+    const handleSessionExpire = () => {
+        console.log('Session expired, clearing session...', holdSeatData);
+        setStartedHoldSession(false);
+        setSessionExpiresAt(null);
+        alert('Your session has expired. Please select your seats again.');
+        updateMovieTicket({ seats: [] });
+        setCurrentStep(MENU_STEPS.SEATS);
+        clearHoldSeatData();
     };
 
-        // Hold seat system state
-    const [startedHoldSession, setStartedHoldSession] = useState(false);
-    const [sessionExpiresAt, setSessionExpiresAt] = useState(null);
+    // =============================================================================
+    // NAVIGATION FUNCTIONS
+    // =============================================================================
 
-    // Hold seat session effect (similar to TicketPurchase)
+    const goToNextStep = () => {
+        setCurrentStep(prev => prev + 1);
+    };
+
+    const goToPreviousStep = () => {
+        setCurrentStep(prev => (prev > 0 ? prev - 1 : 0));
+    };
+
+    // =============================================================================
+    // HOLD SESSION AND TICKET MANAGEMENT EFFECTS
+    // =============================================================================
+
     useEffect(() => {
         async function holdSessionIfNeeded() {
-            // Start hold session when entering PAYMENT step and not already started
             if (currentStep === MENU_STEPS.PAYMENT && !startedHoldSession) {
                 await startHoldSession({ scheduleId: movieTicketData.schedule._id, seatNumbers: movieTicketData.seats });
             }
         }
         holdSessionIfNeeded();
 
-         if (currentStep == MENU_STEPS.TICKET_DISPLAY) {
-                const timer = setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-                return () => clearTimeout(timer);
-            }
+        if (currentStep == MENU_STEPS.TICKET_DISPLAY) {
+            const timer = setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
     }, [currentStep]);
 
     useEffect(() => {
@@ -326,18 +393,6 @@ const handleFilterChange = (filter) => {
         }
     }, [holdSeatData, holdError]);
 
-    const handleSessionExpire = () => {
-        console.log('Session expired, clearing session...', holdSeatData);
-        setStartedHoldSession(false);
-        setSessionExpiresAt(null);
-        // clearSession(); // Uncomment if you want to clear session on expire
-        alert('Your session has expired. Please select your seats again.');
-        updateMovieTicket({ seats: [], });
-        setCurrentStep(MENU_STEPS.SEATS);
-        clearHoldSeatData()
-    };
-
-        // Clear session when seats change (like TicketPurchase)
     useEffect(() => {
         if (startedHoldSession) {
             setStartedHoldSession(false);
@@ -349,7 +404,6 @@ const handleFilterChange = (filter) => {
         }
     }, [movieTicketData.seats]);
 
-    // Reset promotion and discount if noLoginCustomerInfo changes (from TicketPurchase)
     useEffect(() => {
         updateMovieTicket({ promotion: null, discount: 0 });
         updateSnackTicket({ promotion: null, discount: 0 });
@@ -379,15 +433,9 @@ const handleFilterChange = (filter) => {
         }
     }, [ticket, ticketError]);
 
-    const goToNextStep = () => {
-        setCurrentStep(prev => prev + 1);
-    };
-    const goToPreviousStep = () => {
-        setCurrentStep(prev => (prev > 0 ? prev - 1 : 0));
-    };
-
-    
-    
+    // =============================================================================
+    // RENDER MENU FUNCTIONS
+    // =============================================================================
 
     const renderCurrentMenu = () => {
         switch (currentStep) {
@@ -503,34 +551,50 @@ case MENU_STEPS.PAYMENT:
         }
     };
 
+    // =============================================================================
+    // MAIN COMPONENT RENDER
+    // =============================================================================
+
     return (
         <StaffLayout>
             <MobileNotSupported>
-
-                {currentStep!== MENU_STEPS.MOVIE_LIST && currentStep !== MENU_STEPS.TICKET_DISPLAY &&
-                <div className='flex justify-center items-center absolute top-[2%] w-full'>
-                <NavigationProgress
-                    movieTicketData={movieTicketData}
-                    snackTicketData={snackTicketData}
-                    setCurrentStep={setCurrentStep}
-                    currentStep={currentStep}
-                    MENU_STEPS={MENU_STEPS}
+                {currentStep !== MENU_STEPS.MOVIE_LIST && currentStep !== MENU_STEPS.TICKET_DISPLAY && (
+                    <div className='flex justify-center items-center absolute top-[2%] w-full'>
+                        <NavigationProgress
+                            movieTicketData={movieTicketData}
+                            snackTicketData={snackTicketData}
+                            setCurrentStep={setCurrentStep}
+                            currentStep={currentStep}
+                            MENU_STEPS={MENU_STEPS}
+                        />
+                    </div>
+                )}
+                
+                <InputSeller 
+                    value={employeeId || ''} 
+                    onChange={handleEmployeeIdChange} 
+                    onBlur={handleEmployeeIdBlur}
                 />
-                </div>}
-                <InputSeller value={employeeId || ''} onChange={handleEmployeeIdChange} onBlur={handleEmployeeIdBlur}/>
-                {/* Step-based menu render */}
+                
                 {renderCurrentMenu()}
-                <SelectBranchButton isLoading={branchLoading} branchName={branch?.name} />
+                
+                <SelectBranchButton 
+                    isLoading={branchLoading} 
+                    branchName={branch?.name} 
+                />
             </MobileNotSupported>
 
-            {/* Background blur effects */}
             <div className="tranform absolute top-0 left-1/5 h-52 w-52 -translate-y-1/2 rounded-full bg-sky-400/60 mix-blend-lighten blur-[100px]" />
             <div className="tranform absolute top-1/4 left-0 h-44 w-44 -translate-x-1/2 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px]" />
             <div className="absolute top-1/2 right-1/11 h-28 w-28 rounded-full bg-amber-300/60 mix-blend-lighten blur-[100px]" />
             <div className="tranform absolute right-0 bottom-0 h-56 w-56 translate-x-1/2 rounded-full bg-purple-600/60 mix-blend-lighten blur-[100px]" />
         </StaffLayout>
     );
-}
+};
+
+// =============================================================================
+// NAVIGATION PROGRESS COMPONENT
+// =============================================================================
 
 const NavigationProgress = ({ movieTicketData, snackTicketData, setCurrentStep, currentStep, MENU_STEPS }) => {
     const Steps = ({active = false, onClick, text, connector=false}) => (
@@ -563,6 +627,6 @@ const NavigationProgress = ({ movieTicketData, snackTicketData, setCurrentStep, 
             <Steps active={(movieTicketData?.seats.length > 0)} onClick={() => setCurrentStep(MENU_STEPS.PAYMENT)} text="Pay" connector={true}/>
         </div>
     );
-}
+};
 
 export default SellTicket;
