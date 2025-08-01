@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useState, useRef, useEffect } from 'react'
 import ticketImg from '@assets/img/cineticket.png';
 import { useNavigate } from 'react-router-dom';
 import { getMovieDetailsPath, getBuyTicketPath } from '@routes/routeConfig';
@@ -42,8 +41,6 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     const [showOverlay, setShowOverlay] = useState(false);
     const [, forceUpdate] = useState(0); // for global overlay state
     const cardRef = useRef(null);
-    const cardId = useRef(uuidv4());
-    const navigate = useNavigate();
     const descRef = useRef(null);
     const titleRef = useRef(null);
     const metaRef = useRef(null);

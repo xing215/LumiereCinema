@@ -45,7 +45,7 @@ const MovieInfo = ({ movieId, branchId }) => {
             navigate(ROUTES.NOT_FOUND, { replace: true });
         }
     }, [error, navigate]);
-    console.log('MovieInfo', movieDetail);
+    
     return (
         <>
             <TrailerVideo videoYouTube={movieDetail?.trailerURL} />

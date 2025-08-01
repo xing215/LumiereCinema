@@ -6,6 +6,7 @@ import ForwardButton from '@components/buttons/forwardButton.jsx';
 import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 import { useFetchNowShowing } from '@hooks/useMovie';
 
+
 const NowShowingFrame = () => {
     const { fetchNowShowing, movies: nowShowingMovies, loading } = useFetchNowShowing();
     useEffect(() => { fetchNowShowing(); }, []);
