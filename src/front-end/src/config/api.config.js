@@ -111,9 +111,11 @@ const API_CONFIG = {
     getAllTickets: '/api/tickets/snacks/admin/all',
     getTicketByCode: '/api/tickets/snacks/admin', // + /:ticketCode
     updateTicket: '/api/tickets/snacks/admin', // PATCH + /:ticketCode
-    deleteTicket: '/api/tickets/snacks/admin', // DELETE + /:ticketCode
-    holdSeat: '/api/tickets/movie/hold',
+    deleteTicket: '/api/tickets/snacks/admin', // DELETE + /:ticketCode    holdSeat: '/api/tickets/movie/hold',
     checkDiscountedTotal: '/api/tickets/calculate-discounted',
+    
+    // Chatbot endpoints
+    chatbotQuery: '/api/chatbot/query',
   }
 };
 

@@ -69,7 +69,6 @@ const QrScannerView = ({ onScanSuccess, onClose }) => {
                 <X size={24} />
             </button>
 
-            {/* Lớp phủ viewfinder CSS CỦA BẠN */}
             <div className="absolute inset-0 z-10 pointer-events-none">
                 <div className="absolute inset-0 border-[40px] border-black/30 md:border-[50px]"></div>
                 <div className="absolute top-1/2 left-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2" style={{ aspectRatio: '1 / 1' }}>
