@@ -179,6 +179,7 @@
   /* Minimal interference for better interaction */
   caret-color: transparent;
   cursor: pointer;
+  padding-right: 48px !important; /* Extra space for both icons */
 }
 
 /* Prevent text selection and mobile keyboard on input focus */
@@ -201,4 +202,31 @@
     position: fixed !important;
     z-index: 9999;
   }
+}
+
+/* Style for the clear button (X) */
+.react-datepicker__close-icon {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background-color: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+}
+
+.react-datepicker__close-icon::after {
+  content: '×' !important;
+  color: #6b7280 !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  background-color: transparent !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.react-datepicker__close-icon:hover::after {
+  color: #374151 !important;
 }
