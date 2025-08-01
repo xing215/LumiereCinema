@@ -1,4 +1,4 @@
-// components/ChatMessage/MessageTypes/MovieCard.jsx
+// components/display/ChatBot/MessageTypes/MovieCard.jsx
 import React from 'react';
 import { Play, Calendar, Clock, Star } from 'lucide-react';
 

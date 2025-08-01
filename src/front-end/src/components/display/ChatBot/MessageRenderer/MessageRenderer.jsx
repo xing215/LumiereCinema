@@ -1,10 +1,7 @@
-// components/ChatMessage/MessageRenderer.jsx
+// components/display/ChatBot/MessageRenderer/MessageRenderer.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import MovieCard from './MessageTypes/MovieCard';
-import MovieList from './MessageTypes/MovieList';
-import ScheduleList from './MessageTypes/ScheduleList';
-import QuickActions from './MessageTypes/QuickActions';
+import { MovieCard, MovieList, ScheduleList, QuickActions } from '../MessageTypes';
 
 /**
  * MessageRenderer - Component render tin nhắn dựa theo type từ backend
@@ -20,6 +17,7 @@ import QuickActions from './MessageTypes/QuickActions';
  */
 const MessageRenderer = ({ message, onQuickAction }) => {
   const navigate = useNavigate();
+  
   // Nếu message không có botData, render text thường
   if (!message.botData || !message.botData.type) {
     return (
@@ -65,7 +63,8 @@ const MessageRenderer = ({ message, onQuickAction }) => {
 
   // Render theo type
   switch (type) {
-    case 'movie_details':      return (
+    case 'movie_details':
+      return (
         <div className="space-y-3">
           {/* Text message */}
           <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
@@ -82,7 +81,8 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       );
 
     case 'movie_list':
-      return (        <div className="space-y-3">
+      return (
+        <div className="space-y-3">
           {/* Header message */}
           <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
@@ -97,7 +97,8 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       );
 
     case 'schedule_list':
-      return (        <div className="space-y-3">
+      return (
+        <div className="space-y-3">
           {/* Header message */}
           <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
@@ -113,7 +114,8 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       );
 
     case 'follow_up_question':
-      return (        <div className="space-y-3">
+      return (
+        <div className="space-y-3">
           {/* Question message */}
           <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
@@ -129,7 +131,8 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       );
 
     case 'non_movie_related':
-      return (        <div className="space-y-3">
+      return (
+        <div className="space-y-3">
           {/* Polite decline message */}
           <div className="inline-block px-3 py-2 rounded-xl bg-orange-500 shadow-[inset_0px_0px_50px_3px_rgba(251,113,133,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
@@ -145,7 +148,8 @@ const MessageRenderer = ({ message, onQuickAction }) => {
         </div>
       );
 
-    default:      // Fallback cho text message
+    default:
+      // Fallback cho text message
       return (
         <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
           {message.message}

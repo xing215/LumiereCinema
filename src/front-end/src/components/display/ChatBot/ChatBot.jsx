@@ -1,9 +1,17 @@
-// src/components/ChatBot.jsx
+// components/display/ChatBot/ChatBot.jsx
 
 import { useState } from 'react';
-import ChatWindow from '@layouts/Chatbot/ChatWindow'; // Đảm bảo đường dẫn đúng
-import botIcon from '@assets/img/ChatbotPurple.svg'; // Đảm bảo đường dẫn đúng
+import ChatWindow from './ChatWindow';
+import botIcon from '@assets/img/ChatbotPurple.svg';
 
+/**
+ * ChatBot Component - Main chatbot display component
+ * 
+ * Features:
+ * - Toggle chat window visibility
+ * - Floating action button in bottom-right corner
+ * - Integrates with ChatWindow for full chat experience
+ */
 const ChatBot = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
 

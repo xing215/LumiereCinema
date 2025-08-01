@@ -29,7 +29,6 @@ CONVERSATION CONTEXT:
   const nextSaturday = new Date(today);
   nextSaturday.setDate(today.getDate() + daysUntilSaturday);
   const saturdayFormatted = nextSaturday.toISOString().split('T')[0];
-
   return `
     Bạn là AI Assistant chuyên nghiệp của Lumiere Cinema. Nhiệm vụ chính là phục vụ 5 CHỨC NĂNG CỐT LÕI về phim ảnh.
 
@@ -37,6 +36,11 @@ CONVERSATION CONTEXT:
     - Hôm nay: ${todayFormatted}
     - Ngày mai: ${tomorrowFormatted}  
     - Thứ 7 tiếp theo: ${saturdayFormatted}
+
+    ### THÔNG TIN CÁC CHI NHÁNH LUMIERE CINEMA:
+    - "Nguyễn Văn Cừ" (Chi nhánh chính)
+    - "Nguyễn Huệ" (Trung tâm thành phố)  
+    - "Huỳnh Tấn Phát" (Quận 7)
 
     ${contextInfo}
 
@@ -74,13 +78,11 @@ CONVERSATION CONTEXT:
     **Movie Title Normalization:**
     - "Avata" -> "Avatar", "người sắt" -> "Iron Man"
     - "phim của DiCaprio" -> search by actor
-    - "phim siêu anh hùng" -> genre-based search
-
-    **Location Standardization:**
-    - "Q1", "quận 1", "district 1" -> "Quận 1"
-    - "Gò Vấp", "Go Vap" -> "Gò Vấp"
-    - "Bình Thạnh", "Binh Thanh" -> "Bình Thạnh"
-    - "gần tôi", "gần nhất" -> location_request    **Smart Date Processing:**
+    - "phim siêu anh hùng" -> genre-based search    **Location Standardization (CHI NHÁNH LUMIERE CINEMA):**
+    - "Nguyễn Văn Cừ", "chi nhánh chính", "rạp chính" -> "Nguyễn Văn Cừ"
+    - "Nguyễn Huệ", "trung tâm", "downtown", "quận 1" -> "Nguyễn Huệ"
+    - "Huỳnh Tấn Phát", "quận 7", "Q7", "phú mỹ hưng" -> "Huỳnh Tấn Phát"
+    - "gần tôi", "gần nhất" -> location_request (hỏi thêm thông tin)**Smart Date Processing:**
     - "hôm nay" -> ${todayFormatted}
     - "mai", "ngày mai" -> ${tomorrowFormatted}
     - "cuối tuần", "weekend" -> ${saturdayFormatted} (thứ 7 tiếp theo)
@@ -133,22 +135,31 @@ CONVERSATION CONTEXT:
         "next_question": "movie_title"
       },
       "confidence": 0.90
-    }
-
-    **4. Schedule - Partial Info:**
-    User: "Lịch chiếu phim Avatar"
+    }    **4. Schedule with Branch:**
+    User: "Lịch chiếu phim Avatar ở Nguyễn Văn Cừ"
     => {
       "intent": "find_schedules",
-      "entities": {"movie_title": "Avatar"},
+      "entities": {"movie_title": "Avatar", "location": "Nguyễn Văn Cừ"},
       "context": {
         "needs_followup": true, 
-        "missing_params": ["location", "date"],
-        "next_question": "location"
+        "missing_params": ["date"],
+        "next_question": "date"
       },
       "confidence": 0.92
     }
 
-    **5. Non-Movie:**
+    **5. Schedule with all params:**
+    User: "Lịch chiếu Avatar ở Nguyễn Huệ hôm nay"
+    => {
+      "intent": "find_schedules",
+      "entities": {
+        "movie_title": "Avatar", 
+        "location": "Nguyễn Huệ", 
+        "date": "${todayFormatted}"
+      },
+      "context": {"needs_followup": false},
+      "confidence": 0.95
+    }    **6. Non-Movie:**
     User: "Hôm nay thời tiết thế nào?"
     => {
       "intent": "non_movie_related",
@@ -157,7 +168,7 @@ CONVERSATION CONTEXT:
       "confidence": 0.98
     }
 
-    **6. Date Context Examples:**
+    **7. Date Context Examples:**
     User: "Lịch chiếu Avatar hôm nay"
     => {
       "intent": "find_schedules",
@@ -306,10 +317,9 @@ function applyPostProcessingRules(result, userQuery, conversationContext) {
     if (hasScheduleContext && !['find_schedules', 'non_movie_related'].includes(result.intent)) {
       // User đang trong luồng tìm lịch chiếu, có thể đang trả lời parameter
       result.intent = 'find_schedules';
-      
-      // Extract entity based on missing parameter
+        // Extract entity based on missing parameter
       const nextMissingParam = conversationContext.missingParams[0];
-      if (nextMissingParam === 'location' && (lowerQuery.includes('quận') || lowerQuery.includes('gò vấp') || lowerQuery.includes('bình thạnh'))) {
+      if (nextMissingParam === 'location' && (lowerQuery.includes('nguyễn') || lowerQuery.includes('huỳnh') || lowerQuery.includes('quận'))) {
         result.entities.location = extractLocationFromQuery(userQuery);
       }
       if (nextMissingParam === 'date' && (lowerQuery.includes('hôm nay') || lowerQuery.includes('mai') || lowerQuery.match(/\d+\/\d+/))) {
@@ -406,9 +416,18 @@ function performFallbackAnalysis(userQuery, conversationContext) {
  */
 function extractLocationFromQuery(query) {
   const lowerQuery = query.toLowerCase();
-  if (lowerQuery.includes('quận 1') || lowerQuery.includes('q1')) return 'Quận 1';
-  if (lowerQuery.includes('gò vấp')) return 'Gò Vấp';
-  if (lowerQuery.includes('bình thạnh')) return 'Bình Thạnh';
+  
+  // Mapping các tên chi nhánh Lumiere Cinema
+  if (lowerQuery.includes('nguyễn văn cừ') || lowerQuery.includes('chi nhánh chính') || lowerQuery.includes('rạp chính')) {
+    return 'Nguyễn Văn Cừ';
+  }
+  if (lowerQuery.includes('nguyễn huệ') || lowerQuery.includes('trung tâm') || lowerQuery.includes('downtown') || lowerQuery.includes('quận 1')) {
+    return 'Nguyễn Huệ';
+  }
+  if (lowerQuery.includes('huỳnh tấn phát') || lowerQuery.includes('quận 7') || lowerQuery.includes('q7') || lowerQuery.includes('phú mỹ hưng')) {
+    return 'Huỳnh Tấn Phát';
+  }
+  
   return query.trim();
 }
 
@@ -427,14 +446,30 @@ function extractDateFromQuery(query) {
 
 function normalizeLocation(location) {
   const mapping = {
-    'q1': 'Quận 1',
-    'quận 1': 'Quận 1',
-    'district 1': 'Quận 1',
-    'go vap': 'Gò Vấp',
-    'gò vấp': 'Gò Vấp',
-    'binh thanh': 'Bình Thạnh',
-    'bình thạnh': 'Bình Thạnh'
+    // Chi nhánh Nguyễn Văn Cừ
+    'nguyễn văn cừ': 'Nguyễn Văn Cừ',
+    'nguyen van cu': 'Nguyễn Văn Cừ',
+    'chi nhánh chính': 'Nguyễn Văn Cừ',
+    'rạp chính': 'Nguyễn Văn Cừ',
+    
+    // Chi nhánh Nguyễn Huệ
+    'nguyễn huệ': 'Nguyễn Huệ',
+    'nguyen hue': 'Nguyễn Huệ',
+    'trung tâm': 'Nguyễn Huệ',
+    'downtown': 'Nguyễn Huệ',
+    'quận 1': 'Nguyễn Huệ',
+    'q1': 'Nguyễn Huệ',
+    'district 1': 'Nguyễn Huệ',
+    
+    // Chi nhánh Huỳnh Tấn Phát
+    'huỳnh tấn phát': 'Huỳnh Tấn Phát',
+    'huynh tan phat': 'Huỳnh Tấn Phát',
+    'quận 7': 'Huỳnh Tấn Phát',
+    'q7': 'Huỳnh Tấn Phát',
+    'phú mỹ hưng': 'Huỳnh Tấn Phát',
+    'phu my hung': 'Huỳnh Tấn Phát'
   };
+  
   return mapping[location.toLowerCase()] || location;
 }
 

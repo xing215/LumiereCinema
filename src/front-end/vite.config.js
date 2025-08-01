@@ -7,9 +7,9 @@ import path from 'path';
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react(), tailwindcss(), svgr()],
-    resolve: {
-        alias: {
+    resolve: {        alias: {
             '@': path.resolve('./src'),
+            '@features': path.resolve('./src/features'),
             '@hooks': path.resolve('./src/hooks'),
             '@components': path.resolve('./src/components'),
             '@layouts': path.resolve('./src/layouts'),

@@ -27,11 +27,10 @@ class ResponseFormatter {
           "Bạn muốn xem lịch chiếu phim gì ạ? (VD: Avatar, Spider-Man, Iron Man)",
           "Cho tôi biết tên phim bạn quan tâm nhé!",
           "Phim nào bạn đang muốn tìm lịch chiếu?"
-        ],
-        location: [
-          "Bạn muốn xem ở rạp nào? Lumiere Cinema có ở: Quận 1, Gò Vấp, Bình Thạnh",
-          "Chọn chi nhánh bạn muốn đến: Quận 1, Gò Vấp, hay Bình Thạnh?",
-          "Rạp nào tiện cho bạn? (Quận 1 / Gò Vấp / Bình Thạnh)"
+        ],        location: [
+          "Bạn muốn xem ở rạp nào? Lumiere Cinema có: Nguyễn Văn Cừ, Nguyễn Huệ, Huỳnh Tấn Phát",
+          "Chọn chi nhánh bạn muốn đến: Nguyễn Văn Cừ, Nguyễn Huệ, hay Huỳnh Tấn Phát?",
+          "Rạp nào tiện cho bạn? (Nguyễn Văn Cừ / Nguyễn Huệ / Huỳnh Tấn Phát)"
         ],
         date: [
           "Bạn muốn xem vào ngày nào? (VD: hôm nay, mai, thứ 7, hoặc 25/12)",
@@ -120,12 +119,12 @@ class ResponseFormatter {
 
     const translatedFields = missingFields.map(field => fieldTranslations[field] || field);
     const messagePrefix = this.getRandomTemplate('missing_info_prefix');
-    const question = `${messagePrefix}${translatedFields.join(' và ')} nhé.`;
-
-    // Gợi ý cho người dùng
+    const question = `${messagePrefix}${translatedFields.join(' và ')} nhé.`;    // Gợi ý cho người dùng
     const suggestions = [];
     if (missingFields.includes('location')) {
-      suggestions.push({ text: 'Rạp gần tôi', action: 'find_nearest_branch' });
+      suggestions.push({ text: '📍 Nguyễn Văn Cừ', action: 'provide_info', data: { location: 'Nguyễn Văn Cừ' } });
+      suggestions.push({ text: '📍 Nguyễn Huệ', action: 'provide_info', data: { location: 'Nguyễn Huệ' } });
+      suggestions.push({ text: '📍 Huỳnh Tấn Phát', action: 'provide_info', data: { location: 'Huỳnh Tấn Phát' } });
     }
     if (missingFields.includes('date')) {
       suggestions.push({ text: 'Hôm nay', action: 'provide_info', data: { date: 'hôm nay' } });
@@ -182,14 +181,13 @@ class ResponseFormatter {
         ];
         quickActions = ['Avatar', 'Spider-Man', 'Iron Man', 'Fast & Furious'];
         break;
-        
-      case 'location':
+          case 'location':
         suggestions = [
-          { text: 'Quận 1', action: 'select_branch', data: { location: 'Quận 1' } },
-          { text: 'Gò Vấp', action: 'select_branch', data: { location: 'Gò Vấp' } },
-          { text: 'Bình Thạnh', action: 'select_branch', data: { location: 'Bình Thạnh' } }
+          { text: '📍 Nguyễn Văn Cừ', action: 'select_branch', data: { location: 'Nguyễn Văn Cừ' } },
+          { text: '📍 Nguyễn Huệ', action: 'select_branch', data: { location: 'Nguyễn Huệ' } },
+          { text: '📍 Huỳnh Tấn Phát', action: 'select_branch', data: { location: 'Huỳnh Tấn Phát' } }
         ];
-        quickActions = ['Quận 1', 'Gò Vấp', 'Bình Thạnh', 'Gần tôi'];
+        quickActions = ['Nguyễn Văn Cừ', 'Nguyễn Huệ', 'Huỳnh Tấn Phát', 'Gần tôi'];
         break;
         
       case 'date':

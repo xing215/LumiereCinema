@@ -1,4 +1,4 @@
-// src/components/ChatWindow.jsx
+// components/display/ChatBot/ChatWindow/ChatWindow.jsx
 
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@chatscope/chat-ui-kit-react';
 import botIcon from '@assets/img/ChatbotPurple.svg';
 import useChatbot from '@hooks/useChatbot';
-import MessageRenderer from '@components/ChatMessage/MessageRenderer';
+import MessageRenderer from '../MessageRenderer';
 import { useEffect, useRef } from 'react';
 
 /**
@@ -48,6 +48,7 @@ const ChatWindow = ({ onMinimize }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
   /**
    * Xử lý khi người dùng gửi tin nhắn
    * @param {string} innerHtml - Nội dung tin nhắn (có thể chứa HTML)
@@ -64,6 +65,7 @@ const ChatWindow = ({ onMinimize }) => {
   const handleQuickAction = (actionText) => {
     sendQuickAction(actionText);
   };
+
   return (
     <div
       className="
@@ -102,7 +104,9 @@ const ChatWindow = ({ onMinimize }) => {
         >
           —
         </button>
-      </div>      {/* Message List */}
+      </div>
+
+      {/* Message List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 text-white">
         {/* Hiển thị tin nhắn */}
         {messages.map((message) => (
@@ -124,7 +128,9 @@ const ChatWindow = ({ onMinimize }) => {
         
         {/* Invisible element để scroll đến */}
         <div ref={messagesEndRef} />
-      </div>{/* Typing indicator */}
+      </div>
+
+      {/* Typing indicator */}
       {isLoading && (
         <div className="px-4 pb-2">
           <div className="flex items-end gap-2 text-left">
