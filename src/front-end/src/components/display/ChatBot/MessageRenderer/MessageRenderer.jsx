@@ -16,12 +16,10 @@ import { MovieCard, MovieList, ScheduleList, QuickActions } from '../MessageType
  * 5. 'text' hoặc default -> Plain text message
  */
 const MessageRenderer = ({ message, onQuickAction }) => {
-  const navigate = useNavigate();
-  
-  // Nếu message không có botData, render text thường
+  const navigate = useNavigate();  // Nếu message không có botData, render text thường
   if (!message.botData || !message.botData.type) {
     return (
-      <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
+      <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
         {message.message}
       </div>
     );
@@ -62,12 +60,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
   };
 
   // Render theo type
-  switch (type) {
-    case 'movie_details':
+  switch (type) {    case 'movie_details':
       return (
         <div className="space-y-3">
           {/* Text message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
           </div>
           
@@ -78,13 +75,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             quickActions={quick_actions}
           />
         </div>
-      );
-
-    case 'movie_list':
+      );    case 'movie_list':
       return (
         <div className="space-y-3">
           {/* Header message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
           </div>
           
@@ -94,13 +89,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             onAction={handleQuickAction}
           />
         </div>
-      );
-
-    case 'schedule_list':
+      );    case 'schedule_list':
       return (
         <div className="space-y-3">
           {/* Header message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
           </div>
           
@@ -111,13 +104,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             suggestions={suggestions}
           />
         </div>
-      );
-
-    case 'follow_up_question':
+      );    case 'follow_up_question':
       return (
         <div className="space-y-3">
           {/* Question message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
           </div>
           
@@ -128,13 +119,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             onAction={handleQuickAction}
           />
         </div>
-      );
-
-    case 'non_movie_related':
+      );    case 'non_movie_related':
       return (
         <div className="space-y-3">
           {/* Polite decline message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-orange-500 shadow-[inset_0px_0px_50px_3px_rgba(251,113,133,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
             {message.message}
           </div>
           
@@ -146,12 +135,10 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             />
           )}
         </div>
-      );
-
-    default:
+      );    default:
       // Fallback cho text message
       return (
-        <div className="inline-block px-3 py-2 rounded-xl bg-purple-600 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)] text-white max-w-xs lg:max-w-md">
+        <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
           {message.message}
         </div>
       );
