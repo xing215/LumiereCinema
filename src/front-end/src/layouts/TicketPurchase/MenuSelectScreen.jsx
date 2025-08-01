@@ -30,12 +30,16 @@ const TimeGrid = ({ selectedSchedule, onScheduleSelect, schedules, viewingDate }
         return date.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
             minute: '2-digit',
-            hour12: false 
+            hour12: false,
+            timeZone: 'Asia/Ho_Chi_Minh'
         });
     };
     
     const filteredSchedules = viewingDate ? schedules.filter(schedule => {
-        const scheduleDate = new Date(schedule.startTime).toISOString().split('T')[0];
+        // Convert to Vietnam timezone for accurate date comparison
+        const scheduleDate = new Date(schedule.startTime).toLocaleDateString('en-CA', {
+            timeZone: 'Asia/Ho_Chi_Minh'
+        });
         return scheduleDate === viewingDate;
     }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime)) : [];
 
@@ -106,7 +110,10 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
 
 
     const uniqueDates = [...new Set(schedules.map(schedule => {
-        return new Date(schedule.startTime).toISOString().split('T')[0];
+        // Convert to Vietnam timezone for accurate date grouping
+        return new Date(schedule.startTime).toLocaleDateString('en-CA', {
+            timeZone: 'Asia/Ho_Chi_Minh'
+        });
     }))]
     .sort()
     .map(dateStr => ({ date: dateStr }));
@@ -129,7 +136,10 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
 
     const getSelectedDate = () => {
         if (movieTicketData.schedule?._id) {
-            const selectedDate = new Date(movieTicketData.schedule.startTime).toISOString().split('T')[0];
+            // Convert to Vietnam timezone for accurate date display
+            const selectedDate = new Date(movieTicketData.schedule.startTime).toLocaleDateString('en-CA', {
+                timeZone: 'Asia/Ho_Chi_Minh'
+            });
             return { date: selectedDate };
         }
         return null;
@@ -186,7 +196,8 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
         return date.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
             minute: '2-digit',
-            hour12: false 
+            hour12: false,
+            timeZone: 'Asia/Ho_Chi_Minh'
         });
     };
 
@@ -285,7 +296,8 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                                             weekday: 'long',
                                             day: 'numeric',
                                             month: 'long',
-                                            year: 'numeric'
+                                            year: 'numeric',
+                                            timeZone: 'Asia/Ho_Chi_Minh'
                                         })
                                         : ''
                                     }, {formatTimeForDisplay(movieTicketData.schedule?.startTime)}
@@ -331,7 +343,8 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                                         weekday: 'long',
                                         day: 'numeric',
                                         month: 'long',
-                                        year: 'numeric'
+                                        year: 'numeric',
+                                        timeZone: 'Asia/Ho_Chi_Minh'
                                     })
                                     : ''
                                 }, {formatTimeForDisplay(movieTicketData.schedule?.startTime)}

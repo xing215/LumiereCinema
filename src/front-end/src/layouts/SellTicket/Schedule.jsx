@@ -8,10 +8,14 @@ import { useState, useEffect } from 'react';
 // UTILITY FUNCTIONS
 // =============================================================================
 
-const getDateString = date => new Date(date).toISOString().split('T')[0];
+const getDateString = date => {
+    return new Date(date).toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh'
+    });
+};
 
 const formatDateMMDD = dateStr => {
-    const d = new Date(dateStr);
+    const d = new Date(dateStr + 'T00:00:00');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${mm}/${dd}`;
@@ -82,7 +86,8 @@ const Schedule = ({ schedules = [], loading, onScheduleSelect }) => {
                                                 {new Date(schedule.startTime).toLocaleTimeString('en-US', { 
                                                     hour: '2-digit', 
                                                     minute: '2-digit', 
-                                                    hour12: false 
+                                                    hour12: false,
+                                                    timeZone: 'Asia/Ho_Chi_Minh'
                                                 })}
                                             </div>
                                             <div className="text-sm font-['Unbounded'] font-normal">
