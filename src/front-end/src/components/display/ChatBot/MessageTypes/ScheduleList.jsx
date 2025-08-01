@@ -9,6 +9,8 @@ import { Clock, MapPin, Users, DollarSign } from 'lucide-react';
  * và render thành danh sách lịch chiếu với booking actions
  */
 const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
+  console.log('🎬 ScheduleList - Received scheduleData:', JSON.stringify(scheduleData, null, 2));
+  
   if (!scheduleData || !scheduleData.schedules || scheduleData.schedules.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center text-gray-500">
@@ -17,7 +19,17 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
     );
   }
 
-  const { movie_title, branch_location, date, schedules, total_schedules } = scheduleData;
+  const { movie_id, branch_id, movie_title, branch_location, date, schedules, total_schedules } = scheduleData;
+  
+  console.log('🎬 ScheduleList - Extracted data:', {
+    movie_id,
+    branch_id,
+    movie_title,
+    branch_location,
+    date,
+    schedulesCount: schedules?.length,
+    'scheduleData keys': Object.keys(scheduleData)
+  });
 
   return (
     <div className="space-y-3">
@@ -75,16 +87,31 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Quick Actions for this schedule */}
+            </div>            {/* Quick Actions for this schedule */}
             {schedule.quick_actions && schedule.quick_actions.length > 0 && (
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div className="flex gap-2">
                   {schedule.quick_actions.map((action, actionIndex) => (
                     <button
                       key={actionIndex}
-                      onClick={() => onAction(action)}
+                      onClick={() => {                        const actionWithData = {
+                          ...action,
+                          data: {
+                            ...action.data,
+                            movie_id: movie_id,
+                            movie_title: movie_title,
+                            schedule_id: schedule._id,
+                            branch_id: branch_id,
+                            date: date,
+                            time: schedule.time,
+                            room: schedule.room
+                          }
+                        };
+                        console.log('🎬 ScheduleList - Button clicked with action:', actionWithData);
+                        console.log('🎬 ScheduleList - Schedule data:', scheduleData);
+                        console.log('🎬 ScheduleList - Schedule object:', schedule);
+                        onAction(actionWithData);
+                      }}
                       className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md"
                     >
                       {action.text}
@@ -95,9 +122,7 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
             )}
           </div>
         ))}
-      </div>
-
-      {/* General Suggestions */}
+      </div>      {/* General Suggestions */}
       {suggestions && suggestions.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-sm text-gray-600 mb-2">Các tùy chọn khác:</p>
@@ -105,7 +130,18 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
-                onClick={() => onAction(suggestion)}
+                onClick={() => {                  const suggestionWithData = {
+                    ...suggestion,
+                    data: {
+                      ...suggestion.data,
+                      movie_id: movie_id,
+                      movie_title: movie_title,
+                      branch_id: branch_id
+                    }
+                  };
+                  console.log('🎬 ScheduleList - Suggestion clicked with action:', suggestionWithData);
+                  onAction(suggestionWithData);
+                }}
                 className="bg-white text-gray-700 border border-gray-300 px-3 py-1 rounded-lg text-sm hover:bg-gray-100 transition-colors"
               >
                 {suggestion.text}

@@ -107,12 +107,23 @@ const MovieCard = ({ movie, onAction, quickActions = [] }) => {
 
         {/* Quick Actions */}
         {quickActions && quickActions.length > 0 && (
-          <div className="pt-3 border-t border-gray-100">
-            <div className="flex flex-wrap gap-2">
-              {quickActions.map((action, index) => (
-                <button
+          <div className="pt-3 border-t border-gray-100">            <div className="flex flex-wrap gap-2">
+              {quickActions.map((action, index) => (                <button
                   key={index}
-                  onClick={() => onAction(action)}
+                  onClick={() => {
+                    const actionWithData = {
+                      ...action,
+                      data: {
+                        ...action.data,
+                        movie_id: movie._id || movie.id,
+                        movie_title: movie.title
+                      }
+                    };
+                    console.log('🎬 MovieCard - Button clicked with action:', actionWithData);
+                    console.log('🎬 MovieCard - Movie object:', movie);
+                    console.log('🎬 MovieCard - Movie ID being used:', movie._id || movie.id);
+                    onAction(actionWithData);
+                  }}
                   className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-md"
                 >
                   {action.text}

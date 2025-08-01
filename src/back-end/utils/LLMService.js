@@ -59,12 +59,11 @@ CONVERSATION CONTEXT:
     ### CONVERSATION STATE MANAGEMENT:
     - Nếu đang trong luồng getScheduleByBranch và thiếu tham số => tiếp tục thu thập
     - Phát hiện khi người dùng chuyển đổi chủ đề => reset context
-    - Nhớ các thông tin đã thu thập để không hỏi lại
-
-    ### INTENT CLASSIFICATION (CHÍNH XÁC 100%):
+    - Nhớ các thông tin đã thu thập để không hỏi lại    ### INTENT CLASSIFICATION (CHÍNH XÁC 100%):
     
     **Core Movie Functions:**
     - "search_movies": Tìm phim theo tên cụ thể ("tìm phim Avatar", "có phim gì của Tom Cruise")
+    - "search_conversation": Câu hỏi tìm kiếm chung chung, không cụ thể ("tìm phim hay", "phim gì hay", "gợi ý phim")
     - "get_now_showing": Lấy danh sách phim đang chiếu ("phim gì đang chiếu", "phim nào hot hiện tại")  
     - "get_upcoming": Lấy phim sắp chiếu ("phim sắp ra", "tháng tới có phim gì")
     - "movie_details": Chi tiết phim ("thông tin phim X", "phim này nói về gì")
@@ -73,12 +72,15 @@ CONVERSATION CONTEXT:
     **Non-Movie Related (REJECT):**
     - "non_movie_related": Mọi chủ đề ngoài phim (thời tiết, tin tức, toán, etc.)
 
-    ### ENTITY EXTRACTION (SIÊU THÔNG MINH):
-
-    **Movie Title Normalization:**
+    ### ENTITY EXTRACTION (SIÊU THÔNG MINH):    **Movie Title Normalization & Multi-field Search:**
     - "Avata" -> "Avatar", "người sắt" -> "Iron Man"
-    - "phim của DiCaprio" -> search by actor
-    - "phim siêu anh hùng" -> genre-based search    **Location Standardization (CHI NHÁNH LUMIERE CINEMA):**
+    - "phim của DiCaprio" -> search by actor: "Leonardo DiCaprio"
+    - "phim siêu anh hùng" -> search by genre: "Action" or "Superhero"
+    - "phim hành động" -> search by genre: "Action"
+    - "phim kinh dị" -> search by genre: "Horror"
+    - "phim tình cảm" -> search by genre: "Romance"
+    - "phim của Marvel" -> search by keyword: "Marvel"
+    - "phim Christopher Nolan" -> search by director: "Christopher Nolan"**Location Standardization (CHI NHÁNH LUMIERE CINEMA):**
     - "Nguyễn Văn Cừ", "chi nhánh chính", "rạp chính" -> "Nguyễn Văn Cừ"
     - "Nguyễn Huệ", "trung tâm", "downtown", "quận 1" -> "Nguyễn Huệ"
     - "Huỳnh Tấn Phát", "quận 7", "Q7", "phú mỹ hưng" -> "Huỳnh Tấn Phát"
@@ -88,13 +90,13 @@ CONVERSATION CONTEXT:
     - "cuối tuần", "weekend" -> ${saturdayFormatted} (thứ 7 tiếp theo)
     - "thứ bảy" -> ${saturdayFormatted}
     - "25/7" -> "2025-07-25" (chuyển đổi DD/MM thành YYYY-MM-DD)
-    - "ngày 25 tháng 7" -> "2025-07-25"
-
-    ### JSON OUTPUT STRUCTURE:
+    - "ngày 25 tháng 7" -> "2025-07-25"    ### JSON OUTPUT STRUCTURE:
     {
       "intent": "intent_name",
       "entities": {
         "movie_title": "string or null",
+        "search_keyword": "string or null", // For multi-field search (actor, director, genre)
+        "search_type": "title|actor|director|genre|keyword", // Type of search
         "location": "string or null", 
         "date": "string or null"
       },
@@ -113,15 +115,49 @@ CONVERSATION CONTEXT:
       "entities": {},
       "context": {"needs_followup": false},
       "confidence": 0.95
-    }
-
-    **2. Search Movie:**
+    }    **2. Search Movie (Specific):**
     User: "Tìm phim Avatar cho tôi"
     => {
       "intent": "search_movies", 
-      "entities": {"movie_title": "Avatar"},
+      "entities": {
+        "movie_title": "Avatar",
+        "search_type": "title"
+      },
       "context": {"needs_followup": false},
       "confidence": 0.95
+    }
+
+    **2b. Search Conversation (General):**
+    User: "Tìm phim hay"
+    => {
+      "intent": "search_conversation",
+      "entities": {},
+      "context": {"needs_followup": false},
+      "confidence": 0.95
+    }
+
+    **2c. Search by Actor:**
+    User: "Có phim gì của Tom Cruise không?"
+    => {
+      "intent": "search_movies",
+      "entities": {
+        "search_keyword": "Tom Cruise",
+        "search_type": "actor"
+      },
+      "context": {"needs_followup": false},
+      "confidence": 0.94
+    }
+
+    **2d. Search by Genre:**
+    User: "Tìm phim hành động hay"
+    => {
+      "intent": "search_movies",
+      "entities": {
+        "search_keyword": "Action",
+        "search_type": "genre"
+      },
+      "context": {"needs_followup": false},
+      "confidence": 0.93
     }
 
     **3. Schedule - Missing All:**

@@ -8,7 +8,10 @@ import { ChevronRight, Star } from 'lucide-react';
  * Kiến thức: Component này nhận array of movies từ backend
  * và render thành danh sách compact với quick actions
  */
-const MovieList = ({ movies, onAction }) => {
+const MovieList = ({ movies, onAction, status }) => {
+  console.log('🎬 MovieList - Received movies:', movies?.map(m => ({ id: m._id || m.id, title: m.title })));
+  console.log('🎬 MovieList - Received status:', status);
+  
   if (!movies || movies.length === 0) {
     return (
       <div className="text-gray-500 text-center p-4">
@@ -81,15 +84,25 @@ const MovieList = ({ movies, onAction }) => {
                     {movie.description}
                   </p>
                 )}
-              </div>
-
-              {/* Quick Actions */}
+              </div>              {/* Quick Actions */}
               {movie.quick_actions && movie.quick_actions.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {movie.quick_actions.map((action, actionIndex) => (
-                    <button
+                  {movie.quick_actions.map((action, actionIndex) => (                    <button
                       key={actionIndex}
-                      onClick={() => onAction(action)}
+                      onClick={() => {
+                        const actionWithData = {
+                          ...action,
+                          data: {
+                            ...action.data,
+                            movie_id: movie._id || movie.id,
+                            movie_title: movie.title
+                          }
+                        };
+                        console.log('🎬 MovieList - Button clicked with action:', actionWithData);
+                        console.log('🎬 MovieList - Movie object:', movie);
+                        console.log('🎬 MovieList - Movie ID being used:', movie._id || movie.id);
+                        onAction(actionWithData);
+                      }}
                       className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all"
                     >
                       {action.text}
@@ -97,15 +110,18 @@ const MovieList = ({ movies, onAction }) => {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Arrow for detailed view */}
+            </div>            {/* Arrow for detailed view */}
             <div className="flex-shrink-0 flex items-center">
               <button
-                onClick={() => onAction({
-                  action: 'movie_details',
-                  data: { movie_id: movie._id }
-                })}
+                onClick={() => {
+                  const movieDetailsAction = {
+                    action: 'movie_details',
+                    data: { movie_id: movie._id || movie.id }
+                  };
+                  console.log('🎬 MovieList - Arrow clicked with action:', movieDetailsAction);
+                  console.log('🎬 MovieList - Movie object for arrow:', movie);
+                  onAction(movieDetailsAction);
+                }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -113,16 +129,28 @@ const MovieList = ({ movies, onAction }) => {
             </div>
           </div>
         </div>
-      ))}
-
-      {/* Show more button if there are many movies */}
+      ))}      {/* Show more button if there are many movies */}
       {movies.length > 5 && (
         <div className="text-center pt-2">
           <button
-            onClick={() => onAction({
-              action: 'browse_movies',
-              text: 'Xem tất cả phim'
-            })}
+            onClick={() => {
+              // Xác định status URL param dựa trên status từ backend
+              let statusParam = '';
+              if (status === 'upcoming') {
+                statusParam = 'up';  // Sắp chiếu -> ?status=up
+              } else if (status === 'now-showing') {
+                statusParam = 'now'; // Đang chiếu -> ?status=now
+              }
+              
+              const browseAction = {
+                action: 'browse_movies',
+                text: 'Xem tất cả phim',
+                data: { status: statusParam }
+              };
+              
+              console.log('🎬 MovieList - Browse all movies with status:', statusParam);
+              onAction(browseAction);
+            }}
             className="text-purple-600 hover:text-purple-700 text-sm font-medium"
           >
             Xem tất cả {movies.length} phim →
