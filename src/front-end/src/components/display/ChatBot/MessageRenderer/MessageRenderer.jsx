@@ -20,7 +20,7 @@ const MessageRenderer = ({ message, onQuickAction }) => {
   const navigate = useNavigate();  // Nếu message không có botData, render text thường
   if (!message.botData || !message.botData.type) {
     return (
-      <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+      <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
         {message.message}
       </div>
     );
@@ -121,7 +121,7 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       return (
         <div className="space-y-3">
           {/* Text message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -136,7 +136,7 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       return (
         <div className="space-y-3">
           {/* Header message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -147,13 +147,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             status={message.botData.status} // Truyền status vào MovieList
           />
         </div>
-      );
-
-    case 'movie_list_for_schedule':
+      );    case 'movie_list_for_schedule':
       return (
         <div className="space-y-3">
           {/* Header message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -172,11 +170,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             />
           )}
         </div>
-      );case 'schedule_list':
+      );    case 'schedule_list':
       return (
         <div className="space-y-3">
           {/* Header message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -186,12 +184,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             onAction={handleQuickAction}
             suggestions={suggestions}
           />
-        </div>
-      );    case 'follow_up_question':
+        </div>      );case 'follow_up_question':
       return (
         <div className="space-y-3">
           {/* Question message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -206,7 +203,7 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       return (
         <div className="space-y-3">
           {/* Polite decline message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -218,13 +215,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             />
           )}
         </div>
-      );
-
-    case 'schedule_conversation':
+      );    case 'schedule_conversation':
       return (
         <div className="space-y-3">
           {/* Schedule conversation message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -235,13 +230,11 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             onAction={handleQuickAction}
           />
         </div>
-      );
-
-    case 'search_conversation':
+      );    case 'search_conversation':
       return (
         <div className="space-y-3">
           {/* Search conversation message */}
-          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+          <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
           
@@ -251,11 +244,10 @@ const MessageRenderer = ({ message, onQuickAction }) => {
             quickActions={message.botData.quick_actions}
             onAction={handleQuickAction}
           />
-        </div>
-      );default:
+        </div>      );default:
       // Fallback cho text message
       return (
-        <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-xs lg:max-w-md">
+        <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
           {message.message}
         </div>
       );

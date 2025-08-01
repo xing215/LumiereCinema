@@ -14,7 +14,6 @@ const QuickActions = ({ suggestions = [], quickActions = [], onAction }) => {
     ...(Array.isArray(quickActions) ? quickActions.map(qa => ({ ...qa, type: 'action' })) : [])
   ];
   if (allActions.length === 0) return null;
-
   return (
     <div className="bg-gray-50 rounded-lg p-3">
       <div className="flex flex-wrap gap-2">
@@ -22,7 +21,7 @@ const QuickActions = ({ suggestions = [], quickActions = [], onAction }) => {
           <button
             key={index}
             onClick={() => onAction(action)}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 shadow-sm ${
+            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all transform hover:scale-105 shadow-sm break-words ${
               action.type === 'suggestion'
                 ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
                 : 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700'

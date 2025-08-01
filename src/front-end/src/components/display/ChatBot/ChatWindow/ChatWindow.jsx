@@ -65,12 +65,12 @@ const ChatWindow = ({ onMinimize }) => {
   const handleQuickAction = (actionText) => {
     sendQuickAction(actionText);
   };
-
   return (
     <div
       className="
         fixed bottom-4 right-4
-        w-[370px] h-[500px]
+        w-[90vw] max-w-[370px] h-[70vh] max-h-[500px]
+        sm:w-[370px] sm:h-[500px]
         rounded-xl overflow-hidden
         shadow-2xl
         bg-zinc-300
@@ -104,22 +104,34 @@ const ChatWindow = ({ onMinimize }) => {
         >
           —
         </button>
-      </div>
-
-      {/* Message List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 text-white">
+      </div>      {/* Message List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 text-white">
         {/* Hiển thị tin nhắn */}
         {messages.map((message) => (
-          <div key={message.id} className={message.direction === 'incoming' ? 'text-left' : 'text-right'}>
+          <div key={message.id} className={`flex ${message.direction === 'incoming' ? 'justify-start' : 'justify-end'}`}>
             {message.direction === 'incoming' ? (
               // Bot message - use MessageRenderer for rich content
-              <MessageRenderer 
-                message={message} 
-                onQuickAction={handleQuickAction}
-              />            ) : (
-              // User message - simple text bubble
-              <div className="inline-block px-3 py-2 rounded-xl bg-orange-500 shadow-[inset_0px_0px_50px_3px_rgba(251,113,133,1.00)] text-white">
-                {message.message}
+              <div className="flex items-start gap-2 max-w-[85%]">
+                <div className="flex-shrink-0">
+                  <img 
+                    src={botIcon} 
+                    alt="Bot" 
+                    className="w-6 h-6 rounded-full" 
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <MessageRenderer 
+                    message={message} 
+                    onQuickAction={handleQuickAction}
+                  />
+                </div>
+              </div>
+            ) : (
+              // User message - simple text bubble, smaller and on the right
+              <div className="max-w-[70%]">
+                <div className="inline-block px-3 py-2 rounded-xl bg-orange-500 shadow-[inset_0px_0px_50px_3px_rgba(251,113,133,1.00)] text-white text-sm break-words">
+                  {message.message}
+                </div>
               </div>
             )}
           </div>
@@ -127,27 +139,25 @@ const ChatWindow = ({ onMinimize }) => {
         
         {/* Invisible element để scroll đến */}
         <div ref={messagesEndRef} />
-      </div>
-
-      {/* Typing indicator */}
+      </div>      {/* Typing indicator */}
       {isLoading && (
-        <div className="px-4 pb-2">
-          <div className="flex items-end gap-2 text-left">
+        <div className="px-3 pb-2">
+          <div className="flex items-start gap-2 max-w-[85%]">
             {/* Avatar chatbot */}
             <div className="flex-shrink-0">
               <img 
                 src={botIcon} 
                 alt="Bot typing" 
-                className="w-8 h-8 rounded-full" 
+                className="w-6 h-6 rounded-full" 
               />
             </div>
             
             {/* Typing bubble */}
-            <div className="inline-block bg-purple-600 rounded-xl px-4 py-3 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)]">
+            <div className="inline-block bg-purple-600 rounded-xl px-3 py-2 shadow-[inset_0px_0px_50px_3px_rgba(42,182,247,1.00)]">
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           </div>

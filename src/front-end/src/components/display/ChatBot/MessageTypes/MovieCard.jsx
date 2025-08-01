@@ -36,41 +36,37 @@ const MovieCard = ({ movie, onAction, quickActions = [] }) => {
             </div>
           )}
         </div>
-      )}
-
-      {/* Movie Info */}
-      <div className="p-4 space-y-3">
+      )}      {/* Movie Info */}
+      <div className="p-3 space-y-2">
         {/* Title */}
-        <h3 className="font-bold text-lg text-gray-800 line-clamp-2">
+        <h3 className="font-bold text-sm text-gray-800 line-clamp-2 break-words">
           {movie.title}
         </h3>
 
         {/* Meta Info */}
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-1 text-xs text-gray-600">
           {/* Genre & Age Rating */}
-          <div className="flex items-center gap-2">
-            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs font-medium break-words">
               {movie.genre}
             </span>
             {movie.ageRating && (
-              <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium">
+              <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs font-medium break-words">
                 {movie.ageRating}
               </span>
             )}
-          </div>
-
-          {/* Duration & Release Date */}
-          <div className="flex items-center gap-4">
+          </div>          {/* Duration & Release Date */}
+          <div className="flex items-center gap-4 flex-wrap">
             {movie.duration && (
               <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{movie.duration}</span>
+                <Clock className="w-3 h-3" />
+                <span className="text-xs">{movie.duration}</span>
               </div>
             )}
             {movie.releaseDate && (
               <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                <span>{movie.releaseDate}</span>
+                <Calendar className="w-3 h-3" />
+                <span className="text-xs">{movie.releaseDate}</span>
               </div>
             )}
           </div>
@@ -78,21 +74,21 @@ const MovieCard = ({ movie, onAction, quickActions = [] }) => {
           {/* Rating */}
           {movie.rating && (
             <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span>{movie.rating}</span>
+              <Star className="w-3 h-3 text-yellow-500 fill-current" />
+              <span className="text-xs">{movie.rating}</span>
             </div>
           )}
 
           {/* Director */}
           {movie.director && (
-            <div>
+            <div className="text-xs break-words">
               <span className="font-medium">Đạo diễn:</span> {movie.director}
             </div>
           )}
 
           {/* Cast */}
           {movie.cast && (
-            <div>
+            <div className="text-xs break-words">
               <span className="font-medium">Diễn viên:</span> {movie.cast}
             </div>
           )}
@@ -100,7 +96,7 @@ const MovieCard = ({ movie, onAction, quickActions = [] }) => {
 
         {/* Description */}
         {movie.description && (
-          <p className="text-sm text-gray-700 line-clamp-3">
+          <p className="text-xs text-gray-700 line-clamp-2 break-words">
             {movie.description}
           </p>
         )}
@@ -123,8 +119,7 @@ const MovieCard = ({ movie, onAction, quickActions = [] }) => {
                     console.log('🎬 MovieCard - Movie object:', movie);
                     console.log('🎬 MovieCard - Movie ID being used:', movie._id || movie.id);
                     onAction(actionWithData);
-                  }}
-                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-md"
+                  }}                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded-lg text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-md break-words"
                 >
                   {action.text}
                 </button>

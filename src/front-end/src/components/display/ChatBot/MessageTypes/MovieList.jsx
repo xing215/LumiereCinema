@@ -40,12 +40,10 @@ const MovieList = ({ movies, onAction, status }) => {
                   }}
                 />
               </div>
-            )}
-
-            {/* Movie Info */}
+            )}            {/* Movie Info */}
             <div className="flex-1 min-w-0">
               {/* Title */}
-              <h4 className="font-semibold text-gray-800 text-sm line-clamp-1 mb-1">
+              <h4 className="font-semibold text-gray-800 text-xs line-clamp-1 mb-1 break-words">
                 {movie.title}
               </h4>
 
@@ -53,12 +51,12 @@ const MovieList = ({ movies, onAction, status }) => {
               <div className="space-y-1 text-xs text-gray-600">
                 {/* Genre */}
                 {movie.genre && (
-                  <div className="flex items-center gap-1">
-                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs break-words">
                       {movie.genre}
                     </span>
                     {movie.ageRating && (
-                      <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                      <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs break-words">
                         {movie.ageRating}
                       </span>
                     )}
@@ -66,15 +64,15 @@ const MovieList = ({ movies, onAction, status }) => {
                 )}
 
                 {/* Rating & Duration */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {movie.rating && (
                     <div className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                      <span>{movie.rating}</span>
+                      <span className="text-xs">{movie.rating}</span>
                     </div>
                   )}
                   {movie.duration && (
-                    <span>{movie.duration}</span>
+                    <span className="text-xs">{movie.duration}</span>
                   )}
                 </div>
 
@@ -102,8 +100,7 @@ const MovieList = ({ movies, onAction, status }) => {
                         console.log('🎬 MovieList - Movie object:', movie);
                         console.log('🎬 MovieList - Movie ID being used:', movie._id || movie.id);
                         onAction(actionWithData);
-                      }}
-                      className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all"
+                      }}                      className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
                     >
                       {action.text}
                     </button>
@@ -124,7 +121,7 @@ const MovieList = ({ movies, onAction, status }) => {
                 }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
