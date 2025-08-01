@@ -53,7 +53,7 @@ const ForgotPassword = () => {
                 <ForgotPwdForm forgotPwdHook={forgotPwdHook} />
             </div>
 
-            <ChatBot />
+
             <div className="w-screen lg:h-15" />
             <Footer />
         </section>

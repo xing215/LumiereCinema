@@ -40,7 +40,6 @@ const ResetPwdEmail = () => {
                 <ChangePwdForm ResetToken={resetToken} />
             )}
         </div>
-        <ChatBot />
         <div className="w-screen lg:h-15" />
         <Footer />
     </section>
