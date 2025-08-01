@@ -12,10 +12,12 @@ const {
   updateUserStatus,
   deleteUser,
   getAllPromotions,
+  getPromotionBannerList,
   getPromotionByCode,
   createPromotion,
   updatePromotion,
   deletePromotion,
+  getAllBranches,
   createBranch,
   updateBranch,
   deleteBranch,
@@ -34,12 +36,14 @@ router.delete('/users/:userId', protect, restrictTo('administrator'), deleteUser
 
 // Quản lý promotion
 router.get('/promotions/all', protect, restrictTo('administrator'), getAllPromotions);
+router.get('/promotions/banner', getPromotionBannerList);
 router.get('/promotions/:promotionCode', protect, restrictTo('administrator'), getPromotionByCode);
 router.post('/promotions', protect, restrictTo('administrator'), createPromotion);
 router.patch('/promotions/:promotionCode', protect, restrictTo('administrator'), updatePromotion);
 router.delete('/promotions/:promotionCode', protect, restrictTo('administrator'), deletePromotion);
 
 // Quản lý branch
+router.get('/branches', protect, restrictTo('administrator', 'branchmanager'), getAllBranches);
 router.post('/branches', protect, restrictTo('administrator'), createBranch);
 router.patch('/branches/:branchId', protect, restrictTo('administrator'), updateBranch);
 router.delete('/branches/:branchId', protect, restrictTo('administrator'), deleteBranch);

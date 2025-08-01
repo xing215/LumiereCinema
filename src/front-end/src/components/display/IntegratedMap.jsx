@@ -46,6 +46,7 @@ const IntegratedMap = ({
     cinemas = [],
     getAllCinemas = false,
     getAllCinemasClick = () => {console.log("Get all cinemas clicked");},
+    requireCtrlToZoom = false,
 }) => {
     const [maxdistance, setMaxDistance] = useState("");
     const [userLocation, setUserLocation] = useState(null);
@@ -53,10 +54,12 @@ const IntegratedMap = ({
     const [userLocationMarker, setUserLocationMarker] = useState(null);
     const [distanceCircle, setDistanceCircle] = useState(null);
     const [hoveredCinema, setHoveredCinema] = useState(null);
+    const [showZoomTooltip, setShowZoomTooltip] = useState(false);
 
     const mapRef = useRef(null);
     const leafletMapRef = useRef(null);
     const cinemaMarkersRef = useRef([]);
+    const tooltipTimeoutRef = useRef(null);
 
     // Function to move map to a specific cinema location
     const moveToLocation = (cinema) => {
@@ -106,7 +109,7 @@ const IntegratedMap = ({
                 minZoom: 6,
                 maxBounds: DEFAULT_BOUNDS,
                 maxBoundsViscosity: 0.6,
-                scrollWheelZoom: true,
+                scrollWheelZoom: !requireCtrlToZoom, // Disable scroll wheel zoom if requireCtrlToZoom is true
             });
 
             leafletMapRef.current.zoomControl.setPosition(
@@ -134,7 +137,70 @@ const IntegratedMap = ({
                 setDistanceCircle(null);
             }
         };
-    }, [isOpen]);
+    }, [isOpen, requireCtrlToZoom]);
+
+    // Handle Ctrl+Zoom functionality
+    useEffect(() => {
+        if (!leafletMapRef.current || !isOpen || !requireCtrlToZoom) return;
+
+        const map = leafletMapRef.current;
+        const mapContainer = map.getContainer();
+
+        const handleMouseEnter = () => {
+            setShowZoomTooltip(true);
+            // Auto-hide tooltip after 3 seconds
+            if (tooltipTimeoutRef.current) {
+                clearTimeout(tooltipTimeoutRef.current);
+            }
+            tooltipTimeoutRef.current = setTimeout(() => {
+                setShowZoomTooltip(false);
+            }, 3000);
+        };
+
+        const handleMouseLeave = () => {
+            setShowZoomTooltip(false);
+            if (tooltipTimeoutRef.current) {
+                clearTimeout(tooltipTimeoutRef.current);
+            }
+        };
+
+        const handleWheel = (e) => {
+            if (e.ctrlKey || e.metaKey) { // metaKey for Mac Cmd key
+                // Allow zoom when Ctrl/Cmd is held
+                e.preventDefault(); // Prevent page scroll when zooming
+                e.stopPropagation();
+                map.scrollWheelZoom.enable();
+            } else {
+                // Allow page scroll but prevent map zoom when not holding Ctrl/Cmd
+                map.scrollWheelZoom.disable();
+                
+                setShowZoomTooltip(true);
+                if (tooltipTimeoutRef.current) {
+                    clearTimeout(tooltipTimeoutRef.current);
+                }
+                tooltipTimeoutRef.current = setTimeout(() => {
+                    setShowZoomTooltip(false);
+                }, 2000);
+                
+                // Don't preventDefault() here - allow page scroll to continue
+            }
+        };
+
+        mapContainer.addEventListener('mouseenter', handleMouseEnter);
+        mapContainer.addEventListener('mouseleave', handleMouseLeave);
+        mapContainer.addEventListener('wheel', handleWheel, { passive: false });
+
+        return () => {
+            if (mapContainer) {
+                mapContainer.removeEventListener('mouseenter', handleMouseEnter);
+                mapContainer.removeEventListener('mouseleave', handleMouseLeave);
+                mapContainer.removeEventListener('wheel', handleWheel);
+            }
+            if (tooltipTimeoutRef.current) {
+                clearTimeout(tooltipTimeoutRef.current);
+            }
+        };
+    }, [isOpen, requireCtrlToZoom]);
 
     // Update cinema markers when filteredCinemas changes
     useEffect(() => {
@@ -287,9 +353,9 @@ const IntegratedMap = ({
         }
     }, [userLocation, maxdistance, isOpen]);
 
-    // Handle zoom limits
+    // Handle zoom limits (only when requireCtrlToZoom is false)
     useEffect(() => {
-        if (!leafletMapRef.current || !isOpen) return;
+        if (!leafletMapRef.current || !isOpen || requireCtrlToZoom) return;
 
         const map = leafletMapRef.current;
         const handleWheel = (e) => {
@@ -316,11 +382,11 @@ const IntegratedMap = ({
                 mapContainer.removeEventListener("wheel", handleWheel);
             }
         };
-    }, [isOpen]);
+    }, [isOpen, requireCtrlToZoom]);
 
-    // Handle scroll interference
+    // Handle scroll interference (only when requireCtrlToZoom is false)
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || requireCtrlToZoom) return;
 
         let scrollTimeout = null;
 
@@ -348,7 +414,7 @@ const IntegratedMap = ({
             document.removeEventListener("touchend", handleScrollEnd);
             if (scrollTimeout) clearTimeout(scrollTimeout);
         };
-    }, [isOpen]);
+    }, [isOpen, requireCtrlToZoom]);
 
     if (!isOpen) {
         return null;
@@ -374,6 +440,13 @@ const IntegratedMap = ({
                 ref={mapRef}
                 className="absolute top-0 h-full w-full overflow-auto rounded-xl border-gray-200 z-0"
             />
+            
+            {/* Zoom Tooltip */}
+            {requireCtrlToZoom && showZoomTooltip && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-950 bg-opacity-80 text-white px-3 py-2 rounded-md text-sm font-medium z-20 pointer-events-none">
+                    Hold Ctrl to zoom
+                </div>
+            )}
         </div>
     );
 };

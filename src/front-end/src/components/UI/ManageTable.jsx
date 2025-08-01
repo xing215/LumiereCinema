@@ -16,6 +16,8 @@ const ManageTable = ({
     onSaveEdit,
     onCancelEdit,
     isUpdating,
+    // Field types for EditableCell
+    fieldTypes,
     // Status change prop
     onStatusChange,
     // Review mode props
@@ -124,6 +126,8 @@ const ManageTable = ({
                             onSaveEdit={onSaveEdit}
                             onCancelEdit={onCancelEdit}
                             isUpdating={isUpdating}
+                            // Field types for EditableCell
+                            fieldTypes={fieldTypes}
                             // Status change prop
                             onStatusChange={onStatusChange}
                         />

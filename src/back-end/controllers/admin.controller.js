@@ -118,7 +118,9 @@ const getAllProfiles = async (req, res) => {
     if (userList) {
       return res.status(200).json(JSON.parse(userList));
     }
-    const users = await User.find().select('-password -wishlist -watchHistory -branch -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    const users = await User.find()
+      .populate('branch', 'name location')
+      .select('-password -wishlist -watchHistory -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!users || users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
     }
@@ -160,17 +162,26 @@ const updateUserDetails = async (req, res) => {
     await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
 
     if (req.body.updateData.email) {
-      if (await User.findOne({ email: req.body.updateData.email })) {
+      const existingUser = await User.findOne({ 
+        email: req.body.updateData.email,
+        _id: { $ne: req.body.userId } // Exclude current user
+      });
+      if (existingUser) {
         return res.status(400).json({ message: 'Email already in use.' });
       }
     }
     if (req.body.updateData.phone) {
-      if (await User.findOne({ phone: req.body.updateData.phone })) {
+      const existingUser = await User.findOne({ 
+        phone: req.body.updateData.phone,
+        _id: { $ne: req.body.userId } // Exclude current user
+      });
+      if (existingUser) {
         return res.status(400).json({ message: 'Phone number already in use.' });
       }
     }
     if (req.body.updateData.branch) {
-      if (!await Branch.findById(req.body.updateData.branch)) {
+      const branchExists = await Branch.findById(req.body.updateData.branch);
+      if (!branchExists) {
         return res.status(400).json({ message: 'Branch does not exist.' });
       }
     }
@@ -191,7 +202,7 @@ const updateUserDetails = async (req, res) => {
 const updateUserRoles = async (req, res) => {
   try {
     const allowedFields = ['roles'];
-    const validRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
+    const validRoles = ['customer', 'cashier', 'checkincounter', 'branchmanager', 'administrator'];
     const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -314,6 +325,24 @@ const getPromotionByCode = async (req, res) => {
     res.status(200).json(promotion);
   } catch (error) {
     console.error('Error getting promotion:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+const getPromotionBannerList = async (req, res) => {
+  try {
+    const cached = await redisClient.get('promotionBannerList');
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+    const promotions = await Promotion.find({ bannerImage: { $ne: null }, isActive: true });
+    if (!promotions || promotions.length === 0) {
+      return res.status(404).json({ message: 'No promotions with banners found.' });
+    }
+    await redisClient.set('promotionBannerList', JSON.stringify(promotions.map(p => p.bannerImage)), { EX: 3600 });
+    res.status(200).json(promotions.map(p => p.bannerImage));
+  } catch (error) {
+    console.error('Error getting promotion banners:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
@@ -646,6 +675,25 @@ const updateBranchStatus = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get all branches
+ * @route   GET /api/admin/branches
+ * @access  Administrator, BranchManager
+ */
+const getAllBranches = async (req, res) => {
+  try {
+    const branches = await Branch.find({ isActive: true }).select('_id name address city');
+    
+    res.status(200).json(branches);
+  } catch (error) {
+    console.error('Error fetching branches:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch branches',
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createUser,
   getAllProfiles,
@@ -655,6 +703,7 @@ module.exports = {
   updateUserStatus,
   deleteUser,
   getAllPromotions,
+  getPromotionBannerList,
   getPromotionByCode,
   createPromotion,
   updatePromotion,
@@ -663,4 +712,5 @@ module.exports = {
   updateBranch,
   deleteBranch,
   updateBranchStatus,
+  getAllBranches,
 };

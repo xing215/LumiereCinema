@@ -55,11 +55,11 @@ const WishlistButton = ({ movie, className = '' }) => {
             {showAuthError && (
                 <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />
             )}
-            <div className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className}`} onClick={handleWishlistClick}>
+            <div className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className}`} onClick={handleWishlistClick} title={isInWishlist(movie?._id) ? 'Remove from Wishlist' : 'Add to Wishlist'}>
                 <Heart
                     className="absolute h-full w-full"
                     strokeWidth={1.5}
-                    fill={isInWishlist(movie?._id) ? '#ef4444' : 'none'}
+                    fill={isInWishlist(movie?._id) ? 'white' : 'none'}
                 />
             </div>
         </>

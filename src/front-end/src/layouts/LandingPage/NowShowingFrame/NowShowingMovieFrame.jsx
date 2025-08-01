@@ -1,20 +1,32 @@
+
+import React, { useEffect, useRef, useState } from 'react';
 import MovieCard from '@components/UI/MovieCard.jsx';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
 import ForwardButton from '@components/buttons/forwardButton.jsx';
 import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
-
-import React, { useEffect } from 'react';
 import { useFetchNowShowing } from '@hooks/useMovie';
 
 
 const NowShowingFrame = () => {
     const { fetchNowShowing, movies: nowShowingMovies, loading } = useFetchNowShowing();
-    React.useEffect(() => { fetchNowShowing(); }, []);
-    const scrollRef = React.useRef(null);
+    useEffect(() => { fetchNowShowing(); }, []);
+    const scrollRef = useRef(null);
     const scrollByAmount = 350;
-    const [showScrollButtons, setShowScrollButtons] = React.useState(false);
+    const [showScrollButtons, setShowScrollButtons] = useState(false);
+
+    // When showScrollButtons changes from false to true, trigger a scroll event to update overlays
+    useEffect(() => {
+        if (showScrollButtons && scrollRef.current) {
+            setTimeout(() => {
+                if (scrollRef.current) {
+                    scrollRef.current.dispatchEvent(new Event('scroll'));
+                }
+            }, 0);
+        }
+    }, [showScrollButtons]);
+
     // Check if scrolling is needed
-    React.useEffect(() => {
+    useEffect(() => {
         const checkScroll = () => {
             if (!scrollRef.current) return;
             setShowScrollButtons(scrollRef.current.scrollWidth > scrollRef.current.clientWidth + 1);
@@ -43,7 +55,6 @@ const NowShowingFrame = () => {
         }
     };
 
-    // Hide the component if not loading and no movies
     if (!loading && (!nowShowingMovies || nowShowingMovies.length === 0)) {
         return null;
     }
@@ -94,22 +105,26 @@ const NowShowingFrame = () => {
     );
 };
 
-
 // Helper component to wrap MovieCard and add overlay if >40% out of visible area
-
 const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
-    const cardRef = React.useRef(null);
-    const [overlayOpacity, setOverlayOpacity] = React.useState(0);
-
-    React.useEffect(() => {
+    const cardRef = useRef(null);
+    const [overlayOpacity, setOverlayOpacity] = useState(0);
+    useEffect(() => {
+        let rafId;
         const checkOverlay = () => {
             if (!cardRef.current || !scrollRef.current) return;
             const cardRect = cardRef.current.getBoundingClientRect();
             const cardWidth = cardRect.width;
-            const visibleWidth = Math.max(0, cardRect.right - cardRect.left);
-            // Calculate percent out of logical area (0 = fully in, 1 = fully out)
-            let percentOut = 1 - visibleWidth / cardWidth;
-            percentOut = Math.max(0, Math.min(1, percentOut));
+            if (cardWidth === 0) {
+                rafId = requestAnimationFrame(checkOverlay);
+                return;
+            }
+            const windowWidth = window.innerWidth;
+            // Calculate how much of the card is out of the viewport (left or right)
+            let outLeft = Math.max(0, 0 - cardRect.left);
+            let outRight = Math.max(0, cardRect.right - windowWidth);
+            let out = Math.min(Math.max(outLeft, outRight) + 10, cardWidth);
+            let percentOut = Math.min(1, out / cardWidth);
             setOverlayOpacity(percentOut);
         };
         checkOverlay();
@@ -122,16 +137,16 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             if (scrollRef.current) {
                 scrollRef.current.removeEventListener('scroll', checkOverlay);
             }
+            if (rafId) cancelAnimationFrame(rafId);
         };
     }, [scrollRef]);
-
     return (
         <div ref={cardRef} className="flex-shrink-0 w-56 md:w-64 lg:w-72 relative">
             <MovieCard movie={movie} page={page} />
             {overlayOpacity > 0 && (
                 <div
                     className="absolute inset-0 z-20 pointer-events-none rounded-xl"
-                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity * 0.6})` }}
+                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
                 />
             )}
         </div>

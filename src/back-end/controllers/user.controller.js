@@ -84,7 +84,7 @@ const rateMovie = async (req, res) => {
   try {
     const { movieId, rating } = req.body;
     const userId = req.user.id;
-
+    
     if (!movieId || !rating) {
       return res.status(400).json({ message: 'Movie ID and rating are required.' });
     }
@@ -93,12 +93,15 @@ const rateMovie = async (req, res) => {
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found.' });
     }
-// mới kiếm dc cách tối ưu hơn
-const updatedRating = await MovieRating.findOneAndUpdate(
-  { movieId: movieId, userId: userId },
-  { star: rating },
-  { new: true, upsert: true }
-);
+
+    const updatedRating = await MovieRating.findOneAndUpdate(
+      { movie: movieId, user: userId },
+      { star: rating },
+      { new: true, upsert: true }
+    );
+
+    // Release cached movie data
+    await redisClient.del(`movie:${movieId}`);
 
     res.status(200).json({ message: 'Rating updated successfully.', rating: updatedRating });
   } catch (error) {
@@ -111,7 +114,7 @@ const getRatingMovie = async (req, res) => {
   try {
     const { movieId } = req.params;
     const userId = req.user.id;
-
+    
     if (!movieId) {
       return res.status(400).json({ message: 'Movie ID is required.' });
     }
@@ -121,7 +124,7 @@ const getRatingMovie = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found.' });
     }
 
-    const userRating = await MovieRating.findOne({ movieId, userId });
+    const userRating = await MovieRating.findOne({ movie: movieId, user: userId });
     if (!userRating) {
       return res.status(404).json({ rated: false, rating: null });
     }

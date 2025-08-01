@@ -1,11 +1,10 @@
-import React from 'react';
 import { useUser } from '@contexts/UserContext';
 
-const SelectBranchButton = ({ isLoading, branchName, clickable = false }) => {
+const BranchButton = ({ isLoading, branchName, clickable = false }) => {
     const { user } = useUser();
 
     const roles = user?.roles || [];
-    if (!roles.includes('branchmanager')) {
+    if (!roles.includes('branchmanager') && !roles.includes('cashier')) {
         return null;
     }
 
@@ -23,4 +22,4 @@ const SelectBranchButton = ({ isLoading, branchName, clickable = false }) => {
     );
 };
 
-export default SelectBranchButton;
+export default BranchButton;

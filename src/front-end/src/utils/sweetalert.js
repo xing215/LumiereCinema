@@ -316,7 +316,98 @@ export const showConfirmation = (title = 'Are you sure?', text = '', confirmText
     });
 };
 
-// Movie Management Specific Alerts
+// Generic CRUD Operations Alerts
+
+// Adding/Creating items
+export const showAddingItems = (itemType = 'items', count = 1) => {
+    const text = count === 1 
+        ? `Please wait while we add the ${itemType.slice(0, -1)} to the database` 
+        : `Please wait while we add ${count} ${itemType} to the database`;
+        
+    return showLoading(`Adding ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}...`, text);
+};
+
+export const showItemsAdded = (itemType = 'items', count = 1) => {
+    const singularType = itemType.slice(0, -1); // Remove 's' for singular
+    const title = count === 1 ? `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} Added Successfully!` : `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} Added Successfully!`;
+    const text = count === 1 
+        ? `The ${singularType} has been added to the database successfully` 
+        : `${count} ${itemType} have been added to the database successfully`;
+        
+    return Swal.fire({
+        ...customSwalOptions,
+        icon: 'success',
+        title,
+        text,
+        confirmButtonText: 'Great!',
+        iconColor: '#10b981',
+        timer: 4000,
+        timerProgressBar: true,
+        showConfirmButton: true
+    });
+};
+
+// Delete operations
+export const showDeleteItemsConfirmation = (itemType = 'items', count = 1) => {
+    const singularType = itemType.slice(0, -1);
+    const title = count === 1 ? `Delete ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}?` : `Delete ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}?`;
+    const text = count === 1 
+        ? 'This action cannot be undone!' 
+        : `This will delete ${count} ${itemType}. This action cannot be undone!`;
+        
+    return showConfirmation(
+        title,
+        text,
+        'Delete',
+        'Cancel'
+    );
+};
+
+export const showDeletingItems = (itemType = 'items', count = 1) => {
+    const singularType = itemType.slice(0, -1);
+    const text = count === 1 
+        ? `Please wait while we delete the ${singularType}` 
+        : `Please wait while we delete ${count} ${itemType}`;
+        
+    return showLoading(`Deleting ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}...`, text);
+};
+
+export const showItemsDeleted = (itemType = 'items', count = 1) => {
+    const singularType = itemType.slice(0, -1);
+    const title = `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} Deleted!`;
+    const text = count === 1 
+        ? `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} has been deleted successfully` 
+        : `${count} ${itemType} have been deleted successfully`;
+        
+    return showSuccess(title, text);
+};
+
+// Status/Visibility operations
+export const showProcessingItemStatus = (action = 'updating', itemType = 'item') => {
+    const singularType = itemType.slice(0, -1);
+    return showLoading('Processing...', `Please wait while we ${action} ${singularType} status`);
+};
+
+export const showItemStatusChanged = (itemType = 'item', itemName = '', newStatus = 'updated') => {
+    const singularType = itemType.slice(0, -1);
+    const title = `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}!`;
+    const text = `${itemName || singularType.charAt(0).toUpperCase() + singularType.slice(1)} is now ${newStatus}`;
+    return showSuccess(title, text);
+};
+
+// Generic operation error
+export const showOperationError = (operation = 'operation', error = 'Unknown error occurred') => {
+    return Swal.fire({
+        ...customSwalOptions,
+        icon: 'error',
+        title: `${operation.charAt(0).toUpperCase() + operation.slice(1)} Failed`,
+        text: `❌ ${error}\n\nPlease check your data and try again.`,
+        confirmButtonText: 'OK',
+        iconColor: '#ef4444'
+    });
+};
+
+// Movie Management Specific Alerts (keeping existing functionality)
 
 // Upload Excel related alerts
 export const showUploadLoading = () => {
@@ -414,31 +505,12 @@ export const showUploadConfirmation = (movieCount = 0) => {
     });
 };
 
-export const showAddingMovies = (count = 0) => {
-    const text = count === 1 
-        ? 'Please wait while we add the movie to the database' 
-        : `Please wait while we add ${count} movies to the database`;
-        
-    return showLoading('Adding Movies...', text);
+export const showAddingMovies = (count = 1) => {
+    return showAddingItems('movies', count);
 };
 
-export const showMoviesAdded = (count = 0) => {
-    const title = count === 1 ? 'Movie Added Successfully!' : 'Movies Added Successfully!';
-    const text = count === 1 
-        ? 'The movie has been added to the database successfully' 
-        : `${count} movies have been added to the database successfully`;
-        
-    return Swal.fire({
-        ...customSwalOptions,
-        icon: 'success',
-        title,
-        text,
-        confirmButtonText: 'Great!',
-        iconColor: '#10b981',
-        timer: 4000,
-        timerProgressBar: true,
-        showConfirmButton: true
-    });
+export const showMoviesAdded = (count = 1) => {
+    return showItemsAdded('movies', count);
 };
 
 export const showUploadCancelled = () => {
@@ -456,57 +528,33 @@ export const showUploadCancelled = () => {
 
 // Delete related alerts
 export const showDeleteConfirmation = (movieCount = 1) => {
-    const text = movieCount === 1 
-        ? 'This action cannot be undone!' 
-        : `This will delete ${movieCount} movies. This action cannot be undone!`;
-        
-    return showConfirmation(
-        'Delete Movie(s)?',
-        text,
-        'Delete',
-        'Cancel'
-    );
+    return showDeleteItemsConfirmation('movies', movieCount);
 };
 
 export const showDeletingMovies = (movieCount = 1) => {
-    const text = movieCount === 1 
-        ? 'Please wait while we delete the movie' 
-        : `Please wait while we delete ${movieCount} movies`;
-        
-    return showLoading('Deleting Movies...', text);
+    return showDeletingItems('movies', movieCount);
 };
 
 export const showMoviesDeleted = (movieCount = 1) => {
-    const text = movieCount === 1 
-        ? 'Movie has been deleted successfully' 
-        : `${movieCount} movies have been deleted successfully`;
-        
-    return showSuccess('Movies Deleted!', text);
+    return showItemsDeleted('movies', movieCount);
 };
 
 // Active/Hide movie alerts
 export const showProcessingVisibility = () => {
-    return showLoading('Processing...', 'Please wait while we update movie visibility');
+    return showProcessingItemStatus('update visibility for', 'movies');
 };
 
 export const showMovieShown = (movieTitle = 'Movie') => {
-    return showSuccess('Movie Shown!', `${movieTitle} is now visible to customers`);
+    return showItemStatusChanged('movies', movieTitle, 'visible to customers');
 };
 
 export const showMovieHidden = (movieTitle = 'Movie') => {
-    return showSuccess('Movie Hidden!', `${movieTitle} is now hidden from customers`);
+    return showItemStatusChanged('movies', movieTitle, 'hidden from customers');
 };
 
-// Generic upload error
+// Generic upload error (renamed from showUploadError)
 export const showUploadError = (error = 'Unknown error occurred') => {
-    return Swal.fire({
-        ...customSwalOptions,
-        icon: 'error',
-        title: 'Operation Failed',
-        text: `❌ ${error}\n\nPlease check your data and try again.`,
-        confirmButtonText: 'OK',
-        iconColor: '#ef4444'
-    });
+    return showOperationError('Upload', error);
 };
 
 // Close current SweetAlert
@@ -551,6 +599,16 @@ export default {
     showWarning,
     showInfo,
     showConfirmation,
+    // Generic CRUD operations
+    showAddingItems,
+    showItemsAdded,
+    showDeleteItemsConfirmation,
+    showDeletingItems,
+    showItemsDeleted,
+    showProcessingItemStatus,
+    showItemStatusChanged,
+    showOperationError,
+    // Movie-specific (using generics)
     showUploadLoading,
     showUploadResults,
     showUploadConfirmation,
