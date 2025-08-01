@@ -1,9 +1,13 @@
+// ================================ IMPORTS ================================
 import screen from '@assets/img/Screen.svg';
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export const Seats = ({  seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
+// ================================ SEAT COMPONENTS ================================
 
+
+export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
     const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
+    
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -11,41 +15,52 @@ export const Seats = ({  seatColor, isTaken = false, isSelected, onClick, seatCo
     };
 
     return (
-        <div className={`${seatSize} min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
-        onClick={handleClick}>
-            <div className={`h-full z-1 md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}/>
-            <div className={`h-[20%] z-1 w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}/>
+        <div 
+            className={`${seatSize} min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
+            onClick={handleClick}
+        >
+            <div className={`h-full z-1 md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`} />
+            <div className={`h-[20%] z-1 w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`} />
         </div>
     );
-}
+};
 
-export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor=true }) => {
+export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true }) => {
+    const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow) * 2).toString() + '%]';
+    
     const handleClick = () => {
         if (onClick) {
             onClick();
         }
     }; 
 
-    const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)*2).toString() + '%]';
-    const seatSizeforsmall = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
-
-
     return (
-        <div className={`${seatSize} min-w-[68px] group relative flex flex-row gap-2 ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
-        onClick={handleClick}>
-            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor}/>
+        <div 
+            className={`${seatSize} min-w-[68px] group relative flex flex-row gap-2 ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
+            onClick={handleClick}
+        >
             <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
-            <div className={`absolute inset-0 flex z-0 r-[50%] md:h-[55%] w-5 h-[75%] top-1 mx-auto items-center transition-colors justify-center ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`}/>
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
+            <div className={`absolute inset-0 flex z-0 r-[50%] md:h-[55%] w-5 h-[75%] top-1 mx-auto items-center transition-colors justify-center ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`} />
         </div>
     );
-}
+};
+
+// ================================ MINI MAP COMPONENT ================================
+
 
 const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, onClick, schedule }) => {
+    // ================================ STATE MANAGEMENT ================================
+    
     const miniMapRef = useRef();
     const [miniMapDimensions, setMiniMapDimensions] = useState({ width: 0, height: 0 });
     const [viewportRect, setViewportRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
     const [hideMiniMap, setHideMiniMap] = useState(false);
     const rowKeys = Object.keys(seatMap).sort();
+
+    // ================================ MINI MAP EFFECTS ================================
+
+    // ================================ MINI MAP EFFECTS ================================
 
     useEffect(() => {
         if (!needsPanning || !containerRef.current || !contentRef.current) return;
@@ -55,6 +70,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
 
             const containerRect = containerRef.current.getBoundingClientRect();
             const contentRect = contentRef.current.getBoundingClientRect();
+            
             // Calculate mini-map dimensions (max 150px wide, maintain aspect ratio)
             const maxWidth = 150;
             const aspectRatio = contentRect.width / contentRect.height;
@@ -78,15 +94,17 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
             });
 
             // Hide minimap if viewport is at top-right corner
-            const epsilon = 2; // px tolerance
+            const epsilon = 2;
             const atTopRight = Math.abs(viewportX - (miniWidth - viewportWidth)) < epsilon && Math.abs(viewportY) < epsilon;
             setHideMiniMap(atTopRight);
         };
 
         updateMiniMap();
-        const interval = setInterval(updateMiniMap, 16); // ~60fps
+        const interval = setInterval(updateMiniMap, 16);
         return () => clearInterval(interval);
     }, [transform, needsPanning, containerRef, contentRef]);
+
+    // ================================ MINI MAP RENDER ================================
 
     if (!needsPanning || hideMiniMap) return null;
 
@@ -169,64 +187,144 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
     );
 };
 
-const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { console.log('Seat clicked'); } , loading, clearSessionLoading }) => {
+// ================================ MAIN SEAT LAYOUT COMPONENT ================================
+
+const SeatLayout = ({ 
+    schedule, 
+    selectedSeats, 
+    seatMap = {}, 
+    onClick = () => { console.log('Seat clicked'); }, 
+    loading, 
+    clearSessionLoading 
+}) => {
+    // ================================ STATE MANAGEMENT ================================
+    
     const containerRef = useRef();
     const contentRef = useRef();
+    const hasCenteredRef = useRef(false);
+    
     const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [needsPanning, setNeedsPanning] = useState(false);
 
-    // Get ordered rows
+    // ================================ UTILITY FUNCTIONS ================================
+
     const rowKeys = Object.keys(seatMap).sort();
 
-    // Only center content once when panning is first needed
-    const hasCenteredRef = useRef(false);
+    // ================================ SIZE AND CENTERING EFFECTS ================================
+
+    useEffect(() => {
+  console.log('Needs Panning (updated):', needsPanning);
+}, [needsPanning]);
+
+    const originalContentSizeRef = useRef(null);
+
+    useEffect(() => {
+        originalContentSizeRef.current = null;
+        hasCenteredRef.current = false;
+    }, [JSON.stringify(seatMap)]);
+
     useEffect(() => {
         const checkSize = () => {
             if (containerRef.current && contentRef.current) {
+                console.log('Checking size...');
+                console.log('Container:', containerRef.current.getBoundingClientRect());
+                
                 const containerRect = containerRef.current.getBoundingClientRect();
-                const contentRect = contentRef.current.getBoundingClientRect();
-                const contentStyle = window.getComputedStyle(contentRef.current);
-                const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
-                const paddingRight = parseFloat(contentStyle.paddingRight) || 0;
-                const paddingTop = parseFloat(contentStyle.paddingTop) || 0;
-                const paddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
-                const effectiveContentWidth = contentRect.width - (paddingLeft + paddingRight);
-                const effectiveContentHeight = contentRect.height - (paddingTop + paddingBottom);
+                
+                // Get original content dimensions (before any transform)
+                let contentRect;
+                let effectiveContentWidth;
+                let effectiveContentHeight;
+                
+                if (!originalContentSizeRef.current) {
+                    // First time - store original dimensions
+                    contentRect = contentRef.current.getBoundingClientRect();
+                    const contentStyle = window.getComputedStyle(contentRef.current);
+                    
+                    const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
+                    const paddingRight = parseFloat(contentStyle.paddingRight) || 0;
+                    const paddingTop = parseFloat(contentStyle.paddingTop) || 0;
+                    const paddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
+                    
+                    effectiveContentWidth = contentRect.width - (paddingLeft + paddingRight);
+                    effectiveContentHeight = contentRect.height - (paddingTop + paddingBottom);
+                    
+                    // Store original dimensions
+                    originalContentSizeRef.current = {
+                        width: effectiveContentWidth,
+                        height: effectiveContentHeight
+                    };
+                    
+                    console.log('Stored original content size:', originalContentSizeRef.current);
+                } else {
+                    // Use stored original dimensions
+                    effectiveContentWidth = originalContentSizeRef.current.width;
+                    effectiveContentHeight = originalContentSizeRef.current.height;
+                    console.log('Using stored original content size:', originalContentSizeRef.current);
+                }
+                
                 const exceedsWidth = effectiveContentWidth > containerRect.width;
                 const exceedsHeight = effectiveContentHeight > containerRect.height;
+
+                const widthScale = containerRect.width / (effectiveContentWidth + containerRect.width * 0.1);
+                const heightScale = containerRect.height / (effectiveContentHeight + containerRect.height * 0.1);
+                const scale = Math.max(Math.min(widthScale, heightScale), 1);
+                
+                console.log('Effective Content Size:', effectiveContentWidth, effectiveContentHeight);
+                console.log('Exceeds Width:', exceedsWidth, 'Exceeds Height:', exceedsHeight);
+                console.log('widthScale:', widthScale);
+                console.log('heightScale:', heightScale);
+                console.log('Scale:', scale);
+
                 setNeedsPanning(exceedsWidth || exceedsHeight);
+
                 // Center only once when panning is first needed and not dragging
                 if ((exceedsWidth || exceedsHeight) && !hasCenteredRef.current && !isDragging) {
-                    const centerX = (containerRect.width - effectiveContentWidth) / 2;
-                    const centerY = (containerRect.height - effectiveContentHeight) / 2;
+                    const centerX = (containerRect.width - effectiveContentWidth * scale) / 2;
+                    const centerY = (containerRect.height - effectiveContentHeight * scale) / 2;
                     setTransform(prev => ({
                         ...prev,
+                        scale: scale,
                         x: Math.min(0, centerX),
                         y: Math.min(0, centerY)
                     }));
                     hasCenteredRef.current = true;
                 }
-                // Reset hasCenteredRef and seat position if no panning needed
-                if (!(exceedsWidth || exceedsHeight) && hasCenteredRef.current) {
+                
+                // Reset if no panning needed
+                if (!(exceedsWidth || exceedsHeight)) {
                     hasCenteredRef.current = false;
                     setTransform(prev => ({
                         ...prev,
+                        scale: scale,
                         x: 0,
                         y: 0
                     }));
                 }
             }
         };
-        checkSize();
+
+        // Delay checkSize to ensure DOM is painted before measuring
+        const timeout = setTimeout(checkSize, 1);
         window.addEventListener('resize', checkSize);
         return () => {
+            clearTimeout(timeout);
             window.removeEventListener('resize', checkSize);
         };
+    }, [JSON.stringify(seatMap), isDragging, loading, clearSessionLoading]);
+
+    // Reset centering when seatMap changes (fixes navigation issue)
+    useEffect(() => {
+        hasCenteredRef.current = false;
+        setTransform({ x: 0, y: 0, scale: 1 });
+        setIsDragging(false);
+        setNeedsPanning(false);
     }, [JSON.stringify(seatMap)]);
 
-    // Mouse/Touch event handlers for panning
+    // ================================ DRAG AND PAN HANDLERS ================================
+
     const handleStart = (clientX, clientY) => {
         if (!needsPanning) return;
         setIsDragging(true);
@@ -242,7 +340,6 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
         const newX = clientX - dragStart.x;
         const newY = clientY - dragStart.y;
         
-        // Get container and content bounds for limiting pan
         if (containerRef.current && contentRef.current) {
             const containerRect = containerRef.current.getBoundingClientRect();
             const contentRect = contentRef.current.getBoundingClientRect();
@@ -264,7 +361,8 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
         setIsDragging(false);
     };
 
-    // Mouse events
+    // ================================ MOUSE EVENT HANDLERS ================================
+
     const handleMouseDown = (e) => {
         e.preventDefault();
         handleStart(e.clientX, e.clientY);
@@ -278,7 +376,8 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
         handleEnd();
     };
 
-    // Touch events
+    // ================================ TOUCH EVENT HANDLERS ================================
+
     const handleTouchStart = (e) => {
         if (e.touches.length === 1) {
             const touch = e.touches[0];
@@ -298,7 +397,8 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
         handleEnd();
     };
 
-    // Handle mini-map navigation
+    // ================================ MINI MAP NAVIGATION ================================
+
     const handleMiniMapNavigation = (newTransform) => {
         setTransform(prev => ({
             ...prev,
@@ -307,7 +407,8 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
         }));
     };
 
-    // Add global event listeners for drag
+    // ================================ DRAG EVENT LISTENERS ================================
+
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -324,35 +425,40 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
         }
     }, [isDragging, dragStart, transform]);
 
-    
+    // ================================ RENDER ================================
+
 
     return (
         <div className="relative flex flex-col items-center w-full h-full">
+            {/* Screen Image */}
             <img 
                 src={screen}
                 alt="Seat Layout"
                 className="w-[80%] h-auto object-contain py-3 relative z-20"
             />
+            
+            {/* Seat Layout Container */}
             <div 
                 ref={containerRef}
-                className={`w-full h-full overflow-hidden  rounded-xl relative ${needsPanning ? 'cursor-grab active:cursor-grabbing ring-1 ring-white' : ' flex justify-center items-center'}`}
+                className={`w-full h-full overflow-hidden rounded-xl relative ${needsPanning ? 'cursor-grab active:cursor-grabbing ring-1 ring-white' : 'flex justify-center items-center'}`}
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleTouchStart}
             >
-                {loading&&!clearSessionLoading ? (
-                    <div className=" md:text-md h-auto items-center justify-center  font-['Unbounded'] text-base font-black text-white mx-2">
+                {loading && !clearSessionLoading ? (
+                    <div className="md:text-md h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white mx-2">
                         • • •
                     </div>
                 ) : (
                     <div 
                         ref={contentRef}
-                        className={`flex flex-row rounded-sm gap-2 z-10 min-w-max ${needsPanning ? ' p-8' : ''}`}
+                        className={`flex flex-row rounded-sm duration-300 gap-2 z-10 min-w-max ${needsPanning ? 'p-8' : ''}`}
                         style={{
                             transform: `translate(${transform.x}px, ${transform.y}px)`,
-                            transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+                            transition: isDragging ? 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'transform 0.2s ease-out',
+                            scale: transform.scale
                         }}
                     >
-                        {/* Row letters column */}
+                        {/* Row Labels Column */}
                         <div className="flex flex-col gap-2 min-w-[40px] h-full">
                             {rowKeys.map((rowKey) => (
                                 <span
@@ -363,7 +469,8 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                 </span>
                             ))}
                         </div>
-                        {/* Seats grid */}
+                        
+                        {/* Seats Grid */}
                         <div className="flex flex-col gap-2 h-full">
                             {rowKeys.map((rowKey, rowIndex) => (
                                 <div key={rowKey} className="flex flex-row items-center gap-2">
@@ -371,11 +478,12 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                         const seats = seatMap[rowKey];
                                         const seatElements = [];
                                         let i = 0;
+                                        
                                         while (i < seats.length) {
                                             const current = seats[i];
                                             const next = seats[i + 1];
 
-                                            // Check for couple seat: both VIP and both have isCouple true
+                                            // Check for couple seat: both VIP
                                             if (
                                                 current.category === 'VIP' &&
                                                 next &&
@@ -385,7 +493,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                                     <CoupleSeat
                                                         key={current.seatNumber + '-' + next.seatNumber}
                                                         seatColor="bg-yellow-400 group-hover:bg-yellow-500"
-                                                        isTaken={ (current.status === 'occupied' || current.status === 'holding')}
+                                                        isTaken={current.status === 'occupied' || current.status === 'holding'}
                                                         isSelected={selectedSeats.includes(current.seatNumber) || selectedSeats.includes(next.seatNumber)}
                                                         onClick={() => onClick?.([current.seatNumber, next.seatNumber])}
                                                         seatCol={seats.length}
@@ -398,7 +506,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                                                     <Seats
                                                         key={current.seatNumber}
                                                         seatColor={current.category === 'VIP' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
-                                                        isTaken={ (current.status === 'occupied' || current.status === 'holding')}
+                                                        isTaken={current.status === 'occupied' || current.status === 'holding'}
                                                         isSelected={selectedSeats.includes(current.seatNumber)}
                                                         onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}
@@ -417,7 +525,7 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                 )}
             </div>
 
-            {/* Mini-map - only show when panning is needed */}
+            {/* Mini-map */}
             <MiniMap
                 seatMap={seatMap}
                 containerRef={containerRef}
@@ -427,7 +535,6 @@ const SeatLayout = ({ schedule, selectedSeats, seatMap = {}, onClick = () => { c
                 onClick={handleMiniMapNavigation}
                 schedule={schedule}
             />
-            
         </div>
     );
 }

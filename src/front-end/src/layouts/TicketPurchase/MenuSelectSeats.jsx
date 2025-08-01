@@ -1,8 +1,11 @@
+// ================================ IMPORTS ================================
 import { useState, useEffect } from 'react';
 import BPoster from '@components/UI/BPoster';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
 import SeatLayout, {Seats, CoupleSeat} from '@/layouts/TicketPurchase/SeatLayout';
+
+// ================================ COMPONENTS ================================
 
 const SeatName = ({ type, text, isCouple = false }) => (
     <div className="flex w-auto flex-row items-center justify-start gap-3">
@@ -15,6 +18,10 @@ const SeatName = ({ type, text, isCouple = false }) => (
     </div>
 );
 
+// ================================ MAIN COMPONENT ================================
+
+// ================================ MAIN COMPONENT ================================
+
 const MenuSelectSeats = ({ 
     onNext, 
     onBack, 
@@ -22,104 +29,44 @@ const MenuSelectSeats = ({
     updateMovieTicket, 
     clearSessionLoading,
     fetchSeats,
-    seats = [], // Seats data fetched from the server
-    seatsLoading = false, // Loading state for seats
+    seats = [],
+    seatsLoading = false,
 }) => {
+    // ================================ STATE MANAGEMENT ================================
+    
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
 
+    // ================================ DATA FETCHING EFFECTS ================================
+
+    // ================================ DATA FETCHING EFFECTS ================================
+
     useEffect(() => {
-        console.log(seats)
+        console.log(seats);
         if (movieTicketData.schedule && seats.length === 0) {
             fetchSeats(movieTicketData.schedule._id);
         }
     }, []);
 
-    // Handle seat selection/deselection
-    // Accept seatName as string or array, flatten, and update seats
+    useEffect(() => {
+        updateMovieTicket({ total: movieTicketData?.adultTickets * 80000 + movieTicketData?.discountedTickets * 45000 });
+    }, [movieTicketData?.adultTickets, movieTicketData?.discountedTickets]);
+
+    // ================================ EVENT HANDLERS ================================
+
+    // ================================ EVENT HANDLERS ================================
+
     const handleSeatToggle = (seatName) => {
-        // Always treat seatName as array
         const seatNames = Array.isArray(seatName) ? seatName : [seatName];
         let newSelectedSeats = Array.isArray(movieTicketData?.seats) ? [...movieTicketData.seats] : [];
         
         seatNames.forEach(name => {
             if (newSelectedSeats.includes(name)) {
-                // If seat is already selected, unselect it
                 newSelectedSeats = newSelectedSeats.filter(seat => seat !== name);
             } else {
-                // If seat is not selected, select it
                 newSelectedSeats.push(name);
             }
         });
-
-      // Prevent leaving a single unselected seat ('gap') between two selected seats in the same row
-// Only check around the selected seats, not the entire row
-if (seats && seats.seatsByRow) {
-    // Build a map of selected seats by row
-    const selectedByRow = {};
-    newSelectedSeats.forEach(seat => {
-        const row = seat.charAt(0);
-        if (!selectedByRow[row]) selectedByRow[row] = [];
-        selectedByRow[row].push(seat);
-    });
-    
-    // Check for gaps only around selected seats
-    let hasGap = false;
-    
-    newSelectedSeats.forEach(selectedSeat => {
-        const row = selectedSeat.charAt(0);
-        const rowSeats = seats.seatsByRow[row];
-        
-        if (!rowSeats) return;
-        
-        // Find the index of the selected seat in the row
-        const seatIndex = rowSeats.findIndex(s => s.seatNumber === selectedSeat);
-        if (seatIndex === -1) return;
-        
-        const selected = selectedByRow[row] || [];
-        
-        // Check both sides of the selected seat for potential gaps
-        const checkSide = (adjacentIndex, farIndex) => {
-            if (adjacentIndex < 0 || adjacentIndex >= rowSeats.length) return false;
-            if (farIndex < 0 || farIndex >= rowSeats.length) return false;
-            
-            const adjacentSeat = rowSeats[adjacentIndex];
-            const farSeat = rowSeats[farIndex];
-            
-            // Check if adjacent seat is empty/available
-            const adjacentIsSelected = selected.includes(adjacentSeat.seatNumber);
-            const adjacentIsTaken = adjacentSeat.isTaken || adjacentSeat.status === 'occupied';
-            const adjacentIsHeldByOthers = adjacentSeat.status === 'holding';
-            const adjacentIsFilled = adjacentIsSelected || adjacentIsTaken || adjacentIsHeldByOthers;
-            
-            // Check if far seat is filled
-            const farIsSelected = selected.includes(farSeat.seatNumber);
-            const farIsTaken = farSeat.isTaken || farSeat.status === 'occupied';
-            const farIsHeldByOthers = farSeat.status === 'holding';
-            const farIsFilled = farIsSelected || farIsTaken || farIsHeldByOthers;
-            
-            // Gap exists if adjacent is empty but far is filled
-            return !adjacentIsFilled && farIsFilled;
-        };
-        
-        // Check left side: selected -> empty -> filled
-        if (checkSide(seatIndex - 1, seatIndex - 2)) {
-            hasGap = true;
-            return;
-        }
-        
-        // Check right side: selected -> empty -> filled
-        if (checkSide(seatIndex + 1, seatIndex + 2)) {
-            hasGap = true;
-            return;
-        }
-    });
-    
-    if (hasGap) {
-        alert('You cannot leave a single seat between selections.');
-        return;
-    }
-}
 
         if (newSelectedSeats.length > (movieTicketData.adultTickets + movieTicketData.discountedTickets)) {
             alert('Please add more tickets');
@@ -128,24 +75,89 @@ if (seats && seats.seatsByRow) {
         }
     };
 
-    useEffect(() => {
-        updateMovieTicket({ total: movieTicketData?.adultTickets * 80000 + movieTicketData?.discountedTickets * 45000 });
-    }, [movieTicketData?.adultTickets, movieTicketData?.discountedTickets]);
+    // ================================ UTILITY FUNCTIONS ================================
 
-    // Check if user can proceed
+    const checkSeatGaps = (selectedSeats) => {
+        if (!seats || !seats.seatsByRow) return false;
+
+        const selectedByRow = {};
+        selectedSeats.forEach(seat => {
+            const row = seat.charAt(0);
+            if (!selectedByRow[row]) selectedByRow[row] = [];
+            selectedByRow[row].push(seat);
+        });
+        
+        let hasGap = false;
+        
+        selectedSeats.forEach(selectedSeat => {
+            const row = selectedSeat.charAt(0);
+            const rowSeats = seats.seatsByRow[row];
+            
+            if (!rowSeats) return;
+            
+            const seatIndex = rowSeats.findIndex(s => s.seatNumber === selectedSeat);
+            if (seatIndex === -1) return;
+            
+            const selected = selectedByRow[row] || [];
+            
+            const checkSide = (adjacentIndex, farIndex) => {
+                if (adjacentIndex < 0 || adjacentIndex >= rowSeats.length) return false;
+                if (farIndex < 0 || farIndex >= rowSeats.length) return false;
+                
+                const adjacentSeat = rowSeats[adjacentIndex];
+                const farSeat = rowSeats[farIndex];
+                
+                const adjacentIsSelected = selected.includes(adjacentSeat.seatNumber);
+                const adjacentIsTaken = adjacentSeat.isTaken || adjacentSeat.status === 'occupied';
+                const adjacentIsHeldByOthers = adjacentSeat.status === 'holding';
+                const adjacentIsFilled = adjacentIsSelected || adjacentIsTaken || adjacentIsHeldByOthers;
+                
+                const farIsSelected = selected.includes(farSeat.seatNumber);
+                const farIsTaken = farSeat.isTaken || farSeat.status === 'occupied';
+                const farIsHeldByOthers = farSeat.status === 'holding';
+                const farIsFilled = farIsSelected || farIsTaken || farIsHeldByOthers;
+                
+                return !adjacentIsFilled && farIsFilled;
+            };
+            
+            if (checkSide(seatIndex - 1, seatIndex - 2) || checkSide(seatIndex + 1, seatIndex + 2)) {
+                hasGap = true;
+                return;
+            }
+        });
+        
+        return hasGap;
+    };
+
+    // ================================ NAVIGATION FUNCTIONS ================================
+
+    // ================================ NAVIGATION FUNCTIONS ================================
+
     const canProceed = movieTicketData?.seats.length > 0;
 
     const handleNext = () => {
-        if (canProceed) {
-            if ((movieTicketData.adultTickets + movieTicketData.discountedTickets) !== movieTicketData?.seats.length) {
-                alert('Please select the same number of seats as tickets.');
-            } else {
-                onNext();
-            }
-        } else {
+        if (!canProceed) {
             alert('Please select at least one seat before proceeding.');
+            return;
         }
+
+        if ((movieTicketData.adultTickets + movieTicketData.discountedTickets) !== movieTicketData?.seats.length) {
+            alert('Please select the same number of seats as tickets.');
+            return;
+        }
+
+        // Check for seat gaps before proceeding
+        if (checkSeatGaps(movieTicketData.seats)) {
+            alert('You cannot leave a single seat between selections.');
+            return;
+        }
+
+        onNext();
     };
+
+    // ================================ SCROLL EFFECTS ================================
+    
+    // ================================ SCROLL EFFECTS ================================
     
     useEffect(() => {
         const controlBottomBar = () => {
@@ -161,12 +173,12 @@ if (seats && seats.seatsByRow) {
         };
     
         window.addEventListener('scroll', controlBottomBar);
-        
         return () => {
             window.removeEventListener('scroll', controlBottomBar);
         };
-    
     }, [lastScrollY]);
+
+    // ================================ RENDER ================================
 
     return (
         <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
