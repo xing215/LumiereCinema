@@ -529,8 +529,8 @@ const Wishlist = () => {
                         {/* Delete Button & Pagination Controls */}
                         {!loading && currentPageData.length > 0 && (
                             <div className="mt-8 space-y-4">
-                                {/* Delete Button - Always visible in list view */}
-                                {viewMode === 'list' && (
+                                {/* Delete Button - Only visible in list view and if at least one movie is selected */}
+                                {viewMode === 'list' && selectedMovies.length > 0 && (
                                     <div className="flex justify-end">
                                         <button
                                             onClick={handleDeleteSelected}
@@ -538,26 +538,11 @@ const Wishlist = () => {
                                         >
                                             <Trash2 size={16} />
                                             <span className="text-[12px] font-['Unbounded'] tracking-wider">
-                                                DELETE SELECTED
+                                                REMOVE ALL
                                             </span>
                                         </button>
                                     </div>
                                 )}
-
-                                {/* Delete Button - Only show when movies are selected in list view */}
-                                {/* {viewMode === 'list' && selectedMovies.length > 0 && (
-                                    <div className="flex justify-end">
-                                        <button
-                                            onClick={handleDeleteSelected}
-                                            className="flex items-center gap-2 px-4 py-2 bg-pink-400 rounded-xl shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white font-bold hover:bg-purple-700 transition-colors duration-200"
-                                        >
-                                            <Trash2 size={16} />
-                                            <span className="text-[12px] font-['Unbounded'] tracking-wider">
-                                                DELETE SELECTED ({selectedMovies.length})
-                                            </span>
-                                        </button>
-                                    </div>
-                                )} */}
 
                                 {/* Pagination Controls */}
                                 {totalPages > 1 && (

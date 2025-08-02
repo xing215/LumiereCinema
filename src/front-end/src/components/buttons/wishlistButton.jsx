@@ -15,16 +15,14 @@ const WishlistButton = ({ movie, className = '' }) => {
             getWishlist();
             setWishlistFetched(true);
         }
-    }, [wishlistFetched, getWishlist]);
-
+    }, [wishlistFetched, getWishlist]); 
     const isInWishlist = (movieId) => {
         return (
-            wishlist.wishlist &&
-            Array.isArray(wishlist.wishlist) &&
-            wishlist.wishlist.some(item => String(item._id) === String(movieId))
+            wishlist &&
+            Array.isArray(wishlist) &&
+            wishlist.some(item => String(item._id) === String(movieId))
         );
     };
-
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
         if ((wishlistError && (!wishlist.wishlist || wishlist.wishlist.length === 0)) ||

@@ -14,6 +14,7 @@ const Seat = require('../models/Seat');
 const SeatCategory = require('../models/SeatCategory');
 const { redisClient } = require('../config/redis.config');
 const CacheManager = require('../utils/cacheManager');
+const EmailService = require('../utils/emailService');
 
 /**
  * @desc    Get list of schedules by branch, date, and movie
@@ -634,302 +635,6 @@ const holdSeats = async (req, res) => {
   }
 };
 
-/**
- * @desc    Temporarily reserve snacks
- * @route   POST /tickets/snacks/reserve
- * @access  Public
- * @body    { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
- */
-const reserveSnacks = async (req, res) => {
-  try {
-    const { branchId, snackItems, sessionId, reserveDurationMinutes } = req.body;
-    const userId = req.user && req.user?.id ? req.user?.id : null;
-
-    // Validation
-    if (!branchId || !snackItems || !Array.isArray(snackItems) || snackItems.length === 0) {
-      return res.status(400).json({
-        error: 'Branch ID and snack items array are required'
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(branchId)) {
-      return res.status(400).json({
-        error: 'Invalid branch ID format'
-      });
-    }
-
-    // Must have either userId or sessionId
-    if (!userId && !sessionId) {
-      return res.status(400).json({
-        error: 'Either userId or sessionId is required'
-      });
-    }    // Validate snackItems format
-    for (const item of snackItems) {
-      if (!item.shortname || !item.quantity || item.quantity <= 0) {
-        return res.status(400).json({
-          error: 'Each snack item must have shortname and positive quantity'
-        });
-      }
-
-      // Validate shortname format (should be uppercase and trimmed)
-      if (typeof item.shortname !== 'string' || !item.shortname.trim()) {
-        return res.status(400).json({
-          error: `Invalid shortname format: ${item.shortname}`
-        });
-      }
-    }
-
-    // Check if branch exists
-    const branch = await Branch.findById(branchId);
-    if (!branch) {
-      return res.status(404).json({
-        error: 'Branch not found'
-      });
-    }
-
-    // Get shortnames for checking
-    const shortnames = snackItems.map(item => item.shortname.toUpperCase().trim());
-    
-    // Check if all snacks exist and belong to the branch
-    const snacks = await Snack.find({
-      shortname: { $in: shortnames },
-      branch: branchId,
-      isHidden: false
-    }).lean();    if (snacks.length !== shortnames.length) {
-      const foundShortnames = snacks.map(snack => snack.shortname);
-      const missingShortnames = shortnames.filter(shortname => !foundShortnames.includes(shortname));
-      return res.status(404).json({
-        error: 'Some snacks not found or not available',
-        missingShortnames: missingShortnames
-      });
-    }
-
-    // Check stock availability
-    const stockIssues = [];
-    const reservationRequests = [];
-
-    for (const item of snackItems) {
-      const snack = snacks.find(s => s.shortname === item.shortname.toUpperCase().trim());
-      const availableStock = snack.stock - (snack.reserved || 0);
-      
-      if (availableStock < item.quantity) {
-        stockIssues.push({
-          shortname: item.shortname,
-          snackName: snack.name,
-          requested: item.quantity,
-          available: availableStock
-        });
-      } else {
-        reservationRequests.push({
-          snackId: snack._id,
-          shortname: snack.shortname,
-          quantity: item.quantity,
-          snack: snack
-        });
-      }
-    }
-
-    if (stockIssues.length > 0) {
-      return res.status(409).json({
-        error: 'Insufficient stock for some items',
-        stockIssues
-      });
-    }
-
-    // Calculate expiration time for reservation
-    const reserveMinutes = reserveDurationMinutes || 15; // Default 15 minutes
-    const expiresAt = new Date(Date.now() + reserveMinutes * 60 * 1000);
-
-    // Update snack reservations atomically
-    const session = await mongoose.startSession();
-    
-    try {
-      await session.withTransaction(async () => {
-        for (const request of reservationRequests) {
-          await Snack.findByIdAndUpdate(
-            request.snackId,
-            { 
-              $inc: { reserved: request.quantity } 
-            },
-            { session }
-          );
-        }
-      });
-
-      // Create a simple reservation record (you might want to create a SnackReservation model)
-      const reservationRecord = {
-        _id: new mongoose.Types.ObjectId(),
-        branch: branchId,
-        user: userId || null,
-        sessionId: sessionId || null,        items: reservationRequests.map(req => ({
-          snackId: req.snackId,
-          shortname: req.shortname,
-          snackName: req.snack.name,
-          quantity: req.quantity,
-          pricePerUnit: req.snack.price,
-          totalPrice: req.snack.price * req.quantity
-        })),
-        expiresAt,
-        status: 'reserved',
-        createdAt: new Date()
-      };
-
-      await session.commitTransaction();
-
-      // Calculate total
-      const totalAmount = reservationRecord.items.reduce(
-        (sum, item) => sum + item.totalPrice, 0
-      );
-
-      return res.status(201).json({
-        message: 'Snacks reserved successfully',
-        reservation: {
-          _id: reservationRecord._id,
-          items: reservationRecord.items,
-          totalAmount,
-          expiresAt,
-          reserveDurationMinutes: reserveMinutes
-        }
-      });
-
-    } catch (sessionError) {
-      await session.abortTransaction();
-      throw sessionError;
-    } finally {
-      await session.endSession();
-    }
-
-  } catch (error) {
-    console.error('Error reserving snacks:', error);
-    return res.status(500).json({
-      error: 'Internal server error'
-    });
-  }
-};
-
-/**
- * @desc    Create standalone snack ticket
- * @route   POST /tickets/snacks/create
- * @access  Public
- * @body    {
- *            customer?: ObjectId,
- *            noLoginCustomerInfo?: { name, email, phone },
- *            branch: ObjectId,
- *            seller?: ObjectId,
- *            promotionCode?: string,
- *            snackList: [{ shortname: string, quantity: number }]
- *          }
- */
-const createSnackTicket = async (req, res) => {
-  const session = await mongoose.startSession();
-  
-  try {
-    const { 
-      noLoginCustomerInfo, 
-      branch, 
-      seller, 
-      promotionCode,
-      snackList 
-    } = req.body;
-
-    const userId = req.user && req.user?.id ? req.user?.id : null;
-    const user = await User.findById(userId);
-
-    if (user) {
-      if (user.roles.includes('cashier')) {
-        customer = null
-      } else {
-        customer = userId; // Use userId as customer if not a cashier
-      }
-    }
-
-
-    // Validate snackList is provided
-    if (!snackList || !Array.isArray(snackList) || snackList.length === 0) {
-      return res.status(400).json({ 
-        error: 'snackList array is required and cannot be empty' 
-      });
-    }
-
-    let transactionResult;
-
-    await session.withTransaction(async () => {
-      // ===== Validate data =====
-      const { user, branchData } = await validateRequestData({ 
-        customer, 
-        noLoginCustomerInfo, 
-        branch, 
-        snackList, 
-        seller,
-      });
-
-      // ===== Calculate total and update stock =====
-      const { total: baseTotal, validatedSnackList } = await calculateTotalAndUpdateStock(
-        snackList, 
-        branchData._id, 
-        session
-      );
-
-      // ===== Apply discounts =====
-      const { total: finalTotal, appliedPromotion } = await applyDiscounts({ 
-        user, 
-        promotionCode, 
-        total: baseTotal,
-        session 
-      });
-
-      // ===== Add loyalty points if user is logged in =====
-      let pointsAdded = 0;
-      if (user && finalTotal > 0) {
-        pointsAdded = Math.floor(finalTotal / 10000); // 1 point per 10,000 VND
-        user.loyaltyPoints = (user.loyaltyPoints || 0) + pointsAdded;
-        await user.save({ session });
-      }
-
-      // ===== Create snack ticket =====
-      const snackTicket = new SnackTicket({
-        branch,
-        snackList: validatedSnackList,
-        promotion: appliedPromotion,
-        total: finalTotal,
-        seller: seller || null,
-        ...(customer ? { customer } : { noLoginCustomerInfo })
-      });
-
-      await snackTicket.save({ session });
-
-      // Store result for response
-      transactionResult = {
-        snackTicket,
-        totalAmount: finalTotal,
-        appliedPromotion,
-        pointsAdded
-      };
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: 'Snack ticket created successfully',
-      data: {
-        snackTicket: transactionResult.snackTicket,
-        totalAmount: transactionResult.totalAmount,
-        appliedPromotion: transactionResult.appliedPromotion,
-        pointsAdded: transactionResult.pointsAdded
-      }
-    });
-
-  } catch (error) {
-    console.error('Create Snack Ticket Error:', error);
-    const status = error.status || 500;
-    const message = error.message || 'Failed to create snack ticket.';
-    return res.status(status).json({ 
-      error: message 
-    });
-  } finally {
-    await session.endSession();
-  }
-};
-
 // ======= EXISTING SUB FUNCTIONS =======
 
 const validateRequestData = async ({ customer, noLoginCustomerInfo, branch, snackList = [] }) => {
@@ -1426,6 +1131,98 @@ const createTicket = async (req, res) => {
     // Invalidate relevant caches
     if (movieTicket) {
       await CacheManager.invalidateScheduleCache(movieTicket.schedule);
+    }
+
+    // ===== Send email confirmation =====
+    try {
+      const emailService = new EmailService();
+      
+      // Determine customer email and name
+      let customerEmail = null;
+      let customerName = 'Customer';
+      
+      if (customer) {
+        // Logged in customer - always use email from User model
+        const customerData = await User.findById(customer).select('email name');
+        if (customerData) {
+          customerEmail = customerData.email; // Use user's email from database
+          customerName = customerData.name || 'Customer';
+        }
+      } else if (noLoginCustomerInfo) {
+        // Guest customer - use email from noLoginCustomerInfo (only when not logged in)
+        customerEmail = noLoginCustomerInfo.email || null;
+        customerName = noLoginCustomerInfo.name || 'Guest';
+      }
+
+      if (customerEmail) {
+        // Get branch information for email
+        const branchInfo = await Branch.findById(branch).select('name address');
+        const cinemaName = branchInfo?.name || 'Lumiere Cinema';
+        const cinemaAddress = branchInfo?.address || 'Cinema Location';
+
+        // Send movie ticket email
+        if (transactionResult.movieTicket) {
+          try {
+            // Get movie and schedule details
+            const scheduleData = await Schedule.findById(transactionResult.movieTicket.schedule)
+              .populate('movie', 'title')
+              .populate('screen', 'screenName')
+              .lean();
+            
+            if (scheduleData) {
+              const movieEmailParams = {
+                email: customerEmail,
+                fullname: customerName,
+                movie: scheduleData.movie.title,
+                datetime: emailService.formatDateTime(scheduleData.startTime),
+                seat: emailService.formatSeatList(transactionResult.movieTicket.seats),
+                screen: scheduleData.screen.screenName,
+                cinema: cinemaName,
+                cinemaAddress: cinemaAddress,
+                ticketCode: transactionResult.movieTicket.ticketCode
+              };
+
+              await emailService.sendMovieTicketEmail(movieEmailParams);
+              console.log('Movie ticket email sent successfully');
+            }
+          } catch (emailError) {
+            console.error('Error sending movie ticket email:', emailError);
+            // Don't fail the request if email fails
+          }
+        }
+
+        // Send snack ticket email
+        if (transactionResult.snackTicket) {
+          try {
+            // Get detailed snack information
+            const snackTicketData = await SnackTicket.findById(transactionResult.snackTicket._id)
+              .populate('snackList.snack', 'name')
+              .lean();
+            
+            if (snackTicketData) {
+              const snackEmailParams = {
+                email: customerEmail,
+                fullname: customerName,
+                snackList: emailService.formatSnackList(snackTicketData.snackList),
+                cinema: cinemaName,
+                cinemaAddress: cinemaAddress,
+                ticketCode: transactionResult.snackTicket.snackTicketCode
+              };
+
+              await emailService.sendSnackTicketEmail(snackEmailParams);
+              console.log('Snack ticket email sent successfully');
+            }
+          } catch (emailError) {
+            console.error('Error sending snack ticket email:', emailError);
+            // Don't fail the request if email fails
+          }
+        }
+      } else {
+        console.log('No customer email available, skipping email notification');
+      }
+    } catch (emailError) {
+      console.error('Error in email service:', emailError);
+      // Don't fail the request if email service fails
     }
 
     return res.status(201).json({
@@ -1935,17 +1732,11 @@ module.exports = {
   updateTicket,
   deleteTicket,
   holdSeats,
-  getSnacksByBranch,
-  reserveSnacks,
+  getSnacksByBranch,  
   manageSeatHold,
   releaseBulkHolds,
   cleanupExpiredHolds,
   getCacheStats,  cleanupCache,
   preloadCache,
-  createSnackTicket,
   calculateDiscountedTotal,
-  // getTicketListByTime,
-  // checkInTicket,
-  // makeTicketValid,
-  // updateTicket
 };

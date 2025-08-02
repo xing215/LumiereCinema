@@ -31,7 +31,6 @@ const SideBar = ({in_lunar_point=false}) => {
         );
     }
 
-    // Helper functions - THÊM MỚI
     const getNextTierTarget = (rank) => {
         switch (rank) {
             case 'SILVER':
@@ -70,7 +69,6 @@ const SideBar = ({in_lunar_point=false}) => {
         }
     };
 
-    // Computed values - THÊM MỚI
     const currentRank = profile?.loyaltyRank?.rank;
     const currentPoints = profile?.loyaltyRank?.lunarPoints || 0;
     const targetPoints = getNextTierTarget(currentRank);

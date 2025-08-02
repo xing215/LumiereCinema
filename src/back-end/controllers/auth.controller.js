@@ -431,7 +431,7 @@ const staffForgotPassword = async (req, res) => {
         await user.save();
 
         // Create reset URL for staff
-        const resetUrl = `${process.env.FRONTEND_URL}/staff/reset-password/confirm?token=${resetToken}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/confirm?token=${resetToken}`;
 
         // Email configuration
         const transporter = nodemailer.createTransport({
@@ -442,18 +442,16 @@ const staffForgotPassword = async (req, res) => {
             }
         });
 
+        const fs = require('fs');
+        const path = require('path');
+        const templatePath = path.join(__dirname, '../templates/resetPasswordEmail.html');
+        let emailHtml = fs.readFileSync(templatePath, 'utf8');
+        emailHtml = emailHtml.replace(/\{\{resetUrl\}\}/g, resetUrl);
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: 'Password Reset Request - Lumiere Cinema Staff',
-            html: `
-                <h2>Staff Password Reset Request</h2>
-                <p>You requested a password reset for your Lumiere Cinema staff account.</p>
-                <p>Click the link below to reset your password:</p>
-                <a href="${resetUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
-                <p>This link will expire in 1 hour.</p>
-                <p>If you didn't request this, please ignore this email.</p>
-            `
+            subject: 'Password Reset Request - Lumiere Cinema',
+            html: emailHtml
         };
 
         await transporter.sendMail(mailOptions);
