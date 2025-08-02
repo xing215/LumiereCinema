@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '@layouts/LandingPage/Header.jsx';
 import ChangePwdForm from '@layouts/ChangePwd/ChangePwdForm.jsx';
-import ChatBot from '@components/display/ChatBot.jsx';
+import ChatBot from '@components/display/ChatBot';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@routes/routeConfig.js';
 import Footer from '@layouts/LandingPage/Footer.jsx';
@@ -40,7 +40,6 @@ const ResetPwdEmail = () => {
                 <ChangePwdForm ResetToken={resetToken} />
             )}
         </div>
-        <ChatBot />
         <div className="w-screen lg:h-15" />
         <Footer />
     </section>

@@ -326,7 +326,7 @@ const searchMovies = async (req, res) => {
                 $sort: { score: -1 } // Sort by highest relevance score
             },
             {
-                $limit: 10 // Limit results to avoid overload
+                $limit: 3 // Limit results to avoid overload
             },
         ]);
 

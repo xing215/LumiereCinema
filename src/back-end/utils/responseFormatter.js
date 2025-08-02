@@ -8,12 +8,23 @@ class ResponseFormatter {
         "Chào bạn! 👋 Lumiere Cinema có gì có thể giúp bạn hôm nay? Tìm phim hay, xem lịch chiếu, hay đặt vé luôn?",
         "Hi! Tôi sẵn sàng giúp bạn khám phá thế giới điện ảnh tại Lumiere Cinema! 🎬"
       ],
-      
-      non_movie_fallback: [
+        non_movie_fallback: [
         "Tôi là AI chuyên hỗ trợ về phim ảnh và dịch vụ rạp chiếu phim Lumiere Cinema. Bạn có muốn xem phim gì hay không? 🎬",
         "Câu hỏi này nằm ngoài chuyên môn của tôi. Tôi chỉ giúp bạn về phim, lịch chiếu và đặt vé thôi ạ. Có phim nào bạn quan tâm không?",
         "Hmm, tôi không thể trả lời về chủ đề này. Nhưng tôi có thể giúp bạn tìm phim hay đang chiếu! Bạn thích thể loại gì?",
         "Xin lỗi, tôi chỉ am hiểu về lĩnh vực điện ảnh thôi. Bạn có muốn khám phá phim mới tại Lumiere Cinema không? 🍿"
+      ],      search_conversation: [
+        "Tôi hiểu bạn đang tìm phim hay! 🎬 Để gợi ý phù hợp, bạn có thể cho tôi biết:\n• Thích thể loại gì? (hành động, tình cảm, kinh dị, hài...)\n• Muốn xem phim đang chiếu hay sắp chiếu?\n• Có diễn viên hoặc đạo diễn yêu thích không?",
+        "Hay quá! Tôi sẽ giúp bạn tìm phim tuyệt vời 🌟 Bạn có thể:\n• Nói thể loại yêu thích\n• Hỏi \"phim gì đang chiếu?\"\n• Tìm theo tên diễn viên/đạo diễn\n• Hoặc xem phim hot nhất hiện tại!",
+        "Chúng tôi có rất nhiều phim hay! 🍿 Bạn muốn:\n• Xem phim đang chiếu hot nhất?\n• Khám phá phim sắp ra mắt?\n• Tìm theo thể loại cụ thể?\n• Hay để tôi gợi ý phim theo sở thích?",
+        "Tuyệt! Lumiere Cinema có nhiều bộ phim hấp dẫn 🎭 Bạn có thể:\n• Hỏi \"có phim gì hay đang chiếu?\"\n• Nói thể loại yêu thích (VD: \"tìm phim hành động\")\n• Tìm phim của diễn viên cụ thể\n• Xem danh sách phim sắp chiếu"
+      ],
+
+      schedule_conversation: [
+        "Tuyệt! Tôi sẽ giúp bạn tìm lịch chiếu 📅 Bạn muốn xem lịch chiếu của phim nào?",
+        "Để xem lịch chiếu, bạn hãy cho tôi biết tên phim bạn muốn xem nhé! 🎬",
+        "Lịch chiếu phim nào bạn quan tâm? Vui lòng cho tôi biết tên phim 🍿",
+        "Tôi có thể giúp bạn tìm lịch chiếu! Phim gì bạn đang muốn xem? 🎭"
       ],
 
       movie_list_header: [
@@ -27,11 +38,10 @@ class ResponseFormatter {
           "Bạn muốn xem lịch chiếu phim gì ạ? (VD: Avatar, Spider-Man, Iron Man)",
           "Cho tôi biết tên phim bạn quan tâm nhé!",
           "Phim nào bạn đang muốn tìm lịch chiếu?"
-        ],
-        location: [
-          "Bạn muốn xem ở rạp nào? Lumiere Cinema có ở: Quận 1, Gò Vấp, Bình Thạnh",
-          "Chọn chi nhánh bạn muốn đến: Quận 1, Gò Vấp, hay Bình Thạnh?",
-          "Rạp nào tiện cho bạn? (Quận 1 / Gò Vấp / Bình Thạnh)"
+        ],        location: [
+          "Bạn muốn xem ở rạp nào? Lumiere Cinema có: Nguyễn Văn Cừ, Nguyễn Huệ, Huỳnh Tấn Phát",
+          "Chọn chi nhánh bạn muốn đến: Nguyễn Văn Cừ, Nguyễn Huệ, hay Huỳnh Tấn Phát?",
+          "Rạp nào tiện cho bạn? (Nguyễn Văn Cừ / Nguyễn Huệ / Huỳnh Tấn Phát)"
         ],
         date: [
           "Bạn muốn xem vào ngày nào? (VD: hôm nay, mai, thứ 7, hoặc 25/12)",
@@ -120,12 +130,12 @@ class ResponseFormatter {
 
     const translatedFields = missingFields.map(field => fieldTranslations[field] || field);
     const messagePrefix = this.getRandomTemplate('missing_info_prefix');
-    const question = `${messagePrefix}${translatedFields.join(' và ')} nhé.`;
-
-    // Gợi ý cho người dùng
+    const question = `${messagePrefix}${translatedFields.join(' và ')} nhé.`;    // Gợi ý cho người dùng
     const suggestions = [];
     if (missingFields.includes('location')) {
-      suggestions.push({ text: 'Rạp gần tôi', action: 'find_nearest_branch' });
+      suggestions.push({ text: '📍 Nguyễn Văn Cừ', action: 'provide_info', data: { location: 'Nguyễn Văn Cừ' } });
+      suggestions.push({ text: '📍 Nguyễn Huệ', action: 'provide_info', data: { location: 'Nguyễn Huệ' } });
+      suggestions.push({ text: '📍 Huỳnh Tấn Phát', action: 'provide_info', data: { location: 'Huỳnh Tấn Phát' } });
     }
     if (missingFields.includes('date')) {
       suggestions.push({ text: 'Hôm nay', action: 'provide_info', data: { date: 'hôm nay' } });
@@ -144,19 +154,16 @@ class ResponseFormatter {
   /**
    * [MỚI] Format phản hồi cho câu hỏi không liên quan phim
    * @returns {object} Phản hồi từ chối lịch sự và hướng về phim
-   */
-  formatNonMovieResponse() {
-    const message = this.getRandomTemplate('non_movie_fallback');
-    return {
+   */  formatNonMovieResponse() {
+    const message = this.getRandomTemplate('non_movie_fallback');    return {
       type: 'non_movie_related',
       message: message,
       suggestions: [
         { text: 'Phim đang chiếu', action: 'get_now_showing' },
         { text: 'Phim sắp chiếu', action: 'get_upcoming' },
-        { text: 'Tìm phim hay', action: 'search_movies' },
-        { text: 'Xem lịch chiếu', action: 'find_schedules' }
-      ],
-      quick_actions: ['Phim hot', 'Phim mới', 'Action', 'Comedy']
+        { text: 'Tìm phim hay', action: 'search_conversation' },
+        { text: 'Xem lịch chiếu', action: 'schedule_conversation' }
+      ]
     };
   }
 
@@ -182,14 +189,13 @@ class ResponseFormatter {
         ];
         quickActions = ['Avatar', 'Spider-Man', 'Iron Man', 'Fast & Furious'];
         break;
-        
-      case 'location':
+          case 'location':
         suggestions = [
-          { text: 'Quận 1', action: 'select_branch', data: { location: 'Quận 1' } },
-          { text: 'Gò Vấp', action: 'select_branch', data: { location: 'Gò Vấp' } },
-          { text: 'Bình Thạnh', action: 'select_branch', data: { location: 'Bình Thạnh' } }
+          { text: '📍 Nguyễn Văn Cừ', action: 'select_branch', data: { location: 'Nguyễn Văn Cừ' } },
+          { text: '📍 Nguyễn Huệ', action: 'select_branch', data: { location: 'Nguyễn Huệ' } },
+          { text: '📍 Huỳnh Tấn Phát', action: 'select_branch', data: { location: 'Huỳnh Tấn Phát' } }
         ];
-        quickActions = ['Quận 1', 'Gò Vấp', 'Bình Thạnh', 'Gần tôi'];
+        quickActions = ['Nguyễn Văn Cừ', 'Nguyễn Huệ', 'Huỳnh Tấn Phát', 'Gần tôi'];
         break;
         
       case 'date':
@@ -242,29 +248,126 @@ class ResponseFormatter {
         message: '⚠️ Đã có lỗi xảy ra từ hệ thống. Vui lòng thử lại sau ít phút.',
         suggestions: []
       }
-    };
-
-    return {
+    };    return {
       type: 'error',
       ...errorTemplates[errorType] || errorTemplates.api_error
     };
   }
+  /**
+   * [MỚI] Format response cho search conversation (câu hỏi chung chung)
+   * @returns {object} Phản hồi conversational với gợi ý
+   */
+  formatSearchConversationResponse() {
+    const message = this.getRandomTemplate('search_conversation');
+
+    return {
+      type: 'search_conversation',
+      message: message
+    };
+  }
+  /**
+   * [MỚI] Format response cho schedule conversation (hỏi lịch chiếu chung chung)
+   * @returns {object} Phản hồi conversational để hỏi tên phim
+   */
+  formatScheduleConversationResponse() {
+    const message = this.getRandomTemplate('schedule_conversation');
+
+    return {
+      type: 'schedule_conversation',
+      message: message,
+      context: {
+        waiting_for: 'movie_title',
+        next_step: 'search_and_show_movies'
+      }
+    };
+  }
+
+  /**
+   * [MỚI] Format movie list đặc biệt cho context schedule
+   * @param {array} movies - Danh sách phim từ search
+   * @param {object} query - Query entities
+   * @returns {object} Phản hồi movie list với focus vào lịch chiếu
+   */
+  formatMovieListForSchedule(movies, query = {}) {
+    if (!movies || movies.length === 0) {
+      return this.formatErrorResponse('movie_not_found');
+    }
+
+    const movieCount = Math.min(movies.length, 3); // Chỉ hiển thị top 3
+    const topMovies = movies.slice(0, 3);
+    
+    const header = `Tìm thấy ${movieCount} phim phù hợp với "${query.movie_title}". Chọn phim để xem lịch chiếu:`;
+
+    return {
+      type: 'movie_list_for_schedule',
+      message: header,
+      context: 'schedule',
+      data: topMovies.map(movie => ({
+        _id: movie._id,
+        title: movie.title,
+        posterURL: movie.posterURL,
+        duration: movie.duration,
+        genre: movie.genre,
+        ageRating: movie.ageRating,
+        ratingsAverage: movie.ratingsAverage,
+        releaseDate: movie.releaseDate,
+        quick_actions: [
+          { 
+            text: '📅 Xem lịch chiếu', 
+            action: 'find_schedules', 
+            data: { 
+              movie_id: movie._id,
+              movie_title: movie.title 
+            } 
+          },
+          { 
+            text: 'ℹ️ Chi tiết phim', 
+            action: 'movie_details', 
+            data: { 
+              movie_id: movie._id 
+            } 
+          }
+        ]
+      })),
+      suggestions: [
+        { text: '🎬 Xem tất cả phim đang chiếu', action: 'get_now_showing' },
+        { text: '🔜 Xem phim sắp chiếu', action: 'get_upcoming' },
+        { text: '🔍 Tìm phim khác', action: 'search_conversation' }
+      ]
+    };
+  }
 
   // --- CÁC HÀM CŨ GIỮ NGUYÊN VÀ CẢI TIẾN ---
-
   formatMovieList(movies, query = {}) {
     if (!movies || movies.length === 0) {
       return this.formatErrorResponse('movie_not_found');
     }
 
-    const filterText = query.status === 'upcoming' ? 'sắp chiếu' : 'đang chiếu';
-    const header = this.getRandomTemplate('movie_list_header')
-      .replace('{count}', movies.length)
-      .replace('{filter}', filterText);
-
-    return {
+    // Tạo message header dựa trên loại tìm kiếm
+    let header;
+    if (query.search_type) {
+      switch (query.search_type) {
+        case 'actor':
+          header = `Tìm thấy ${movies.length} phim có diễn viên "${query.search_keyword}":`;
+          break;
+        case 'director':
+          header = `Tìm thấy ${movies.length} phim của đạo diễn "${query.search_keyword}":`;
+          break;
+        case 'genre':
+          header = `Tìm thấy ${movies.length} phim thể loại "${query.search_keyword}":`;
+          break;
+        default:
+          header = `Tìm thấy ${movies.length} phim phù hợp với "${query.search_keyword || query.movie_title}":`;
+      }
+    } else {
+      const filterText = query.status === 'upcoming' ? 'sắp chiếu' : 'đang chiếu';
+      header = this.getRandomTemplate('movie_list_header')
+        .replace('{count}', movies.length)
+        .replace('{filter}', filterText);
+    }return {
       type: 'movie_list',
       message: header,
+      status: query.status, // Thêm status để frontend biết loại danh sách
       data: movies.map(movie => ({
         _id: movie._id,
         title: movie.title,
@@ -320,12 +423,12 @@ class ResponseFormatter {
     const headerMsg = this.getRandomTemplate('schedule_found')
       .replace('{movie}', entities.movie_title || 'phim này')
       .replace('{location}', entities.location || 'rạp này')
-      .replace('{date}', entities.date || 'ngày này');
-
-    return {
+      .replace('{date}', entities.date || 'ngày này');    return {
       type: 'schedule_list',
       message: headerMsg,
       data: {
+        movie_id: scheduleData.movieId || entities.movie_id, // Thêm movie_id
+        branch_id: scheduleData.branchId || entities.branch_id, // Thêm branch_id
         movie_title: entities.movie_title,
         branch_location: entities.location,
         date: entities.date,
@@ -336,7 +439,11 @@ class ResponseFormatter {
           available_seats: schedule.seatInfo?.availableSeatsCount || 'N/A',
           price: schedule.price || 'N/A',
           quick_actions: [
-            { text: 'Đặt vé suất này', action: 'book_ticket', data: { schedule_id: schedule._id } }
+            { text: 'Đặt vé suất này', action: 'book_ticket', data: { 
+              schedule_id: schedule._id,
+              movie_id: scheduleData.movieId || entities.movie_id,
+              branch_id: scheduleData.branchId || entities.branch_id
+            } }
           ]
         }))
       },

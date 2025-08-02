@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@layouts/LandingPage/Header';
 import Footer from '@layouts/LandingPage/Footer';
+import ChatBot from '@components/display/ChatBot';
 import MovieCard from '@components/UI/MovieCard';
 import CinemaPopUp from '@components/UI/CinemaPopUp';
 import { useFetchBranches } from '@/hooks/useBranch';
@@ -153,6 +154,7 @@ const MovieListPage = () => {
         <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
             <MainBody />
+            <ChatBot />
             <Footer />
         </div>
     );
