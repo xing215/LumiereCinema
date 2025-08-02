@@ -177,12 +177,12 @@ export const useGetSchedules = () => {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { token } = useUser();
+  const { token, user } = useUser();
   const fetchSchedules = async (movieId, branchId) => {
     setLoading(true);
     setError(null);
     try {
-      const url = buildApiUrl(`/api/tickets/${branchId}/schedule`);
+      const url = user?.roles?.includes('branchmanager') ? buildApiUrl(`/api/branches/${branchId}/schedules`) : buildApiUrl(`/api/tickets/${branchId}/schedule`);
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
         params: movieId ? { movieId } : {}
@@ -202,7 +202,11 @@ export const useGetSchedules = () => {
         availableSeatsCount: schedule.seatInfo?.availableSeatsCount || 0,
       }))
     );
-    setSchedules(allSchedules);
+    if (user?.roles?.includes('branchmanager')) {
+      setSchedules(response.data.schedules || []);
+    } else {
+      setSchedules(allSchedules);
+    }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch schedules';
       setError(errorMessage);
