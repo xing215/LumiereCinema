@@ -189,7 +189,8 @@ const SnackPurchase = () => {
                         onBack={goToPreviousStep}
                         snackTicketData={snackTicketData}
                         updateSnackTicket={updateSnackTicket}
-                        loading={ticketLoading}
+                        loading={false}
+                        ticketLoading={ticketLoading}
                     />
                 );
             case MENU_STEPS.TICKET_DISPLAY:

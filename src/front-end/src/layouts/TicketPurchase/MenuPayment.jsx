@@ -92,7 +92,8 @@ const MenuPayment = ({
     sessionExpiresAt, 
     loading, 
     onExpire, 
-    isSession 
+    isSession, 
+    ticketLoading = false
 }) => {
     // ================================ STATE MANAGEMENT ================================
     
@@ -289,10 +290,10 @@ const MenuPayment = ({
                         <div className="flex w-full flex-row items-center justify-center gap-2">
                             <BackNaviButton onClick={onBack} />
                             <NextNaviButton 
-                                text="COMPLETE" 
+                                text={ticketLoading ? "• • •":"COMPLETE"} 
                                 onClick={handlePayment} 
                                 showTextOnMobile={true} 
-                                disabled={!selectedPayment || isExpired}
+                                disabled={!selectedPayment || isExpired || loading || ticketLoading}
                             />
                         </div>
                     </div>

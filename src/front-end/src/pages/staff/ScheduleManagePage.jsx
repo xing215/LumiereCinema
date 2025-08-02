@@ -5,11 +5,255 @@ import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton.jsx';
 import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
 import AddButton from "@components/buttons/Staff/AddButton.jsx";
-import { useEffect, useRef, useCallback, useMemo, useState, use } from 'react'; 
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react'; 
 import { useUser } from '@contexts/UserContext';
-import { useGetBranchById, useGetSchedules } from '@hooks/useBranch'; 
+import { useGetBranchById, useGetSchedules } from '@hooks/useBranch';
+import { useGetMovies } from '@hooks/useAdmin';
+import CustomDropdown from '@components/UI/CustomDropdown.jsx'; 
 
-const Schedule = ({screen = 20, schedules = [], selectedDate}) => {
+// Add Schedule Modal Component
+const AddScheduleModal = ({ isOpen, onClose, selectedTime, selectedScreen, selectedDate }) => {
+    const [formData, setFormData] = useState({
+        movie: '',
+        movieId: '',
+        date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+        screen: selectedScreen || '',
+        startTime: selectedTime || '',
+        endTime: ''
+    });
+
+    const { getMovies, movies, loading: moviesLoading } = useGetMovies();
+
+    // Calculate end time based on movie duration
+    const calculateEndTime = useCallback((startTime, durationMinutes) => {
+        if (!startTime || !durationMinutes) return '';
+        
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const startDate = new Date();
+        startDate.setHours(hours, minutes, 0, 0);
+        
+        const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+        
+        return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+    }, []);
+
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscape);
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+            setFormData({
+                movie: '',
+                movieId: '',
+                date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+                screen: selectedScreen || '',
+                startTime: selectedTime || '',
+                endTime: ''
+            });
+            // Fetch movies when modal opens
+            getMovies();
+        } else {
+            // Reset overflow when popup closes
+            document.body.style.overflow = '';
+        }
+
+        // Cleanup function to ensure overflow is reset
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = ''; // Reset overflow on unmount
+        };
+    }, [isOpen]);
+
+    // Update end time when movie or start time changes
+    useEffect(() => {
+        if (formData.movieId && formData.startTime) {
+            const selectedMovie = movies.find(movie => movie._id === formData.movieId);
+            if (selectedMovie && selectedMovie.duration) {
+                const endTime = calculateEndTime(formData.startTime, selectedMovie.duration);
+                setFormData(prev => ({
+                    ...prev,
+                    endTime
+                }));
+            }
+        }
+    }, [formData.movieId, formData.startTime, movies, calculateEndTime]);
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleMovieChange = (e) => {
+        const { value } = e.target;
+        const selectedMovie = movies.find(movie => movie._id === value);
+        setFormData(prev => ({
+            ...prev,
+            movie: selectedMovie ? selectedMovie.title : '',
+            movieId: value
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        // TODO: Implement schedule creation logic
+        console.log('Schedule form data:', formData);
+        onClose();
+    };
+
+    const handleCancel = () => {
+        onClose();
+    };
+
+    // Prepare movie options for dropdown
+    const movieOptions = movies.map(movie => ({
+        value: movie._id,
+        label: `${movie.title} (${movie.duration}min)`
+    }));
+
+    return (
+        <div 
+            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000000000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
+            onClick={handleBackdropClick}
+        >
+            <div className="relative w-auto h-auto rounded-xl shadow-xl flex flex-col items-center justify-center">
+                {/* Close button */}
+                <button
+                    onClick={e => {
+                        e.stopPropagation();
+                        onClose();
+                    }}
+                    className="absolute -top-12 -right-2 md:-top-15 lg:-right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
+                >
+                    ×
+                </button>
+                
+                {/* Modal Content */}
+                <div className="w-[678px] h-[495px] relative">
+                    <div className="w-[678px] h-[495px] left-0 top-0 absolute bg-slate-900/40 rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px]" />
+                    
+                    <form onSubmit={handleSubmit} className="absolute inset-0 p-[76px_76px_45px_76px] flex flex-col justify-between">
+                        {/* Form Fields */}
+                        <div className="w-[525px] h-80 flex flex-col justify-start items-start gap-3.5">
+                            {/* Movie Field */}
+                            <div className="w-[529px] inline-flex justify-start items-start gap-3.5">
+                                <div className="w-[529px] h-10 rounded-xl">
+                                    <CustomDropdown
+                                        value={formData.movieId}
+                                        onChange={handleMovieChange}
+                                        name="movieId"
+                                        placeholder={moviesLoading ? "• • •" : "Select Movie"}
+                                        bgColor="-zinc-300/70"
+                                        hoverColor="zinc-200"
+                                        borderColor="transparent"
+                                        textColor="black"
+                                        bgOpacity=""
+                                        height="h-full"
+                                        textAlign="left"
+                                        options={movieOptions}
+                                        disabled={moviesLoading}
+                                    />
+                                </div>
+                                <div className="w-36 justify-start text-white text-xl font-normal font-['Libre_Franklin']">Movie</div>
+                            </div>
+
+                            {/* Date and Screen Row */}
+                            <div className="inline-flex justify-start items-start gap-3.5">
+                                <div className="w-64 h-10 bg-zinc-300/70 rounded-xl">
+                                    <input
+                                        type="date"
+                                        name="date"
+                                        value={formData.date}
+                                        onChange={handleInputChange}
+                                        className="w-full h-full bg-transparent rounded-xl px-3 text-black focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
+                                        required
+                                    />
+                                </div>
+                                <div className="w-60 justify-start text-white text-xl font-normal font-['Libre_Franklin']">Date</div>
+                                <div className="w-64 h-10 bg-zinc-300/70 rounded-xl">
+                                    <input
+                                        type="number"
+                                        name="screen"
+                                        value={formData.screen}
+                                        onChange={handleInputChange}
+                                        placeholder="Screen Number"
+                                        min="1"
+                                        className="w-full h-full bg-transparent rounded-xl px-3 text-black placeholder-gray-600 focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
+                                        required
+                                    />
+                                </div>
+                                <div className="w-36 justify-start text-white text-xl font-normal font-['Libre_Franklin']">Screen</div>
+                            </div>
+
+                            {/* Start Time Field (Read-only, showing clicked time) */}
+                            <div className="w-[525px] h-10 bg-zinc-300/70 rounded-xl">
+                                <input
+                                    type="time"
+                                    name="startTime"
+                                    value={formData.startTime}
+                                    className="w-full h-full bg-transparent rounded-xl px-3 text-black focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
+                                    readOnly
+                                />
+                            </div>
+                            <div className="justify-start text-white text-xl font-normal font-['Libre_Franklin']">Start Time</div>
+                            
+                            {/* End Time Field (Auto-calculated) */}
+                            <div className="w-[525px] h-10 bg-zinc-300/70 rounded-xl">
+                                <input
+                                    type="time"
+                                    name="endTime"
+                                    value={formData.endTime}
+                                    className="w-full h-full bg-transparent rounded-xl px-3 text-black focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
+                                    readOnly
+                                />
+                            </div>
+                            <div className="justify-start text-white text-xl font-normal font-['Libre_Franklin']">End Time (Auto-calculated)</div>
+                            
+                            <div className="w-20 h-3.5 bg-zinc-300/0" />
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="h-9 inline-flex justify-start items-center gap-3.5">
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                className="w-48 h-10 relative"
+                            >
+                                <div className="w-48 h-10 left-0 top-0 absolute bg-slate-900 rounded-2xl shadow-[inset_0px_0px_60.654205322265625px_3.639252185821533px_rgba(155,47,255,1.00)]" />
+                                <div className="w-40 h-5 left-[14.42px] top-[8.91px] absolute text-center justify-start text-white text-lg font-bold font-['Unbounded']">CANCEL</div>
+                            </button>
+                            <button
+                                type="submit"
+                                className="w-48 h-10 relative"
+                                disabled={!formData.movieId || moviesLoading}
+                            >
+                                <div className={`w-48 h-10 left-0 top-0 absolute rounded-2xl shadow-[inset_0px_0px_60.654205322265625px_3.639252185821533px_rgba(155,47,255,1.00)] ${!formData.movieId || moviesLoading ? 'bg-gray-500' : 'bg-pink-400'}`} />
+                                <div className="w-40 h-5 left-[14.42px] top-[8.91px] absolute text-center justify-start text-white text-lg font-bold font-['Unbounded']">
+                                    {moviesLoading ? '• • •' : 'CONFIRM'}
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+}; 
+
+const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) => {
     const scheduleGridRef = useRef(null);
     
     // Helper function to convert time to position on timeline (allows negative values)
@@ -96,8 +340,10 @@ const Schedule = ({screen = 20, schedules = [], selectedDate}) => {
             const timeString = `${clickedHour < 10 ? `0${clickedHour}` : clickedHour}:${clickedMinuteInHour < 10 ? `0${clickedMinuteInHour}` : clickedMinuteInHour}`;
             console.log(`Clicked: Time ${timeString}, Screen ${clickedScreen}`);
             
-            // Optional: Show an alert for demonstration
-            alert(`You clicked on Screen ${clickedScreen} at ${timeString}`);
+            // Call the onAddSchedule callback to show the modal
+            if (onAddSchedule) {
+                onAddSchedule(timeString, clickedScreen + 1); // Convert back to 1-based screen numbering
+            }
         }
     }, [screen]);
     
@@ -256,6 +502,13 @@ const ScheduleManagePage = () => {
     const {token} = useUser();
     const [selectedDate, setSelectedDate] = useState(new Date()); // Current date state
     const { schedules, loading, error, fetchSchedules } = useGetSchedules();
+    
+    // Modal state management
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalData, setModalData] = useState({
+        selectedTime: '',
+        selectedScreen: '',
+    });
 
     useEffect(() => {
         if (user && user.roles?.includes('branchmanager') && user.branch) {
@@ -316,6 +569,24 @@ const ScheduleManagePage = () => {
         setSelectedDate(newDate);
     }, []);
     
+    // Handle opening the add schedule modal
+    const handleAddSchedule = useCallback((selectedTime, selectedScreen) => {
+        setModalData({
+            selectedTime,
+            selectedScreen
+        });
+        setIsModalOpen(true);
+    }, []);
+    
+    // Handle closing the modal
+    const handleCloseModal = useCallback(() => {
+        setIsModalOpen(false);
+        setModalData({
+            selectedTime: '',
+            selectedScreen: ''
+        });
+    }, []);
+    
 
 
     return (
@@ -351,11 +622,25 @@ const ScheduleManagePage = () => {
                         </div>
                     </div>
                 ) : (
-                    <Schedule schedules={filteredSchedules} selectedDate={selectedDate} screen={userBranch?.screens?.length} />
+                    <Schedule 
+                        schedules={filteredSchedules} 
+                        selectedDate={selectedDate} 
+                        screen={userBranch?.screens?.length} 
+                        onAddSchedule={handleAddSchedule}
+                    />
                 )}
 
                 <SelectBranchButton isLoading={branchLoading} branchName={userBranch?.name} />
             </MobileNotSupported>
+
+            {/* Add Schedule Modal */}
+            <AddScheduleModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                selectedTime={modalData.selectedTime}
+                selectedScreen={modalData.selectedScreen}
+                selectedDate={selectedDate}
+            />
 
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
             <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />

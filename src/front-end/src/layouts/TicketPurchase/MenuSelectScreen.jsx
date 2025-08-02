@@ -24,7 +24,7 @@ const TimeButton = ({ time, seats, schedule, isSelected, onSelect }) => {
     );
 };
 
-const TimeGrid = ({ selectedSchedule, onScheduleSelect, schedules, viewingDate }) => {
+const TimeGrid = ({ selectedSchedule, onScheduleSelect, schedules, viewingDate, scheduleLoading }) => {
     const formatTime = (isoString) => {
         const date = new Date(isoString);
         return date.toLocaleTimeString('en-US', { 
@@ -58,7 +58,7 @@ const TimeGrid = ({ selectedSchedule, onScheduleSelect, schedules, viewingDate }
             ) : (
                 <div className="flex w-full items-center justify-center py-8">
                     <div className="font-['Unbounded'] text-sm font-semibold text-white/60">
-                        {schedules > 0 ? viewingDate ? 'No showtimes available for this date' : 'Please select a date to view showtimes' : 'No showtimes available'}
+                        {scheduleLoading ? '• • •' : (schedules > 0 ? viewingDate ? 'No showtimes available for this date' : 'Please select a date to view showtimes' : 'No showtimes available')}
                     </div>
                 </div>
             )}
@@ -246,6 +246,7 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                                 onDateSelect={handleDateSelect}
                                 uniqueDates={uniqueDates}
                                 selectedScheduleDate={selectedDateInfo?.date}
+                                loading={scheduleLoading}
                             />
                         )}
                         
@@ -273,6 +274,7 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
                                     onScheduleSelect={handleScheduleSelect}
                                     schedules={schedules}
                                     viewingDate={viewingDate}
+                                    scheduleLoading={scheduleLoading}
                                 />
                             </>
                         )}

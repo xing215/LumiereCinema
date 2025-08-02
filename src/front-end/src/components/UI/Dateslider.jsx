@@ -37,7 +37,7 @@ const SliderButton = ({ date, isSelected, onClick, opacity = 'opacity-100', hasS
     );
 };
 
-const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDate = null }) => {
+const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDate = null, loading }) => {
     const swiperRef = useRef(null);
     const selectedIndex = uniqueDates.findIndex(date => date.date === viewingDate);
     
@@ -74,6 +74,16 @@ const DateSlider = ({ viewingDate, onDateSelect, uniqueDates, selectedScheduleDa
         if (distance === 1) return 'opacity-60';
         return 'opacity-30';
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-auto">
+                        <div className="text-white text-2xl p-5 font-bold font-['Unbounded'] animate-pulse">
+                            • • •
+                        </div>
+                    </div>
+        )
+    }
     
     return (
         <div className="flex h-auto w-auto flex-col items-center justify-center">

@@ -454,6 +454,7 @@ const TicketPurchase = () => {
                         loading={holdSessionLoading}
                         onExpire={handleExpire}
                         isSession={startedHoldSession}
+                        ticketLoading={ticketLoading}
                     />
                 );
             case MENU_STEPS.TICKET_DISPLAY:
