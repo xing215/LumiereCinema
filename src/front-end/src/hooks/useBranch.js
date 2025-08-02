@@ -35,13 +35,14 @@ export const useGetBranchById = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [branch, setBranch] = useState(null);
+  const { token } = useUser();
 
   const getBranchById = async (branchId) => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await branchService.getBranchDetails(branchId);
+      const data = await branchService.getBranchDetails(branchId, token);
       setBranch(data);
       return { success: true, data };
     } catch (err) {
@@ -266,6 +267,7 @@ export const useGetSnacks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [snacks, setSnacks] = useState([]);
+  const { token } = useUser();
   const { currentBranch } = useSetCurrentBranch();
 
   const getSnacks = async (branchId = currentBranch) => {
@@ -279,7 +281,7 @@ export const useGetSnacks = () => {
     setError(null);
     
     try {
-      const data = await branchService.getBranchSnacks(branchId);
+      const data = await branchService.getBranchSnacks(branchId, token);
       setSnacks(data);
       return { success: true, data };
     } catch (err) {

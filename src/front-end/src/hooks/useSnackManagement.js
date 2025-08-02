@@ -25,7 +25,8 @@ import {
 export const useSnackManagement = () => {
     // User and branch context
     const { user } = useUser();
-    const { currentBranch, setCurrentBranch } = useSetCurrentBranch();
+    // const { currentBranch, setCurrentBranch } = useSetCurrentBranch();
+    console.log('🔄 useSnackManagement initialized', user);
     const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
     
     // Snacks data from database
@@ -40,6 +41,13 @@ export const useSnackManagement = () => {
     // UI state
     const [tickedSnacks, setTickedSnacks] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => { 
+        console.log('🔄 useSnackManagement initialized')
+        // Initialize branch if user is branch manager
+        // This will only run once when the hook is first used
+        console.log(snacks)
+    }, [snacks]);
     
     // Add snack state
     const [isAddingSnack, setIsAddingSnack] = useState(false);
@@ -56,22 +64,22 @@ export const useSnackManagement = () => {
 
     // Refresh snacks data
     const refreshSnacks = useCallback(async () => {
-        const branchId = currentBranch || user?.branch?._id;
+        const branchId =  user?.branch?._id;
         if (branchId) {
             setSnacksFetched(false);
             await getSnacks(branchId);
             setSnacksFetched(true);
         }
-    }, [currentBranch, user?.branch?._id, getSnacks]);
+    }, [user, getSnacks]);
 
     // Inline editing hook - create wrapper function for updateSnack
     const updateSnackWrapper = useCallback(async (snackId, updateData) => {
-        const branchId = currentBranch || user?.branch?._id;
+        const branchId = user?.branch?._id;
         if (!branchId) {
             throw new Error('No branch selected');
         }
         return await updateSnack(branchId, snackId, updateData);
-    }, [updateSnack, currentBranch, user?.branch?._id]);
+    }, [updateSnack, user?.branch?._id]);
 
     const {
         editingCell,
@@ -191,21 +199,21 @@ export const useSnackManagement = () => {
     }, [user, getBranchById, branchInitialized]);
 
     // Set current branch when user branch is available
-    useEffect(() => {
-        if (user?.branch?._id && !currentBranch) {
-            setCurrentBranch(user.branch._id);
-        }
-    }, [user, currentBranch, setCurrentBranch]);
+    // useEffect(() => {
+    //     if (user?.branch?._id?._id && !currentBranch) {
+    //         setCurrentBranch(user.branch._id);
+    //     }
+    // }, [user, currentBranch, setCurrentBranch]);
 
     // Fetch snacks when branch is available (only once)
     useEffect(() => {
-        const branchId = currentBranch || user?.branch?._id;
+        const branchId = user?.branch?._id;
         if (branchId && !snacksFetched) {
             console.log('Fetching snacks for branch:', branchId);
             getSnacks(branchId);
             setSnacksFetched(true);
         }
-    }, [currentBranch, user?.branch?._id, snacksFetched]);
+    }, [user?.branch?._id, snacksFetched]);
 
     // Search functionality
     const handleSearch = useCallback((term) => {
@@ -399,7 +407,7 @@ export const useSnackManagement = () => {
     }, [cancelEdit]);
 
     const handleConfirmAddSnack = useCallback(async () => {
-        const branchId = currentBranch || user?.branch?._id;
+        const branchId = user?.branch?._id;
         if (!branchId) {
             showError('No branch selected. Please make sure you are assigned to a branch.');
             return;
@@ -446,11 +454,11 @@ export const useSnackManagement = () => {
             closeSwal();
             showError('Add Snack Failed', 'Failed to add snack: ' + (error.message || 'Unknown error'));
         }
-    }, [currentBranch, user?.branch?._id, validateSnack, newSnackData, snacks, updateSnack, refreshSnacks, handleCancelAddSnack]);
+    }, [user?.branch?._id, validateSnack, newSnackData, snacks, updateSnack, refreshSnacks, handleCancelAddSnack]);
 
     // Delete operations
     const handleDeleteConfirm = useCallback(async () => {
-        const branchId = currentBranch || user?.branch?._id;
+        const branchId = user?.branch?._id;
         if (!branchId) {
             showError('No branch selected');
             return;
@@ -520,7 +528,7 @@ export const useSnackManagement = () => {
             closeSwal();
             showError('Delete Error', 'An error occurred while deleting snacks');
         }
-    }, [currentBranch, user?.branch?._id, tickedSnacks, filterSnacks, snacks, removeSnack, refreshSnacks]);
+    }, [, user?.branch?._id, tickedSnacks, filterSnacks, snacks, removeSnack, refreshSnacks]);
 
     const handleDeleteClick = useCallback(async () => {
         const confirmResult = await showDeleteItemsConfirmation('snacks', tickedSnacks.size);
@@ -532,7 +540,7 @@ export const useSnackManagement = () => {
 
     // Status change handler (activate/deactivate)
     const onStatusChange = useCallback(async (rowIndex, newIsHidden) => {
-        const branchId = currentBranch || user?.branch?._id;
+        const branchId = user?.branch?._id;
         if (!branchId) {
             showError('No Branch Selected', 'No branch selected');
             return;
@@ -578,7 +586,7 @@ export const useSnackManagement = () => {
             closeSwal();
             showError('Status Update Error', 'Failed to update snack status');
         }
-    }, [currentBranch, user?.branch?._id, filterSnacks, snacks, updateSnack, refreshSnacks, isAddingSnack]);
+    }, [user?.branch?._id, filterSnacks, snacks, updateSnack, refreshSnacks, isAddingSnack]);
 
     // Data processing
     const getProcessedSnackData = useCallback(() => {
@@ -648,7 +656,7 @@ export const useSnackManagement = () => {
         deleteLoading,
         
         // Branch info
-        currentBranch,
+        currentBranch: user?.branch?._id,
         userBranch,
         branchLoading,
         

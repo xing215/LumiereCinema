@@ -19,7 +19,7 @@ export const useGetSeatsBySchedule = () => {
     setError(null);
     try {
       console.log('gettingseat')
-      const data = await ticketService.getSeatMapBySchedule(scheduleId);
+      const data = await ticketService.getSeatMapBySchedule(scheduleId, {}, token);
       setSeats(data);
       return data;
     } catch (err) {
@@ -44,7 +44,7 @@ export const useFetchAvailableSeats = () => {
     setError(null);
     
     try {
-      const response = await ticketService.getSeatMapBySchedule(scheduleId);
+      const response = await ticketService.getSeatMapBySchedule(scheduleId, {}, token);
       setAvailableSeats(response);
       return { success: true, data: response };
     } catch (err) {
@@ -395,7 +395,7 @@ export const useGetSnacksByBranch = () => {
     setError(null);
     
     try {
-      const response = await ticketService.getSnacksByBranch(branchId);
+      const response = await ticketService.getSnacksByBranch(branchId, token);
       setSnacks(response.snacks);
       return { success: true, data: response };
     } catch (err) {
