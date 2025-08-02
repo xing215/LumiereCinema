@@ -12,13 +12,18 @@ export const branchService = {
     return response.data;
   },
 
-  getBranchDetails: async (branchId) => {
-    const response = await axios.get(getApiUrlWithParams('branchDetails', { branchId }));
+  getBranchDetails: async (branchId, authToken) => {
+    const response = await axios.get(getApiUrlWithParams('branchDetails', { branchId }),
+          {headers: { Authorization: `Bearer ${authToken}` }}
+    );
     return response.data;
   },
 
-  getBranchSnacks: async (branchId) => {
-    const response = await axios.get(getApiUrlWithParams('branchSnacks', { branchId }));
+  getBranchSnacks: async (branchId, authToken = null) => {
+    const config = authToken ? {
+      headers: { Authorization: `Bearer ${authToken}` }
+    } : {};
+    const response = await axios.get(getApiUrlWithParams('branchSnacks', { branchId }), config);
     return response.data;
   },
 

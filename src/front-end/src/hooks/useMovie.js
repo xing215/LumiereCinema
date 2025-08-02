@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { movieService } from '@services';
+import { useUser } from '@contexts/UserContext';
 
 export const useSetBranch = () => {
   const [currentBranch, setCurrentBranch] = useState(null);
@@ -103,6 +104,7 @@ export const useGetShowtimes = () => {
   const [error, setError] = useState(null);
   const [showtimes, setShowtimes] = useState([]);
   const { getCurrentBranch } = useSetBranch();
+  const { token } = useUser();
 
   const getShowtimes = async (movieId, date = null) => {
     setLoading(true);
@@ -114,7 +116,7 @@ export const useGetShowtimes = () => {
       if (branchId) params.branchId = branchId;
       if (date) params.date = date;
 
-      const data = await movieService.getMovieShowtimes(movieId, params);
+      const data = await movieService.getMovieShowtimes(movieId, params, token);
       setShowtimes(data);
       return { success: true, data };
     } catch (err) {

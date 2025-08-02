@@ -27,15 +27,22 @@ export const movieService = {
     return response.data;
   },
 
-  getMovieShowtimes: async (movieId, queryParams = {}) => {
-    const response = await axios.get(getApiUrlWithParams('movieShowtimes', { movieId }), { 
-      params: queryParams 
-    });
+  getMovieShowtimes: async (movieId, queryParams = {}, authToken = null) => {
+    const config = authToken ? {
+      params: queryParams,
+      headers: { Authorization: `Bearer ${authToken}` }
+    } : { params: queryParams };
+    
+    const response = await axios.get(getApiUrlWithParams('movieShowtimes', { movieId }), config);
     return response.data;
   },
 
-  getMovieRatings: async (movieId) => {
-    const response = await axios.get(getApiUrlWithParams('movieRatings', { movieId }));
+  getMovieRatings: async (movieId, authToken = null) => {
+    const config = authToken ? {
+      headers: { Authorization: `Bearer ${authToken}` }
+    } : {};
+    
+    const response = await axios.get(getApiUrlWithParams('movieRatings', { movieId }), config);
     return response.data;
   },
 

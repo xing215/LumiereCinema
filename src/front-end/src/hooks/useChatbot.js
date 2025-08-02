@@ -13,7 +13,7 @@ import { useUser } from '@contexts/UserContext';
  * 4. Tự động tạo sessionId để duy trì ngữ cảnh hội thoại
  */
 const useChatbot = () => {  // Lấy thông tin user để theo dõi trạng thái đăng nhập
-  const { isAuthenticated, user } = useUser();
+  const { isAuthenticated, user, token } = useUser();
   
   // State cho danh sách tin nhắn
   const [messages, setMessages] = useState(() => {
@@ -101,7 +101,7 @@ const useChatbot = () => {  // Lấy thông tin user để theo dõi trạng th�
       const botResponse = await chatbotService.sendQuery({
         question: userMessage,
         sessionId: sessionId
-      });
+      }, token);
 
       // Tạo tin nhắn phản hồi từ bot
       const botMsg = {

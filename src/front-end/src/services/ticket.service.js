@@ -17,10 +17,13 @@ export const ticketService = {
     return response.data;
   },
 
-  getSeatMapBySchedule: async (scheduleId, queryParams = {}) => {
-    const response = await axios.get(getApiUrlWithParams('seatMapBySchedule', { scheduleId }), { 
-      params: queryParams 
-    });
+  getSeatMapBySchedule: async (scheduleId, queryParams = {}, authToken = null) => {
+    const config = authToken ? {
+      params: queryParams,
+      headers: { Authorization: `Bearer ${authToken}` }
+    } : { params: queryParams };
+    
+    const response = await axios.get(getApiUrlWithParams('seatMapBySchedule', { scheduleId }), config);
     return response.data;
   },
 
@@ -61,8 +64,13 @@ export const ticketService = {
     return response.data;
   },
 
-  bulkReleaseSeatHolds: async (releaseData) => {
-    const response = await axios.delete(getApiUrl('bulkReleaseSeatHolds'), { data: releaseData });
+  bulkReleaseSeatHolds: async (releaseData, authToken = null) => {
+    const config = authToken ? {
+      data: releaseData,
+      headers: { Authorization: `Bearer ${authToken}` }
+    } : { data: releaseData };
+    
+    const response = await axios.delete(getApiUrl('bulkReleaseSeatHolds'), config);
     return response.data;
   },
 
@@ -103,8 +111,12 @@ export const ticketService = {
   },
 
   // Snack ticket operations
-  getSnacksByBranch: async (branchId) => {
-    const response = await axios.get(getApiUrlWithParams('snacksByBranch', { branchId }));
+  getSnacksByBranch: async (branchId, authToken = null) => {
+    const config = authToken ? {
+      headers: { Authorization: `Bearer ${authToken}` }
+    } : {};
+    
+    const response = await axios.get(getApiUrlWithParams('snacksByBranch', { branchId }), config);
     return response.data;
   },
 

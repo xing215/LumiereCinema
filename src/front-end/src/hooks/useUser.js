@@ -220,13 +220,14 @@ export const useGetMyRatings = () => {
 export const useMessageChatBot = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { token } = useUser();
 
   const messageChatBot = async (queryData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const data = await chatbotService.sendQuery(queryData);
+      const data = await chatbotService.sendQuery(queryData, token);
       return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to send message to chatbot';
