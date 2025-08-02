@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { getApiUrl, getMovieApiUrl } from '@config/api.config';
+import { adminService, movieService, promotionService } from '@services';
 import { useUser } from '@contexts/UserContext';
 
 /**
@@ -18,15 +17,12 @@ export const useGetAccounts = () => {
     setError(null);
     
     try {
-      console.log('🔍 Making request to: http://localhost:5000/api/admin/users');
+      console.log('🔍 Making request to get all users');
       console.log('🔍 Token:', token);
-      const response = await axios.get('http://localhost:5000/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('🔍 Raw response:', response);
-      console.log('🔍 Response data:', response.data);
-      setAccounts(response.data);
-      return { success: true, data: response.data };
+      const data = await adminService.getAllUsers(token);
+      console.log('🔍 Response data:', data);
+      setAccounts(data);
+      return { success: true, data };
     } catch (err) {
       console.error('🔍 Error details:', err);
       console.error('🔍 Error response:', err.response);
@@ -51,10 +47,8 @@ export const useAddAccount = () => {
     setError(null);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/users', accountData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await adminService.createUser(accountData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add account';
       setError(errorMessage);
@@ -82,26 +76,12 @@ export const useUpdateAccount = () => {
       
       // First update basic user details if any
       if (Object.keys(otherData).length > 0) {
-        const requestBody = {
-          userId: accountId,
-          updateData: otherData
-        };
-        
-        await axios.put(`http://localhost:5000/api/admin/users/${accountId}`, requestBody, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await adminService.updateUserDetails(accountId, otherData, token);
       }
 
       // Then update roles if provided
       if (roles && Array.isArray(roles)) {
-        const rolesRequestBody = {
-          userId: accountId,
-          updateData: { roles }
-        };
-        
-        await axios.patch(`http://localhost:5000/api/admin/users/${accountId}/roles`, rolesRequestBody, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await adminService.updateUserRoles(accountId, { roles }, token);
       }
 
       return { success: true };
@@ -127,13 +107,8 @@ export const useUpdateUserPermission = () => {
     setError(null);
     
     try {
-      const response = await axios.patch(`/api/admin/users/${userId}/roles`, 
-        { permissions }, 
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      return { success: true, data: response.data };
+      const data = await adminService.updateUserRoles(userId, { permissions }, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update permissions';
       setError(errorMessage);
@@ -156,10 +131,8 @@ export const useRemoveAccount = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(`http://localhost:5000/api/admin/users/${accountId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await adminService.deleteUser(accountId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove account';
       setError(errorMessage);
@@ -183,11 +156,9 @@ export const useGetPromotions = () => {
     setError(null);
     
     try {
-      const response = await axios.get('/api/admin/promotions', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPromotions(response.data);
-      return { success: true, data: response.data };
+      const data = await promotionService.getAllPromotions(token);
+      setPromotions(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch promotions';
       setError(errorMessage);
@@ -210,10 +181,8 @@ export const useAddPromotion = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/admin/promotions', promotionData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await promotionService.createPromotion(promotionData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add promotion';
       setError(errorMessage);
@@ -236,10 +205,8 @@ export const useUpdatePromotion = () => {
     setError(null);
     
     try {
-      const response = await axios.put(`/api/admin/promotions/${promotionId}`, promotionData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await promotionService.updatePromotion(promotionId, promotionData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update promotion';
       setError(errorMessage);
@@ -262,10 +229,8 @@ export const useRemovePromotion = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(`/api/admin/promotions/${promotionId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await promotionService.deletePromotion(promotionId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove promotion';
       setError(errorMessage);
@@ -289,11 +254,9 @@ export const useGetMovies = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('allMovies'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMovies(response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.getAllMovies(token);
+      setMovies(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch movies';
       setError(errorMessage);
@@ -316,14 +279,11 @@ export const useAddMovie = () => {
     setError(null);
     
     console.log('Adding movie with data:', movieData);
-    console.log('API URL:', getApiUrl('addMovie'));
     
     try {
-      const response = await axios.post(getApiUrl('addMovie'), movieData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('Add movie response:', response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.createMovie(movieData, token);
+      console.log('Add movie response:', data);
+      return { success: true, data };
     } catch (err) {
       console.error('Add movie error:', err);
       console.error('Error response:', err.response?.data);
@@ -348,10 +308,8 @@ export const useUpdateMovie = () => {
     setError(null);
     
     try {
-      const response = await axios.put(getMovieApiUrl(movieId), movieData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await movieService.updateMovie(movieId, movieData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update movie';
       setError(errorMessage);
@@ -374,10 +332,8 @@ export const useRemoveMovie = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(getMovieApiUrl(movieId), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await movieService.deleteMovie(movieId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove movie';
       setError(errorMessage);
@@ -400,10 +356,8 @@ export const useAddBranch = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/admin/branches', branchData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await adminService.createBranch(branchData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add branch';
       setError(errorMessage);
@@ -426,10 +380,8 @@ export const useUpdateBranch = () => {
     setError(null);
     
     try {
-      const response = await axios.put(`/api/admin/branches/${branchId}`, branchData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await adminService.updateBranch(branchId, branchData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update branch';
       setError(errorMessage);
@@ -452,10 +404,8 @@ export const useRemoveBranch = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(`/api/admin/branches/${branchId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await adminService.deleteBranch(branchId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove branch';
       setError(errorMessage);
@@ -479,14 +429,12 @@ export const useGetBranches = () => {
     setError(null);
     
     try {
-      console.log('🔍 Making request to: http://localhost:5000/api/admin/branches');
+      console.log('🔍 Making request to get all branches');
       console.log('🔍 Token:', token);
-      const response = await axios.get('http://localhost:5000/api/admin/branches', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('🔍 Branches response:', response.data);
-      setBranches(response.data);
-      return { success: true, data: response.data };
+      const data = await adminService.getAllBranches(token);
+      console.log('🔍 Branches response:', data);
+      setBranches(data);
+      return { success: true, data };
     } catch (err) {
       console.error('🔍 Error fetching branches:', err);
       console.error('🔍 Error response:', err.response);

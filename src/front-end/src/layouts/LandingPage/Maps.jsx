@@ -19,7 +19,8 @@ const Maps = ({ cinemas }) => {
             <div className="h-auto w-auto ">
                 <IntegratedMap cinemas={cinemas} onClick={(cinema) => {
                     navigate(getMovieListPath(undefined, cinema._id));
-                }} />
+                }}  requireCtrlToZoom={true}
+                />
             </div>
             <div className="h-1 w-full md:h-5 lg:h-10 xl:h-15" />
             <div className="absolute bottom-0 left-0 h-30 w-30 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px] lg:h-35 lg:w-35 xl:left-20 xl:h-44 xl:w-44" />

@@ -190,7 +190,7 @@ const MenuSelectSeats = ({
                     <BPoster Pics={movieTicketData?.schedule?.movie?.poster} />
                 </div>
                 {/* Main content */}
-                <div className="relative flex min-w-[56vw] flex-1 flex-col items-center justify-between">
+                <div className="relative flex min-w-[56vw] xl:min-w-0 2xl:min-w-[56vw] flex-1 flex-col items-center justify-between">
                     <div className="relative flex flex-col md:flex-row gap-5 items-center justify-between px-4 py-5 md:px-6 md:h-[407px]">
                         <div className="relative flex shrink flex-row items-center justify-start md:w-[90%] xl:w-[40%] md:flex-col lg:justify-start lg:gap-1">
                         <TicketSelect
@@ -224,7 +224,7 @@ const MenuSelectSeats = ({
 
                         </div>
                         {/* <div className="relative flex justify-center scale-100 md:scale-100 lg:scale-90 xl:scale-75 xl:m-7 md:m-8 w-[50vw] md:w-[30vw] lg:h-auto"> */}
-                        <div className="relative flex justify-center w-[80vw] md:w-[37vw] xl:w-full h-full">
+                        <div className="relative flex justify-center w-[80vw] md:w-[37vw] h-full">
                             <SeatLayout 
                                 schedule={movieTicketData?.schedule} 
                                 seatMap={seats?.seatsByRow} 

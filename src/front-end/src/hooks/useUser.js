@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useUser } from '@contexts/UserContext';
-import { getApiUrl, getApiUrlWithParams } from '@config/api.config';
+import { userService, chatbotService } from '@services';
 
 /**
  * User logic hooks for managing user profile data and user-specific interactions
@@ -18,11 +17,9 @@ export const useFetchProfile = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('userProfile'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setProfile(response.data);
-      return { success: true, data: response.data };
+      const data = await userService.getProfile(token);
+      setProfile(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch profile';
       setError(errorMessage);
@@ -40,16 +37,13 @@ export const useUpdateProfile = () => {
   const [error, setError] = useState(null);
   const { token } = useUser();
 
-
   const updateProfile = async (profileData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await axios.patch(getApiUrl('userProfile'), profileData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await userService.updateProfile(profileData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update profile';
       setError(errorMessage);
@@ -73,14 +67,12 @@ export const useGetWatchHistory = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('watchHistory'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const watchHistoryData = response.data.watchHistory || response.data;
+      const data = await userService.getWatchHistory(token);
+      const watchHistoryData = data.watchHistory || data;
       console.log('Watch History Data:', watchHistoryData);
       setWatchHistory(watchHistoryData);
       
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch watch history';
       setError(errorMessage);
@@ -108,15 +100,13 @@ export const useGetWishlist = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(getApiUrl('wishlist'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const data = await userService.getWishlist(token);
       
       // Xử lý đúng cấu trúc dữ liệu từ backend
-      const wishlistData = response.data.wishlist || response.data;
+      const wishlistData = data.wishlist || data;
       setWishlist(wishlistData);
 
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch wishlist';
       setError(errorMessage);
@@ -137,11 +127,8 @@ export const useAddToWishlist = () => {
     setLoading(true);
     setError(null);
     try {
-      const url = getApiUrlWithParams('addToWishlist', { movieId });
-      const response = await axios.post(url, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await userService.addToWishlist(movieId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add to wishlist';
       setError(errorMessage);
@@ -162,11 +149,8 @@ export const useRemoveFromWishlist = () => {
     setLoading(true);
     setError(null);
     try {
-      const url = getApiUrlWithParams('removeFromWishlist', { movieId });
-      const response = await axios.delete(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await userService.removeFromWishlist(movieId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove from wishlist';
       setError(errorMessage);
@@ -189,10 +173,8 @@ export const useRateMovie = () => {
     setError(null);
     
     try {
-      const response = await axios.post(getApiUrl('rateMovie'), { movieId, rating }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await userService.rateMovie({ movieId, rating }, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to rate movie';
       setError(errorMessage);
@@ -215,17 +197,14 @@ export const useGetMyRatings = () => {
     setLoading(true);
     setError(null);
     try {
-      const url = getApiUrlWithParams('getRatingMovie', { movieId: movieId});
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const data = await userService.getUserRating(movieId, token);
       if (movieId) {
-        setRatings(prev => ({ ...prev, [movieId]: response.data }));
+        setRatings(prev => ({ ...prev, [movieId]: data }));
       } else {
-        setRatings(response.data);
+        setRatings(data);
       }
       
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch ratings';
       setError(errorMessage);
@@ -241,17 +220,14 @@ export const useGetMyRatings = () => {
 export const useMessageChatBot = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { token } = useUser();
 
-  const messageChatBot = async (message) => {
+  const messageChatBot = async (queryData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await axios.post('/api/chatbot/message', { message }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await chatbotService.sendQuery(queryData);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to send message to chatbot';
       setError(errorMessage);

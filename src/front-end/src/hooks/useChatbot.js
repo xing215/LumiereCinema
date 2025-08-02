@@ -1,7 +1,6 @@
 // hooks/useChatbot.js
 import { useState, useCallback, useEffect } from 'react';
-import axios from 'axios';
-import { getApiUrl } from '@config/api.config';
+import { chatbotService } from '@services';
 import { useUser } from '@contexts/UserContext';
 
 /**
@@ -99,12 +98,10 @@ const useChatbot = () => {  // Lấy thông tin user để theo dõi trạng th�
 
     try {
       // Gửi request tới backend
-      const response = await axios.post(getApiUrl('chatbotQuery'), {
+      const botResponse = await chatbotService.sendQuery({
         question: userMessage,
         sessionId: sessionId
       });
-
-      const botResponse = response.data;
 
       // Tạo tin nhắn phản hồi từ bot
       const botMsg = {

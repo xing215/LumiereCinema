@@ -188,7 +188,6 @@ const TicketPurchase = () => {
             console.log('Fetching movie details for ID:', movieId);
         } else {
             navigate(ROUTES.MOVIES);
-            alert('Invalid movie.');
         }
         
         if (branchId && branchId !== 'null') {

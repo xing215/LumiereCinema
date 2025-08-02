@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { getApiUrl } from '@config/api.config';
+import { reportService } from '@services';
 import { useUser } from '@contexts/UserContext';
 
 /**
@@ -18,12 +17,9 @@ export const useGetRevenueReport = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('revenueSummary'), {
-        headers: { Authorization: `Bearer ${token}` },
-        params: filters
-      });
-      setReportData(response.data);
-      return { success: true, data: response.data };
+      const data = await reportService.getRevenueSummary(filters, token);
+      setReportData(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch revenue report';
       setError(errorMessage);
@@ -48,17 +44,16 @@ export const useGetAvailableBranches = () => {
     try {
       // Simple role check: admin > branchmanager
       const roles = user?.roles || (user?.role ? [user.role] : []);
-      let apiUrl;
+      let data;
+      
       if (roles.includes('administrator')) {
-        apiUrl = getApiUrl('reportBranches');
+        data = await reportService.getBranches(token);
       } else if (roles.includes('branchmanager')) {
-        apiUrl = getApiUrl('reportBranch');
+        data = await reportService.getBranch(token);
       }
-      const response = await axios.get(apiUrl, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBranches(Array.isArray(response.data) ? response.data : []);
-      return { success: true, data: response.data };
+      
+      setBranches(Array.isArray(data) ? data : []);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
       setError(errorMessage);
