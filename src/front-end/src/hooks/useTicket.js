@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { getApiUrl, buildApiUrl } from '@config/api.config';
+import { ticketService } from '@services';
 import { useUser } from '@contexts/UserContext';
-import  { v4 as uuidv4 } from 'uuid';
+import { buildApiUrl, getApiUrl } from '@config/api.config';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Ticket logic hooks for managing ticket booking, seat selection, and related operations
@@ -12,16 +13,15 @@ export const useGetSeatsBySchedule = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { token } = useUser();
+  
   const fetchSeats = async (scheduleId) => {
     setLoading(true);
     setError(null);
     try {
       console.log('gettingseat')
-      const response = await axios.get(buildApiUrl(`/api/tickets/screen/${scheduleId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }));
-      setSeats(response.data);
-      return response.data;
+      const data = await ticketService.getSeatMapBySchedule(scheduleId);
+      setSeats(data);
+      return data;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch seats';
       setError(errorMessage);
@@ -44,11 +44,9 @@ export const useFetchAvailableSeats = () => {
     setError(null);
     
     try {
-      const response = await axios.get(`/api/schedules/${scheduleId}/seats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAvailableSeats(response.data);
-      return { success: true, data: response.data };
+      const response = await ticketService.getSeatMapBySchedule(scheduleId);
+      setAvailableSeats(response);
+      return { success: true, data: response };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch available seats';
       setError(errorMessage);
@@ -73,14 +71,13 @@ export const useApplyPromotion = () => {
     setError(null);
     try {
       console.log('Applying promotion:', { promotionCode, snackTotal, movieTotal, noLoginCustomerInfo });
-      const response = await axios.post(
-        getApiUrl('checkDiscountedTotal'),
+      const response = await ticketService.calculateDiscountedTotal(
         { promotionCode, snackTotal, movieTotal, noLoginCustomerInfo },
-        { headers: { Authorization: `Bearer ${token}` } }
+        token
       );
-      console.log('Promotion applied successfully:', response.data.data);
-      setAppliedPromotion(response.data.data);
-      return { success: true, data: response.data };
+      console.log('Promotion applied successfully:', response.data);
+      setAppliedPromotion(response.data);
+      return { success: true, data: response };
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid promotion code';
       setAppliedPromotion(null);
@@ -196,12 +193,10 @@ export const useCreateTicket = () => {
       console.log(movieTicketData, snackTicketData)
       const ticketData = buildTicketData({movieTicketData, snackTicketData});
       console.log('Creating ticket with data:', ticketData);
-      const response = await axios.post(buildApiUrl(`/api/tickets/create`), ticketData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('Ticket created successfully:', response.data);
-      setTicket(response.data);
-      return { success: true, data: response.data };
+      const response = await ticketService.createTicket(ticketData, token);
+      console.log('Ticket created successfully:', response);
+      setTicket(response);
+      return { success: true, data: response };
     } catch (err) {
       console.error('Error creating ticket:', err);
       const errorMessage = err.response?.data?.error || 'Failed to create ticket';
@@ -235,19 +230,18 @@ export const useStartHoldSession = () => {
       console.log('✅ New session created:', sessionId);
     }
 
-    const response = await axios.post(getApiUrl('holdSeat'), {
+    const response = await ticketService.holdSeats({
       scheduleId,
       seatNumbers,
       sessionId,
       holdDurationMinutes
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setError(null);
-    setHoldSeatData(response.data);
-    console.log('✅ Hold session started:', response.data);
+    }, token);
     
-    return { success: true, data: response.data };
+    setError(null);
+    setHoldSeatData(response);
+    console.log('✅ Hold session started:', response);
+    
+    return { success: true, data: response };
   } catch (err) {
     console.error('❌ Error in hold session:', err);
     setHoldSeatData(null);
@@ -283,11 +277,10 @@ export const useClearSession = () => {
       console.log(sessionId)
       console.log('clearingsession')
       if (sessionId) {
-        await axios.patch(getApiUrl('holdSeat'), {
-          action: 'release', sessionId: sessionId
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await ticketService.manageSeatHold({
+          action: 'release', 
+          sessionId: sessionId
+        }, token);
       }
       return { success: true };
     } catch (err) {
@@ -312,10 +305,8 @@ export const useCheckin = () => {
     setError(null);
     
     try {
-      const response = await axios.patch(`/api/tickets/${ticketCode}/checkin`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const response = await ticketService.checkinTicket(ticketCode, token);
+      return { success: true, data: response };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Check-in failed';
       setError(errorMessage);
@@ -328,6 +319,9 @@ export const useCheckin = () => {
   return { checkin, loading, error };
 };
 
+// Note: useActiveTicket is commented out as there's no 'Active' status in the backend ticket model
+// The ticket status enum only includes: 'Confirmed', 'CheckedIn', 'Cancelled'
+/*
 export const useActiveTicket = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -353,6 +347,7 @@ export const useActiveTicket = () => {
 
   return { activeTicket, loading, error };
 };
+*/
 
 export const useGetTicketDetailsByCode = () => {
     const [loading, setLoading] = useState(false);
@@ -368,15 +363,10 @@ export const useGetTicketDetailsByCode = () => {
         setTicket(null);
         
         try {
-            // Luôn gọi đến một URL chung (backend sẽ tự xử lý)
-            // Chúng ta có thể dùng URL của vé phim làm đại diện
-            const url = buildApiUrl(`/api/tickets/movie/admin/${ticketCode}`);
-            const response = await axios.get(url, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            setTicket(response.data); // Dữ liệu trả về giờ đã có trường ticketType
-            return { success: true, data: response.data };
+            // Use the ticket service to get movie ticket details
+            const response = await ticketService.getMovieTicketDetails(ticketCode, token);
+            setTicket(response); // Dữ liệu trả về giờ đã có trường ticketType
+            return { success: true, data: response };
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Ticket not found or an error occurred.';
             setError(errorMessage);
@@ -393,7 +383,6 @@ export const useGetSnacksByBranch = () => {
   const [error, setError] = useState(null);
   const [snacks, setSnacks] = useState([]);
   const { token } = useUser();
-  // const { currentBranch } = useSetCurrentBranch();
 
   const getSnacks = async (branchId) => {
     console.log('Fetching snacks for branch:', branchId);
@@ -406,11 +395,9 @@ export const useGetSnacksByBranch = () => {
     setError(null);
     
     try {
-      const response = await axios.get(buildApiUrl(`/api/tickets/${branchId}/snacks`), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSnacks(response.data.snacks);
-      return { success: true, data: response.data };
+      const response = await ticketService.getSnacksByBranch(branchId);
+      setSnacks(response.snacks);
+      return { success: true, data: response };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch snacks';
       setError(errorMessage);

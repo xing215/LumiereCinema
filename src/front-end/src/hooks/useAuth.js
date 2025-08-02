@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 import { useUser } from '@contexts/UserContext';
-import { getApiUrl, getApiUrlWithParams, getActivationApiUrl } from '@config/api.config';
+import { authService } from '@services';
 import { useError } from '@contexts/ErrorContext';
 
 /**
@@ -18,12 +17,13 @@ export const useLogin = () => {
     setError(null);
     
     try {
-      const endpoint = isStaff ? 'staffLogin' : 'login';
-      const response = await axios.post(getApiUrl(endpoint), credentials);
-      const { token, user } = response.data;
+      const data = isStaff 
+        ? await authService.staffLogin(credentials)
+        : await authService.login(credentials);
       
+      const { token, user } = data;
       login(user, token);
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed';
       setError(errorMessage);
@@ -40,6 +40,7 @@ export const useAuthInterceptor = () => {
   const { logout } = useUser();
   const { showError } = useError();
   useEffect(() => {
+    const axios = require('axios');
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
@@ -53,7 +54,7 @@ export const useAuthInterceptor = () => {
     return () => {
       axios.interceptors.response.eject(interceptor);
     };
-  }, [logout]);
+  }, [logout, showError]);
 };
 
 export const useRegister = () => {
@@ -65,8 +66,8 @@ export const useRegister = () => {
     setError(null);
     
     try {
-      const response = await axios.post(getApiUrl('register'), userData);
-      return { success: true, data: response.data };
+      const data = await authService.register(userData);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Registration failed';
       setError(errorMessage);
@@ -88,9 +89,7 @@ export const useLogout = () => {
     
     try {
       if (token) {
-        await axios.post(getApiUrl('logout'), {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await authService.logout(token);
       }
     } catch (err) {
       console.error('Logout error:', err);
@@ -114,9 +113,9 @@ export const useForgotPassword = () => {
     setError(null);
     setSuccess(false);
     try {
-      const response = await axios.post(getApiUrl('forgotPassword'), { email });
+      const data = await authService.forgotPassword(email);
       setSuccess(true);
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Password reset request failed';
       setError(errorMessage);
@@ -139,9 +138,9 @@ export const useStaffForgotPassword = () => {
     setError(null);
     setSuccess(false);
     try {
-      const response = await axios.post(getApiUrl('staffForgotPassword'), { email });
+      const data = await authService.staffForgotPassword(email);
       setSuccess(true);
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Staff password reset request failed';
       setError(errorMessage);
@@ -160,14 +159,14 @@ export const useResetPassword = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const resetPassword = async (token, newPassword, retypeNewPassword) => {
+  const resetPassword = async (resetData) => {
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
-      const response = await axios.post(getApiUrl('resetPassword'), token, newPassword, retypeNewPassword);
+      const data = await authService.resetPassword(resetData);
       setSuccess(true);
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Password reset request failed';
       setError(errorMessage);
@@ -191,9 +190,9 @@ export const useActivateAccount = () => {
     setSuccess(false);
     
     try {
-      const response = await axios.post(getActivationApiUrl(activateToken));
+      const data = await authService.activateAccount(activateToken);
       setSuccess(true);
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Account activation failed';
       setError(errorMessage);
@@ -216,10 +215,8 @@ export const useChangePassword = () => {
     setError(null);
     
     try {
-      const response = await axios.post(getApiUrl('changePassword'), passwordData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await authService.changePassword(passwordData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Password change failed';
       setError(errorMessage);
@@ -242,11 +239,11 @@ export const useStaffLogin = () => {
     setError(null);
     
     try {
-      const response = await axios.post(getApiUrl('staffLogin'), credentials);
-      const { token, user } = response.data;
+      const data = await authService.staffLogin(credentials);
+      const { token, user } = data;
       
       login(user, token);
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Staff login failed';
       setError(errorMessage);

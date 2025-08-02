@@ -125,7 +125,6 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             let outRight = Math.max(0, cardRect.right - windowWidth);
             let out = Math.min(Math.max(outLeft, outRight) + 10, cardWidth);
             let percentOut = Math.min(1, out / cardWidth);
-            console.log(`Card ${cardIdx} width ${cardWidth} out ${out}`, );
             setOverlayOpacity(percentOut);
         };
         checkOverlay();

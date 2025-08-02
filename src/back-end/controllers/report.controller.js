@@ -56,8 +56,19 @@ exports.getTotalRevenue = async (req, res) => {
           ],
           totalMovies: [
             {
+              $lookup: {
+                from: 'schedules',
+                localField: 'schedule',
+                foreignField: '_id',
+                as: 'scheduleInfo',
+              },
+            },
+            {
+              $unwind: '$scheduleInfo',
+            },
+            {
               $group: {
-                _id: '$movie',
+                _id: '$scheduleInfo.movie',
               },
             },
           ],
@@ -190,8 +201,19 @@ exports.getRevenueSummary = async (req, res) => {
           // Total Movies
           totalMovies: [
             {
+              $lookup: {
+                from: 'schedules',
+                localField: 'schedule',
+                foreignField: '_id',
+                as: 'scheduleInfo',
+              },
+            },
+            {
+              $unwind: '$scheduleInfo',
+            },
+            {
               $group: {
-                _id: '$movie',
+                _id: '$scheduleInfo.movie', // Group by movie ID from schedule
               },
             },
           ],
@@ -226,26 +248,38 @@ exports.getRevenueSummary = async (req, res) => {
           // Movie Revenue
           movieRevenue: [
             {
+              $lookup: {
+                from: 'schedules', // First lookup schedule
+                localField: 'schedule',
+                foreignField: '_id',
+                as: 'scheduleInfo',
+              },
+            },
+            {
+              $unwind: '$scheduleInfo',
+            },
+            {
+              $lookup: {
+                from: 'movies', // Then lookup movie from schedule
+                localField: 'scheduleInfo.movie',
+                foreignField: '_id',
+                as: 'movieInfo',
+              },
+            },
+            {
+              $unwind: '$movieInfo',
+            },
+            {
               $group: {
-                _id: '$movie', // Group by movie
+                _id: '$movieInfo._id', // Group by movie ID
+                movieTitle: { $first: '$movieInfo.title' }, // Get movie title
                 revenue: { $sum: '$total' },
               },
             },
             {
-              $lookup: {
-                from: 'movies', // Assuming 'movies' is the collection for movies
-                localField: '_id',
-                foreignField: '_id',
-                as: 'movie',
-              },
-            },
-            {
-              $unwind: '$movie',
-            },
-            {
               $project: {
                 _id: 0,
-                movieTitle: '$movie.title',
+                movieTitle: 1,
                 revenue: 1,
               },
             },
@@ -258,8 +292,17 @@ exports.getRevenueSummary = async (req, res) => {
     const chartData = result[0]?.chartData || [];
     const summary = result[0]?.summary[0] || { totalRevenue: 0, totalTickets: 0 };
     const totalMovies = result[0]?.totalMovies.length || 0;
+    console.log(result[0]);
     const employeeRevenue = result[0]?.employeeRevenue || [];
     const movieRevenue = result[0]?.movieRevenue || [];
+
+    console.log('Revenue Summary:', {
+      byDateRevenue: chartData,
+      totalRevenue: summary,
+      totalMovies,
+      employeeRevenue,
+      movieRevenue,
+    });
 
     res.status(200).json({
       byDateRevenue: chartData,

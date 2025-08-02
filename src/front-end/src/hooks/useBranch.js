@@ -1,34 +1,24 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { getApiUrl, buildApiUrl } from '@config/api.config';
+import { branchService, ticketService } from '@services';
 import { useUser } from '@contexts/UserContext';
 
 /**
  * Branch logic hooks for handling branch-level data operations
  */
 
-// Helper function for snack API URLs
-const getBranchSnackApiUrl = (branchId, snackId = null) => {
-  const baseUrl = buildApiUrl(`/api/branches/${branchId}/snacks`);
-  return snackId ? `${baseUrl}/${snackId}` : baseUrl;
-};
-
 export const useFetchBranches = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [branches, setBranches] = useState([]);
-  const { token } = useUser();
 
   const fetchBranches = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('branches'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBranches(response.data.branches || []);
-      return { success: true, data: response.data };
+      const data = await branchService.getAvailableBranches();
+      setBranches(data.branches || []);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
       setError(errorMessage);
@@ -44,7 +34,6 @@ export const useFetchBranches = () => {
 export const useGetBranchById = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { token } = useUser();
   const [branch, setBranch] = useState(null);
 
   const getBranchById = async (branchId) => {
@@ -52,11 +41,9 @@ export const useGetBranchById = () => {
     setError(null);
 
     try {
-      const response = await axios.get(buildApiUrl(`/api/branches/${branchId}`), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBranch(response.data);
-      return { success: true, data: response.data };
+      const data = await branchService.getBranchDetails(branchId);
+      setBranch(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch branch';
       setError(errorMessage);
@@ -104,11 +91,9 @@ export const useGetScreens = () => {
     setError(null);
     
     try {
-      const response = await axios.get(`/api/branches/${branchId}/screens`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setScreens(response.data);
-      return { success: true, data: response.data };
+      const data = await branchService.getBranchScreens(branchId, token);
+      setScreens(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch screens';
       setError(errorMessage);
@@ -131,10 +116,8 @@ export const useUpdateScreen = () => {
     setError(null);
     
     try {
-      const response = await axios.put(`/api/branches/${branchId}/screens/${screenId}`, screenData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await branchService.updateBranchScreen(branchId, screenId, screenData, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update screen';
       setError(errorMessage);
@@ -157,10 +140,8 @@ export const useRemoveScreen = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(`/api/branches/${branchId}/screens/${screenId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await branchService.deleteBranchScreen(branchId, screenId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove screen';
       setError(errorMessage);
@@ -178,35 +159,41 @@ export const useGetSchedules = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { token, user } = useUser();
+  
   const fetchSchedules = async (movieId, branchId) => {
     setLoading(true);
     setError(null);
     try {
-      const url = user?.roles?.includes('branchmanager') ? buildApiUrl(`/api/branches/${branchId}/schedules`) : buildApiUrl(`/api/tickets/${branchId}/schedule`);
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: movieId ? { movieId } : {}
-      });
-      const screens = response.data.screens || [];
-    const allSchedules = screens.flatMap(screen =>
-      (screen.schedules || []).map(schedule => ({
-        _id: schedule._id,
-        movie: schedule.movie,
-        screen: {
-          _id: screen._id,
-          name: screen.screenInfo?.screenName || screen.screenName,
-          totalSeats: screen.screenInfo?.totalSeats || screen.totalSeats,
-        },
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
-        availableSeatsCount: schedule.seatInfo?.availableSeatsCount || 0,
-      }))
-    );
-    if (user?.roles?.includes('branchmanager')) {
-      setSchedules(response.data.schedules || []);
-    } else {
-      setSchedules(allSchedules);
-    }
+      let response;
+      
+      if (user?.roles?.includes('branchmanager')) {
+        // Use branch manager schedules endpoint
+        response = await branchService.getBranchSchedules(branchId, { movieId }, token);
+        setSchedules(response.schedules || []);
+      } else {
+        // Use ticket service for public schedules
+        const params = movieId ? { movieId } : {};
+        response = await ticketService.getSchedulesByBranch(branchId, params, token);
+        
+        // Transform the data for public use
+        const screens = response.screens || [];
+        const allSchedules = screens.flatMap(screen =>
+          (screen.schedules || []).map(schedule => ({
+            _id: schedule._id,
+            movie: schedule.movie,
+            screen: {
+              _id: screen._id,
+              name: screen.screenInfo?.screenName || screen.screenName,
+              totalSeats: screen.screenInfo?.totalSeats || screen.totalSeats,
+            },
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            availableSeatsCount: schedule.seatInfo?.availableSeatsCount || 0,
+          }))
+        );
+        console.log('Fetched schedules:', allSchedules);
+        setSchedules(allSchedules);
+      }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch schedules';
       setError(errorMessage);
@@ -228,16 +215,17 @@ export const useUpdateSchedule = () => {
     setError(null);
     
     try {
-      const url = scheduleData.id 
-        ? `/api/branches/${branchId}/schedules/${scheduleData.id}`
-        : `/api/branches/${branchId}/schedules`;
+      let data;
       
-      const method = scheduleData.id ? 'put' : 'post';
-      const response = await axios[method](url, scheduleData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      if (scheduleData.id) {
+        // Update existing schedule
+        data = await branchService.editBranchSchedule(branchId, scheduleData.id, scheduleData, token);
+      } else {
+        // Create new schedule
+        data = await branchService.createBranchSchedule(branchId, scheduleData, token);
+      }
       
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update schedule';
       setError(errorMessage);
@@ -260,10 +248,8 @@ export const useRemoveSchedule = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(`/api/branches/${branchId}/schedules/${scheduleId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await branchService.deleteBranchSchedule(branchId, scheduleId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove schedule';
       setError(errorMessage);
@@ -280,7 +266,6 @@ export const useGetSnacks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [snacks, setSnacks] = useState([]);
-  const { token } = useUser();
   const { currentBranch } = useSetCurrentBranch();
 
   const getSnacks = async (branchId = currentBranch) => {
@@ -294,11 +279,9 @@ export const useGetSnacks = () => {
     setError(null);
     
     try {
-      const response = await axios.get(buildApiUrl(`/api/branches/${branchId}/snacks`), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSnacks(response.data);
-      return { success: true, data: response.data };
+      const data = await branchService.getBranchSnacks(branchId);
+      setSnacks(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch snacks';
       setError(errorMessage);
@@ -321,23 +304,19 @@ export const useUpdateSnack = () => {
     setError(null);
     
     try {
-      let response;
-      const headers = { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
+      let data;
       
       if (snackId) {
         // Update existing snack
         console.log('Updating snack:', snackId, 'in branch:', branchId);
-        response = await axios.patch(getBranchSnackApiUrl(branchId, snackId), snackData, { headers });
+        data = await branchService.editBranchSnack(branchId, snackId, snackData, token);
       } else {
         // Add new snack
         console.log('Adding new snack to branch:', branchId, 'Data:', snackData);
-        response = await axios.post(getBranchSnackApiUrl(branchId), snackData, { headers });
+        data = await branchService.createBranchSnack(branchId, snackData, token);
       }
-      console.log('Snack operation success:', response.data);
-      return { success: true, data: response.data };
+      console.log('Snack operation success:', data);
+      return { success: true, data };
     } catch (err) {
       console.error('Snack operation failed:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to update snack';
@@ -361,10 +340,8 @@ export const useRemoveSnack = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(getBranchSnackApiUrl(branchId, snackId), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      const data = await branchService.deleteBranchSnack(branchId, snackId, token);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove snack';
       setError(errorMessage);

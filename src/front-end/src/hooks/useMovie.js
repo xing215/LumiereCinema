@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { getApiUrl, buildApiUrl } from '@config/api.config';
+import { movieService } from '@services';
 
 export const useSetBranch = () => {
   const [currentBranch, setCurrentBranch] = useState(null);
@@ -34,9 +33,9 @@ export const useFetchNowShowing = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('nowShowingMovies'));
-      setMovies(response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.getNowShowingMovies();
+      setMovies(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch now showing movies';
       setError(errorMessage);
@@ -59,9 +58,9 @@ export const useFetchComingSoon = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('upcomingMovies'));
-      setMovies(response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.getUpcomingMovies();
+      setMovies(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch coming soon movies';
       setError(errorMessage);
@@ -84,9 +83,9 @@ export const useGetMovieDetail = () => {
     setError(null);
     
     try {
-      const response = await axios.get(buildApiUrl(`/api/movies/${movieId}`));
-      setMovieDetail(response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.getMovieDetails(movieId);
+      setMovieDetail(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch movie details';
       setError(errorMessage);
@@ -115,9 +114,9 @@ export const useGetShowtimes = () => {
       if (branchId) params.branchId = branchId;
       if (date) params.date = date;
 
-      const response = await axios.get(getMovieApiUrl(movieId, 'showscreen'), { params });
-      setShowtimes(response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.getMovieShowtimes(movieId, params);
+      setShowtimes(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch showtimes';
       setError(errorMessage);
@@ -140,11 +139,9 @@ export const useSearchMovies = () => {
     setError(null);
     
     try {
-      const response = await axios.get(getApiUrl('searchMovies'), {
-        params: { q: keyword }
-      });
-      setSearchResults(response.data);
-      return { success: true, data: response.data };
+      const data = await movieService.searchMovies({ q: keyword });
+      setSearchResults(data);
+      return { success: true, data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Search failed';
       setError(errorMessage);
