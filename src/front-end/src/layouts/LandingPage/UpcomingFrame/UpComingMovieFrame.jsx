@@ -3,13 +3,38 @@ import MovieCard from '@components/UI/MovieCard.jsx';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
 import ForwardButton from '@components/buttons/forwardButton.jsx';
 import { useFetchComingSoon } from '@hooks/useMovie';
+import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 
 const UpComingFrame = () => {
+    // Scroll handlers for navigation buttons
+    const handleScrollLeft = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: -scrollByAmount, behavior: 'smooth' });
+        }
+    };
+
+    const handleScrollRight = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: scrollByAmount, behavior: 'smooth' });
+        }
+    };
     const { fetchComingSoon, movies: upcomingMovies, loading } = useFetchComingSoon();
     React.useEffect(() => { fetchComingSoon(); }, []);
     const scrollRef = React.useRef(null);
     const scrollByAmount = 350;
     const [showScrollButtons, setShowScrollButtons] = React.useState(false);
+
+    // When showScrollButtons changes from false to true, trigger a scroll event to update overlays
+    React.useEffect(() => {
+        if (showScrollButtons && scrollRef.current) {
+            // Wait for DOM update
+            setTimeout(() => {
+                if (scrollRef.current) {
+                    scrollRef.current.dispatchEvent(new Event('scroll'));
+                }
+            }, 0);
+        }
+    }, [showScrollButtons]);
     // Check if scrolling is needed
     React.useEffect(() => {
         const checkScroll = () => {
@@ -29,8 +54,14 @@ const UpComingFrame = () => {
         };
     }, [upcomingMovies]);
 
+    // Hide the component if not loading and no movies
+    if (!loading && (!upcomingMovies || upcomingMovies.length === 0)) {
+        return null;
+    }
     return (
         <div className="relative w-screen bg-transparent flex flex-col items-center py-8">
+            <div className="justify-start text-center font-['Unbounded'] text-sm font-bold text-white md:text-2xl lg:text-4xl xl:text-5xl">UPCOMING MOVIES</div>
+            <div className="h-4 w-full" />
             <div className="relative w-screen flex items-center">
                 {/* Backward Button (md and up) */}
                 {showScrollButtons && (
@@ -58,9 +89,7 @@ const UpComingFrame = () => {
                                 scrollRef={scrollRef}
                             />
                         ))
-                    ) : (
-                        <div className="text-center text-gray-300 text-lg font-[Merriweather Sans]">No movies found.</div>
-                    )}
+                    ) : null}
                 </div>
                 {/* Forward Button (md and up) */}
                 {showScrollButtons && (
@@ -68,6 +97,9 @@ const UpComingFrame = () => {
                         <ForwardButton onClick={handleScrollRight} position="absolute" />
                 </div>
                 )}
+            </div>
+            <div className="flex justify-center items-center mt-4">
+                <SeeMoreButton statusFilter="up" />
             </div>
         </div>
     );
@@ -77,23 +109,23 @@ const UpComingFrame = () => {
 const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
     const cardRef = React.useRef(null);
     const [overlayOpacity, setOverlayOpacity] = React.useState(0);
-    const SCREEN_PADDING = 60;
     React.useEffect(() => {
+        let rafId;
         const checkOverlay = () => {
             if (!cardRef.current || !scrollRef.current) return;
             const cardRect = cardRef.current.getBoundingClientRect();
-            const scrollRect = scrollRef.current.getBoundingClientRect();
             const cardWidth = cardRect.width;
-            // Define the logical visible area (screen minus padding on both sides)
-            const logicalLeft = scrollRect.left + SCREEN_PADDING;
-            const logicalRight = scrollRect.right - SCREEN_PADDING;
-            // Calculate visible width inside logical area
-            const visibleLeft = Math.max(cardRect.left, logicalLeft);
-            const visibleRight = Math.min(cardRect.right, logicalRight);
-            const visibleWidth = Math.max(0, visibleRight - visibleLeft);
-            // Calculate percent out of logical area (0 = fully in, 1 = fully out)
-            let percentOut = 1 - visibleWidth / cardWidth;
-            percentOut = Math.max(0, Math.min(1, percentOut));
+            if (cardWidth === 0) {
+                rafId = requestAnimationFrame(checkOverlay);
+                return;
+            }
+            const windowWidth = window.innerWidth;
+            // Calculate how much of the card is out of the viewport (left or right)
+            let outLeft = Math.max(0, 0 - cardRect.left);
+            let outRight = Math.max(0, cardRect.right - windowWidth);
+            let out = Math.min(Math.max(outLeft, outRight) + 10, cardWidth);
+            let percentOut = Math.min(1, out / cardWidth);
+            console.log(`Card ${cardIdx} width ${cardWidth} out ${out}`, );
             setOverlayOpacity(percentOut);
         };
         checkOverlay();
@@ -106,6 +138,7 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             if (scrollRef.current) {
                 scrollRef.current.removeEventListener('scroll', checkOverlay);
             }
+            if (rafId) cancelAnimationFrame(rafId);
         };
     }, [scrollRef]);
     return (
@@ -114,7 +147,7 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             {overlayOpacity > 0 && (
                 <div
                     className="absolute inset-0 z-20 pointer-events-none rounded-xl"
-                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity * 0.6})` }}
+                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
                 />
             )}
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
@@ -14,12 +15,32 @@ const Header = () => {
     const { logoutUser, loading } = useLogout();
 
     const handleLogout = async () => {
-        try {
-            await logoutUser();
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            logout();
+        const result = await Swal.fire({
+            title: '<span style="color:#fff;font-size:1.5rem;font-weight:500;">You are about to logout...</span>',
+            showCancelButton: true,
+            background: '#23222a',
+            color: '#fff',
+            confirmButtonText: '<span style="font-weight:700;letter-spacing:0.5px;">Logout</span>',
+            cancelButtonText: '<span style="font-weight:700;letter-spacing:0.5px;">Cancel</span>',
+            customClass: { popup: 'swal2-popup-rating', confirmButton: 'swal2-btn-gradient', cacelButton: 'swal2-btn-gradient' },
+            reverseButtons: true
+        });
+        if (result.isConfirmed) {
+            try {
+                await logoutUser();
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                logout();
+                await Swal.fire({
+                    icon: 'success',
+                    title: '<span style="color:#fff;font-size:1.2rem;font-weight:500;">Logged out successfully</span>',
+                    background: '#23222a',
+                    color: '#fff',
+                    confirmButtonText: '<span style="font-weight:700;letter-spacing:0.5px;">OK</span>',
+                    customClass: { popup: 'swal2-popup-rating', confirmButton: 'swal2-btn-gradient' }
+                });
+            }
         }
     };
 

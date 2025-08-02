@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import IntegratedMap from '@components/display/IntegratedMap';
 
-const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedCinema = null, getAllCinemas = true, getAllCinemasClick = () => {console.log("Get all cinemas clicked");} }) => {
+const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedCinema = null, getAllCinemas = false, getAllCinemasClick = () => {console.log("Get all cinemas clicked");} }) => {
 
     useEffect(() => {
         const handleEscape = (e) => {

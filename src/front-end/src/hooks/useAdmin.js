@@ -18,12 +18,18 @@ export const useGetAccounts = () => {
     setError(null);
     
     try {
-      const response = await axios.get('/api/admin/accounts', {
+      console.log('🔍 Making request to: http://localhost:5000/api/admin/users');
+      console.log('🔍 Token:', token);
+      const response = await axios.get('http://localhost:5000/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('🔍 Raw response:', response);
+      console.log('🔍 Response data:', response.data);
       setAccounts(response.data);
       return { success: true, data: response.data };
     } catch (err) {
+      console.error('🔍 Error details:', err);
+      console.error('🔍 Error response:', err.response);
       const errorMessage = err.response?.data?.message || 'Failed to fetch accounts';
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -32,7 +38,7 @@ export const useGetAccounts = () => {
     }
   };
 
-  return { getAccounts, accounts, loading, error };
+  return { getAccounts, accounts, setAccounts, loading, error };
 };
 
 export const useAddAccount = () => {
@@ -45,7 +51,7 @@ export const useAddAccount = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/admin/accounts', accountData, {
+      const response = await axios.post('http://localhost:5000/api/admin/users', accountData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -71,10 +77,34 @@ export const useUpdateAccount = () => {
     setError(null);
     
     try {
-      const response = await axios.put(`/api/admin/accounts/${accountId}`, accountData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return { success: true, data: response.data };
+      // Separate roles from other data
+      const { roles, ...otherData } = accountData;
+      
+      // First update basic user details if any
+      if (Object.keys(otherData).length > 0) {
+        const requestBody = {
+          userId: accountId,
+          updateData: otherData
+        };
+        
+        await axios.put(`http://localhost:5000/api/admin/users/${accountId}`, requestBody, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      // Then update roles if provided
+      if (roles && Array.isArray(roles)) {
+        const rolesRequestBody = {
+          userId: accountId,
+          updateData: { roles }
+        };
+        
+        await axios.patch(`http://localhost:5000/api/admin/users/${accountId}/roles`, rolesRequestBody, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      return { success: true };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update account';
       setError(errorMessage);
@@ -97,7 +127,7 @@ export const useUpdateUserPermission = () => {
     setError(null);
     
     try {
-      const response = await axios.patch(`/api/admin/accounts/${userId}/permissions`, 
+      const response = await axios.patch(`/api/admin/users/${userId}/roles`, 
         { permissions }, 
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -126,7 +156,7 @@ export const useRemoveAccount = () => {
     setError(null);
     
     try {
-      const response = await axios.delete(`/api/admin/accounts/${accountId}`, {
+      const response = await axios.delete(`http://localhost:5000/api/admin/users/${accountId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -436,4 +466,37 @@ export const useRemoveBranch = () => {
   };
 
   return { removeBranch, loading, error };
+};
+
+export const useGetBranches = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const { token } = useUser();
+
+  const getBranches = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('🔍 Making request to: http://localhost:5000/api/admin/branches');
+      console.log('🔍 Token:', token);
+      const response = await axios.get('http://localhost:5000/api/admin/branches', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('🔍 Branches response:', response.data);
+      setBranches(response.data);
+      return { success: true, data: response.data };
+    } catch (err) {
+      console.error('🔍 Error fetching branches:', err);
+      console.error('🔍 Error response:', err.response);
+      const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getBranches, branches, setBranches, loading, error };
 };

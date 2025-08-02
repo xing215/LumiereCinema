@@ -32,7 +32,6 @@ const ProfileForm = () => {
     function formatDate(date) {
     if (!date) return '';
     if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) return date;
-    // Handles ISO string or Date object
     const d = new Date(date);
     if (isNaN(d)) return '';
     return d.toISOString().slice(0, 10);

@@ -29,7 +29,7 @@ const StaffRoot = () => {
         } else if (userRoles.includes('checkincounter')) {
             navigate(ROUTES.STAFF_CHECKIN);
         } else if (userRoles.includes('cashier')) {
-            navigate(ROUTES.NOT_FOUND);
+            navigate(ROUTES.STAFF_SELL_TICKET);
         } else if (userRoles.includes('customer')) {
             navigate(ROUTES.HOME);
         } else {

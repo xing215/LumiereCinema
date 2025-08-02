@@ -108,10 +108,14 @@ export const useGetWishlist = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(getApiUrlWithParams('wishlist'), {
+      const response = await axios.get(getApiUrl('wishlist'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setWishlist(response.data);
+      
+      // Xử lý đúng cấu trúc dữ liệu từ backend
+      const wishlistData = response.data.wishlist || response.data;
+      setWishlist(wishlistData);
+
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch wishlist';
@@ -185,7 +189,7 @@ export const useRateMovie = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/user/ratings', { movieId, rating }, {
+      const response = await axios.post(getApiUrl('rateMovie'), { movieId, rating }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return { success: true, data: response.data };
@@ -210,13 +214,11 @@ export const useGetMyRatings = () => {
   const getMyRatings = async (movieId = null) => {
     setLoading(true);
     setError(null);
-    
     try {
-      const url = movieId ? `/api/user/ratings/${movieId}` : '/api/user/ratings';
+      const url = getApiUrlWithParams('getRatingMovie', { movieId: movieId});
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
       if (movieId) {
         setRatings(prev => ({ ...prev, [movieId]: response.data }));
       } else {

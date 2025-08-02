@@ -68,14 +68,14 @@ export const useApplyPromotion = () => {
   const { token } = useUser();
 
   // Accepts promotionCode, snackTotal, movieTotal
-  const applyPromotion = async ({ promotionCode, snackTotal, movieTotal }) => {
+  const applyPromotion = async ({ promotionCode, snackTotal, movieTotal, noLoginCustomerInfo }) => {
     setLoading(true);
     setError(null);
     try {
-      console.log('Applying promotion:', { promotionCode, snackTotal, movieTotal });
+      console.log('Applying promotion:', { promotionCode, snackTotal, movieTotal, noLoginCustomerInfo });
       const response = await axios.post(
         getApiUrl('checkDiscountedTotal'),
-        { promotionCode, snackTotal, movieTotal },
+        { promotionCode, snackTotal, movieTotal, noLoginCustomerInfo },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log('Promotion applied successfully:', response.data.data);
@@ -83,6 +83,7 @@ export const useApplyPromotion = () => {
       return { success: true, data: response.data };
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid promotion code';
+      setAppliedPromotion(null);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -127,7 +128,7 @@ export const useCreateTicket = () => {
 
     // Add promotion code if present
     if (movieTicketData?.promotion || snackTicketData?.promotion) {
-        ticketData.promotionCode = movieTicketData.promotion || snackTicketData.promotion;
+        ticketData.promotionCode = movieTicketData?.promotion || snackTicketData?.promotion;
     }
 
     // Movie ticket data
@@ -140,7 +141,9 @@ export const useCreateTicket = () => {
         ticketData.movieTicket = {
             schedule: movieTicketData.schedule._id,
             seats: movieTicketData.seats,
-            total: movieTicketData.total || 0
+            total: movieTicketData.total || 0,
+            adultTickets: movieTicketData.adultTickets || 0,
+            discountedTickets: movieTicketData.discountedTickets || 0
         };
     }
 
@@ -242,10 +245,12 @@ export const useStartHoldSession = () => {
     });
     setError(null);
     setHoldSeatData(response.data);
+    console.log('✅ Hold session started:', response.data);
     
     return { success: true, data: response.data };
   } catch (err) {
     console.error('❌ Error in hold session:', err);
+    setHoldSeatData(null);
     const errorMessage = err?.response?.data?.error || 'Failed to hold seats';
     setError(errorMessage);
     return { success: false, error: errorMessage };
@@ -255,7 +260,14 @@ export const useStartHoldSession = () => {
   }
 };
 
-  return { startHoldSession, holdSeatData, loading, error };
+const clearHoldSeatData = () => {
+  console.log('🔄 Clearing hold session...');
+  setLoading(true);
+  setError(null);
+  setHoldSeatData(null);
+};
+
+  return { startHoldSession, clearHoldSeatData, holdSeatData, loading, error };
 };
 
 
@@ -374,4 +386,39 @@ export const useGetTicketDetailsByCode = () => {
         }
     };
     return { getTicket, ticket, loading, error };
+};
+
+export const useGetSnacksByBranch = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [snacks, setSnacks] = useState([]);
+  const { token } = useUser();
+  // const { currentBranch } = useSetCurrentBranch();
+
+  const getSnacks = async (branchId) => {
+    console.log('Fetching snacks for branch:', branchId);
+    if (!branchId) {
+      setError('No branch selected');
+      return { success: false, error: 'No branch selected' };
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(buildApiUrl(`/api/tickets/${branchId}/snacks`), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSnacks(response.data.snacks);
+      return { success: true, data: response.data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch snacks';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getSnacks, snacks, loading, error };
 };

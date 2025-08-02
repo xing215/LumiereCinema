@@ -27,19 +27,19 @@
 import React, { useState, useEffect } from 'react';
 
 // Custom hook for mobile detection
-const UseMobileDetection = (breakpoint = 1024) => {
+const UseMobileDetection = (breakpoint = 1024, minHeight = 600) => {
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => {
-            setIsMobile(window.innerWidth < breakpoint);
+            setIsMobile(window.innerWidth < breakpoint || window.innerHeight < minHeight);
         };
 
         checkMobile();
         window.addEventListener('resize', checkMobile);
 
         return () => window.removeEventListener('resize', checkMobile);
-    }, [breakpoint]);
+    }, [breakpoint, minHeight]);
 
     return isMobile;
 };
@@ -50,9 +50,10 @@ const MobileNotSupported = ({
     submessage = 'Please switch to a wider screen device for the best experience.',
     recommendation = 'Recommended: Desktop or tablet in landscape mode',
     breakpoint = 1024,
+    minHeight = 600,
     children = null,
 }) => {
-    const isMobile = UseMobileDetection(breakpoint);
+    const isMobile = UseMobileDetection(breakpoint, minHeight);
 
     if (!isMobile) {
         return children || null;

@@ -7,7 +7,7 @@ import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
-import MovieDetail from '@/pages/MovieDetail';
+import MovieDetail from '@pages/MovieDetail';
 import CheckInCounterPage from '@pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from '@pages/staff/ScheduleManagePage.jsx';
 import PromotionManagePage from '@pages/staff/PromotionManagePage.jsx';
@@ -21,14 +21,17 @@ import StaffRoot from '@pages/staff/StaffRoot.jsx';
 import MovieManagePage from '@pages/staff/MovieManagePage.jsx';
 import SnackManagePage from '@pages/staff/SnackManagePage.jsx';
 import TicketPurchase from '@pages/TicketPurchase';
-import AboutUs from '@/pages/AboutUs';
+import AboutUs from '@pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
 import LunarPointsPage from '@pages/LunarPoints.jsx';
 import WatchHistoryPage from '@/pages/WatchHistory';
+import WishlistPage from '@/pages/Wishlist.jsx';
+import SellTicket from '@pages/staff/SellTicket.jsx';
+import SellSnack from '@pages/staff/SellSnack.jsx';
 
-import Developing from '@/pages/others/Developing.jsx';
-import NotFound from '@/pages/others/NotFound.jsx';
+import Developing from '@pages/others/Developing.jsx';
+import NotFound from '@pages/others/NotFound.jsx';
 
 // Route aliases for better portability
 export const ROUTES = {
@@ -40,7 +43,6 @@ export const ROUTES = {
     RESET_PASSWORD: '/reset-password',
     RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
-    MOVIE_DETAILS: '/movie', // ?id=...
     MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
@@ -69,6 +71,8 @@ export const ROUTES = {
     STAFF_ACCOUNT: '/staff/account',
     STAFF_MOVIE: '/staff/movie',
     STAFF_SNACK: '/staff/snack',
+    STAFF_SELL_TICKET: '/staff/sell-ticket',
+    STAFF_SELL_SNACK: '/staff/sell-snack',
 
     // Other pages
     DEVELOPING: '/developing',
@@ -189,6 +193,14 @@ export const routeConfig = [
         allowedRoles: ['customer']
     },
 
+    {
+        path: ROUTES.WISHLIST,
+        component: WishlistPage,
+        type: 'customer',
+        requiresAuth: true,
+        allowedRoles: ['customer']
+    },
+
     // Staff public routes - accessible to all staff without authentication
     {
         path: ROUTES.STAFF_LOGIN,
@@ -295,6 +307,20 @@ export const routeConfig = [
         type: 'public',
         requiresAuth: false
     },
+    {
+        path: ROUTES.STAFF_SELL_TICKET,
+        component: SellTicket,
+        type: 'staff',
+        requiresAuth: true,
+        allowedRoles: ['cashier']
+    },
+    {
+        path: ROUTES.STAFF_SELL_SNACK,
+        component: SellSnack,
+        type: 'staff',
+        requiresAuth: true,
+        allowedRoles: ['cashier']
+    }
 ];
 
 // Helper function to check if user has required roles
