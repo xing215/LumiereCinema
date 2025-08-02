@@ -62,7 +62,6 @@ const Login = () => {
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
                 <LoginForm />
             </div>
-            <ChatBot />
 
             <div className="w-screen lg:h-15" />
             <Footer />

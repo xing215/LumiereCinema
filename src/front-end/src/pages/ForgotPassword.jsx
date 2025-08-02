@@ -4,7 +4,7 @@ import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
 import { useForgotPassword } from '@hooks/useAuth';
 import Header from '@layouts/LandingPage/Header.jsx';
-import ChatBot from '@components/display/ChatBot.jsx';
+import ChatBot from '@components/display/ChatBot';
 import BackwardButton from '@components/buttons/backwardButton.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
 import ForgotPwdForm from '@layouts/ResetPwd/ForgotPwdForm.jsx';
@@ -53,7 +53,7 @@ const ForgotPassword = () => {
                 <ForgotPwdForm forgotPwdHook={forgotPwdHook} />
             </div>
 
-            <ChatBot />
+
             <div className="w-screen lg:h-15" />
             <Footer />
         </section>

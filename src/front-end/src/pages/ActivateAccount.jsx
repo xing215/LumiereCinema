@@ -63,8 +63,6 @@ const ActivateAccount = () => {
                     }
                 </div>
             </div>
-
-            <ChatBot />
             <div className="h-10 w-screen lg:h-2" />
             <Footer />
         </section>

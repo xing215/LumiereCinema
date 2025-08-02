@@ -49,7 +49,6 @@ const Registration = () => {
                 <RegistrationForm />
             </div>
 
-            <ChatBot />
             <div className="h-10 w-screen lg:h-20" />
             <Footer />
         </section>

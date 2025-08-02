@@ -7,13 +7,11 @@ const {
   getSchedulesByBranch, 
   getSeatMapBySchedule,
   createTicket,
-  createSnackTicket,
   holdSeats,
   manageSeatHold,
   releaseBulkHolds,
   cleanupExpiredHolds,
   getSnacksByBranch,
-  reserveSnacks,
   getCacheStats,
   cleanupCache,
   preloadCache,
@@ -115,21 +113,6 @@ router.delete('/movie/admin/:ticketCode', protect, restrictTo('administrator'), 
  * Lấy danh sách snacks có sẵn theo branch
  */
 router.get('/:branchId/snacks', getSnacksByBranch);
-
-/**
- * POST /snack/reserve
- * Đặt trước snacks tạm thời
- * Body: { branchId, snackItems: [{ shortname, quantity }], userId?, sessionId?, reserveDurationMinutes? }
- */
-router.post('/snack/reserve', getUser, reserveSnacks);
-
-/**
- * POST /snack/create
- * Tạo vé snack riêng biệt
- * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, 
- *         snackList: [{ shortname, quantity }] }
- */
-router.post('/snack/create', getUser, createSnackTicket);
 
 /**
  * GET /snack/admin/all

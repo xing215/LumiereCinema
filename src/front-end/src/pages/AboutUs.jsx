@@ -1,6 +1,6 @@
 import Header from '@layouts/LandingPage/Header.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
-import ChatBot from '@/components/display/ChatBot';
+import ChatBot from '@components/display/ChatBot';
 import { Title } from '@components/UI/label.jsx';
 import TheStory from '@/layouts/AboutUs/TheStory';
 import OurTeam from '@/layouts/AboutUs/OurTeam';

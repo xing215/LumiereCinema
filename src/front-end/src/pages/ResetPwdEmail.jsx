@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useUser } from '@contexts/UserContext';
 import Header from '@layouts/LandingPage/Header.jsx';
 import ChangePwdForm from '@layouts/ChangePwd/ChangePwdForm.jsx';
-import ChatBot from '@components/display/ChatBot.jsx';
+import ChatBot from '@components/display/ChatBot';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@routes/routeConfig.js';
 import Footer from '@layouts/LandingPage/Footer.jsx';
@@ -11,15 +12,20 @@ const ResetPwdEmail = () => {
     const [searchParams] = useSearchParams();
     const [resetToken, setResetToken] = useState(null);
     const [tokenError, setTokenError] = useState(false);
+    const { isAuthenticated, logout } = useUser();
 
     useEffect(() => {
+        // If logged in, auto logout before proceeding
+        if (isAuthenticated) {
+            logout();
+        }
         const token = searchParams.get('token');
         if (token) {
             setResetToken(token);
         } else {
             setTokenError(true);
         }
-    }, [searchParams]);
+    }, [searchParams, isAuthenticated, logout]);
 
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden overflow-y-hidden bg-slate-950">
@@ -40,7 +46,6 @@ const ResetPwdEmail = () => {
                 <ChangePwdForm ResetToken={resetToken} />
             )}
         </div>
-        <ChatBot />
         <div className="w-screen lg:h-15" />
         <Footer />
     </section>

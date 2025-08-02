@@ -1,5 +1,6 @@
 import Header from '@layouts/LandingPage/Header.jsx';
 import Footer from '@layouts/LandingPage/Footer.jsx';
+import ChatBot from '@components/display/ChatBot';
 import MovieInfo from '@layouts/MovieDetail/MovieInfo.jsx';
 import Suggestion from '@layouts/MovieDetail/Suggestion.jsx';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -24,6 +25,7 @@ const MovieDetail = () => {
             <Header />
             <MainBody />
             <Footer />
+            <ChatBot />
         </div>
     );
 };

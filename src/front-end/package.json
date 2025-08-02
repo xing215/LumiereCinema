@@ -11,6 +11,8 @@
         "format": "prettier --write ."
     },
     "dependencies": {
+        "@chatscope/chat-ui-kit-react": "^2.1.1",
+        "@chatscope/chat-ui-kit-styles": "^1.4.0",
         "@popperjs/core": "^2.11.8",
         "@tailwindcss/vite": "^4.1.10",
         "@vitejs/plugin-react": "^4.4.1",
