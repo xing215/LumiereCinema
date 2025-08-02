@@ -348,7 +348,7 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
     }, [screen]);
     
     return (
-        <div className='absolute bottom-1/10 h-[67%] xl:h-[75%] flex w-full items-start justify-center'>
+        <div className='absolute bottom-1/10 h-[67%] flex w-full items-start justify-center'>
             {/* Background grid and time markers - behind scrollable content */}
             <div className='absolute h-full pointer-events-none w-[87%] right-[4%]'>
                  <div className="absolute z-20 top-1.5 h-[3px] w-full bg-slate-950" />
@@ -607,7 +607,7 @@ const ScheduleManagePage = () => {
                     
                 </div>
 
-                <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:h-[78%] xl:rounded-3xl"></div>
+                <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:rounded-3xl"></div>
                 
                 {error ? (
                     <div className="flex items-center justify-center h-full">

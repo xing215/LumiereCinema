@@ -9,13 +9,22 @@ const WishlistButton = ({ movie, className = '' }) => {
     const { removeFromWishlist, loading: removeLoading } = useRemoveFromWishlist();
     const [showAuthError, setShowAuthError] = React.useState(false);
     const [wishlistFetched, setWishlistFetched] = React.useState(false);
+    const [isInWishlistState, setIsInWishlistState] = React.useState(false);
 
     React.useEffect(() => {
         if (!wishlistFetched) {
             getWishlist();
             setWishlistFetched(true);
         }
-    }, [wishlistFetched, getWishlist]); 
+    }, [wishlistFetched, getWishlist]);
+
+    // Update local state when wishlist data changes
+    React.useEffect(() => {
+        if (movie?._id && wishlist) {
+            const inWishlist = isInWishlist(movie._id);
+            setIsInWishlistState(inWishlist);
+        }
+    }, [wishlist, movie?._id]); 
     const isInWishlist = (movieId) => {
         return (
             wishlist &&
@@ -23,6 +32,8 @@ const WishlistButton = ({ movie, className = '' }) => {
             wishlist.some(item => String(item._id) === String(movieId))
         );
     };
+
+
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
         if ((wishlistError && (!wishlist.wishlist || wishlist.wishlist.length === 0)) ||
@@ -31,20 +42,29 @@ const WishlistButton = ({ movie, className = '' }) => {
             return;
         }
         if (!movie?._id) return;
-        if (isInWishlist(movie._id)) {
+        
+        if (isInWishlistState) {
             const result = await removeFromWishlist(movie._id);
             if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
                 setShowAuthError(true);
                 return;
             }
-            await getWishlist();
+            // If no error, immediately update local state and sync in background
+            if (!result?.error) {
+                setIsInWishlistState(false);
+                getWishlist(); // Sync in background
+            }
         } else {
             const result = await addToWishlist(movie._id);
             if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
                 setShowAuthError(true);
                 return;
             }
-            await getWishlist();
+            // If no error, immediately update local state and sync in background
+            if (!result?.error) {
+                setIsInWishlistState(true);
+                getWishlist(); // Sync in background
+            }
         }
     };
 
@@ -53,11 +73,11 @@ const WishlistButton = ({ movie, className = '' }) => {
             {showAuthError && (
                 <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />
             )}
-            <div className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className}`} onClick={handleWishlistClick} title={isInWishlist(movie?._id) ? 'Remove from Wishlist' : 'Add to Wishlist'}>
+            <div className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className}`} onClick={handleWishlistClick} title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}>
                 <Heart
                     className="absolute h-full w-full"
                     strokeWidth={1.5}
-                    fill={isInWishlist(movie?._id) ? 'white' : 'none'}
+                    fill={isInWishlistState ? 'white' : 'none'}
                 />
             </div>
         </>
