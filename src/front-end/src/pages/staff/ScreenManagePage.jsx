@@ -6,12 +6,27 @@ import EditSeatModal from '@components/display/Modal/EditSeatModal.jsx';
 import ManageTable from '@components/UI/ManageTable.jsx';
 import DeleteButton from '@components/buttons/Staff/DeleteButton.jsx';
 import AddButton from '@components/buttons/Staff/AddButton.jsx';
+import ConfirmButton from '@components/buttons/Staff/ConfirmButton.jsx';
+import CancelButton from '@components/buttons/Staff/CancelButton.jsx';
 import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import { useEffect } from 'react'; 
 import { useUser } from '@contexts/UserContext';
 import { useGetBranchById } from '@hooks/useBranch';
 import { useScreenManagement } from '@hooks/useScreenManagement'; 
+
+const AddScreenButtons = ({ onConfirm, onCancel, isLoading = false }) => (
+    <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
+        <ConfirmButton 
+            onClick={onConfirm}
+            disabled={isLoading}
+        />
+        <CancelButton 
+            onClick={onCancel}
+            disabled={isLoading}
+        />
+    </div>
+); 
 const ScreenManagePage = () => {
     const [showConfirmDeleteScreen, setShowConfirmDeleteScreen] = useState(false);
     const [editedScreenIndex, setEditedScreenIndex] = useState(null);
@@ -50,15 +65,34 @@ const ScreenManagePage = () => {
     };
 
     const Button = () => {
-        return (
-            <div className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl hover:cursor-pointer">
-                {tickedScreens.size > 0 ? (
+        const handleAddScreenClick = () => {
+            console.log('🖱️ [ScreenManagePage] Add Screen button clicked');
+            console.log('🖱️ [ScreenManagePage] Current tickedScreens.size:', tickedScreens.size);
+            console.log('🖱️ [ScreenManagePage] About to call handleStartAddScreen');
+            handleStartAddScreen();
+        };
+
+        if (isAddingScreen) {
+            return (
+                <AddScreenButtons 
+                    onConfirm={handleConfirmAddScreen}
+                    onCancel={handleCancelAddScreen}
+                    isLoading={isUpdating}
+                />
+            );
+        } else if (tickedScreens.size > 0) {
+            return (
+                <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
                     <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)} />
-                ) : (
-                    <AddButton text="Add Screen" onClicked={handleStartAddScreen} />
-                )}
-            </div>
-        );
+                </div>
+            );
+        } else {
+            return (
+                <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
+                    <AddButton text="Add Screen" onClick={handleAddScreenClick} />
+                </div>
+            );
+        }
     };
 
     useEffect(() => {

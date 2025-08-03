@@ -240,20 +240,28 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Actions</span>
                                     ) : (
-                                        <div className="action-button flex justify-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+                                        <div className="action-button flex justify-center gap-3 w-full" onClick={(e) => e.stopPropagation()}>
                                             <button 
                                                 onClick={() => value.onConfirm?.()}
-                                                className="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded hover:bg-green-600"
+                                                className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-yellow-600 rounded-lg hover:from-amber-700 hover:to-yellow-700 shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-amber-800"
                                                 title="Confirm Add"
+                                                style={{
+                                                    fontFamily: 'serif',
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                }}
                                             >
-                                                ✓
+                                                ✓ OK
                                             </button>
                                             <button 
                                                 onClick={() => value.onCancel?.()}
-                                                className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded hover:bg-red-600"
+                                                className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-red-700 to-red-800 rounded-lg hover:from-red-800 hover:to-red-900 shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-red-900"
                                                 title="Cancel Add"
+                                                style={{
+                                                    fontFamily: 'serif',
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                }}
                                             >
-                                                ✗
+                                                ✗ Cancel
                                             </button>
                                         </div>
                                     )

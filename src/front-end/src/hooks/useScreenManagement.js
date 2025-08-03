@@ -344,6 +344,9 @@ export const useScreenManagement = () => {
 
   // New screen management
   const handleStartAddScreen = useCallback(() => {
+    console.log('🆕 [handleStartAddScreen] Starting to add new screen');
+    console.log('🆕 [handleStartAddScreen] Current state:', { isAddingScreen, editingCell });
+    
     setEditingCell(null);
     setIsAddingScreen(true);
     setNewScreenData({
@@ -353,7 +356,16 @@ export const useScreenManagement = () => {
       columns: '',
       isActive: true
     });
-  }, []);
+    
+    console.log('🆕 [handleStartAddScreen] New screen data initialized:', {
+      screenName: '',
+      screenType: '2D',
+      rows: '',
+      columns: '',
+      isActive: true
+    });
+    console.log('🆕 [handleStartAddScreen] isAddingScreen set to true');
+  }, [isAddingScreen, editingCell]);
 
   const handleCancelAddScreen = useCallback(() => {
     setEditingCell(null);
@@ -700,6 +712,7 @@ export const useScreenManagement = () => {
     // Add new screen row if adding
     if (isAddingScreen) {
       console.log('➕ [getProcessedScreenData] Adding new screen row:', newScreenData);
+      console.log('➕ [getProcessedScreenData] isAddingScreen is true, creating new row');
       const newScreenRow = [
         { type: 'AddIndicator' },
         newScreenData.screenName,
@@ -713,9 +726,13 @@ export const useScreenManagement = () => {
           isUpdating: false,
           disabled: true
         }, 
-        { type: 'AddLabel', text: 'NEW', onConfirm: handleConfirmAddScreen, onCancel: handleCancelAddScreen }
+        'NEW' // Simple text instead of AddLabel with buttons
       ];
+      console.log('➕ [getProcessedScreenData] New screen row created:', newScreenRow);
       allScreenRows = [newScreenRow, ...allScreenRows];
+      console.log('➕ [getProcessedScreenData] Added new screen row to beginning of array');
+    } else {
+      console.log('❌ [getProcessedScreenData] Not adding screen - isAddingScreen is false');
     }
 
     console.log('🎯 [getProcessedScreenData] Final processed data:', allScreenRows);
@@ -731,6 +748,8 @@ export const useScreenManagement = () => {
   console.log('📈 [useScreenManagement] screenData length:', screenData.length);
   console.log('⏳ [useScreenManagement] loading:', loading);
   console.log('🎯 [useScreenManagement] isAddingScreen:', isAddingScreen);
+  console.log('🔧 [useScreenManagement] newScreenData:', newScreenData);
+  console.log('📝 [useScreenManagement] editingCell:', editingCell);
 
   return {
     // Data
