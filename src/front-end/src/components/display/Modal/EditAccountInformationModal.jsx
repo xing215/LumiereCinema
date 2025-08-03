@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@styles/datepicker.css';
+import { showError } from '@/utils/sweetalert';
 
 const TickButton = ({ onTick, check }) => {
     return (
@@ -170,6 +171,21 @@ const EditAccountInformationModal = ({
 
 
     const handleChosenRole = (roleIndex) => {
+        // Nếu đang ở chế độ edit, kiểm tra các ràng buộc
+        if (isEdit) {
+            // Nếu đang là customer, không cho phép click vào role khác
+            if (chosenRole.has(1)) {
+                showError('Error', 'Customer role cannot be changed.');
+                return; // Không làm gì cả
+            }
+            
+            // Nếu đang là staff roles, không cho phép click vào customer role
+            if (roleIndex === 1) {
+                showError('Error', 'Customer role cannot be assigned.');
+                return; // Không làm gì cả
+            }
+        }
+
         setChosenRole((prev) => {
             const newSet = new Set(prev);
 
