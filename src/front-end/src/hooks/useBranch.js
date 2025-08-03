@@ -355,3 +355,133 @@ export const useRemoveSnack = () => {
 
   return { removeSnack, loading, error };
 };
+
+// Seat Management Hooks
+
+export const useGetScreenSeats = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [seats, setSeats] = useState([]);
+  const { token } = useUser();
+
+  const getScreenSeats = async (branchId, screenId) => {
+    if (!branchId || !screenId) {
+      const errorMsg = 'Branch ID and Screen ID are required';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.getScreenSeats(branchId, screenId, token);
+      setSeats(data);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch seats';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getScreenSeats, seats, setSeats, loading, error };
+};
+
+export const useCreateSeat = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const createSeat = async (branchId, screenId, seatData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.createSeat(branchId, screenId, seatData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to create seat';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createSeat, loading, error };
+};
+
+export const useBulkCreateSeats = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const bulkCreateSeats = async (branchId, screenId, seatsData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.bulkCreateSeats(branchId, screenId, seatsData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to create seats';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { bulkCreateSeats, loading, error };
+};
+
+export const useUpdateSeat = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const updateSeat = async (branchId, screenId, seatId, seatData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.updateSeat(branchId, screenId, seatId, seatData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to update seat';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateSeat, loading, error };
+};
+
+export const useRemoveSeat = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const removeSeat = async (branchId, screenId, seatId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.deleteSeat(branchId, screenId, seatId, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to remove seat';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { removeSeat, loading, error };
+};

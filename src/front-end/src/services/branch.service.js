@@ -113,5 +113,41 @@ export const branchService = {
       headers: { Authorization: `Bearer ${authToken}` }
     });
     return response.data;
+  },
+
+  // Branch seat management (branchmanager only)
+  getScreenSeats: async (branchId, screenId, authToken) => {
+    const response = await axios.get(getApiUrlWithParams('screenSeats', { branchId, screenId }), {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return response.data;
+  },
+
+  createSeat: async (branchId, screenId, seatData, authToken) => {
+    const response = await axios.post(getApiUrlWithParams('screenSeats', { branchId, screenId }), seatData, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return response.data;
+  },
+
+  bulkCreateSeats: async (branchId, screenId, seatsData, authToken) => {
+    const response = await axios.post(getApiUrlWithParams('bulkCreateSeats', { branchId, screenId }), seatsData, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return response.data;
+  },
+
+  updateSeat: async (branchId, screenId, seatId, seatData, authToken) => {
+    const response = await axios.patch(getApiUrlWithParams('screenSeatDetails', { branchId, screenId, seatId }), seatData, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return response.data;
+  },
+
+  deleteSeat: async (branchId, screenId, seatId, authToken) => {
+    const response = await axios.delete(getApiUrlWithParams('screenSeatDetails', { branchId, screenId, seatId }), {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return response.data;
   }
 };
