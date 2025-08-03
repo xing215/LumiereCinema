@@ -43,8 +43,8 @@ export const useScreenManagement = () => {
     isActive: true
   });
 
-  // Column configuration - removing editable columns for inline editing
-  const editableColumns = []; // Remove inline editing capability
+  // Column configuration - conditional editable columns based on adding state
+  const editableColumns = isAddingScreen ? [1, 2, 3, 4] : []; // Enable editing only when adding new screen
   const columnFieldMapping = {
     // Keep for potential future use but disable inline editing
     1: 'screenName',
@@ -55,16 +55,26 @@ export const useScreenManagement = () => {
 
   const header = ['', 'Screen Name', 'Type', 'Rows', 'Columns', 'Active', 'Edit Seats'];
 
-  // Field types configuration - all non-editable for inline editing
+  // Field types configuration - conditional based on adding state
   const fieldTypes = {
     0: 'text',   // TickButton (not editable)
-    1: 'text',   // Screen Name - display only
-    2: 'text',   // Screen Type - display only  
-    3: 'text',   // Rows - display only
-    4: 'text',   // Columns - display only
+    1: isAddingScreen ? 'text' : 'text',   // Screen Name - editable when adding
+    2: isAddingScreen ? 'select' : 'text', // Screen Type - dropdown when adding
+    3: isAddingScreen ? 'number' : 'text', // Rows - number input when adding
+    4: isAddingScreen ? 'number' : 'text', // Columns - number input when adding
     5: 'text',   // Active (toggle button)
     6: 'text'    // Edit Seats (button)
   };
+
+  // Debug logging for field types when adding screen
+  useEffect(() => {
+    if (isAddingScreen) {
+      console.log('🎭 [ADD_SCREEN_DEBUG] isAddingScreen:', isAddingScreen);
+      console.log('🎭 [ADD_SCREEN_DEBUG] editableColumns:', editableColumns);
+      console.log('🎭 [ADD_SCREEN_DEBUG] fieldTypes:', fieldTypes);
+      console.log('🎭 [ADD_SCREEN_DEBUG] screenTypeOptions:', screenTypeOptions);
+    }
+  }, [isAddingScreen, editableColumns, fieldTypes]);
 
   const screenTypeOptions = ['2D', '3D', 'IMAX', '4DX'];
 
@@ -156,18 +166,35 @@ export const useScreenManagement = () => {
   // New screen field change handler
   const handleNewScreenFieldChange = useCallback((columnIndex, value) => {
     const fieldName = columnFieldMapping[columnIndex];
+    console.log('🔄 [NEW_SCREEN_FIELD_CHANGE]', {
+      columnIndex,
+      fieldName,
+      value,
+      prevScreenData: newScreenData
+    });
+    
     if (fieldName) {
       setNewScreenData(prev => {
-        if (fieldName === 'size.rows') {
-          return { ...prev, rows: value };
-        } else if (fieldName === 'size.columns') {
-          return { ...prev, columns: value };
-        } else {
-          return { ...prev, [fieldName]: value };
-        }
+        const newData = (() => {
+          if (fieldName === 'size.rows') {
+            return { ...prev, rows: value };
+          } else if (fieldName === 'size.columns') {
+            return { ...prev, columns: value };
+          } else {
+            return { ...prev, [fieldName]: value };
+          }
+        })();
+        
+        console.log('🔄 [NEW_SCREEN_DATA_UPDATED]', {
+          fieldName,
+          value,
+          newData
+        });
+        
+        return newData;
       });
     }
-  }, [columnFieldMapping]);
+  }, [columnFieldMapping, newScreenData]);
 
   // Screen name validation
   const validateScreenName = useCallback((screenName) => {
@@ -191,18 +218,53 @@ export const useScreenManagement = () => {
 
   // Inline editing handlers
   const handleStartEdit = useCallback((rowIndex, columnIndex, currentValue) => {
+    console.log('🔧 [EDIT_START_DEBUG]', {
+      rowIndex,
+      columnIndex,
+      currentValue,
+      isAddingScreen,
+      editableColumns,
+      isUpdating,
+      fieldType: fieldTypes[columnIndex],
+      isColumnEditable: editableColumns.includes(columnIndex),
+      screenTypeOptions: columnIndex === 2 ? screenTypeOptions : null
+    });
+    
     if (editableColumns.includes(columnIndex) && !isUpdating) {
       if (isAddingScreen && rowIndex === 0) {
+        console.log('✅ [EDIT_START] Starting edit for new screen row', {
+          columnIndex,
+          fieldType: fieldTypes[columnIndex],
+          currentValue
+        });
         setEditingCell({ rowIndex, columnIndex, value: currentValue });
         return;
       }
+      console.log('✅ [EDIT_START] Starting edit for existing screen');
       setEditingCell({ rowIndex, columnIndex, value: currentValue });
+    } else {
+      console.log('❌ [EDIT_BLOCKED]', {
+        reason: !editableColumns.includes(columnIndex) ? 'Column not editable' : 'Currently updating'
+      });
     }
-  }, [editableColumns, isUpdating, isAddingScreen]);
+  }, [editableColumns, isUpdating, isAddingScreen, fieldTypes, screenTypeOptions]);
 
   const handleSaveEdit = useCallback(async (rowIndex, columnIndex, newValue) => {
+    console.log('💾 [SAVE_EDIT_DEBUG]', {
+      rowIndex,
+      columnIndex,
+      newValue,
+      isAddingScreen,
+      fieldName: columnFieldMapping[columnIndex]
+    });
+    
     // Handle new screen field changes
     if (isAddingScreen && rowIndex === 0) {
+      console.log('💾 [SAVE_NEW_SCREEN] Updating new screen data:', {
+        columnIndex,
+        fieldName: columnFieldMapping[columnIndex],
+        newValue
+      });
       handleNewScreenFieldChange(columnIndex, newValue);
       setEditingCell(null);
       return;
@@ -747,11 +809,11 @@ export const useScreenManagement = () => {
     updateLoading,
     removeLoading,
     
-    // Inline editing removed - all editing now happens in modal
-    editingCell: null,
-    handleStartEdit: () => {}, // No-op function for compatibility
-    handleSaveEdit: () => {}, // No-op function for compatibility  
-    handleCancelEdit: () => {}, // No-op function for compatibility
+    // Inline editing - enabled only when adding new screen
+    editingCell,
+    handleStartEdit,
+    handleSaveEdit,  
+    handleCancelEdit,
     isUpdating,
     
     // Screen operations

@@ -68,7 +68,10 @@ const EditableCell = ({
                 }, 100);
             } else if (inputRef.current) {
                 inputRef.current.focus();
-                inputRef.current.select();
+                // Only call select() on input elements, not select elements
+                if (fieldType !== 'select' && typeof inputRef.current.select === 'function') {
+                    inputRef.current.select();
+                }
                 autoResizeTextarea(inputRef.current);
             }
         }
