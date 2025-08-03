@@ -1793,10 +1793,18 @@ const getBranchScreens = async (req, res) => {
       }
 
       // 6. Validate location within screen size
-      if (location.row < 1 || location.row > screen.size.rows ||
+      let rowNumber;
+      if (typeof location.row === 'string') {
+        // Convert row letter (A, B, C, etc.) to number (1, 2, 3, etc.)
+        rowNumber = location.row.charCodeAt(0) - 64;
+      } else {
+        rowNumber = parseInt(location.row);
+      }
+
+      if (rowNumber < 1 || rowNumber > screen.size.rows ||
           location.column < 1 || location.column > screen.size.columns) {
         return res.status(400).json({ 
-          message: `Seat location must be within screen size (${screen.size.rows}x${screen.size.columns}).` 
+          message: `Seat location must be within screen size (row: ${location.row}, column: ${location.column}, screen: ${screen.size.rows}x${screen.size.columns}).` 
         });
       }
 
@@ -1918,9 +1926,18 @@ const getBranchScreens = async (req, res) => {
           continue;
         }
 
-        if (seat.location.row < 1 || seat.location.row > screen.size.rows ||
+        // Validate row - convert letter to number for bounds checking
+        let rowNumber;
+        if (typeof seat.location.row === 'string') {
+          // Convert row letter (A, B, C, etc.) to number (1, 2, 3, etc.)
+          rowNumber = seat.location.row.charCodeAt(0) - 64;
+        } else {
+          rowNumber = parseInt(seat.location.row);
+        }
+
+        if (rowNumber < 1 || rowNumber > screen.size.rows ||
             seat.location.column < 1 || seat.location.column > screen.size.columns) {
-          errors.push(`Seat ${i + 1}: Location out of screen bounds`);
+          errors.push(`Seat ${i + 1}: Location out of screen bounds (row: ${seat.location.row}, column: ${seat.location.column}, screen: ${screen.size.rows}x${screen.size.columns})`);
           continue;
         }
 
@@ -2077,20 +2094,28 @@ const getBranchScreens = async (req, res) => {
         updateData.seatNumber = trimmedSeatNumber;
       }
 
-      // Validate and set location if provided
-      if (location) {
-        if (!location.row || !location.column) {
-          return res.status(400).json({ 
-            message: 'Both row and column are required when updating location.' 
-          });
-        }
+        // Validate and set location if provided
+        if (location) {
+          if (!location.row || !location.column) {
+            return res.status(400).json({ 
+              message: 'Both row and column are required when updating location.' 
+            });
+          }
 
-        if (location.row < 1 || location.row > screen.size.rows ||
-            location.column < 1 || location.column > screen.size.columns) {
-          return res.status(400).json({ 
-            message: `Location must be within screen size (${screen.size.rows}x${screen.size.columns}).` 
-          });
-        }
+          let rowNumber;
+          if (typeof location.row === 'string') {
+            // Convert row letter (A, B, C, etc.) to number (1, 2, 3, etc.)
+            rowNumber = location.row.charCodeAt(0) - 64;
+          } else {
+            rowNumber = parseInt(location.row);
+          }
+
+          if (rowNumber < 1 || rowNumber > screen.size.rows ||
+              location.column < 1 || location.column > screen.size.columns) {
+            return res.status(400).json({ 
+              message: `Location must be within screen size (row: ${location.row}, column: ${location.column}, screen: ${screen.size.rows}x${screen.size.columns}).` 
+            });
+          }
 
         // Check for duplicate location (excluding current seat)
         const duplicateLocation = await Seat.findOne({ 

@@ -37,7 +37,12 @@ const SeatLayout = (props) => {
                                 const current = row[i];
                                 const next = row[i + 1];
 
-                                if (current.type === 'Couple' && next?.type === 'Couple') {
+                                // Normalize seat type - check both 'type' and 'category' fields and convert to lowercase
+                                const currentType = (current.category || current.type || 'standard').toLowerCase();
+                                const nextType = (next?.category || next?.type || 'standard').toLowerCase();
+
+                                // Only render as CoupleSeat if both seats are couple type AND both are visible (not hidden)
+                                if (currentType === 'couple' && nextType === 'couple' && !current.isHidden && !next.isHidden) {
                                     // Gộp thành CoupleSeat
                                     if (isEditable) {
                                         const isHighlighted = highlightedSeats.includes(current.seatNumber) || 
@@ -68,7 +73,11 @@ const SeatLayout = (props) => {
                                     // Render single seat
                                     if (isEditable) {
                                         const isHighlighted = highlightedSeats.includes(current.seatNumber);
-                                        const seatType = current.type || (current.isHidden ? 'Hidden' : 'Standard');
+                                        // Fix: Always check isHidden first, then normalize type for proper color display
+                                        const normalizedType = (current.category || current.type || 'standard').toLowerCase();
+                                        const seatType = current.isHidden ? 'Hidden' : 
+                                                        normalizedType === 'couple' ? 'Couple' :
+                                                        normalizedType === 'hidden' ? 'Hidden' : 'Standard';
                                         
                                         seats.push(
                                             <div
@@ -81,7 +90,9 @@ const SeatLayout = (props) => {
                                                         seat: current.seatNumber,
                                                         currentType: seatType,
                                                         selectedType: selectedSeatType,
-                                                        seatData: current
+                                                        seatData: current,
+                                                        isHidden: current.isHidden,
+                                                        normalizedType
                                                     });
                                                     onSeatClick?.(current);
                                                 }}
@@ -90,7 +101,12 @@ const SeatLayout = (props) => {
                                             </div>
                                         );
                                     } else {
-                                        seats.push(<Seat key={`${rowIndex}-${i}`} type={current.type} />);
+                                        // Fix: Also apply the same logic for non-editable mode
+                                        const normalizedType = (current.category || current.type || 'standard').toLowerCase();
+                                        const seatType = current.isHidden ? 'Hidden' : 
+                                                        normalizedType === 'couple' ? 'Couple' :
+                                                        normalizedType === 'hidden' ? 'Hidden' : 'Standard';
+                                        seats.push(<Seat key={`${rowIndex}-${i}`} type={seatType} />);
                                     }
                                 }
                             }

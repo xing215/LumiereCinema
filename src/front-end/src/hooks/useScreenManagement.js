@@ -44,7 +44,7 @@ export const useScreenManagement = () => {
   });
 
   // Column configuration - conditional editable columns based on adding state
-  const editableColumns = isAddingScreen ? [1, 2, 3, 4] : []; // Enable editing only when adding new screen
+  const editableColumns = isAddingScreen ? [1, 2, 3, 4] : [1, 2]; // Enable inline editing for name and type, but not rows/columns
   const columnFieldMapping = {
     // Keep for potential future use but disable inline editing
     1: 'screenName',
@@ -58,10 +58,10 @@ export const useScreenManagement = () => {
   // Field types configuration - conditional based on adding state
   const fieldTypes = {
     0: 'text',   // TickButton (not editable)
-    1: isAddingScreen ? 'text' : 'text',   // Screen Name - editable when adding
-    2: isAddingScreen ? 'select' : 'text', // Screen Type - dropdown when adding
-    3: isAddingScreen ? 'number' : 'text', // Rows - number input when adding
-    4: isAddingScreen ? 'number' : 'text', // Columns - number input when adding
+    1: 'text',   // Screen Name - always editable via inline editing
+    2: 'select', // Screen Type - always dropdown for inline editing  
+    3: isAddingScreen ? 'number' : 'readonly', // Rows - readonly for existing screens
+    4: isAddingScreen ? 'number' : 'readonly', // Columns - readonly for existing screens
     5: 'text',   // Active (toggle button)
     6: 'text'    // Edit Seats (button)
   };

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import SeatLayout from '@components/display/Seats.jsx';
 import Seat from '@components/UI/Seat.jsx';
 import CoupleSeat from '@components/UI/CoupleSeat.jsx';
-import { useGetScreenSeats, useUpdateScreen, useBulkCreateSeats, useUpdateSeat } from '@hooks/useBranch';
+import { useGetScreenSeats, useUpdateScreen, useBulkCreateSeats, useUpdateSeat, useRemoveSeat } from '@hooks/useBranch';
 import { useUser } from '@contexts/UserContext';
 import { showError, showSuccess, showLoading, closeSwal } from '@utils/sweetalert';
 
@@ -116,7 +116,7 @@ const ScreenInformation = ({ screenData, onFieldChange }) => {
 const SeatInformation = ({ selectedSeatType, onSeatTypeSelect }) => {
     const seatTypes = [
         { type: 'STANDARD', label: 'Standard', component: Seat },
-        { type: 'VIP', label: 'VIP/Couple', component: CoupleSeat },
+        { type: 'COUPLE', label: 'Couple', component: CoupleSeat },
         { type: 'HIDDEN', label: 'Hidden', component: Seat }
     ];
 
@@ -135,7 +135,7 @@ const SeatInformation = ({ selectedSeatType, onSeatTypeSelect }) => {
                             onSeatTypeSelect(type);
                         }}
                     >
-                        {type === 'VIP' ? (
+                        {type === 'COUPLE' ? (
                             <CoupleSeat />
                         ) : (
                             <Seat type={type === 'HIDDEN' ? 'Hidden' : 'Standard'} />
@@ -158,6 +158,7 @@ const EditSeatModal = (props) => {
     const { updateScreen } = useUpdateScreen();
     const { bulkCreateSeats } = useBulkCreateSeats();
     const { updateSeat } = useUpdateSeat();
+    const { removeSeat } = useRemoveSeat();
     
     const [seats, setSeats] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -202,44 +203,225 @@ const EditSeatModal = (props) => {
         loadSeats();
     }, [props.screenData?._id, props.screenData?.id, branchId]);
 
-    // Generate seats based on rows and columns
-    const generateSeats = useCallback((rows, columns) => {
-        const newSeats = [];
-        for (let row = 1; row <= rows; row++) {
+    // Generate or update seats based on rows and columns
+    const updateSeatsForDimensions = useCallback((newRows, newColumns, existingSeats = []) => {
+        console.log('🪑 [SEATS_DIMENSION_UPDATE]', { 
+            newRows, 
+            newColumns, 
+            existingSeatsCount: existingSeats.length 
+        });
+
+        const updatedSeats = [];
+        
+        // Create seat map for existing seats
+        const existingSeatMap = {};
+        existingSeats.forEach(seat => {
+            const row = seat.location?.row || seat.row;
+            const column = seat.location?.column || seat.column;
+            if (row && column) {
+                existingSeatMap[`${row}-${column}`] = seat;
+            }
+        });
+
+        // Generate seats for the new dimensions
+        for (let row = 1; row <= newRows; row++) {
             const rowLetter = String.fromCharCode(64 + row);
-            for (let col = 1; col <= columns; col++) {
-                newSeats.push({
-                    seatNumber: `${rowLetter}${col}`,
-                    location: { row: rowLetter, column: col },
-                    type: 'Standard',
-                    isHidden: false
-                });
+            for (let col = 1; col <= newColumns; col++) {
+                const seatKey = `${rowLetter}-${col}`;
+                const existingSeat = existingSeatMap[seatKey];
+                
+                if (existingSeat) {
+                    // Keep existing seat with its current properties
+                    updatedSeats.push({
+                        ...existingSeat,
+                        seatNumber: `${rowLetter}${col}`,
+                        location: { row: rowLetter, column: col },
+                        row: rowLetter
+                    });
+                } else {
+                    // Create new seat with default properties
+                    updatedSeats.push({
+                        seatNumber: `${rowLetter}${col}`,
+                        location: { row: rowLetter, column: col },
+                        row: rowLetter,
+                        type: 'Standard',
+                        isHidden: false
+                    });
+                }
             }
         }
-        return newSeats;
+
+        console.log('✅ [SEATS_DIMENSION_UPDATE] Generated/updated seats:', {
+            totalSeats: updatedSeats.length,
+            newSeats: updatedSeats.filter(s => !existingSeatMap[`${s.location.row}-${s.location.column}`]).length,
+            preservedSeats: updatedSeats.filter(s => existingSeatMap[`${s.location.row}-${s.location.column}`]).length
+        });
+
+        return updatedSeats;
     }, []);
 
-    const handleFieldChange = useCallback((field, value) => {
-        console.log('📝 [FIELD_CHANGE]', { field, value });
-        setScreenInfo(prev => {
-            const newInfo = { ...prev, [field]: value };
-            
-            // If rows or columns changed, regenerate seats
-            if (field === 'rows' || field === 'columns') {
-                const newSeats = generateSeats(
-                    field === 'rows' ? value : prev.rows,
-                    field === 'columns' ? value : prev.columns
-                );
-                console.log('🪑 [SEATS_REGENERATED]', { seatsCount: newSeats.length });
-                setSeats(newSeats);
-            }
-            
-            setHasChanges(true);
-            return newInfo;
-        });
-    }, [generateSeats]);
+    // Legacy generate seats function for initial load
+    const generateSeats = useCallback((rows, columns) => {
+        return updateSeatsForDimensions(rows, columns, []);
+    }, [updateSeatsForDimensions]);
 
-    // Handle seat click with enhanced debugging
+    const handleFieldChange = useCallback(async (field, value) => {
+        console.log('📝 [FIELD_CHANGE]', { field, value });
+        
+        // For rows/columns changes, sync immediately with database
+        if (field === 'rows' || field === 'columns') {
+            const screenId = props.screenData._id || props.screenData.id;
+            const oldRows = screenInfo.rows;
+            const oldColumns = screenInfo.columns;
+            const newRows = field === 'rows' ? value : oldRows;
+            const newColumns = field === 'columns' ? value : oldColumns;
+            
+            console.log('🔄 [DIMENSION_CHANGE]', { field, value, oldRows, oldColumns, newRows, newColumns });
+            
+            // Show loading for dimension changes
+            showLoading('Updating Screen Layout...', 'Please wait while we update screen dimensions and seats');
+            
+            try {
+                // Update screen dimensions first
+                const screenUpdateData = {
+                    screenName: screenInfo.screenName,
+                    size: { rows: newRows, columns: newColumns }
+                };
+                
+                console.log('🎬 [SCREEN_UPDATE_DIMENSIONS] Updating screen dimensions:', screenUpdateData);
+                const updateResult = await updateScreen(branchId, screenId, screenUpdateData);
+                
+                if (!updateResult.success) {
+                    throw new Error(updateResult.error || 'Failed to update screen dimensions');
+                }
+                
+                // Determine what seats need to be added or removed
+                const currentSeats = seats;
+                const seatsToRemove = [];
+                const seatsToAdd = [];
+                
+                if (field === 'rows') {
+                    if (value < oldRows) {
+                        // Remove seats from the last row(s)
+                        for (let row = value + 1; row <= oldRows; row++) {
+                            const rowLetter = String.fromCharCode(64 + row);
+                            const rowSeats = currentSeats.filter(s => 
+                                (s.location?.row || s.row) === rowLetter
+                            );
+                            seatsToRemove.push(...rowSeats.filter(s => s._id)); // Only existing seats
+                        }
+                    } else if (value > oldRows) {
+                        // Add seats to new row(s)
+                        for (let row = oldRows + 1; row <= value; row++) {
+                            const rowLetter = String.fromCharCode(64 + row);
+                            for (let col = 1; col <= newColumns; col++) {
+                                seatsToAdd.push({
+                                    seatNumber: `${rowLetter}${col}`,
+                                    location: { row: rowLetter, column: col }, // Use row letter (A, B, C, etc.)
+                                    category: 'STANDARD', // Use uppercase 'STANDARD' to match SeatCategory shortname
+                                    isHidden: false
+                                });
+                            }
+                        }
+                    }
+                } else if (field === 'columns') {
+                    if (value < oldColumns) {
+                        // Remove seats from the last column(s)
+                        for (let col = value + 1; col <= oldColumns; col++) {
+                            const columnSeats = currentSeats.filter(s => 
+                                (s.location?.column || s.column) === col
+                            );
+                            seatsToRemove.push(...columnSeats.filter(s => s._id)); // Only existing seats
+                        }
+                    } else if (value > oldColumns) {
+                        // Add seats to new column(s)
+                        for (let row = 1; row <= newRows; row++) {
+                            const rowLetter = String.fromCharCode(64 + row);
+                            for (let col = oldColumns + 1; col <= value; col++) {
+                                seatsToAdd.push({
+                                    seatNumber: `${rowLetter}${col}`,
+                                    location: { row: rowLetter, column: col }, // Use row letter (A, B, C, etc.)
+                                    category: 'STANDARD', // Use uppercase 'STANDARD' to match SeatCategory shortname
+                                    isHidden: false
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                console.log('🪑 [SEATS_OPERATION_PLAN]', {
+                    seatsToRemove: seatsToRemove.length,
+                    seatsToAdd: seatsToAdd.length,
+                    seatsToAddDetails: seatsToAdd.map(s => ({ seatNumber: s.seatNumber, category: s.category }))
+                });
+                
+                // Remove seats if needed
+                if (seatsToRemove.length > 0) {
+                    console.log('🗑️ [SEATS_REMOVE] Removing seats:', seatsToRemove.length);
+                    for (const seat of seatsToRemove) {
+                        try {
+                            await removeSeat(branchId, screenId, seat._id);
+                            console.log(`✅ [SEAT_REMOVED] Seat ${seat.seatNumber} removed`);
+                        } catch (error) {
+                            console.error(`❌ [SEAT_REMOVE_ERROR] Failed to remove seat ${seat.seatNumber}:`, error);
+                            throw new Error(`Failed to remove seat ${seat.seatNumber}: ${error.message}`);
+                        }
+                    }
+                }
+                
+                // Add seats if needed
+                if (seatsToAdd.length > 0) {
+                    console.log('➕ [SEATS_ADD] Adding seats:', seatsToAdd.length);
+                    console.log('🪑 [SEATS_ADD_DATA] Seats data:', JSON.stringify(seatsToAdd, null, 2));
+                    
+                    try {
+                        const createResult = await bulkCreateSeats(branchId, screenId, { seats: seatsToAdd });
+                        console.log('🔍 [SEATS_ADD_RESULT]', createResult);
+                        
+                        if (createResult.success) {
+                            console.log('✅ [SEATS_ADD] New seats created successfully');
+                        } else {
+                            console.error('❌ [SEATS_ADD_FAILED]:', createResult.error);
+                            throw new Error(`Failed to create seats: ${createResult.error}`);
+                        }
+                    } catch (error) {
+                        console.error('❌ [SEATS_ADD_ERROR]:', error);
+                        throw new Error(`Failed to create seats: ${error.message}`);
+                    }
+                }
+                
+                // Reload seats from server to get the updated state
+                console.log('🔄 [SEATS_RELOAD] Reloading seats from server');
+                const result = await getScreenSeats(branchId, screenId);
+                if (result.success) {
+                    const seatsData = Array.isArray(result.data?.seats) ? result.data.seats : [];
+                    setSeats(seatsData);
+                    console.log('✅ [SEATS_RELOAD] Seats reloaded:', seatsData.length, 'seats');
+                } else {
+                    console.error('❌ [SEATS_RELOAD_FAILED]:', result.error);
+                }
+                
+                closeSwal(); // Close loading alert
+                showSuccess('Success!', `Screen dimensions updated to ${newRows}x${newColumns}`);
+                
+            } catch (error) {
+                console.error('❌ [DIMENSION_CHANGE_ERROR] Error updating dimensions:', error);
+                closeSwal(); // Close loading alert
+                showError('Error', error.message || 'Failed to update screen dimensions');
+                return; // Don't update local state if database update failed
+            }
+        }
+        
+        // Update local state
+        setScreenInfo(prev => ({
+            ...prev,
+            [field]: value
+        }));
+        
+        setHasChanges(true);
+    }, [screenInfo, seats, branchId, props.screenData, updateScreen, removeSeat, bulkCreateSeats, getScreenSeats]);
+
+    // Handle seat click with enhanced debugging and fixed couple seat logic
     const handleSeatClick = useCallback((seatOrSeats) => {
         if (!selectedSeatType) {
             console.log('⚠️ [EDIT_SEAT] No seat type selected');
@@ -256,7 +438,8 @@ const EditSeatModal = (props) => {
             selectedType: selectedSeatType,
             currentSeats: seatsToUpdate.map(s => ({ 
                 seatNumber: s.seatNumber, 
-                currentType: s.type, 
+                currentType: s.type,
+                currentCategory: s.category, 
                 isHidden: s.isHidden 
             }))
         });
@@ -268,6 +451,7 @@ const EditSeatModal = (props) => {
         setSeats(prevSeats => {
             const newSeats = [...prevSeats];
             
+            // Process each seat to update
             seatsToUpdate.forEach(targetSeat => {
                 const seatIndex = newSeats.findIndex(s => 
                     s._id === targetSeat._id || 
@@ -277,51 +461,137 @@ const EditSeatModal = (props) => {
                 
                 if (seatIndex !== -1) {
                     const currentSeat = newSeats[seatIndex];
+                    let newType, newIsHidden;
                     
-                    // Map selectedSeatType to appropriate type value
-                    let newType = selectedSeatType === 'VIP' ? 'Couple' : 
-                                  selectedSeatType === 'HIDDEN' ? 'Hidden' : 'Standard';
-                    let newIsHidden = selectedSeatType === 'HIDDEN';
-                    
-                    // Toggle behavior
-                    if (selectedSeatType === 'HIDDEN') {
-                        newIsHidden = !currentSeat.isHidden;
-                        newType = currentSeat.type || 'Standard';
-                    } else if (currentSeat.type === newType && !currentSeat.isHidden) {
-                        newType = 'Standard';
-                    }
-                    
-                    // Handle couple seat logic
-                    if (isCoupleSeat && selectedSeatType === 'VIP') {
-                        newType = 'Couple';
-                        newIsHidden = false;
+                    // Enhanced logic for different seat types - Fixed mapping with proper couple seat handling
+                    switch (selectedSeatType) {
+                        case 'HIDDEN':
+                            // For HIDDEN: If applying to couple seat, make both seats hidden
+                            // If applying to single seat, toggle hidden state
+                            if (isCoupleSeat) {
+                                // Apply hidden to couple seats - set both to hidden standard seats
+                                newType = 'Standard';
+                                newIsHidden = true;
+                            } else {
+                                // Toggle hidden state for single seat while preserving type
+                                newIsHidden = !currentSeat.isHidden;
+                                newType = currentSeat.category || currentSeat.type || 'Standard';
+                            }
+                            break;
+                            
+                        case 'COUPLE':
+                            // For couple seats: always set to Couple (no toggle)
+                            newType = 'Couple';
+                            newIsHidden = false;
+                            break;
+                            
+                        case 'STANDARD':
+                        default:
+                            // For standard: set to Standard (works for both single and couple seats)
+                            newType = 'Standard';
+                            newIsHidden = false;
+                            break;
                     }
                     
                     console.log('🔄 [SEAT_UPDATE]', {
                         seatNumber: currentSeat.seatNumber,
                         oldType: currentSeat.type,
+                        oldCategory: currentSeat.category,
                         newType: newType,
                         oldHidden: currentSeat.isHidden,
-                        newHidden: newIsHidden
+                        newHidden: newIsHidden,
+                        selectedSeatType,
+                        isCoupleSeat,
+                        seatIndex
                     });
                     
-                    newSeats[seatIndex] = {
+                    const updatedSeat = {
                         ...currentSeat,
-                        type: newType,
+                        type: newType,          // Keep for internal consistency
+                        category: newType,      // Use for API calls
                         isHidden: newIsHidden
                     };
                     
-                    // Track changes for sync
+                    newSeats[seatIndex] = updatedSeat;
+                    
+                    // Track changes for sync - use proper seat ID
+                    const seatChangeKey = currentSeat._id || currentSeat.seatNumber;
                     setSeatChanges(prev => ({
                         ...prev,
-                        [currentSeat._id || currentSeat.seatNumber]: {
+                        [seatChangeKey]: {
                             action: 'update',
-                            oldData: { type: currentSeat.type, isHidden: currentSeat.isHidden },
-                            newData: { type: newType, isHidden: newIsHidden }
+                            oldData: { type: currentSeat.category || currentSeat.type, isHidden: currentSeat.isHidden },
+                            newData: { type: newType, isHidden: newIsHidden },
+                            seatNumber: currentSeat.seatNumber
                         }
                     }));
+                    
+                    console.log('✅ [SEAT_CHANGE_TRACKED]', {
+                        seatChangeKey,
+                        seatNumber: currentSeat.seatNumber,
+                        newData: { type: newType, isHidden: newIsHidden }
+                    });
                 }
             });
+
+            // Additional logic for COUPLE type: ensure adjacent seats are also updated
+            if (selectedSeatType === 'COUPLE' && !isCoupleSeat) {
+                // If user clicked on a single seat to make it couple, update adjacent seat too
+                const clickedSeat = seatsToUpdate[0];
+                const clickedSeatIndex = newSeats.findIndex(s => 
+                    s._id === clickedSeat._id || 
+                    s.seatNumber === clickedSeat.seatNumber ||
+                    (s.location?.row === clickedSeat.location?.row && s.location?.column === clickedSeat.location?.column)
+                );
+
+                if (clickedSeatIndex !== -1) {
+                    const clickedSeatData = newSeats[clickedSeatIndex];
+                    const row = clickedSeatData.location?.row || clickedSeatData.row;
+                    const column = clickedSeatData.location?.column || clickedSeatData.column;
+
+                    // Check for adjacent seat (next column in same row)
+                    const adjacentSeatIndex = newSeats.findIndex(s => 
+                        (s.location?.row || s.row) === row && 
+                        (s.location?.column || s.column) === column + 1
+                    );
+
+                    if (adjacentSeatIndex !== -1) {
+                        const adjacentSeat = newSeats[adjacentSeatIndex];
+                        
+                        console.log('🔗 [ADJACENT_SEAT_UPDATE] Making adjacent seat couple', {
+                            clickedSeat: clickedSeatData.seatNumber,
+                            adjacentSeat: adjacentSeat.seatNumber
+                        });
+
+                        const updatedAdjacentSeat = {
+                            ...adjacentSeat,
+                            type: 'Couple',
+                            category: 'Couple',
+                            isHidden: false
+                        };
+
+                        newSeats[adjacentSeatIndex] = updatedAdjacentSeat;
+
+                        // Track change for adjacent seat too
+                        const adjacentSeatChangeKey = adjacentSeat._id || adjacentSeat.seatNumber;
+                        setSeatChanges(prev => ({
+                            ...prev,
+                            [adjacentSeatChangeKey]: {
+                                action: 'update',
+                                oldData: { type: adjacentSeat.category || adjacentSeat.type, isHidden: adjacentSeat.isHidden },
+                                newData: { type: 'Couple', isHidden: false },
+                                seatNumber: adjacentSeat.seatNumber
+                            }
+                        }));
+
+                        console.log('✅ [ADJACENT_SEAT_CHANGE_TRACKED]', {
+                            adjacentSeatChangeKey,
+                            seatNumber: adjacentSeat.seatNumber,
+                            newData: { type: 'Couple', isHidden: false }
+                        });
+                    }
+                }
+            }
             
             setHasChanges(true);
             return newSeats;
@@ -364,14 +634,25 @@ const EditSeatModal = (props) => {
             }
             console.log('✅ [SCREEN_UPDATE] Screen updated successfully');
 
-            // Update individual seats
+            // Handle seat changes - both updates and potential bulk creation for new seats
+            const existingSeats = seats.filter(seat => seat._id);
+            const newSeats = seats.filter(seat => !seat._id);
+            
+            console.log('🪑 [SEATS_ANALYSIS]', {
+                totalSeats: seats.length,
+                existingSeats: existingSeats.length,
+                newSeats: newSeats.length,
+                seatChanges: Object.keys(seatChanges).length
+            });
+
+            // Update existing seats that have changes
             if (Object.keys(seatChanges).length > 0) {
-                console.log('🪑 [SEATS_UPDATE] Updating seats:', Object.keys(seatChanges).length);
+                console.log('🔄 [EXISTING_SEATS_UPDATE] Updating existing seats');
                 
                 for (const [seatId, change] of Object.entries(seatChanges)) {
                     try {
                         const seatUpdateData = {
-                            type: change.newData.type,
+                            category: change.newData.type,  // Fix: use 'category' instead of 'type'
                             isHidden: change.newData.isHidden
                         };
                         
@@ -387,8 +668,29 @@ const EditSeatModal = (props) => {
                         console.error(`❌ [SEAT_UPDATE_ERROR] Exception updating seat ${seatId}:`, seatError);
                     }
                 }
+            }
+
+            // Create new seats if any
+            if (newSeats.length > 0) {
+                console.log('➕ [NEW_SEATS_CREATE] Creating new seats:', newSeats.length);
                 
-                console.log('✅ [SEATS_UPDATE] All seat updates completed');
+                const seatsToCreate = newSeats.map(seat => ({
+                    seatNumber: seat.seatNumber,
+                    location: seat.location,
+                    category: seat.type || 'Standard',  // Fix: use 'category' instead of 'type'
+                    isHidden: seat.isHidden || false
+                }));
+                
+                try {
+                    const createResult = await bulkCreateSeats(branchId, screenId, { seats: seatsToCreate });
+                    if (createResult.success) {
+                        console.log('✅ [NEW_SEATS_CREATE] New seats created successfully');
+                    } else {
+                        console.error('❌ [NEW_SEATS_CREATE_FAILED]:', createResult.error);
+                    }
+                } catch (createError) {
+                    console.error('❌ [NEW_SEATS_CREATE_ERROR]:', createError);
+                }
             }
 
             closeSwal();
@@ -455,10 +757,11 @@ const EditSeatModal = (props) => {
                                 <h4 className="text-white font-bold text-sm mb-2">Instructions:</h4>
                                 <ul className="text-gray-300 text-xs space-y-1">
                                     <li>• Select a seat type above</li>
-                                    <li>• Click once to apply type</li>
-                                    <li>• Click again to toggle back</li>
-                                    <li>• VIP seats become couple seats when adjacent</li>
-                                    <li>• Click Confirm to save changes</li>
+                                    <li>• Click seats to apply selected type</li>
+                                    <li>• Hidden: Toggles seat visibility</li>
+                                    <li>• Couple: Makes seats couple type</li>
+                                    <li>• Standard: Returns seat to normal</li>
+                                    <li>• Changes auto-save when you click Confirm</li>
                                 </ul>
                             </div>
                         </div>
