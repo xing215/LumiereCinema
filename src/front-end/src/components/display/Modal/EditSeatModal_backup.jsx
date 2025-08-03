@@ -116,7 +116,7 @@ const ScreenInformation = ({ screenData, onFieldChange }) => {
 const SeatInformation = ({ selectedSeatType, onSeatTypeSelect }) => {
     const seatTypes = [
         { type: 'STANDARD', label: 'Standard', component: Seat },
-        { type: 'VIP', label: 'VIP/Couple', component: CoupleSeat },
+        { type: 'COUPLE', label: 'Couple', component: CoupleSeat },
         { type: 'HIDDEN', label: 'Hidden', component: Seat }
     ];
 
@@ -135,7 +135,7 @@ const SeatInformation = ({ selectedSeatType, onSeatTypeSelect }) => {
                             onSeatTypeSelect(type);
                         }}
                     >
-                        {type === 'VIP' ? (
+                        {type === 'COUPLE' ? (
                             <CoupleSeat />
                         ) : (
                             <Seat type={type === 'HIDDEN' ? 'Hidden' : 'Standard'} />
@@ -147,6 +147,106 @@ const SeatInformation = ({ selectedSeatType, onSeatTypeSelect }) => {
                 </div>
             ))}
         </div>
+    );
+};
+
+// Enhanced SeatLayout component that can handle seat editing
+const EditableSeatLayout = ({ seats, onSeatClick, selectedSeatType, highlightedSeats = [] }) => {
+    if (!seats || seats.length === 0) {
+        return <div className="text-white">No seats data available</div>;
+    }
+
+    // Group seats by row
+    const seatsByRow = seats.reduce((acc, seat) => {
+        const row = seat.location?.row || seat.row;
+        if (!acc[row]) acc[row] = [];
+        acc[row].push(seat);
+        return acc;
+    }, {});
+
+    // Sort rows alphabetically
+    const sortedRows = Object.keys(seatsByRow).sort();
+
+    return (
+        <div className="relative flex h-full flex-col items-center justify-center gap-5 lg:gap-5">
+            <div className="bg-gray-300 h-4 w-48 rounded-t-lg flex items-center justify-center">
+                <span className="text-black text-sm font-bold">SCREEN</span>
+            </div>
+            <div className="relative flex flex-col items-start gap-1.5 lg:gap-2 xl:gap-3">
+                {sortedRows.map((rowLetter) => {
+                    const rowSeats = seatsByRow[rowLetter].sort((a, b) => 
+                        (a.location?.column || a.column) - (b.location?.column || b.column)
+                    );
+                    
+                    return (
+                        <div key={rowLetter} className="flex items-center gap-2 lg:gap-2 xl:gap-3">
+                            <p className="font-unbounded w-9 justify-start self-stretch text-center text-sm font-bold text-white md:text-[18px] xl:text-xl">
+                                {rowLetter}
+                            </p>
+                            {(() => {
+                                const seatElements = [];
+                                let i = 0;
+                                
+                                while (i < rowSeats.length) {
+                                    const current = rowSeats[i];
+                                    const next = rowSeats[i + 1];
+
+                                    // Check for couple seat: both have type 'Couple' (following Seats.jsx logic exactly)
+                                    if (
+                                        current.type === 'Couple' &&
+                                        next &&
+                                        next.type === 'Couple'
+                                    ) {
+                                        // Render as couple seat using CoupleSeat component
+                                        const isHighlighted = highlightedSeats.includes(current.seatNumber) || highlightedSeats.includes(next.seatNumber);
+                                        seatElements.push(
+                                            <button
+                                                key={current.seatNumber + '-' + next.seatNumber}
+                                                onClick={() => {
+                                                    console.log('🪑 [COUPLE_SEAT_CLICK]', {
+                                                        seats: [current.seatNumber, next.seatNumber],
+                                                        selectedType: selectedSeatType
+                                                    });
+                                                    onSeatClick?.([current, next]);
+                                                }}
+                                                className={`cursor-pointer transition-all duration-200 ${
+                                                    isHighlighted ? 'scale-110 ring-2 ring-blue-400' : ''
+                                                }`}
+                                            >
+                                                <CoupleSeat />
+                                            </button>
+                                        );
+                                        i += 2; // Skip next seat
+                                    } else {
+                                        // Render as single seat using Seat component
+                                        const isHighlighted = highlightedSeats.includes(current.seatNumber);
+                                        // Map to seat type exactly like Seats.jsx expects
+                                        const seatType = current.type || (current.isHidden ? 'Hidden' : 'Standard');
+                                        
+                                        seatElements.push(
+                                            <button
+                                                key={current._id || current.seatNumber}
+                                                onClick={() => {
+                                                    console.log('🪑 [SEAT_CLICK]', {
+                                                        seat: current.seatNumber,
+                                                        currentType: seatType,
+                                                        selectedType: selectedSeatType,
+                                                        isHidden: current.isHidden,
+                                                        type: current.type
+                                                    });
+                                                    onSeatClick?.(current);
+                                                }}
+                                                className={`cursor-pointer transition-all duration-200 ${
+                                                    isHighlighted ? 'scale-110 ring-2 ring-blue-400' : ''
+                                                }`}
+                                            >
+                                                <Seat type={seatType} />
+                                            </button>
+                                        );
+                                        i += 1;
+                                    }
+                                }
+                                return seatElements;
     );
 };
 
@@ -162,8 +262,8 @@ const EditSeatModal = (props) => {
     const [seats, setSeats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSeatType, setSelectedSeatType] = useState(null);
-    const [seatChanges, setSeatChanges] = useState({});
-    const [highlightedSeats, setHighlightedSeats] = useState([]);
+    const [seatChanges, setSeatChanges] = useState({}); // Track seat changes { seatId: { action: 'update', oldData, newData }, ... }
+    const [highlightedSeats, setHighlightedSeats] = useState([]); // For visual feedback
     const [screenInfo, setScreenInfo] = useState({
         screenName: props.screenData?.screenName || props.screenData?.name || '',
         rows: props.screenData?.size?.rows || props.screenData?.rows || 0,
@@ -171,27 +271,43 @@ const EditSeatModal = (props) => {
     });
     const [hasChanges, setHasChanges] = useState(false);
 
+    // Initialize modal with debug logging
+    useEffect(() => {
+        const screenId = props.screenData?._id || props.screenData?.id;
+        console.log('🎬 [EDIT_MODAL_INIT] Modal opened with screen data:', {
+            screenId: screenId,
+            screenName: props.screenData?.screenName || props.screenData?.name,
+            screenType: props.screenData?.screenType,
+            rows: props.screenData?.size?.rows || props.screenData?.rows,
+            columns: props.screenData?.size?.columns || props.screenData?.columns,
+            isActive: props.screenData?.isActive,
+            branchId: branchId
+        });
+    }, [props.screenData?._id, props.screenData?.id, branchId]); // Only listen to screen ID changes
+
     // Load seats when modal opens
     useEffect(() => {
         const loadSeats = async () => {
             const screenId = props.screenData?._id || props.screenData?.id;
-            if (screenId) {
-                console.log('🎬 [EDIT_MODAL_LOAD] Loading seats for screen:', screenId);
+            if (screenId) { // screen ID
+                console.log('🎬 [EDIT_MODAL_LOAD] Starting to load seats for screen:', screenId);
                 setLoading(true);
                 try {
                     const result = await getScreenSeats(branchId, screenId);
                     if (result.success) {
+                        // API returns { seats: [...], total: number, screen: {...} }
+                        // Ensure we always have an array, even if result.data.seats is undefined or not an array
                         const seatsData = Array.isArray(result.data?.seats) ? result.data.seats : [];
-                        console.log('✅ [EDIT_MODAL_LOAD] Seats loaded:', seatsData.length, 'seats');
+                        console.log('✅ [EDIT_MODAL_LOAD] Seats loaded successfully:', seatsData.length, 'seats');
                         setSeats(seatsData);
                     } else {
                         console.error('❌ [EDIT_MODAL_LOAD] Failed to load seats:', result.error);
-                        setSeats([]);
+                        setSeats([]); // Ensure we set an empty array on error
                         showError('Error', 'Failed to load seats data');
                     }
                 } catch (error) {
                     console.error('❌ [EDIT_MODAL_LOAD] Exception loading seats:', error);
-                    setSeats([]);
+                    setSeats([]); // Ensure we set an empty array on exception
                     showError('Error', 'Failed to load seats data');
                 } finally {
                     setLoading(false);
@@ -200,7 +316,7 @@ const EditSeatModal = (props) => {
         };
 
         loadSeats();
-    }, [props.screenData?._id, props.screenData?.id, branchId]);
+    }, [props.screenData?._id, props.screenData?.id, branchId]); // Only listen to screen ID changes
 
     // Generate seats based on rows and columns
     const generateSeats = useCallback((rows, columns) => {
@@ -211,7 +327,7 @@ const EditSeatModal = (props) => {
                 newSeats.push({
                     seatNumber: `${rowLetter}${col}`,
                     location: { row: rowLetter, column: col },
-                    type: 'Standard',
+                    category: 'STANDARD',
                     isHidden: false
                 });
             }
@@ -220,7 +336,7 @@ const EditSeatModal = (props) => {
     }, []);
 
     const handleFieldChange = useCallback((field, value) => {
-        console.log('📝 [FIELD_CHANGE]', { field, value });
+        console.log('📝 [FIELD_CHANGE]', { field, value, currentScreenInfo: screenInfo });
         setScreenInfo(prev => {
             const newInfo = { ...prev, [field]: value };
             
@@ -230,7 +346,11 @@ const EditSeatModal = (props) => {
                     field === 'rows' ? value : prev.rows,
                     field === 'columns' ? value : prev.columns
                 );
-                console.log('🪑 [SEATS_REGENERATED]', { seatsCount: newSeats.length });
+                console.log('🪑 [SEATS_REGENERATED]', {
+                    newRows: field === 'rows' ? value : prev.rows,
+                    newColumns: field === 'columns' ? value : prev.columns,
+                    seatsCount: newSeats.length
+                });
                 setSeats(newSeats);
             }
             
@@ -239,31 +359,24 @@ const EditSeatModal = (props) => {
         });
     }, [generateSeats]);
 
-    // Handle seat click with enhanced debugging
+    // Handle seat click - supports both single seat and couple seat
     const handleSeatClick = useCallback((seatOrSeats) => {
-        if (!selectedSeatType) {
-            console.log('⚠️ [EDIT_SEAT] No seat type selected');
-            return;
-        }
+        if (!selectedSeatType) return;
 
+        // Check if it's a couple seat (array) or single seat
         const isCoupleSeat = Array.isArray(seatOrSeats);
         const seatsToUpdate = isCoupleSeat ? seatOrSeats : [seatOrSeats];
 
-        console.log('🎯 [EDIT_SEAT_CLICK]', {
+        console.log('🎯 [SEAT_UPDATE]', {
             isCoupleSeat,
             seatsCount: seatsToUpdate.length,
             seatNumbers: seatsToUpdate.map(s => s.seatNumber),
-            selectedType: selectedSeatType,
-            currentSeats: seatsToUpdate.map(s => ({ 
-                seatNumber: s.seatNumber, 
-                currentType: s.type, 
-                isHidden: s.isHidden 
-            }))
+            selectedType: selectedSeatType
         });
 
-        // Highlight seats for visual feedback
+        // Highlight seats being edited for visual feedback
         setHighlightedSeats(seatsToUpdate.map(s => s.seatNumber));
-        setTimeout(() => setHighlightedSeats([]), 800);
+        setTimeout(() => setHighlightedSeats([]), 500); // Remove highlight after 500ms
 
         setSeats(prevSeats => {
             const newSeats = [...prevSeats];
@@ -271,39 +384,34 @@ const EditSeatModal = (props) => {
             seatsToUpdate.forEach(targetSeat => {
                 const seatIndex = newSeats.findIndex(s => 
                     s._id === targetSeat._id || 
-                    s.seatNumber === targetSeat.seatNumber ||
                     (s.location?.row === targetSeat.location?.row && s.location?.column === targetSeat.location?.column)
                 );
                 
                 if (seatIndex !== -1) {
                     const currentSeat = newSeats[seatIndex];
                     
-                    // Map selectedSeatType to appropriate type value
+                    // Toggle behavior: if clicking on same type, toggle to opposite
+                    // Map selectedSeatType to appropriate type value for consistency with Seats.jsx
                     let newType = selectedSeatType === 'VIP' ? 'Couple' : 
                                   selectedSeatType === 'HIDDEN' ? 'Hidden' : 'Standard';
                     let newIsHidden = selectedSeatType === 'HIDDEN';
                     
-                    // Toggle behavior
+                    // Check current state for toggle behavior
                     if (selectedSeatType === 'HIDDEN') {
+                        // Toggle hidden state
                         newIsHidden = !currentSeat.isHidden;
-                        newType = currentSeat.type || 'Standard';
+                        newType = currentSeat.type || 'Standard'; // Keep original type
                     } else if (currentSeat.type === newType && !currentSeat.isHidden) {
+                        // If clicking same type again, toggle to standard
                         newType = 'Standard';
                     }
                     
                     // Handle couple seat logic
                     if (isCoupleSeat && selectedSeatType === 'VIP') {
+                        // For couple seats, both should be Couple type
                         newType = 'Couple';
                         newIsHidden = false;
                     }
-                    
-                    console.log('🔄 [SEAT_UPDATE]', {
-                        seatNumber: currentSeat.seatNumber,
-                        oldType: currentSeat.type,
-                        newType: newType,
-                        oldHidden: currentSeat.isHidden,
-                        newHidden: newIsHidden
-                    });
                     
                     newSeats[seatIndex] = {
                         ...currentSeat,
@@ -347,7 +455,7 @@ const EditSeatModal = (props) => {
         try {
             const screenId = props.screenData._id || props.screenData.id;
             
-            // Update screen info
+            // Update screen info if changed
             const screenUpdateData = {
                 screenName: screenInfo.screenName,
                 size: {
@@ -356,7 +464,7 @@ const EditSeatModal = (props) => {
                 }
             };
 
-            console.log('🎬 [SCREEN_UPDATE] Updating screen:', screenUpdateData);
+            console.log('🎬 [SCREEN_UPDATE] Updating screen with data:', screenUpdateData);
             const updateResult = await updateScreen(branchId, screenId, screenUpdateData);
             
             if (!updateResult.success) {
@@ -364,9 +472,9 @@ const EditSeatModal = (props) => {
             }
             console.log('✅ [SCREEN_UPDATE] Screen updated successfully');
 
-            // Update individual seats
+            // Update individual seats that have changes
             if (Object.keys(seatChanges).length > 0) {
-                console.log('🪑 [SEATS_UPDATE] Updating seats:', Object.keys(seatChanges).length);
+                console.log('🪑 [SEATS_UPDATE] Updating individual seats:', Object.keys(seatChanges).length);
                 
                 for (const [seatId, change] of Object.entries(seatChanges)) {
                     try {
@@ -375,16 +483,17 @@ const EditSeatModal = (props) => {
                             isHidden: change.newData.isHidden
                         };
                         
-                        console.log('🔄 [SEAT_UPDATE]', { seatId, seatUpdateData });
                         const seatResult = await updateSeat(branchId, screenId, seatId, seatUpdateData);
                         
                         if (!seatResult.success) {
-                            console.error(`❌ [SEAT_UPDATE_FAILED] Seat ${seatId}:`, seatResult.error);
+                            console.error(`❌ [SEAT_UPDATE_FAILED] Failed to update seat ${seatId}:`, seatResult.error);
+                            // Continue with other seats, don't fail completely
                         } else {
                             console.log(`✅ [SEAT_UPDATE] Seat ${seatId} updated successfully`);
                         }
                     } catch (seatError) {
                         console.error(`❌ [SEAT_UPDATE_ERROR] Exception updating seat ${seatId}:`, seatError);
+                        // Continue with other seats
                     }
                 }
                 
@@ -398,7 +507,7 @@ const EditSeatModal = (props) => {
             setSeatChanges({});
             setHasChanges(false);
             
-            // Refresh parent data
+            // Refresh the parent page data if there's a refresh callback
             if (props.onRefresh) {
                 console.log('🔄 [REFRESH] Triggering parent data refresh');
                 props.onRefresh();
@@ -463,11 +572,10 @@ const EditSeatModal = (props) => {
                             </div>
                         </div>
 
-                        {/* Seat Layout Section using updated SeatLayout */}
+                        {/* Seat Layout Section */}
                         <div className="relative min-h-0 flex justify-center p-[3%] mr-[2%]">
-                            <SeatLayout 
-                                data={seats}
-                                isEditable={true}
+                            <EditableSeatLayout 
+                                seats={seats}
                                 onSeatClick={handleSeatClick}
                                 selectedSeatType={selectedSeatType}
                                 highlightedSeats={highlightedSeats}
@@ -478,7 +586,7 @@ const EditSeatModal = (props) => {
 
                 <div className="relative flex items-center gap-4">
                     <CancelButton onclick={() => {
-                        console.log('🔙 [CANCEL] User cancelled edit modal');
+                        console.log('❌ [MODAL_CANCEL] User canceled editing, changes discarded:', { hasChanges });
                         props.onClose();
                     }} />
                     <ConfirmButton onClick={handleSave} />

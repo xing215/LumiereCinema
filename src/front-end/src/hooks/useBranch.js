@@ -478,7 +478,7 @@ export const useUpdateSeat = () => {
   const [error, setError] = useState(null);
   const { token } = useUser();
 
-  const updateSeat = async (branchId, screenId, seatId, seatData) => {
+  const updateSeat = useCallback(async (branchId, screenId, seatId, seatData) => {
     setLoading(true);
     setError(null);
     
@@ -492,7 +492,7 @@ export const useUpdateSeat = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   return { updateSeat, loading, error };
 };

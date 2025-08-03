@@ -5,6 +5,8 @@ const Seat = ({ type }) => {
         {
             standard: 'bg-blue-400',
             couple: 'bg-indigo-400',
+            vip: 'bg-yellow-400',
+            hidden: 'bg-gray-600',
         }[normalizedType] || 'bg-stone-400';
 
     return (
