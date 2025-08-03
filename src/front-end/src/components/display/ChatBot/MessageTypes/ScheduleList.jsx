@@ -9,8 +9,6 @@ import { Clock, MapPin, Users, DollarSign } from 'lucide-react';
  * và render thành danh sách lịch chiếu với booking actions
  */
 const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
-  console.log('🎬 ScheduleList - Received scheduleData:', JSON.stringify(scheduleData, null, 2));
-  
   if (!scheduleData || !scheduleData.schedules || scheduleData.schedules.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center text-gray-500">
@@ -20,16 +18,6 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
   }
 
   const { movie_id, branch_id, movie_title, branch_location, date, schedules, total_schedules } = scheduleData;
-  
-  console.log('🎬 ScheduleList - Extracted data:', {
-    movie_id,
-    branch_id,
-    movie_title,
-    branch_location,
-    date,
-    schedulesCount: schedules?.length,
-    'scheduleData keys': Object.keys(scheduleData)
-  });
   return (
     <div className="space-y-3">
       {/* Schedule Header Info */}
@@ -102,14 +90,10 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
                             branch_id: branch_id,
                             date: date,
                             time: schedule.time,
-                            room: schedule.room
-                          }
+                            room: schedule.room                          }
                         };
-                        console.log('🎬 ScheduleList - Button clicked with action:', actionWithData);
-                        console.log('🎬 ScheduleList - Schedule data:', scheduleData);
-                        console.log('🎬 ScheduleList - Schedule object:', schedule);
                         onAction(actionWithData);
-                      }}                      className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-2 py-1 rounded-lg text-xs font-medium hover:from-green-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md break-words"
+                      }}className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-2 py-1 rounded-lg text-xs font-medium hover:from-green-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md break-words"
                     >
                       {action.text}
                     </button>
@@ -128,15 +112,13 @@ const ScheduleList = ({ scheduleData, onAction, suggestions = [] }) => {
               <button
                 key={index}
                 onClick={() => {                  const suggestionWithData = {
-                    ...suggestion,
-                    data: {
+                    ...suggestion,                    data: {
                       ...suggestion.data,
                       movie_id: movie_id,
                       movie_title: movie_title,
                       branch_id: branch_id
                     }
                   };
-                  console.log('🎬 ScheduleList - Suggestion clicked with action:', suggestionWithData);
                   onAction(suggestionWithData);
                 }}
                 className="bg-white text-gray-700 border border-gray-300 px-2 py-1 rounded-lg text-xs hover:bg-gray-100 transition-colors break-words"

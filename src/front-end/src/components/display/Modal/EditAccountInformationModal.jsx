@@ -210,15 +210,7 @@ const EditAccountInformationModal = ({
     const genderOptions = [
         { value: 'male', label: 'Male' },
         { value: 'female', label: 'Female' },
-        { value: 'other', label: 'Other' }
-    ];
-
-    // Debug: Log branch data
-    console.log('Branch debug:', {
-        accountDataBranch: accountData?.branch,
-        branchesLength: branches.length,
-        branchOptions: branches.map(branch => ({ value: branch._id, label: branch.name }))
-    });
+        { value: 'other', label: 'Other' }    ];
 
     return (
         <div className="absolute inset-0 z-50 bg-slate-900/10 backdrop-blur-[20px]">
