@@ -277,8 +277,8 @@ export const useAccountManagement = () => {
             const accountData = {
                 ...newAccountData,
                 roles: rolesArray,
-                // If customer role only, set branch to null; otherwise use selected branch
-                branch: rolesArray.includes('customer') && rolesArray.length === 1 ? null : newAccountData.branch
+                // If customer role only or administrator role, set branch to null; otherwise use selected branch
+                branch: (rolesArray.includes('customer') && rolesArray.length === 1) || rolesArray.includes('administrator') ? null : newAccountData.branch
             };
 
             showAddingItems();
@@ -362,8 +362,8 @@ export const useAccountManagement = () => {
             const updateData = {
                 ...editAccountData,
                 roles: rolesArray,
-                // If customer role only, set branch to null; otherwise use selected branch
-                branch: rolesArray.includes('customer') && rolesArray.length === 1 ? null : editAccountData.branch
+                // If customer role only or administrator role, set branch to null; otherwise use selected branch
+                branch: (rolesArray.includes('customer') && rolesArray.length === 1) || rolesArray.includes('administrator') ? null : editAccountData.branch
             };
 
             showLoading('Updating account...');

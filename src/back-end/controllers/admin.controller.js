@@ -47,8 +47,13 @@ const createUser = async (req, res) => {
       }
     }
 
-    // Validate branch if provided
-    if (branch) {
+    // Validate branch if provided and roles require it
+    // Customer-only and administrator roles don't need branch
+    const rolesArray = roles && roles.length > 0 ? roles : ['customer'];
+    const needsBranch = !(rolesArray.includes('customer') && rolesArray.length === 1) && 
+                       !rolesArray.includes('administrator');
+    
+    if (branch && needsBranch) {
       const branchExists = await Branch.findById(branch);
       if (!branchExists) {
         return res.status(400).json({ 
@@ -153,51 +158,73 @@ const getDetailedProfile = async (req, res) => {
 
 const updateUserDetails = async (req, res) => {
   try {
+    const userId = req.params.userId; // Get userId from URL params
+    const updateData = req.body; // Get updateData from request body
     const allowedFields = ['email', 'name', 'phone', 'birthday', 'gender', 'branch', 'password'];
-    const user = await User.findById(req.body.userId).select('-roles -wishlist -watchHistory -lastAccess -isLocked -lastOrder -passwordResetToken -passwordResetExpires');
+    
+    const user = await User.findById(userId).select('-roles -wishlist -watchHistory -lastAccess -isLocked -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    await redisClient.del('userList');
-    await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
 
-    if (req.body.updateData.email) {
+    // Clear cache for updated user profile
+    await redisClient.del('userList');
+    await redisClient.del(`user:${userId}`);
+
+    // Validate email uniqueness
+    if (updateData.email) {
       const existingUser = await User.findOne({ 
-        email: req.body.updateData.email,
-        _id: { $ne: req.body.userId } // Exclude current user
+        email: updateData.email,
+        _id: { $ne: userId } // Exclude current user
       });
       if (existingUser) {
         return res.status(400).json({ message: 'Email already in use.' });
       }
     }
-    if (req.body.updateData.phone) {
+    
+    // Validate phone uniqueness
+    if (updateData.phone) {
       const existingUser = await User.findOne({ 
-        phone: req.body.updateData.phone,
-        _id: { $ne: req.body.userId } // Exclude current user
+        phone: updateData.phone,
+        _id: { $ne: userId } // Exclude current user
       });
       if (existingUser) {
         return res.status(400).json({ message: 'Phone number already in use.' });
       }
     }
-    if (req.body.updateData.branch) {
-      const branchExists = await Branch.findById(req.body.updateData.branch);
-      if (!branchExists) {
-        return res.status(400).json({ message: 'Branch does not exist.' });
+    
+    // Validate branch exists (only if branch is provided and user roles require it)
+    if (updateData.branch) {
+      // Check current user roles to determine if branch is needed
+      const currentUser = await User.findById(userId).select('roles');
+      const currentRoles = currentUser ? currentUser.roles : ['customer'];
+      const needsBranch = !(currentRoles.includes('customer') && currentRoles.length === 1) && 
+                         !currentRoles.includes('administrator');
+      
+      if (needsBranch) {
+        const branchExists = await Branch.findById(updateData.branch);
+        if (!branchExists) {
+          return res.status(400).json({ message: 'Branch does not exist.' });
+        }
       }
-    }    for (const field in req.body.updateData) {
+    }
+    
+    // Update only allowed fields
+    for (const field in updateData) {
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Field ${field} cannot be updated.` });
       }
-      user[field] = req.body.updateData[field];
+      user[field] = updateData[field];
     }
+    
     await user.save();
     
     // Clear user cache after update
     await Promise.all([
       redisClient.del('userList'),
-      redisClient.del(`user:${req.body.userId}`)
+      redisClient.del(`user:${userId}`)
     ]);
-    
+
     res.status(200).json({ message: 'User details updated successfully.', user });
   } catch (error) {
     console.error('Error updating user details:', error);
@@ -207,60 +234,80 @@ const updateUserDetails = async (req, res) => {
 
 const updateUserRoles = async (req, res) => {
   try {
+    const userId = req.params.userId; // Get userId from URL params
+    const updateData = req.body; // Get updateData from request body
     const allowedFields = ['roles'];
     const validRoles = ['customer', 'cashier', 'checkincounter', 'branchmanager', 'administrator'];
-    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    
+    const user = await User.findById(userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -isLocked -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    if (req.body.updateData.roles && !Array.isArray(req.body.updateData.roles)) {
+    
+    // Validate roles format and values
+    if (updateData.roles && !Array.isArray(updateData.roles)) {
       return res.status(400).json({ message: 'Roles must be an array.' });
     }
-    if (req.body.updateData.roles && req.body.updateData.roles.length > 0) {
-      for (const role of req.body.updateData.roles) {
+    if (updateData.roles && updateData.roles.length > 0) {
+      for (const role of updateData.roles) {
         if (!validRoles.includes(role)) {
           return res.status(400).json({ message: `Invalid role: ${role}` });
         }
       }
     }
+    
+    // Clear cache
     await redisClient.del('userList');
-    await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
-    for (const field in req.body.updateData) {
+    await redisClient.del(`user:${userId}`);
+    
+    // Update only allowed fields
+    for (const field in updateData) {
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Field ${field} cannot be updated.` });
       }
-      user[field] = req.body.updateData[field];
+      user[field] = updateData[field];
     }
+    
     await user.save();
     res.status(200).json({ message: 'User roles updated successfully.', user });
   } catch (error) {
-    console.error('Error updating user details:', error);
+    console.error('Error updating user roles:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
 
 const updateUserStatus = async (req, res) => {
   try {
+    const userId = req.params.userId; // Get userId from URL params
+    const updateData = req.body; // Get updateData from request body
     const allowedFields = ['isLocked'];
-    const user = await User.findById(req.body.userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
+    
+    const user = await User.findById(userId).select('-name -email -phone -birthday -gender -branch -password -wishlist -watchHistory -roles -lastAccess -lastOrder -passwordResetToken -passwordResetExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    if (req.body.updateData.isLocked !== undefined && typeof req.body.updateData.isLocked !== 'boolean') {
+    
+    // Validate isLocked field
+    if (updateData.isLocked !== undefined && typeof updateData.isLocked !== 'boolean') {
       return res.status(400).json({ message: 'isLocked must be a boolean.' });
     }
+    
+    // Clear cache
     await redisClient.del('userList');
-    await redisClient.del(`user:${req.body.userId}`); // Clear cache for updated user profile
-    for (const field in req.body.updateData) {
+    await redisClient.del(`user:${userId}`);
+    
+    // Update only allowed fields
+    for (const field in updateData) {
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Field ${field} cannot be updated.` });
       }
-      user[field] = req.body.updateData[field];
+      user[field] = updateData[field];
     }
+    
     await user.save();
     res.status(200).json({ message: 'User status updated successfully.', user });
   } catch (error) {
-    console.error('Error updating user details:', error);
+    console.error('Error updating user status:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
@@ -289,7 +336,7 @@ const deleteUser = async (req, res) => {
       return res.status(400).json({ message: 'Cannot delete user with existing movie ratings.' });
     }  
 
-    await user.remove();
+    await User.findByIdAndDelete(userId);
     res.status(200).json({ message: 'User deleted successfully.' });
 
   } catch (error) {

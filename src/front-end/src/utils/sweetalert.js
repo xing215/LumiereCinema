@@ -348,12 +348,19 @@ export const showItemsAdded = (itemType = 'items', count = 1) => {
 };
 
 // Delete operations
+
 export const showDeleteItemsConfirmation = (itemType = 'items', count = 1) => {
-    const singularType = itemType.slice(0, -1);
-    const title = count === 1 ? `Delete ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}?` : `Delete ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}?`;
+    // Ensure itemType is a string and has a fallback
+    const safeItemType = typeof itemType === 'string' && itemType.length > 0 ? itemType : 'items';
+    
+    const singularType = safeItemType.slice(0, -1);
+    const title = count === 1 
+        ? `Delete ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}?` 
+        : `Delete ${safeItemType.charAt(0).toUpperCase() + safeItemType.slice(1)}?`;
+    
     const text = count === 1 
         ? 'This action cannot be undone!' 
-        : `This will delete ${count} ${itemType}. This action cannot be undone!`;
+        : `This will delete ${count} ${safeItemType}. This action cannot be undone!`;
         
     return showConfirmation(
         title,

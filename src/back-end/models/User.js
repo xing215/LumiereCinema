@@ -87,4 +87,17 @@ userSchema.methods.addLunarPointsFromPurchase = function (amountInVND) {
 
 userSchema.index({ email: 1 });
 
+// Middleware to automatically set branch to null for customer and administrator roles
+userSchema.pre('save', function(next) {
+  // Check if roles field is modified or this is a new document
+  if (this.isModified('roles') || this.isNew) {
+    // If user has only customer role or has administrator role, set branch to null
+    if ((this.roles.includes('customer') && this.roles.length === 1) || 
+        this.roles.includes('administrator')) {
+      this.branch = undefined;
+    }
+  }
+  next();
+});
+
 module.exports = mongoose.model('User', userSchema);
