@@ -5,6 +5,7 @@ const Schedule = require('../models/Schedule.js');
 const Screen = require('../models/Screen.js');
 const mongoose = require('mongoose');
 const { redisClient } = require('../config/redis.config.js');
+const CacheManager = require('../utils/cacheManager.js');
 
 const DEFAULT_EXPIRATION = 600; // Cache 10 phút
 
@@ -41,11 +42,11 @@ const createSnack = async (req, res) => {
       ...snackData,
       branch: branchId,
       shortname: snackData.shortname?.toUpperCase(), // đảm bảo viết hoa
-    });
+    });    await newSnack.save();
 
-    await newSnack.save();
-
-    // 4. Xoá cache danh sách snack của rạp này
+    // Clear cache for this branch's snacks
+    const cacheKey = `snacks:branch:${branchId}`;
+    await redisClient.del(cacheKey);
 
     res.status(201).json({
       message: 'Snack created successfully.',
@@ -89,13 +90,13 @@ const editSnack = async (req, res) => {
       { _id: snackId, branch: branchId },
       { $set: updateData },
       { new: true, runValidators: false } // Disable validators since we handle it manually
-    );
-
-    if (!snack) {
+    );    if (!snack) {
       return res.status(404).json({ message: 'Snack not found for update.' });
     }
 
-    // Xoá cache danh sách snack của rạp này
+    // Clear cache for this branch's snacks
+    const cacheKey = `snacks:branch:${branchId}`;
+    await redisClient.del(cacheKey);
 
     res.status(200).json({
       message: 'Snack updated successfully.',
@@ -114,12 +115,14 @@ const editSnack = async (req, res) => {
  */
 const deleteSnack = async (req, res) => {
   try {
-    const { branchId, snackId } = req.params;
-
-    // Thử xóa trước
+    const { branchId, snackId } = req.params;    // Thử xóa trước
     const snack = await Snack.findOneAndDelete({ _id: snackId, branch: branchId });
     if (snack) {
-      // Nếu xóa được thì xóa cache và trả về kết quả
+      // Clear cache for this branch's snacks
+      const cacheKey = `snacks:branch:${branchId}`;
+      await redisClient.del(cacheKey);
+      
+      // Nếu xóa được thì trả về kết quả
       return res.status(200).json({
         message: 'Snack deleted successfully.',
         snack
@@ -131,10 +134,11 @@ const deleteSnack = async (req, res) => {
       { _id: snackId, branch: branchId },
       { isHidden: true },
       { new: true }
-    );
-
-    if (hiddenSnack) {
-      await redisClient.del(`snacks:branch:${branchId}`);
+    );    if (hiddenSnack) {
+      // Clear cache for this branch's snacks
+      const cacheKey = `snacks:branch:${branchId}`;
+      await redisClient.del(cacheKey);
+      
       return res.status(200).json({
         message: 'Snack could not be deleted, but was hidden instead.',
         snack: hiddenSnack
@@ -563,12 +567,22 @@ const getBranchById = async (req, res) => {
         startTime: scheduleStartTime,
         endTime: endTime,
         OccupiedSeat: []
-      });
+      });      await newSchedule.save();
 
-      await newSchedule.save();
-
-      // 13. Clear related caches
-      await redisClient.del(`schedules:branch:${branchId}`);
+      // 13. Clear related caches - schedule creation affects multiple cache types
+      await Promise.all([
+        redisClient.del(`schedules:branch:${branchId}`),
+        // Clear branch list cache as it includes movie count per branch
+        redisClient.del('branchList'),
+        // Clear movie cache as it affects movie scheduling info
+        redisClient.del(`movie:${movieId}`),
+        redisClient.del('movies:now-showing'),
+        redisClient.del('movies:upcoming'),
+        // Clear any cached schedule queries with different parameters
+        redisClient.keys(`schedules:branch:${branchId}:*`).then(keys => {
+          if (keys.length > 0) return redisClient.del(keys);
+        })
+      ]);
 
       // 14. Populate the response
       const populatedSchedule = await Schedule.findById(newSchedule._id)
@@ -752,10 +766,25 @@ const editMovieSchedule = async (req, res) => {
       updateData,
       { new: true, runValidators: true }
     ).populate('movie', 'title duration genre rating posterURL')
-     .populate('screen', 'screenName screenType size');
-
-    // 10. Clear related caches
-    await redisClient.del(`schedules:branch:${branchId}`);
+     .populate('screen', 'screenName screenType size');    // 10. Clear related caches - schedule update affects multiple cache types
+    await Promise.all([
+      redisClient.del(`schedules:branch:${branchId}`),
+      // Clear branch list cache as it includes movie count per branch
+      redisClient.del('branchList'),
+      // Clear seat map cache for this schedule
+      CacheManager.invalidateScheduleCache(scheduleId),
+      // Clear movie cache if movie was changed
+      ...(updateData.movie ? [
+        redisClient.del(`movie:${updateData.movie}`),
+        redisClient.del(`movie:${existingSchedule.movie}`),
+        redisClient.del('movies:now-showing'),
+        redisClient.del('movies:upcoming')
+      ] : []),
+      // Clear any cached schedule queries with different parameters
+      redisClient.keys(`schedules:branch:${branchId}:*`).then(keys => {
+        if (keys.length > 0) return redisClient.del(keys);
+      })
+    ]);
 
     res.status(200).json({
       message: 'Schedule updated successfully.',
@@ -835,13 +864,25 @@ const deleteMovieSchedule = async (req, res) => {
       return res.status(400).json({ 
         message: `Cannot delete schedule. ${tickets.length} ticket(s) have been sold. Please contact customers to cancel their tickets first.` 
       });
-    }
-
-    // 7. Delete the schedule
+    }    // 7. Delete the schedule
     await Schedule.findByIdAndDelete(scheduleId);
 
-    // 8. Clear related caches
-    await redisClient.del(`schedules:branch:${branchId}`);
+    // 8. Clear related caches - schedule deletion affects multiple cache types
+    await Promise.all([
+      redisClient.del(`schedules:branch:${branchId}`),
+      // Clear branch list cache as it includes movie count per branch
+      redisClient.del('branchList'),
+      // Clear seat map cache for this schedule
+      CacheManager.invalidateScheduleCache(scheduleId),
+      // Clear movie cache as it affects movie scheduling info
+      redisClient.del(`movie:${schedule.movie._id}`),
+      redisClient.del('movies:now-showing'),
+      redisClient.del('movies:upcoming'),
+      // Clear any cached schedule queries with different parameters
+      redisClient.keys(`schedules:branch:${branchId}:*`).then(keys => {
+        if (keys.length > 0) return redisClient.del(keys);
+      })
+    ]);
 
     res.status(200).json({
       message: 'Schedule deleted successfully.',
@@ -1250,12 +1291,19 @@ const getBranchScreens = async (req, res) => {
           columns: parseInt(size.columns)
         },
         isActive: true
-      });
+      });      await newScreen.save();
 
-      await newScreen.save();
-
-      // 10. Clear related caches
-      await redisClient.del(`screens:branch:${branchId}`);
+      // 10. Clear related caches - screen creation affects multiple cache types
+      await Promise.all([
+        redisClient.del(`screens:branch:${branchId}`),
+        // Clear branch list cache as it includes screen count per branch
+        redisClient.del('branchList'),
+        redisClient.del(`branch:${branchId}`),
+        // Clear any cached screen queries with different parameters
+        redisClient.keys(`screens:branch:${branchId}:*`).then(keys => {
+          if (keys.length > 0) return redisClient.del(keys);
+        })
+      ]);
 
       res.status(201).json({
         message: 'Screen created successfully.',
@@ -1464,17 +1512,24 @@ const getBranchScreens = async (req, res) => {
       // Set active status if provided
       if (typeof isActive === 'boolean') {
         updateData.isActive = isActive;
-      }
-
-      // 7. Update the screen
+      }      // 7. Update the screen
       const updatedScreen = await Screen.findByIdAndUpdate(
         screenId,
         updateData,
         { new: true, runValidators: true }
       );
 
-      // 8. Clear related caches
-      await redisClient.del(`screens:branch:${branchId}`);
+      // 8. Clear related caches - screen update affects multiple cache types
+      await Promise.all([
+        redisClient.del(`screens:branch:${branchId}`),
+        // Clear branch list cache as it includes screen count per branch
+        redisClient.del('branchList'),
+        redisClient.del(`branch:${branchId}`),
+        // Clear any cached screen queries with different parameters
+        redisClient.keys(`screens:branch:${branchId}:*`).then(keys => {
+          if (keys.length > 0) return redisClient.del(keys);
+        })
+      ]);
 
       res.status(200).json({
         message: 'Screen updated successfully.',
@@ -1536,15 +1591,22 @@ const getBranchScreens = async (req, res) => {
       // 5. Check for existing schedules
       const schedulesCount = await Schedule.countDocuments({ screen: screenId });
       
-      if (schedulesCount > 0) {
-        // If schedules exist, just deactivate the screen instead of deleting
+      if (schedulesCount > 0) {        // If schedules exist, just deactivate the screen instead of deleting
         const deactivatedScreen = await Screen.findByIdAndUpdate(
           screenId,
           { isActive: false },
           { new: true }
         );
 
-        await redisClient.del(`screens:branch:${branchId}`);
+        // Clear related caches for screen deactivation
+        await Promise.all([
+          redisClient.del(`screens:branch:${branchId}`),
+          redisClient.del('branchList'),
+          redisClient.del(`branch:${branchId}`),
+          redisClient.keys(`screens:branch:${branchId}:*`).then(keys => {
+            if (keys.length > 0) return redisClient.del(keys);
+          })
+        ]);
 
         return res.status(200).json({
           message: `Screen cannot be deleted due to existing schedules (${schedulesCount}). Screen has been deactivated instead.`,
@@ -1559,13 +1621,20 @@ const getBranchScreens = async (req, res) => {
       if (seatsCount > 0) {
         // Delete all seats associated with this screen first
         await Seat.deleteMany({ screen: screenId });
-      }
-
-      // 7. Delete the screen
+      }      // 7. Delete the screen
       await Screen.findByIdAndDelete(screenId);
 
-      // 8. Clear related caches
-      await redisClient.del(`screens:branch:${branchId}`);
+      // 8. Clear related caches - screen deletion affects multiple cache types
+      await Promise.all([
+        redisClient.del(`screens:branch:${branchId}`),
+        // Clear branch list cache as it includes screen count per branch
+        redisClient.del('branchList'),
+        redisClient.del(`branch:${branchId}`),
+        // Clear any cached screen queries with different parameters
+        redisClient.keys(`screens:branch:${branchId}:*`).then(keys => {
+          if (keys.length > 0) return redisClient.del(keys);
+        })
+      ]);
 
       res.status(200).json({
         message: 'Screen deleted successfully.',

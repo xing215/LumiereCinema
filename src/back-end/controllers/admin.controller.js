@@ -184,14 +184,20 @@ const updateUserDetails = async (req, res) => {
       if (!branchExists) {
         return res.status(400).json({ message: 'Branch does not exist.' });
       }
-    }
-    for (const field in req.body.updateData) {
+    }    for (const field in req.body.updateData) {
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Field ${field} cannot be updated.` });
       }
       user[field] = req.body.updateData[field];
     }
     await user.save();
+    
+    // Clear user cache after update
+    await Promise.all([
+      redisClient.del('userList'),
+      redisClient.del(`user:${req.body.userId}`)
+    ]);
+    
     res.status(200).json({ message: 'User details updated successfully.', user });
   } catch (error) {
     console.error('Error updating user details:', error);
@@ -648,15 +654,23 @@ const updateBranchStatus = async (req, res) => {
     const branch = await Branch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ message: 'Branch not found.' });
-    }
-
-    // Update branch status
+    }    // Update branch status
     branch.isActive = isActive;
     await branch.save();
 
-    // Clear related caches
-    await redisClient.del('branchList');
-    await redisClient.del(`branch:${branchId}`);
+    // Clear related caches - branch status change affects multiple cache types
+    await Promise.all([
+      redisClient.del('branchList'),
+      redisClient.del(`branch:${branchId}`),
+      // Clear all branch screens cache as status affects availability
+      redisClient.keys(`screens:branch:${branchId}*`).then(keys => {
+        if (keys.length > 0) return redisClient.del(keys);
+      }),
+      // Clear schedules cache for this branch
+      redisClient.keys(`schedules:branch:${branchId}*`).then(keys => {
+        if (keys.length > 0) return redisClient.del(keys);
+      })
+    ]);
 
     res.status(200).json({ 
       message: `Branch ${isActive ? 'activated' : 'deactivated'} successfully.`, 
