@@ -1264,9 +1264,9 @@ const getBranchScreens = async (req, res) => {
       }
 
       // 7. Validate size constraints
-      if (size.rows < 1 || size.rows > 30 || size.columns < 1 || size.columns > 50) {
+      if (size.rows < 1 || size.rows > 15 || size.columns < 1 || size.columns > 15) {
         return res.status(400).json({ 
-          message: 'Screen size must be between 1-30 rows and 1-50 columns.' 
+          message: 'Screen size must be between 1-15 rows and 1-15 columns.' 
         });
       }
 
@@ -1497,9 +1497,9 @@ const getBranchScreens = async (req, res) => {
           });
         }
 
-        if (size.rows < 1 || size.rows > 30 || size.columns < 1 || size.columns > 50) {
+        if (size.rows < 1 || size.rows > 15 || size.columns < 1 || size.columns > 15) {
           return res.status(400).json({ 
-            message: 'Screen size must be between 1-30 rows and 1-50 columns.' 
+            message: 'Screen size must be between 1-15 rows and 1-15 columns.' 
           });
         }
 

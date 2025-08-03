@@ -420,8 +420,8 @@ export const useScreenManagement = () => {
       const rows = parseInt(newScreenData.rows);
       const columns = parseInt(newScreenData.columns);
 
-      if (rows < 1 || rows > 26 || columns < 1 || columns > 50) {
-        showError('Validation Error', 'Rows must be between 1-26 (A-Z) and columns must be between 1-50.');
+      if (rows < 1 || rows > 15 || columns < 1 || columns > 15) {
+        showError('Validation Error', 'Rows must be between 1-15 and columns must be between 1-15.');
         return;
       }
 

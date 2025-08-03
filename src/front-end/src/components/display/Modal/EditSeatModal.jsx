@@ -268,6 +268,14 @@ const EditSeatModal = (props) => {
     const handleFieldChange = useCallback(async (field, value) => {
         console.log('📝 [FIELD_CHANGE]', { field, value });
         
+        // Validate rows/columns limits
+        if (field === 'rows' || field === 'columns') {
+            if (value < 1 || value > 15) {
+                showError('Invalid Input', `${field === 'rows' ? 'Rows' : 'Columns'} must be between 1 and 15.`);
+                return;
+            }
+        }
+        
         // For rows/columns changes, sync immediately with database
         if (field === 'rows' || field === 'columns') {
             const screenId = props.screenData._id || props.screenData.id;
