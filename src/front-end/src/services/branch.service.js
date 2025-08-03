@@ -81,10 +81,32 @@ export const branchService = {
 
   // Branch screen management (branchmanager only)
   getBranchScreens: async (branchId, authToken) => {
-    const response = await axios.get(getApiUrlWithParams('branchScreens', { branchId }), {
-      headers: { Authorization: `Bearer ${authToken}` }
-    });
-    return response.data;
+    console.log('🌐 [branchService.getBranchScreens] Starting API call');
+    console.log('🏢 [branchService.getBranchScreens] branchId:', branchId);
+    console.log('🔑 [branchService.getBranchScreens] authToken available:', !!authToken);
+    
+    const url = getApiUrlWithParams('branchScreens', { branchId });
+    console.log('🔗 [branchService.getBranchScreens] URL:', url);
+    
+    try {
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      
+      console.log('✅ [branchService.getBranchScreens] Response received:', response);
+      console.log('📊 [branchService.getBranchScreens] Response data:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ [branchService.getBranchScreens] API call failed:', error);
+      console.error('🔍 [branchService.getBranchScreens] Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
   },
 
   createBranchScreen: async (branchId, screenData, authToken) => {

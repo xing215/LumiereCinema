@@ -10,44 +10,91 @@ import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import { useEffect } from 'react'; 
 import { useUser } from '@contexts/UserContext';
-import { useGetBranchById } from '@hooks/useBranch'; 
+import { useGetBranchById } from '@hooks/useBranch';
+import { useScreenManagement } from '@hooks/useScreenManagement'; 
 const ScreenManagePage = () => {
-    const [tickedScreens, setTickedScreens] = useState(new Set());
-    const [screenRows, setScreenRows] = useState(Array.from({ length: 10 }, () => ['TickButton', 1, 1, 10, 20, 'ActiveButton', 'EditSeatButton']));
     const [showConfirmDeleteScreen, setShowConfirmDeleteScreen] = useState(false);
     const [editedScreenIndex, setEditedScreenIndex] = useState(null);
 
-    const handleDelete = () => {
-        setScreenRows((prev) => prev.filter((_, index) => !tickedScreens.has(index)));
-        setTickedScreens(new Set());
+    const { user } = useUser();
+    const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
+    
+    // Use the screen management hook
+    const {
+        screenData,
+        header,
+        screenColumnConfig,
+        loading,
+        tickedScreens,
+        setTickedScreens,
+        isAddingScreen,
+        handleStartAddScreen,
+        handleCancelAddScreen,
+        handleConfirmAddScreen,
+        handleDeleteConfirm,
+        handleSearch,
+        editingCell,
+        handleStartEdit,
+        handleSaveEdit,
+        handleCancelEdit,
+        onStatusChange
+    } = useScreenManagement();
+
+    const handleDelete = async () => {
+        await handleDeleteConfirm();
         setShowConfirmDeleteScreen(false);
     };
 
-    const header = ['TickButton', 'ID', 'Name', 'Row', 'Column', 'ActiveButton', 'EditSeatButton'];
     const Button = () => {
         return (
             <div className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl hover:cursor-pointer">
-                {tickedScreens.size > 0 ? <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)}/> : <AddButton text="Add Screen"/>}
+                {tickedScreens.size > 0 ? (
+                    <DeleteButton onClicked={() => setShowConfirmDeleteScreen(true)} />
+                ) : (
+                    <AddButton text="Add Screen" onClicked={handleStartAddScreen} />
+                )}
             </div>
-        )
-    }
-    const screenColumnConfig = null
-    const { user } = useUser();
-        const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
-        
-        useEffect(() => {
-            if (user && user.roles?.includes('branchmanager') && user.branch) {
-                getBranchById(user.branch._id);
-            }
-        }, [user]);
+        );
+    };
+
+    useEffect(() => {
+        if (user && user.roles?.includes('branchmanager') && user.branch) {
+            getBranchById(user.branch._id);
+        }
+    }, [user, getBranchById]);
+
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
-                <SearchButton />
-                <Button/>
-                {showConfirmDeleteScreen && <ConfirmationModal item={tickedScreens.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteScreen(false)} />}
-                <ManageTable data={screenRows} anyTicked={tickedScreens} setTickedRows={setTickedScreens} onEditSeat={setEditedScreenIndex} header={header} columnConfig={screenColumnConfig}/>
-                {editedScreenIndex !== null && <EditSeatModal screenData={screenRows[editedScreenIndex]} onClose={() => setEditedScreenIndex(null)} />}
+                <SearchButton onSearch={handleSearch} />
+                <Button />
+                {showConfirmDeleteScreen && (
+                    <ConfirmationModal 
+                        item={tickedScreens.size} 
+                        handleDelete={handleDelete} 
+                        onClose={() => setShowConfirmDeleteScreen(false)} 
+                    />
+                )}
+                <ManageTable 
+                    data={screenData} 
+                    anyTicked={tickedScreens} 
+                    setTickedRows={setTickedScreens} 
+                    onEditSeat={setEditedScreenIndex} 
+                    header={header} 
+                    columnConfig={screenColumnConfig}
+                    editingCell={editingCell}
+                    onStartEdit={handleStartEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onStatusChange={onStatusChange}
+                    loading={loading}
+                />
+                {editedScreenIndex !== null && (
+                    <EditSeatModal 
+                        screenData={screenData[editedScreenIndex]} 
+                        onClose={() => setEditedScreenIndex(null)} 
+                    />
+                )}
                 <SelectBranchButton isLoading={branchLoading} branchName={userBranch?.name} />
             </MobileNotSupported>
             <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Screens</div>

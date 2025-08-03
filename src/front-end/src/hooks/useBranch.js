@@ -83,7 +83,12 @@ export const useGetScreens = () => {
   const { currentBranch } = useSetCurrentBranch();
 
   const getScreens = async (branchId = currentBranch) => {
+    console.log('🔄 [useGetScreens] Starting fetch');
+    console.log('🏢 [useGetScreens] branchId:', branchId);
+    console.log('🔑 [useGetScreens] token available:', !!token);
+    
     if (!branchId) {
+      console.log('❌ [useGetScreens] No branch selected');
       setError('No branch selected');
       return { success: false, error: 'No branch selected' };
     }
@@ -92,10 +97,16 @@ export const useGetScreens = () => {
     setError(null);
     
     try {
+      console.log('📡 [useGetScreens] Calling branchService.getBranchScreens');
       const data = await branchService.getBranchScreens(branchId, token);
+      console.log('✅ [useGetScreens] API call success, data:', data);
+      
       setScreens(data);
       return { success: true, data };
     } catch (err) {
+      console.error('❌ [useGetScreens] API call failed:', err);
+      console.error('🔍 [useGetScreens] Error response:', err.response);
+      
       const errorMessage = err.response?.data?.message || 'Failed to fetch screens';
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -104,7 +115,31 @@ export const useGetScreens = () => {
     }
   };
 
-  return { getScreens, screens, loading, error };
+  return { getScreens, screens, setScreens, loading, error };
+};
+
+export const useCreateScreen = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const createScreen = async (branchId, screenData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.createBranchScreen(branchId, screenData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to create screen';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createScreen, loading, error };
 };
 
 export const useUpdateScreen = () => {
