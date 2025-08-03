@@ -58,10 +58,10 @@ const ScreenManagePage = () => {
     };
 
     useEffect(() => {
-        if (user && user.roles?.includes('branchmanager') && user.branch) {
+        if (user && user.roles?.includes('branchmanager') && user.branch && !userBranch) {
             getBranchById(user.branch._id);
         }
-    }, [user, getBranchById]);
+    }, [user, getBranchById, userBranch]);
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">

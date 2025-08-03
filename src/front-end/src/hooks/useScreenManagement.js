@@ -57,7 +57,7 @@ export const useScreenManagement = () => {
     4: 'size.columns'
   };
 
-  const header = ['', 'Screen Name', 'Type', 'Rows', 'Columns', 'Total Seats', 'Active', 'Edit Seats'];
+  const header = ['', 'Screen Name', 'Type', 'Rows', 'Columns', 'Active', 'Edit Seats'];
 
   // Field types configuration
   const fieldTypes = {
@@ -66,9 +66,8 @@ export const useScreenManagement = () => {
     2: 'select', // Screen Type - select
     3: 'number', // Rows - number
     4: 'number', // Columns - number
-    5: 'text',   // Total Seats (calculated, not editable)
-    6: 'text',   // Active (toggle button)
-    7: 'text'    // Edit Seats (button)
+    5: 'text',   // Active (toggle button)
+    6: 'text'    // Edit Seats (button)
   };
 
   const screenTypeOptions = ['2D', '3D', 'IMAX', '4DX'];
@@ -79,7 +78,6 @@ export const useScreenManagement = () => {
     { width: 'w-24', truncate: false },    // Type
     { width: 'w-20', truncate: false },    // Rows
     { width: 'w-20', truncate: false },    // Columns
-    { width: 'w-24', truncate: false },    // Total Seats
     { width: 'w-20', truncate: false },    // Active
     { width: 'w-28', truncate: false }     // Edit Seats
   ];
@@ -347,14 +345,6 @@ export const useScreenManagement = () => {
     }
   }, [tickedScreens, branchId, screens, filterScreens, removeScreen, fetchScreens]);
 
-  // Calculate total seats for each screen
-  const calculateTotalSeats = useCallback((screen) => {
-    if (screen.size && screen.size.rows && screen.size.columns) {
-      return screen.size.rows * screen.size.columns;
-    }
-    return 0;
-  }, []);
-
   // Data processing
   const getProcessedScreenData = useCallback(() => {
     console.log('🔄 [getProcessedScreenData] Processing screen data');
@@ -376,7 +366,6 @@ export const useScreenManagement = () => {
         screen.screenType || '',
         screen.size?.rows || 0,
         screen.size?.columns || 0,
-        calculateTotalSeats(screen),
         { 
           type: 'ActiveButton', 
           isActive: screen.isActive !== false,
@@ -409,8 +398,6 @@ export const useScreenManagement = () => {
         newScreenData.screenType,
         newScreenData.rows,
         newScreenData.columns,
-        newScreenData.rows && newScreenData.columns ? 
-          parseInt(newScreenData.rows) * parseInt(newScreenData.columns) : 0,
         { 
           type: 'ActiveButton', 
           isActive: newScreenData.isActive,
@@ -427,7 +414,7 @@ export const useScreenManagement = () => {
     console.log('📊 [getProcessedScreenData] Total rows:', allScreenRows.length);
     
     return allScreenRows;
-  }, [screens, isAddingScreen, newScreenData, isUpdating, filterScreens, calculateTotalSeats]);
+  }, [screens, isAddingScreen, newScreenData, isUpdating, filterScreens]);
 
   // Debug hook return data
   const screenData = getProcessedScreenData();
