@@ -5,8 +5,10 @@ import {
   useCreateScreen,
   useUpdateScreen, 
   useRemoveScreen,
-  useGetScreenSeats 
+  useGetScreenSeats,
+  useBulkCreateSeats
 } from '@hooks/useBranch';
+import { showError, showSuccess } from '@/utils/sweetalert';
 
 /**
  * Comprehensive hook for managing screen operations in the branch manager panel
@@ -26,6 +28,7 @@ export const useScreenManagement = () => {
   const { updateScreen, loading: updateLoading } = useUpdateScreen();
   const { removeScreen, loading: removeLoading } = useRemoveScreen();
   const { getScreenSeats } = useGetScreenSeats();
+  const { bulkCreateSeats } = useBulkCreateSeats();
 
   // Debug API hooks
   console.log('🔌 [useScreenManagement] API hooks loaded');
@@ -154,6 +157,67 @@ export const useScreenManagement = () => {
     });
   }, [searchTerm]);
 
+  // Auto-generate seats for a screen
+  const generateSeatsForScreen = useCallback((rows, columns) => {
+    const seats = [];
+    
+    for (let row = 1; row <= rows; row++) {
+      // Convert row number to letter (1 = A, 2 = B, etc.)
+      const rowLetter = String.fromCharCode(64 + row); // 65 is 'A', so 64 + 1 = 65
+      
+      for (let col = 1; col <= columns; col++) {
+        seats.push({
+          seatNumber: `${rowLetter}${col}`,
+          location: {
+            row: rowLetter,
+            column: col
+          },
+          category: 'STANDARD',
+          isHidden: false
+        });
+      }
+    }
+    
+    console.log('🪑 [generateSeatsForScreen] Generated seats:', seats);
+    return seats;
+  }, []);
+
+  // New screen field change handler
+  const handleNewScreenFieldChange = useCallback((columnIndex, value) => {
+    const fieldName = columnFieldMapping[columnIndex];
+    if (fieldName) {
+      setNewScreenData(prev => {
+        if (fieldName === 'size.rows') {
+          return { ...prev, rows: value };
+        } else if (fieldName === 'size.columns') {
+          return { ...prev, columns: value };
+        } else {
+          return { ...prev, [fieldName]: value };
+        }
+      });
+    }
+  }, [columnFieldMapping]);
+
+  // Screen name validation
+  const validateScreenName = useCallback((screenName) => {
+    if (!screenName || !screenName.trim()) {
+      return { isValid: false, message: 'Screen name is required.' };
+    }
+
+    const filteredScreens = filterScreens(screens || []);
+    const screensArray = Array.isArray(filteredScreens) ? filteredScreens : [];
+    
+    const existingScreen = screensArray.find(screen => 
+      screen.screenName?.toLowerCase().trim() === screenName.toLowerCase().trim()
+    );
+
+    if (existingScreen) {
+      return { isValid: false, message: 'A screen with this name already exists in this branch.' };
+    }
+
+    return { isValid: true, message: '' };
+  }, [screens, filterScreens]);
+
   // Inline editing handlers
   const handleStartEdit = useCallback((rowIndex, columnIndex, currentValue) => {
     if (editableColumns.includes(columnIndex) && !isUpdating) {
@@ -173,14 +237,52 @@ export const useScreenManagement = () => {
       return;
     }
     
+    // Adjust index for existing screens when adding screen
+    const adjustedRowIndex = isAddingScreen ? rowIndex - 1 : rowIndex;
+    
     // Handle existing screen changes
     const filteredScreens = filterScreens(screens || []);
     const screensArray = Array.isArray(filteredScreens) ? filteredScreens : [];
-    const screen = screensArray[rowIndex];
+    const screen = screensArray[adjustedRowIndex];
     const fieldName = columnFieldMapping[columnIndex];
     
     if (screen && fieldName && branchId) {
       const screenId = screen.id || screen._id;
+      const screenName = screen.screenName || screen.name || `Screen ${screenId}`;
+      
+      // Validate the input based on field type
+      let validationError = null;
+      
+      if (fieldName === 'screenName') {
+        if (!newValue || !newValue.trim()) {
+          validationError = 'Screen name cannot be empty.';
+        } else {
+          // Check for duplicate screen name (excluding current screen)
+          const nameValidation = validateScreenName(newValue);
+          if (!nameValidation.isValid) {
+            // Allow if it's the same screen (no actual change)
+            if (newValue.trim().toLowerCase() !== screen.screenName?.toLowerCase().trim()) {
+              validationError = nameValidation.message;
+            }
+          }
+        }
+      } else if (fieldName === 'size.rows') {
+        const rows = parseInt(newValue);
+        if (isNaN(rows) || rows < 1 || rows > 26) {
+          validationError = 'Rows must be between 1-26 (A-Z).';
+        }
+      } else if (fieldName === 'size.columns') {
+        const columns = parseInt(newValue);
+        if (isNaN(columns) || columns < 1 || columns > 50) {
+          validationError = 'Columns must be between 1-50.';
+        }
+      }
+      
+      if (validationError) {
+        showError('Validation Error', validationError);
+        setEditingCell(null);
+        return;
+      }
       
       try {
         setIsUpdating(true);
@@ -198,38 +300,49 @@ export const useScreenManagement = () => {
         
         if (result.success) {
           await fetchScreens(); // Refresh data
+          
+          // Show success notification
+          showSuccess(
+            'Screen Updated',
+            `Screen "${screenName}" has been updated successfully.`
+          );
         } else {
           console.error('Failed to update screen:', result.error);
+          
+          // Parse error message for user-friendly display
+          let errorMessage = 'Failed to update screen. Please check your input and try again.';
+          
+          if (result.error) {
+            if (typeof result.error === 'string') {
+              errorMessage = result.error;
+            } else if (result.error.message) {
+              errorMessage = result.error.message;
+            }
+          }
+          
+          // Show error notification
+          showError('Cannot Update Screen', errorMessage);
         }
       } catch (error) {
         console.error('Failed to save edit:', error);
+        
+        // Show generic error notification for unexpected errors
+        showError(
+          'Error Occurred',
+          'An unexpected error occurred while updating the screen. Please try again.'
+        );
       } finally {
         setIsUpdating(false);
         setEditingCell(null);
       }
     }
-  }, [isAddingScreen, screens, columnFieldMapping, filterScreens, updateScreen, branchId, fetchScreens]);
+  }, [isAddingScreen, screens, columnFieldMapping, filterScreens, updateScreen, branchId, fetchScreens, validateScreenName]);
 
   const handleCancelEdit = useCallback(() => {
     setEditingCell(null);
   }, []);
 
   // New screen management
-  const handleNewScreenFieldChange = useCallback((columnIndex, value) => {
-    const fieldName = columnFieldMapping[columnIndex];
-    if (fieldName) {
-      setNewScreenData(prev => {
-        if (fieldName === 'size.rows') {
-          return { ...prev, rows: value };
-        } else if (fieldName === 'size.columns') {
-          return { ...prev, columns: value };
-        } else {
-          return { ...prev, [fieldName]: value };
-        }
-      });
-    }
-  }, [columnFieldMapping]);
-
   const handleStartAddScreen = useCallback(() => {
     setEditingCell(null);
     setIsAddingScreen(true);
@@ -260,20 +373,96 @@ export const useScreenManagement = () => {
     try {
       setIsUpdating(true);
 
+      // Validate required fields
+      if (!newScreenData.screenName.trim()) {
+        showError('Validation Error', 'Screen name is required.');
+        return;
+      }
+
+      if (!newScreenData.rows || !newScreenData.columns) {
+        showError('Validation Error', 'Both rows and columns are required.');
+        return;
+      }
+
+      const rows = parseInt(newScreenData.rows);
+      const columns = parseInt(newScreenData.columns);
+
+      if (rows < 1 || rows > 26 || columns < 1 || columns > 50) {
+        showError('Validation Error', 'Rows must be between 1-26 (A-Z) and columns must be between 1-50.');
+        return;
+      }
+
+      // Validate screen name uniqueness
+      const nameValidation = validateScreenName(newScreenData.screenName);
+      if (!nameValidation.isValid) {
+        showError('Screen Name Error', nameValidation.message);
+        return;
+      }
+
       const screenToAdd = {
         screenName: newScreenData.screenName.trim(),
         screenType: newScreenData.screenType,
         size: {
-          rows: parseInt(newScreenData.rows),
-          columns: parseInt(newScreenData.columns)
+          rows: rows,
+          columns: columns
         },
         isActive: newScreenData.isActive
       };
 
-      // Note: Using createScreen hook
+      console.log('📝 [handleConfirmAddScreen] Creating screen:', screenToAdd);
+
+      // Create the screen first
       const result = await createScreen(branchId, screenToAdd);
       
       if (result.success) {
+        const newScreenId = result.screen?._id || result.screen?.id;
+        console.log('✅ [handleConfirmAddScreen] Screen created successfully with ID:', newScreenId);
+
+        if (newScreenId) {
+          // Generate and create seats for the new screen
+          const seatsData = generateSeatsForScreen(rows, columns);
+          
+          console.log('🪑 [handleConfirmAddScreen] Creating seats for screen:', { 
+            screenId: newScreenId, 
+            seatsCount: seatsData.length 
+          });
+
+          try {
+            const seatsResult = await bulkCreateSeats(branchId, newScreenId, { seats: seatsData });
+            
+            if (seatsResult.success || seatsResult.seats) {
+              console.log('✅ [handleConfirmAddScreen] Seats created successfully:', seatsResult);
+              
+              showSuccess(
+                'Screen Created',
+                `Screen "${screenToAdd.screenName}" has been created successfully with ${seatsData.length} seats.`
+              );
+            } else {
+              console.warn('⚠️ [handleConfirmAddScreen] Seats creation may have failed:', seatsResult);
+              
+              showSuccess(
+                'Screen Created',
+                `Screen "${screenToAdd.screenName}" has been created successfully, but there was an issue creating seats. You can add seats manually later.`
+              );
+            }
+          } catch (seatError) {
+            console.error('❌ [handleConfirmAddScreen] Error creating seats:', seatError);
+            
+            showSuccess(
+              'Screen Created',
+              `Screen "${screenToAdd.screenName}" has been created successfully, but there was an issue creating seats. You can add seats manually later.`
+            );
+          }
+        } else {
+          console.warn('⚠️ [handleConfirmAddScreen] No screen ID returned, cannot create seats');
+          
+          showSuccess(
+            'Screen Created',
+            `Screen "${screenToAdd.screenName}" has been created successfully, but there was an issue creating seats. You can add seats manually later.`
+          );
+        }
+
+        // Refresh screen data and reset form
         await fetchScreens();
         setIsAddingScreen(false);
         setNewScreenData({
@@ -285,41 +474,116 @@ export const useScreenManagement = () => {
         });
       } else {
         console.error('Failed to add screen:', result.error);
+        
+        // Parse error message for user-friendly display
+        let errorMessage = 'Failed to create screen. Please check your input and try again.';
+        
+        if (result.error) {
+          if (typeof result.error === 'string') {
+            errorMessage = result.error;
+          } else if (result.error.message) {
+            errorMessage = result.error.message;
+          }
+        }
+        
+        // Show error notification
+        showError('Cannot Create Screen', errorMessage);
       }
 
     } catch (error) {
       console.error('Failed to add screen:', error);
+      
+      // Show generic error notification for unexpected errors
+      showError(
+        'Error Occurred',
+        'An unexpected error occurred while creating the screen. Please try again.'
+      );
     } finally {
       setIsUpdating(false);
     }
-  }, [branchId, newScreenData, fetchScreens]);
+  }, [branchId, newScreenData, fetchScreens, validateScreenName, generateSeatsForScreen, createScreen, bulkCreateSeats]);
 
   // Status change handler
-  const onStatusChange = useCallback(async (rowIndex, newIsActive) => {
-    if (!branchId) return;
+  const onStatusChange = useCallback(async (rowIndex, newIsHidden) => {
+    console.log('🔄 [onStatusChange] Called with:', { rowIndex, newIsHidden });
+    
+    if (!branchId) {
+      console.log('❌ [onStatusChange] No branchId found');
+      return;
+    }
+
+    // Convert isHidden to isActive (isActive = !isHidden)
+    const newIsActive = !newIsHidden;
+    console.log('🔄 [onStatusChange] Converted to isActive:', newIsActive);
+
+    // Adjust index for existing screens when adding screen
+    const adjustedRowIndex = isAddingScreen ? rowIndex - 1 : rowIndex;
+    console.log('🔄 [onStatusChange] Adjusted row index:', { original: rowIndex, adjusted: adjustedRowIndex, isAddingScreen });
 
     const filteredScreens = filterScreens(screens || []);
     const screensArray = Array.isArray(filteredScreens) ? filteredScreens : [];
-    const targetScreen = screensArray[rowIndex];
-    if (!targetScreen) return;
+    const targetScreen = screensArray[adjustedRowIndex];
+    
+    console.log('🎯 [onStatusChange] Target screen:', targetScreen);
+    
+    if (!targetScreen) {
+      console.log('❌ [onStatusChange] No target screen found at index:', adjustedRowIndex);
+      return;
+    }
     
     try {
       setIsUpdating(true);
       const screenId = targetScreen.id || targetScreen._id;
+      console.log('📝 [onStatusChange] Updating screen:', { screenId, newIsActive });
       
       const result = await updateScreen(branchId, screenId, { isActive: newIsActive });
       
       if (result.success) {
+        console.log('✅ [onStatusChange] Successfully updated screen status');
+        
+        // Only refresh data on successful update
         await fetchScreens();
+        
+        // Show success notification
+        const statusText = newIsActive ? 'activated' : 'deactivated';
+        showSuccess(
+          'Screen Status Updated',
+          `Screen "${targetScreen.screenName || targetScreen.name}" has been ${statusText} successfully.`
+        );
       } else {
-        console.error('Failed to update screen status:', result.error);
+        console.error('❌ [onStatusChange] Failed to update screen status:', result.error);
+        
+        // Parse error message for user-friendly display
+        let errorMessage = 'Failed to update screen status. Please try again.';
+        
+        if (result.error) {
+          // Handle specific backend constraint errors
+          if (typeof result.error === 'string' && result.error.includes('Cannot deactivate screen')) {
+            errorMessage = result.error; // Use the backend message directly
+          } else if (result.error.message && result.error.message.includes('Cannot deactivate screen')) {
+            errorMessage = result.error.message;
+          } else if (typeof result.error === 'string') {
+            errorMessage = result.error;
+          } else if (result.error.message) {
+            errorMessage = result.error.message;
+          }
+        }
+        
+        // Show error notification - DO NOT refresh data on failure
+        showError('Cannot Update Screen Status', errorMessage);
       }
     } catch (error) {
-      console.error('Failed to update screen status:', error);
+      console.error('❌ [onStatusChange] Error updating screen status:', error);
+      
+      // Show generic error notification for unexpected errors - DO NOT refresh data on failure
+      showError(
+        'Error Occurred',
+        'An unexpected error occurred while updating the screen status. Please try again.'
+      );
     } finally {
       setIsUpdating(false);
     }
-  }, [branchId, screens, filterScreens, updateScreen, fetchScreens]);
+  }, [branchId, screens, filterScreens, updateScreen, fetchScreens, isAddingScreen]);
 
   // Delete operations
   const handleDeleteConfirm = useCallback(async () => {
@@ -330,20 +594,64 @@ export const useScreenManagement = () => {
     const selectedIndices = Array.from(tickedScreens);
     
     try {
+      const deletedScreenNames = [];
+      let failedDeletes = 0;
+      
       for (const index of selectedIndices) {
-        const screen = screensArray[index];
+        // Adjust index for existing screens when adding screen
+        const adjustedIndex = isAddingScreen ? index - 1 : index;
+        
+        // Skip if this is the "add new screen" row (index 0 when adding)
+        if (isAddingScreen && index === 0) {
+          continue;
+        }
+        
+        const screen = screensArray[adjustedIndex];
         if (screen) {
           const screenId = screen.id || screen._id;
-          await removeScreen(branchId, screenId);
+          const screenName = screen.screenName || screen.name || `Screen ${screenId}`;
+          
+          const result = await removeScreen(branchId, screenId);
+          
+          if (result.success) {
+            deletedScreenNames.push(screenName);
+          } else {
+            failedDeletes++;
+            console.error('Failed to delete screen:', screenName, result.error);
+          }
         }
       }
       
       await fetchScreens();
       setTickedScreens(new Set());
+      
+      // Show appropriate notification based on results
+      if (deletedScreenNames.length > 0 && failedDeletes === 0) {
+        // All deletions successful
+        const message = deletedScreenNames.length === 1
+          ? `Screen "${deletedScreenNames[0]}" has been deleted successfully.`
+          : `${deletedScreenNames.length} screens have been deleted successfully.`;
+        
+        showSuccess('Screens Deleted', message);
+      } else if (deletedScreenNames.length > 0 && failedDeletes > 0) {
+        // Partial success
+        const message = `${deletedScreenNames.length} screen(s) deleted successfully, but ${failedDeletes} failed. Please try again for the remaining screens.`;
+        showError('Partial Delete Success', message);
+      } else if (failedDeletes > 0) {
+        // All deletions failed
+        showError('Delete Failed', 'Failed to delete the selected screens. Please try again.');
+      }
+      
     } catch (error) {
       console.error('Failed to delete screens:', error);
+      
+      // Show generic error notification for unexpected errors
+      showError(
+        'Error Occurred',
+        'An unexpected error occurred while deleting screens. Please try again.'
+      );
     }
-  }, [tickedScreens, branchId, screens, filterScreens, removeScreen, fetchScreens]);
+  }, [tickedScreens, branchId, screens, filterScreens, removeScreen, fetchScreens, isAddingScreen]);
 
   // Data processing
   const getProcessedScreenData = useCallback(() => {
@@ -368,7 +676,7 @@ export const useScreenManagement = () => {
         screen.size?.columns || 0,
         { 
           type: 'ActiveButton', 
-          isActive: screen.isActive !== false,
+          isHidden: !(screen.isActive !== false), // Convert isActive to isHidden (isHidden = !isActive)
           rowIndex: index + (isAddingScreen ? 1 : 0),
           isUpdating: isUpdating
         }, 
@@ -400,12 +708,12 @@ export const useScreenManagement = () => {
         newScreenData.columns,
         { 
           type: 'ActiveButton', 
-          isActive: newScreenData.isActive,
+          isHidden: !newScreenData.isActive, // Convert isActive to isHidden (isHidden = !isActive)
           rowIndex: 0,
           isUpdating: false,
           disabled: true
         }, 
-        { type: 'AddLabel', text: 'NEW' }
+        { type: 'AddLabel', text: 'NEW', onConfirm: handleConfirmAddScreen, onCancel: handleCancelAddScreen }
       ];
       allScreenRows = [newScreenRow, ...allScreenRows];
     }

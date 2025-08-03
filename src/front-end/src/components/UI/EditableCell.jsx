@@ -11,6 +11,7 @@ const EditableCell = ({
     onSave, 
     onCancel, 
     fieldType = 'text',
+    selectOptions = null, // Add selectOptions prop for select fieldType
     className = '',
     disabled = false,
     isUpdating = false,
@@ -187,6 +188,24 @@ const EditableCell = ({
                         wrapperClassName="datepicker-wrapper"
                     />
                 </div>
+            );
+        } else if (fieldType === 'select' && selectOptions) {
+            return (
+                <select
+                    ref={inputRef}
+                    value={editValue}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleBlur}
+                    className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+                    autoFocus
+                >
+                    {selectOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
             );
         } else {
             return (

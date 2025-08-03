@@ -238,10 +238,23 @@ const RowTemplate = (props) => {
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'AddLabel' ? (
                                     props.isHeader ? (
-                                        <span>Preview</span>
+                                        <span>Actions</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <PreviewButton/>
+                                        <div className="action-button flex justify-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+                                            <button 
+                                                onClick={() => value.onConfirm?.()}
+                                                className="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded hover:bg-green-600"
+                                                title="Confirm Add"
+                                            >
+                                                ✓
+                                            </button>
+                                            <button 
+                                                onClick={() => value.onCancel?.()}
+                                                className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded hover:bg-red-600"
+                                                title="Cancel Add"
+                                            >
+                                                ✗
+                                            </button>
                                         </div>
                                     )
                                 ) : (
@@ -259,6 +272,7 @@ const RowTemplate = (props) => {
                                             tooltipText={tooltipText}
                                             shouldTruncate={shouldTruncateText && !props.isExpanded}
                                             fieldType={(props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : 'text') }
+                                            selectOptions={props.selectOptions && props.selectOptions[index] ? props.selectOptions[index] : null}
                                         />
                                     ) : (
                                         <span

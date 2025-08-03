@@ -24,10 +24,14 @@ const ScreenManagePage = () => {
         screenData,
         header,
         screenColumnConfig,
+        editableColumns,
+        fieldTypes,
+        screenTypeOptions,
         loading,
         tickedScreens,
         setTickedScreens,
         isAddingScreen,
+        isUpdating,
         handleStartAddScreen,
         handleCancelAddScreen,
         handleConfirmAddScreen,
@@ -82,11 +86,15 @@ const ScreenManagePage = () => {
                     onEditSeat={setEditedScreenIndex} 
                     header={header} 
                     columnConfig={screenColumnConfig}
+                    editableFields={editableColumns}
                     editingCell={editingCell}
                     onStartEdit={handleStartEdit}
                     onSaveEdit={handleSaveEdit}
                     onCancelEdit={handleCancelEdit}
+                    fieldTypes={fieldTypes}
+                    selectOptions={{ 2: screenTypeOptions }}
                     onStatusChange={onStatusChange}
+                    isUpdating={isUpdating}
                     loading={loading}
                 />
                 {editedScreenIndex !== null && (
