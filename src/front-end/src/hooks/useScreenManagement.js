@@ -43,9 +43,10 @@ export const useScreenManagement = () => {
     isActive: true
   });
 
-  // Column configuration
-  const editableColumns = [1, 2, 3, 4]; // screenName, screenType, rows, columns
+  // Column configuration - removing editable columns for inline editing
+  const editableColumns = []; // Remove inline editing capability
   const columnFieldMapping = {
+    // Keep for potential future use but disable inline editing
     1: 'screenName',
     2: 'screenType', 
     3: 'size.rows',
@@ -54,13 +55,13 @@ export const useScreenManagement = () => {
 
   const header = ['', 'Screen Name', 'Type', 'Rows', 'Columns', 'Active', 'Edit Seats'];
 
-  // Field types configuration
+  // Field types configuration - all non-editable for inline editing
   const fieldTypes = {
     0: 'text',   // TickButton (not editable)
-    1: 'text',   // Screen Name - text
-    2: 'select', // Screen Type - select
-    3: 'number', // Rows - number
-    4: 'number', // Columns - number
+    1: 'text',   // Screen Name - display only
+    2: 'text',   // Screen Type - display only  
+    3: 'text',   // Rows - display only
+    4: 'text',   // Columns - display only
     5: 'text',   // Active (toggle button)
     6: 'text'    // Edit Seats (button)
   };
@@ -379,24 +380,16 @@ export const useScreenManagement = () => {
         isActive: newScreenData.isActive
       };
 
-      console.log('🎬 [ADD_SCREEN_START] ===========================================');
-      console.log('🎬 [ADD_SCREEN_START] Screen data to create:', screenToAdd);
-      console.log('🎬 [ADD_SCREEN_START] Expected seats count:', rows * columns);
-
       // Show initial loading for seats generation
       showLoading('Preparing Screen...', 'Generating seat layout for your screen');
 
       // Generate seats data first (validate seats before creating screen)
-      console.log('🪑 [SEATS_GENERATION_START] ===========================================');
-      console.log('🪑 [SEATS_GENERATION_START] Generating seats for:', { rows, columns });
-      
       const seatsData = generateSeatsForScreen(rows, columns);
       
       // Validate seats generation
       if (!seatsData || seatsData.length === 0) {
         closeSwal();
         showError('Seat Generation Failed', 'Failed to generate seats layout. Please try again.');
-        console.error('❌ [SEATS_GENERATION_FAILED] No seats generated');
         return;
       }
       
@@ -404,15 +397,8 @@ export const useScreenManagement = () => {
       if (seatsData.length !== expectedSeatsCount) {
         closeSwal();
         showError('Seat Generation Error', `Expected ${expectedSeatsCount} seats but generated ${seatsData.length}. Please try again.`);
-        console.error('❌ [SEATS_GENERATION_MISMATCH] Expected:', expectedSeatsCount, 'Generated:', seatsData.length);
         return;
       }
-      
-      console.log('🪑 [SEATS_GENERATION_SUCCESS] Generated seats data:');
-      console.log('🪑 [SEATS_GENERATION_SUCCESS] - Total seats:', seatsData.length);
-      console.log('🪑 [SEATS_GENERATION_SUCCESS] - First 3 seats:', seatsData.slice(0, 3));
-      console.log('🪑 [SEATS_GENERATION_SUCCESS] - Last 3 seats:', seatsData.slice(-3));
-      console.log('🪑 [SEATS_GENERATION_SUCCESS] - Validation passed, proceeding with screen creation');
 
       // Update loading message for screen creation
       showLoading('Creating Screen...', 'Setting up your new screen in database');
@@ -423,36 +409,17 @@ export const useScreenManagement = () => {
       if (result.success) {
         // Fix: API returns {message, screen} in data, we need result.data.screen
         const newScreenId = result.data?.screen?._id || result.data?.screen?.id || result.data?._id || result.data?.id;
-        console.log('✅ [ADD_SCREEN_SUCCESS] Screen created with ID:', newScreenId);
-        console.log('✅ [ADD_SCREEN_SUCCESS] Full result:', result);
-        console.log('✅ [ADD_SCREEN_SUCCESS] Screen data:', result.data?.screen || result.data);
 
         if (newScreenId) {
-          console.log('🪑 [ADD_SEATS_START] ===========================================');
-          console.log('🪑 [ADD_SEATS_START] Starting seat creation for screen:', newScreenId);
-          
           // Update loading message for seats creation
           showLoading('Creating Seats...', `Adding ${seatsData.length} seats to the screen`);
-          
-          console.log('🪑 [ADD_SEATS_START] Calling bulkCreateSeats API...');
 
           try {
             const seatsResult = await bulkCreateSeats(branchId, newScreenId, { seats: seatsData });
             
-            console.log('🪑 [ADD_SEATS_RESPONSE] Raw API response:', seatsResult);
-            
             if (seatsResult.success || seatsResult.seats) {
-              console.log('✅ [ADD_SEATS_SUCCESS] Seats created successfully!');
-              console.log('✅ [ADD_SEATS_SUCCESS] Result:', seatsResult);
-              
               // Close loading alert before showing success
               closeSwal();
-              
-              console.log('🎉 [CREATION_COMPLETE] ===========================================');
-              console.log('🎉 [CREATION_COMPLETE] Screen and seats created successfully');
-              console.log('🎉 [CREATION_COMPLETE] - Screen ID:', newScreenId);
-              console.log('🎉 [CREATION_COMPLETE] - Screen name:', screenToAdd.screenName);
-              console.log('🎉 [CREATION_COMPLETE] - Seats count:', seatsData.length);
               
               // Show success only after both screen and seats are created
               showSuccess(
@@ -467,9 +434,8 @@ export const useScreenManagement = () => {
               // Rollback: Delete the created screen since seats failed
               try {
                 await removeScreen(branchId, newScreenId);
-                console.log('✅ [ROLLBACK_SUCCESS] Screen deleted successfully');
               } catch (rollbackError) {
-                console.error('❌ [ROLLBACK_FAILED] Failed to rollback screen:', rollbackError);
+                console.error('Failed to rollback screen:', rollbackError);
               }
               
               // Close loading alert before showing error
@@ -480,21 +446,17 @@ export const useScreenManagement = () => {
                 `Failed to create seats for the screen. Screen creation has been cancelled.`
               );
               
-              console.log('🚫 [CREATION_FAILED] ===========================================');
               // Exit early to prevent form reset
               return;
             }
           } catch (seatError) {
-            console.error('❌ [ADD_SEATS_ERROR] Exception during seat creation:', seatError);
-            console.error('❌ [ADD_SEATS_ERROR] Error stack:', seatError.stack);
-            console.warn('🔄 [ROLLBACK_START] Rolling back screen creation due to exception...');
+            console.error('Exception during seat creation:', seatError);
             
             // Rollback: Delete the created screen since seats failed
             try {
               await removeScreen(branchId, newScreenId);
-              console.log('✅ [ROLLBACK_SUCCESS] Screen deleted successfully');
             } catch (rollbackError) {
-              console.error('❌ [ROLLBACK_FAILED] Failed to rollback screen:', rollbackError);
+              console.error('Failed to rollback screen:', rollbackError);
             }
             
             // Close loading alert before showing error
@@ -505,18 +467,10 @@ export const useScreenManagement = () => {
               `Failed to create seats for the screen. Screen creation has been cancelled.`
             );
             
-            console.log('🚫 [CREATION_FAILED] ===========================================');
             // Exit early to prevent form reset
             return;
           }
         } else {
-          console.error('❌ [ADD_SCREEN_ERROR] No screen ID returned from API');
-          console.error('❌ [ADD_SCREEN_ERROR] Result object:', result);
-          
-          // Since no screen ID, likely the screen wasn't created properly
-          // Try to find and delete any created screen by name
-          console.warn('🔄 [CLEANUP_START] Attempting to cleanup potentially created screen...');
-          
           // Close loading alert before showing error
           closeSwal();
           
@@ -525,12 +479,10 @@ export const useScreenManagement = () => {
             `Screen creation failed - no valid screen ID returned. Please try again.`
           );
           
-          console.log('🚫 [CREATION_FAILED] ===========================================');
           // Exit early to prevent form reset  
           return;
         }
 
-        console.log('🔄 [REFRESH_DATA] Refreshing screen list...');
         // Refresh screen data and reset form only if everything succeeded
         await fetchScreens();
         setIsAddingScreen(false);
@@ -541,11 +493,7 @@ export const useScreenManagement = () => {
           columns: '',
           isActive: true
         });
-        console.log('✅ [REFRESH_COMPLETE] Form reset and data refreshed');
       } else {
-        console.error('❌ [ADD_SCREEN_FAILED] Screen creation failed');
-        console.error('❌ [ADD_SCREEN_FAILED] Error:', result.error);
-        
         // Close loading alert before showing error
         closeSwal();
         
@@ -560,20 +508,13 @@ export const useScreenManagement = () => {
           }
         }
         
-        console.log('🚫 [CREATION_FAILED] ===========================================');
-        
         // Show error notification
         showError('Cannot Create Screen', errorMessage);
       }
 
     } catch (error) {
-      console.error('❌ [ADD_SCREEN_EXCEPTION] Unexpected error during screen creation:', error);
-      console.error('❌ [ADD_SCREEN_EXCEPTION] Error stack:', error.stack);
-      
       // Close loading alert before showing error
       closeSwal();
-      
-      console.log('🚫 [CREATION_FAILED] ===========================================');
       
       // Show generic error notification for unexpected errors
       showError(
@@ -775,6 +716,20 @@ export const useScreenManagement = () => {
   // Get processed screen data
   const screenData = getProcessedScreenData();
 
+  // Function to get actual screen object by row index
+  const getScreenByIndex = useCallback((rowIndex) => {
+    const filteredScreens = filterScreens(screens || []);
+    const screensArray = Array.isArray(filteredScreens) ? filteredScreens : [];
+    
+    // Adjust index if we're adding a screen (first row is new screen)
+    const adjustedIndex = isAddingScreen ? rowIndex - 1 : rowIndex;
+    
+    if (adjustedIndex >= 0 && adjustedIndex < screensArray.length) {
+      return screensArray[adjustedIndex];
+    }
+    return null;
+  }, [screens, isAddingScreen, filterScreens]);
+
   return {
     // Data
     screenData,
@@ -792,11 +747,11 @@ export const useScreenManagement = () => {
     updateLoading,
     removeLoading,
     
-    // Inline editing
-    editingCell,
-    handleStartEdit,
-    handleSaveEdit,
-    handleCancelEdit,
+    // Inline editing removed - all editing now happens in modal
+    editingCell: null,
+    handleStartEdit: () => {}, // No-op function for compatibility
+    handleSaveEdit: () => {}, // No-op function for compatibility  
+    handleCancelEdit: () => {}, // No-op function for compatibility
     isUpdating,
     
     // Screen operations
@@ -808,6 +763,12 @@ export const useScreenManagement = () => {
     
     // Search
     handleSearch,
+    
+    // Data refresh
+    fetchScreens,
+    
+    // Get actual screen object by index
+    getScreenByIndex,
     
     // Branch info
     branchId,

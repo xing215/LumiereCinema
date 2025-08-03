@@ -56,7 +56,9 @@ const ScreenManagePage = () => {
         handleStartEdit,
         handleSaveEdit,
         handleCancelEdit,
-        onStatusChange
+        onStatusChange,
+        fetchScreens, // Add this for refreshing data
+        getScreenByIndex // Add this to get actual screen object
     } = useScreenManagement();
 
     const handleDelete = async () => {
@@ -66,9 +68,6 @@ const ScreenManagePage = () => {
 
     const Button = () => {
         const handleAddScreenClick = () => {
-            console.log('🖱️ [ScreenManagePage] Add Screen button clicked');
-            console.log('🖱️ [ScreenManagePage] Current tickedScreens.size:', tickedScreens.size);
-            console.log('🖱️ [ScreenManagePage] About to call handleStartAddScreen');
             handleStartAddScreen();
         };
 
@@ -133,8 +132,9 @@ const ScreenManagePage = () => {
                 />
                 {editedScreenIndex !== null && (
                     <EditSeatModal 
-                        screenData={screenData[editedScreenIndex]} 
-                        onClose={() => setEditedScreenIndex(null)} 
+                        screenData={getScreenByIndex(editedScreenIndex)} 
+                        onClose={() => setEditedScreenIndex(null)}
+                        onRefresh={fetchScreens}
                     />
                 )}
                 <SelectBranchButton isLoading={branchLoading} branchName={userBranch?.name} />

@@ -1,9 +1,63 @@
+import { useState, useEffect, useCallback } from 'react';
 import SeatLayout from '@components/display/Seats.jsx';
 import Seat from '@components/UI/Seat.jsx';
 import CoupleSeat from '@components/UI/CoupleSeat.jsx';
+import { useGetScreenSeats, useUpdateScreen, useBulkCreateSeats } from '@hooks/useBranch';
+import { useUser } from '@contexts/UserContext';
+import { showError, showSuccess, showLoading, closeSwal } from '@utils/sweetalert';
 
-const DisplayButton = ({ data }) => {
-    return <div className="font-unbounded relative h-7 w-[25%] rounded-xl bg-zinc-300/70 text-center font-bold text-black">{data}</div>;
+const DisplayButton = ({ data, onClick, isEditable = false }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [value, setValue] = useState(data || '');
+
+    const handleDoubleClick = () => {
+        if (isEditable) {
+            setIsEditing(true);
+            setValue(data || '');
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSave();
+        } else if (e.key === 'Escape') {
+            setIsEditing(false);
+            setValue(data || '');
+        }
+    };
+
+    const handleSave = () => {
+        if (onClick && value !== data) {
+            onClick(value);
+        }
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <div className="font-unbounded relative h-7 w-[25%] rounded-xl bg-zinc-300/70 text-center font-bold text-black">
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    onBlur={handleSave}
+                    className="w-full h-full bg-transparent text-center font-bold text-black border-none outline-none"
+                    autoFocus
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div 
+            className={`font-unbounded relative h-7 w-[25%] rounded-xl bg-zinc-300/70 text-center font-bold text-black ${isEditable ? 'cursor-pointer hover:bg-zinc-400/70' : ''}`}
+            onDoubleClick={handleDoubleClick}
+            title={isEditable ? "Double-click to edit" : ""}
+        >
+            {data || ''}
+        </div>
+    );
 };
 
 const CancelButton = (props) => {
@@ -15,243 +69,422 @@ const CancelButton = (props) => {
     );
 };
 
-const ConfirmButton = () => {
+const ConfirmButton = ({ onClick, disabled = false }) => {
     return (
-        <button className="relative flex h-8 w-40 items-center justify-center">
+        <button 
+            className="relative flex h-8 w-40 items-center justify-center" 
+            onClick={onClick}
+            disabled={disabled}
+        >
             <div className="absolute inset-0 rounded-2xl bg-pink-400 shadow-[inset_0px_0px_60.654205322265625px_3.639252185821533px_rgba(155,47,255,1.00)]" />
             <span className="font-unbounded relative z-10 text-lg font-bold text-white">CONFIRM</span>
         </button>
     );
 };
 
-const ScreenInformation = (props) => {
+const ScreenInformation = ({ screenData, onFieldChange }) => {
     return (
         <div className="relative flex w-full flex-col items-start gap-4">
             <div className="flex w-full items-center gap-2">
                 <p className="font-libre-franklin justify-start text-lg font-bold text-white">Screen:</p>
-                <DisplayButton data={props.data?.[2]} />
+                <DisplayButton 
+                    data={screenData?.screenName || screenData?.name} 
+                    onClick={(value) => onFieldChange('screenName', value)}
+                    isEditable={true}
+                />
             </div>
             <div className="flex w-full items-center gap-2">
                 <p className="font-libre-franklin justify-start text-lg font-bold text-white">Rows:</p>
-                <DisplayButton data={props.data?.[3]} />
+                <DisplayButton 
+                    data={screenData?.size?.rows || screenData?.rows} 
+                    onClick={(value) => onFieldChange('rows', parseInt(value) || 1)}
+                    isEditable={true}
+                />
             </div>
             <div className="flex w-full items-center gap-2">
                 <p className="font-libre-franklin justify-start text-lg font-bold text-white">Columns:</p>
-                <DisplayButton data={props.data?.[4]} />
+                <DisplayButton 
+                    data={screenData?.size?.columns || screenData?.columns} 
+                    onClick={(value) => onFieldChange('columns', parseInt(value) || 1)}
+                    isEditable={true}
+                />
             </div>
         </div>
     );
 };
 
-const SeatInformation = () => {
+const SeatInformation = ({ selectedSeatType, onSeatTypeSelect }) => {
+    const seatTypes = [
+        { type: 'STANDARD', label: 'Standard', component: Seat },
+        { type: 'COUPLE', label: 'Couple', component: CoupleSeat },
+        { type: 'HIDDEN', label: 'Hidden', component: Seat }
+    ];
+
     return (
         <div className="relative flex w-full flex-col items-start gap-2.5 xl:gap-4">
-            <div className="flex w-full items-center justify-end gap-2">
-                <p className="font-libre-franklin w-[20%] justify-start text-base font-bold text-white xl:text-lg">Price</p>
-                <p className="font-libre-franklin w-[20%] justify-start text-base font-bold text-white xl:text-lg">DPrice</p>
-            </div>
+            {seatTypes.map(({ type, label, component: SeatComponent }) => (
+                <div key={type} className="flex w-full items-center justify-start gap-2">
+                    <button
+                        className={`flex w-35 items-center gap-2 xl:w-40 p-2 rounded-lg transition-colors ${
+                            selectedSeatType === type 
+                                ? 'bg-blue-600/50 border-2 border-blue-400' 
+                                : 'hover:bg-gray-600/30 border-2 border-transparent'
+                        }`}
+                        onClick={() => {
+                            console.log('🎭 [SEAT_TYPE_SELECT] Seat type selected:', type);
+                            onSeatTypeSelect(type);
+                        }}
+                    >
+                        {type === 'COUPLE' ? (
+                            <CoupleSeat />
+                        ) : (
+                            <Seat type={type === 'HIDDEN' ? 'Hidden' : 'Standard'} />
+                        )}
+                        <p className="font-libre-franklin text-base font-bold text-white capitalize">
+                            {label}
+                        </p>
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+};
 
-            <div className="flex w-full items-center justify-end gap-2">
-                <div className="flex w-35 items-center gap-2 xl:w-40">
-                    <Seat type="Normal" />
-                    <p className="font-libre-franklin text-base font-bold text-white capitalize">Normal</p>
-                </div>
-                <DisplayButton />
-                <DisplayButton />
+// Enhanced SeatLayout component that can handle seat editing
+const EditableSeatLayout = ({ seats, onSeatClick, selectedSeatType }) => {
+    if (!seats || seats.length === 0) {
+        return <div className="text-white">No seats data available</div>;
+    }
+
+    // Group seats by row
+    const seatsByRow = seats.reduce((acc, seat) => {
+        const row = seat.location?.row || seat.row;
+        if (!acc[row]) acc[row] = [];
+        acc[row].push(seat);
+        return acc;
+    }, {});
+
+    // Sort rows alphabetically
+    const sortedRows = Object.keys(seatsByRow).sort();
+
+    return (
+        <div className="relative flex h-full flex-col items-center justify-center gap-5 lg:gap-5">
+            <div className="bg-gray-300 h-4 w-48 rounded-t-lg flex items-center justify-center">
+                <span className="text-black text-sm font-bold">SCREEN</span>
             </div>
-            <div className="flex w-full items-center justify-end gap-2">
-                <div className="flex w-35 items-center gap-2 xl:w-40">
-                    <Seat type="VIP" />
-                    <p className="font-libre-franklin text-base font-bold text-white capitalize">VIP</p>
-                </div>
-                <DisplayButton />
-                <DisplayButton />
-            </div>
-            <div className="flex w-full items-center justify-end gap-2">
-                <div className="flex w-35 items-center gap-2 xl:w-40">
-                    <CoupleSeat />
-                    <p className="font-libre-franklin text-base font-bold text-white capitalize">Couple</p>
-                </div>
-                <DisplayButton />
-                <DisplayButton />
-            </div>
-            <div className="flex w-full items-center justify-end gap-2">
-                <div className="flex w-35 items-center gap-2 xl:w-40">
-                    <Seat type="Hidden" />
-                    <p className="font-libre-franklin text-base font-bold text-white capitalize">Hidden</p>
-                </div>
-                <DisplayButton />
-                <DisplayButton />
+            <div className="relative flex flex-col items-start gap-1.5 lg:gap-2 xl:gap-3">
+                {sortedRows.map((rowLetter) => {
+                    const rowSeats = seatsByRow[rowLetter].sort((a, b) => 
+                        (a.location?.column || a.column) - (b.location?.column || b.column)
+                    );
+                    
+                    return (
+                        <div key={rowLetter} className="flex items-center gap-2 lg:gap-2 xl:gap-3">
+                            <p className="font-unbounded w-9 justify-start self-stretch text-center text-sm font-bold text-white md:text-[18px] xl:text-xl">
+                                {rowLetter}
+                            </p>
+                            {rowSeats.map((seat, index) => {
+                                const seatType = seat.isHidden ? 'Hidden' : 
+                                               seat.category === 'COUPLE' ? 'Couple' : 'Standard';
+                                
+                                return (
+                                    <button
+                                        key={seat._id || `${rowLetter}-${index}`}
+                                        onClick={() => {
+                                            console.log('🪑 [SEAT_CLICK]', {
+                                                seat: seat.seatNumber,
+                                                currentType: seatType,
+                                                selectedType: selectedSeatType,
+                                                isHidden: seat.isHidden,
+                                                category: seat.category
+                                            });
+                                            onSeatClick(seat);
+                                        }}
+                                        className={`transition-transform hover:scale-110 ${
+                                            selectedSeatType ? 'cursor-pointer' : 'cursor-default'
+                                        }`}
+                                        disabled={!selectedSeatType}
+                                    >
+                                        {seat.category === 'COUPLE' ? (
+                                            <CoupleSeat />
+                                        ) : (
+                                            <Seat type={seatType} />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
 };
 
-const seatRows = [
-    [
-        { row: 'A', no: 1, type: 'Normal' },
-        { row: 'A', no: 2, type: 'Couple' },
-        { row: 'A', no: 3, type: 'Couple' },
-        { row: 'A', no: 4, type: 'Normal' },
-        { row: 'A', no: 5, type: 'Normal' },
-        { row: 'A', no: 6, type: 'Normal' },
-        { row: 'A', no: 7, type: 'Normal' },
-        { row: 'A', no: 8, type: 'Normal' },
-        { row: 'A', no: 9, type: 'Normal' },
-        { row: 'A', no: 10, type: 'Normal' },
-        { row: 'A', no: 11, type: 'Normal' },
-        { row: 'A', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'B', no: 1, type: 'Normal' },
-        { row: 'B', no: 2, type: 'Normal' },
-        { row: 'B', no: 3, type: 'Normal' },
-        { row: 'B', no: 4, type: 'Normal' },
-        { row: 'B', no: 5, type: 'Normal' },
-        { row: 'B', no: 6, type: 'Normal' },
-        { row: 'B', no: 7, type: 'Normal' },
-        { row: 'B', no: 8, type: 'Normal' },
-        { row: 'B', no: 9, type: 'Normal' },
-        { row: 'B', no: 10, type: 'Normal' },
-        { row: 'B', no: 11, type: 'Normal' },
-        { row: 'B', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'C', no: 1, type: 'Normal' },
-        { row: 'C', no: 2, type: 'Normal' },
-        { row: 'C', no: 3, type: 'Normal' },
-        { row: 'C', no: 4, type: 'Normal' },
-        { row: 'C', no: 5, type: 'Normal' },
-        { row: 'C', no: 6, type: 'Normal' },
-        { row: 'C', no: 7, type: 'Normal' },
-        { row: 'C', no: 8, type: 'Normal' },
-        { row: 'C', no: 9, type: 'Normal' },
-        { row: 'C', no: 10, type: 'Normal' },
-        { row: 'C', no: 11, type: 'Normal' },
-        { row: 'C', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'D', no: 1, type: 'Normal' },
-        { row: 'D', no: 2, type: 'Normal' },
-        { row: 'D', no: 3, type: 'Normal' },
-        { row: 'D', no: 4, type: 'Normal' },
-        { row: 'D', no: 5, type: 'Normal' },
-        { row: 'D', no: 6, type: 'Normal' },
-        { row: 'D', no: 7, type: 'Normal' },
-        { row: 'D', no: 8, type: 'Normal' },
-        { row: 'D', no: 9, type: 'Normal' },
-        { row: 'D', no: 10, type: 'Normal' },
-        { row: 'D', no: 11, type: 'Normal' },
-        { row: 'D', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'E', no: 1, type: 'VIP' },
-        { row: 'E', no: 2, type: 'VIP' },
-        { row: 'E', no: 3, type: 'Normal' },
-        { row: 'E', no: 4, type: 'Normal' },
-        { row: 'E', no: 5, type: 'Normal' },
-        { row: 'E', no: 6, type: 'Normal' },
-        { row: 'E', no: 7, type: 'Normal' },
-        { row: 'E', no: 8, type: 'Normal' },
-        { row: 'E', no: 9, type: 'Normal' },
-        { row: 'E', no: 10, type: 'Normal' },
-        { row: 'E', no: 11, type: 'Normal' },
-        { row: 'E', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'F', no: 1, type: 'VIP' },
-        { row: 'F', no: 2, type: 'VIP' },
-        { row: 'F', no: 3, type: 'Normal' },
-        { row: 'F', no: 4, type: 'Normal' },
-        { row: 'F', no: 5, type: 'Normal' },
-        { row: 'F', no: 6, type: 'Normal' },
-        { row: 'F', no: 7, type: 'Normal' },
-        { row: 'F', no: 8, type: 'Normal' },
-        { row: 'F', no: 9, type: 'Normal' },
-        { row: 'F', no: 10, type: 'Normal' },
-        { row: 'F', no: 11, type: 'Normal' },
-        { row: 'F', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'G', no: 1, type: 'Normal' },
-        { row: 'G', no: 2, type: 'Normal' },
-        { row: 'G', no: 3, type: 'Couple' },
-        { row: 'G', no: 4, type: 'Couple' },
-        { row: 'G', no: 5, type: 'Normal' },
-        { row: 'G', no: 6, type: 'Normal' },
-        { row: 'G', no: 7, type: 'Normal' },
-        { row: 'G', no: 8, type: 'Normal' },
-        { row: 'G', no: 9, type: 'Normal' },
-        { row: 'G', no: 10, type: 'Normal' },
-        { row: 'G', no: 11, type: 'Normal' },
-        { row: 'G', no: 12, type: 'Hidden' },
-    ],
-    [
-        { row: 'H', no: 1, type: 'Normal' },
-        { row: 'H', no: 2, type: 'Normal' },
-        { row: 'H', no: 3, type: 'Normal' },
-        { row: 'H', no: 4, type: 'Normal' },
-        { row: 'H', no: 5, type: 'Normal' },
-        { row: 'H', no: 6, type: 'Normal' },
-        { row: 'H', no: 7, type: 'Normal' },
-        { row: 'H', no: 8, type: 'Normal' },
-        { row: 'H', no: 9, type: 'Normal' },
-        { row: 'H', no: 10, type: 'Normal' },
-        { row: 'H', no: 11, type: 'Normal' },
-        { row: 'H', no: 12, type: 'Hidden' },
-    ],
-    [
-        { row: 'I', no: 1, type: 'Normal' },
-        { row: 'I', no: 2, type: 'Normal' },
-        { row: 'I', no: 3, type: 'Normal' },
-        { row: 'I', no: 4, type: 'Normal' },
-        { row: 'I', no: 5, type: 'Normal' },
-        { row: 'I', no: 6, type: 'Normal' },
-        { row: 'I', no: 7, type: 'Normal' },
-        { row: 'I', no: 8, type: 'Normal' },
-        { row: 'I', no: 9, type: 'Normal' },
-        { row: 'I', no: 10, type: 'Normal' },
-        { row: 'I', no: 11, type: 'Normal' },
-        { row: 'I', no: 12, type: 'Normal' },
-    ],
-    [
-        { row: 'J', no: 1, type: 'Normal' },
-        { row: 'J', no: 2, type: 'Normal' },
-        { row: 'J', no: 3, type: 'Normal' },
-        { row: 'J', no: 4, type: 'Normal' },
-        { row: 'J', no: 5, type: 'Normal' },
-        { row: 'J', no: 6, type: 'Normal' },
-        { row: 'J', no: 7, type: 'Normal' },
-        { row: 'J', no: 8, type: 'Normal' },
-        { row: 'J', no: 9, type: 'Normal' },
-        { row: 'J', no: 10, type: 'Normal' },
-        { row: 'J', no: 11, type: 'Normal' },
-        { row: 'J', no: 12, type: 'Normal' },
-    ],
-];
-
 const EditSeatModal = (props) => {
+    const { user } = useUser();
+    const branchId = user?.branch?._id || user?.branch;
+    
+    const { getScreenSeats } = useGetScreenSeats();
+    const { updateScreen } = useUpdateScreen();
+    const { bulkCreateSeats } = useBulkCreateSeats();
+    
+    const [seats, setSeats] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedSeatType, setSelectedSeatType] = useState(null);
+    const [screenInfo, setScreenInfo] = useState({
+        screenName: props.screenData?.screenName || props.screenData?.name || '',
+        rows: props.screenData?.size?.rows || props.screenData?.rows || 0,
+        columns: props.screenData?.size?.columns || props.screenData?.columns || 0
+    });
+    const [hasChanges, setHasChanges] = useState(false);
+
+    // Initialize modal with debug logging
+    useEffect(() => {
+        const screenId = props.screenData?._id || props.screenData?.id;
+        console.log('🎬 [EDIT_MODAL_INIT] Modal opened with screen data:', {
+            screenId: screenId,
+            screenName: props.screenData?.screenName || props.screenData?.name,
+            screenType: props.screenData?.screenType,
+            rows: props.screenData?.size?.rows || props.screenData?.rows,
+            columns: props.screenData?.size?.columns || props.screenData?.columns,
+            isActive: props.screenData?.isActive,
+            branchId: branchId
+        });
+    }, [props.screenData?._id, props.screenData?.id, branchId]); // Only listen to screen ID changes
+
+    // Load seats when modal opens
+    useEffect(() => {
+        const loadSeats = async () => {
+            const screenId = props.screenData?._id || props.screenData?.id;
+            if (screenId) { // screen ID
+                console.log('🎬 [EDIT_MODAL_LOAD] Starting to load seats for screen:', screenId);
+                setLoading(true);
+                try {
+                    const result = await getScreenSeats(branchId, screenId);
+                    if (result.success) {
+                        // API returns { seats: [...], total: number, screen: {...} }
+                        // Ensure we always have an array, even if result.data.seats is undefined or not an array
+                        const seatsData = Array.isArray(result.data?.seats) ? result.data.seats : [];
+                        console.log('✅ [EDIT_MODAL_LOAD] Seats loaded successfully:', seatsData.length, 'seats');
+                        setSeats(seatsData);
+                    } else {
+                        console.error('❌ [EDIT_MODAL_LOAD] Failed to load seats:', result.error);
+                        setSeats([]); // Ensure we set an empty array on error
+                        showError('Error', 'Failed to load seats data');
+                    }
+                } catch (error) {
+                    console.error('❌ [EDIT_MODAL_LOAD] Exception loading seats:', error);
+                    setSeats([]); // Ensure we set an empty array on exception
+                    showError('Error', 'Failed to load seats data');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadSeats();
+    }, [props.screenData?._id, props.screenData?.id, branchId]); // Only listen to screen ID changes
+
+    // Generate seats based on rows and columns
+    const generateSeats = useCallback((rows, columns) => {
+        const newSeats = [];
+        for (let row = 1; row <= rows; row++) {
+            const rowLetter = String.fromCharCode(64 + row);
+            for (let col = 1; col <= columns; col++) {
+                newSeats.push({
+                    seatNumber: `${rowLetter}${col}`,
+                    location: { row: rowLetter, column: col },
+                    category: 'STANDARD',
+                    isHidden: false
+                });
+            }
+        }
+        return newSeats;
+    }, []);
+
+    const handleFieldChange = useCallback((field, value) => {
+        console.log('📝 [FIELD_CHANGE]', { field, value, currentScreenInfo: screenInfo });
+        setScreenInfo(prev => {
+            const newInfo = { ...prev, [field]: value };
+            
+            // If rows or columns changed, regenerate seats
+            if (field === 'rows' || field === 'columns') {
+                const newSeats = generateSeats(
+                    field === 'rows' ? value : prev.rows,
+                    field === 'columns' ? value : prev.columns
+                );
+                console.log('🪑 [SEATS_REGENERATED]', {
+                    newRows: field === 'rows' ? value : prev.rows,
+                    newColumns: field === 'columns' ? value : prev.columns,
+                    seatsCount: newSeats.length
+                });
+                setSeats(newSeats);
+            }
+            
+            setHasChanges(true);
+            return newInfo;
+        });
+    }, [generateSeats]);
+
+    const handleSeatClick = useCallback((seat) => {
+        if (!selectedSeatType) return;
+
+        console.log('🎯 [SEAT_UPDATE]', {
+            seatNumber: seat.seatNumber,
+            fromType: seat.category,
+            toType: selectedSeatType,
+            fromHidden: seat.isHidden,
+            toHidden: selectedSeatType === 'HIDDEN'
+        });
+
+        setSeats(prevSeats => {
+            const newSeats = prevSeats.map(s => {
+                if (s._id === seat._id || 
+                   (s.location?.row === seat.location?.row && s.location?.column === seat.location?.column)) {
+                    return {
+                        ...s,
+                        category: selectedSeatType === 'HIDDEN' ? s.category : selectedSeatType,
+                        isHidden: selectedSeatType === 'HIDDEN'
+                    };
+                }
+                return s;
+            });
+            setHasChanges(true);
+            return newSeats;
+        });
+    }, [selectedSeatType]);
+
+    const handleSave = async () => {
+        if (!hasChanges) {
+            console.log('ℹ️ [SAVE_SKIPPED] No changes to save');
+            props.onClose();
+            return;
+        }
+
+        console.log('💾 [SAVE_START] Starting save process with changes:', {
+            screenInfo,
+            seatsCount: seats.length,
+            hasChanges
+        });
+
+        showLoading('Saving Changes...', 'Please wait while we update the screen and seats');
+        
+        try {
+            // Update screen info if changed
+            const screenUpdateData = {
+                screenName: screenInfo.screenName,
+                size: {
+                    rows: screenInfo.rows,
+                    columns: screenInfo.columns
+                }
+            };
+
+            console.log('🎬 [SCREEN_UPDATE] Updating screen with data:', screenUpdateData);
+            const updateResult = await updateScreen(branchId, props.screenData._id || props.screenData.id, screenUpdateData);
+            
+            if (!updateResult.success) {
+                throw new Error(updateResult.error || 'Failed to update screen');
+            }
+            console.log('✅ [SCREEN_UPDATE] Screen updated successfully');
+
+            // Update seats - prepare seat data for bulk creation (which replaces existing seats)
+            const seatsUpdateData = {
+                seats: seats.map(seat => ({
+                    seatNumber: seat.seatNumber,
+                    location: seat.location,
+                    category: seat.category,
+                    isHidden: seat.isHidden
+                }))
+            };
+
+            console.log('🪑 [SEATS_UPDATE] Updating seats with data:', {
+                seatsCount: seatsUpdateData.seats.length,
+                standardSeats: seatsUpdateData.seats.filter(s => s.category === 'STANDARD' && !s.isHidden).length,
+                coupleSeats: seatsUpdateData.seats.filter(s => s.category === 'COUPLE' && !s.isHidden).length,
+                hiddenSeats: seatsUpdateData.seats.filter(s => s.isHidden).length
+            });
+
+            const seatsResult = await bulkCreateSeats(branchId, props.screenData._id || props.screenData.id, seatsUpdateData);
+            
+            if (!seatsResult.success) {
+                throw new Error(seatsResult.error || 'Failed to update seats');
+            }
+            console.log('✅ [SEATS_UPDATE] Seats updated successfully');
+
+            closeSwal();
+            showSuccess('Success!', 'Screen and seats updated successfully');
+            
+            // Refresh the parent page data if there's a refresh callback
+            if (props.onRefresh) {
+                console.log('🔄 [REFRESH] Triggering parent data refresh');
+                props.onRefresh();
+            }
+            
+            console.log('✅ [SAVE_COMPLETE] All changes saved successfully');
+            props.onClose();
+            
+        } catch (error) {
+            console.error('❌ [SAVE_ERROR] Error saving changes:', error);
+            closeSwal();
+            showError('Error', error.message || 'Failed to save changes');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="absolute inset-0 z-50 bg-slate-900/10 backdrop-blur-[20px]">
+                <div className="fixed flex flex-col items-center justify-center gap-[10%] rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px] lg:inset-[10%] lg:bg-slate-900/60 xl:inset-[5%] xl:bg-slate-900">
+                    <div className="text-white text-xl">Loading seats...</div>
+                </div>
+            </div>
+        );
+    }
+
+    const updatedScreenData = {
+        ...props.screenData,
+        screenName: screenInfo.screenName,
+        size: {
+            rows: screenInfo.rows,
+            columns: screenInfo.columns
+        }
+    };
+
     return (
         <div className="absolute inset-0 z-50 bg-slate-900/10 backdrop-blur-[20px]">
-            <div className="fixed flex flex-col items-center justify-center gap-2 rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px] lg:inset-[10%] lg:bg-slate-900/60 xl:inset-[5%] xl:bg-slate-900">
-                <div className="relative flex w-full items-center">
-                    <div className="relative ml-[2%] w-70 flex-col gap-4 xl:w-100">
-                        <ScreenInformation data={props.screenData} />
-                        <SeatInformation />
-                    </div>
+            <div className="fixed flex flex-col items-center justify-center gap-[10%] rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px] lg:inset-[10%] lg:bg-slate-900/60 xl:inset-[5%] xl:bg-slate-900">
 
-                    <div className="relative h-full w-[10%]" />
+                <div className="relative flex w-full items-center justify-center">
+                    <div className="flex justify-center items-center gap-0">
+                        {/* Information Section */}
+                        <div className="relative w-80 flex-shrink-0 flex flex-col gap-6 items-start text-left justify-center px-[5%]">
+                            <ScreenInformation 
+                                screenData={updatedScreenData} 
+                                onFieldChange={handleFieldChange}
+                            />
+                            <SeatInformation 
+                                selectedSeatType={selectedSeatType}
+                                onSeatTypeSelect={setSelectedSeatType}
+                            />
+                        </div>
 
-                    <div className="relative mr-[2%] w-[60%]">
-                        <SeatLayout data={seatRows} />
+                        {/* Seat Layout Section */}
+                        <div className="relative min-h-0 flex justify-center p-[3%] mr-[2%]">
+                            <EditableSeatLayout 
+                                seats={seats}
+                                onSeatClick={handleSeatClick}
+                                selectedSeatType={selectedSeatType}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <div className="h-[10%] w-full" />
-
                 <div className="relative flex items-center gap-4">
-                    <CancelButton onclick={props.onClose} />
-                    <ConfirmButton />
+                    <CancelButton onclick={() => {
+                        console.log('❌ [MODAL_CANCEL] User canceled editing, changes discarded:', { hasChanges });
+                        props.onClose();
+                    }} />
+                    <ConfirmButton onClick={handleSave} />
                 </div>
             </div>
         </div>

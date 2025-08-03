@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { branchService, ticketService } from '@services';
 import { useUser } from '@contexts/UserContext';
 
@@ -147,7 +147,7 @@ export const useUpdateScreen = () => {
   const [error, setError] = useState(null);
   const { token } = useUser();
 
-  const updateScreen = async (branchId, screenId, screenData) => {
+  const updateScreen = useCallback(async (branchId, screenId, screenData) => {
     setLoading(true);
     setError(null);
     
@@ -161,7 +161,7 @@ export const useUpdateScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   return { updateScreen, loading, error };
 };
@@ -399,7 +399,7 @@ export const useGetScreenSeats = () => {
   const [seats, setSeats] = useState([]);
   const { token } = useUser();
 
-  const getScreenSeats = async (branchId, screenId) => {
+  const getScreenSeats = useCallback(async (branchId, screenId) => {
     if (!branchId || !screenId) {
       const errorMsg = 'Branch ID and Screen ID are required';
       setError(errorMsg);
@@ -420,7 +420,7 @@ export const useGetScreenSeats = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   return { getScreenSeats, seats, setSeats, loading, error };
 };
@@ -454,7 +454,7 @@ export const useBulkCreateSeats = () => {
   const [error, setError] = useState(null);
   const { token } = useUser();
 
-  const bulkCreateSeats = async (branchId, screenId, seatsData) => {
+  const bulkCreateSeats = useCallback(async (branchId, screenId, seatsData) => {
     setLoading(true);
     setError(null);
     
@@ -468,7 +468,7 @@ export const useBulkCreateSeats = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   return { bulkCreateSeats, loading, error };
 };
