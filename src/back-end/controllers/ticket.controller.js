@@ -585,10 +585,9 @@ const holdSeats = async (req, res) => {
       return res.status(500).json({
         error: 'Transaction completed but returned invalid result structure',
         details: process.env.NODE_ENV === 'development' ? { result } : undefined
-      });
-    }
+      });    }
     
-    // OPTIMIZATION: Invalidate cache for this schedule since seat holds changed
+    // Invalidate cache for this schedule since seat holds changed
     await CacheManager.invalidateScheduleCache(scheduleId);
 
     return res.status(201).json({
@@ -1026,15 +1025,27 @@ const createTicket = async (req, res) => {
           adultTickets
         });
         await createdMovieTicket.save({ session });
-        totalAmount += movieTicketTotal;
-        // add ticket to user's watch history if logged in
+        totalAmount += movieTicketTotal;        // add ticket to user's watch history if logged in
         if (user) {
           user.watchHistory = user.watchHistory || [];
           user.watchHistory.push(createdMovieTicket._id);
           await user.save({ session });
-          // Cập nhật lại Redis nếu có dùng cache user
+          
+          // Clear related user cache
           const userCacheKey = `user:${user._id}`;
-          await redisClient.set(userCacheKey, JSON.stringify(user));
+          const watchHistoryCacheKey = `watchHistory:${user._id}`;
+          const userTicketsCacheKey = `userTickets:${user._id}`;
+          
+          await Promise.all([
+            redisClient.del(userCacheKey),
+            redisClient.del(watchHistoryCacheKey),
+            // Clear all user tickets cache with different query parameters
+            redisClient.keys(`userTickets:${user._id}:*`).then(keys => {
+              if (keys.length > 0) {
+                return redisClient.del(keys);
+              }
+            })
+          ]);
         }
         // CRITICAL: Update Schedule.OccupiedSeat to mark seats as occupied
         await Schedule.findByIdAndUpdate(
@@ -1551,11 +1562,15 @@ const manageSeatHold = async (req, res) => {
       return res.status(404).json({
         error: 'No seat holds found for the given user/session'
       });
-    }
-
-    if (action === 'release') {
+    }    if (action === 'release') {
       const ids = holds.map(h => h._id);
       await SeatHold.deleteMany({ _id: { $in: ids } });
+      
+      // Invalidate seat map cache since holds were released
+      if (scheduleId) {
+        await CacheManager.invalidateScheduleCache(scheduleId);
+      }
+      
       return res.status(200).json({
         success: true,
         message: 'Seat holds released successfully',
@@ -1618,9 +1633,10 @@ const releaseBulkHolds = async (req, res) => {
     // Add seat numbers filter if provided
     if (seatNumbers && Array.isArray(seatNumbers)) {
       query.seatNumber = { $in: seatNumbers };
-    }
+    }    const result = await SeatHold.deleteMany(query);
 
-    const result = await SeatHold.deleteMany(query);
+    // Invalidate seat map cache since holds were released
+    await CacheManager.invalidateScheduleCache(scheduleId);
 
     return res.status(200).json({
       success: true,

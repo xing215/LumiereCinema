@@ -98,10 +98,12 @@ const rateMovie = async (req, res) => {
       { movie: movieId, user: userId },
       { star: rating },
       { new: true, upsert: true }
-    );
-
-    // Release cached movie data
-    await redisClient.del(`movie:${movieId}`);
+    );    // Clear cached movie data - ratings affect movie averages
+    await Promise.all([
+      redisClient.del(`movie:${movieId}`),
+      redisClient.del('movies:now-showing'),
+      redisClient.del('movies:upcoming')
+    ]);
 
     res.status(200).json({ message: 'Rating updated successfully.', rating: updatedRating });
   } catch (error) {

@@ -351,16 +351,8 @@ export const useSnackManagement = () => {
                         return;
                     }
                 }
-                
-                // Use the saveEdit from useInlineEdit hook
+                  // Use the saveEdit from useInlineEdit hook
                 try {
-                    console.log('🔍 DEBUG - Saving edit:', {
-                        snackId,
-                        fieldName,
-                        processedValue,
-                        originalValue: newValue,
-                        snackData: snack
-                    });
                     await saveEdit(snackId, fieldName, processedValue);
                     // Note: saveEdit handles optimistic UI updates automatically
                 } catch (error) {

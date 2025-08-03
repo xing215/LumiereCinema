@@ -15,12 +15,8 @@ export const useGetAccounts = () => {
   const getAccounts = async () => {
     setLoading(true);
     setError(null);
-    
-    try {
-      console.log('🔍 Making request to get all users');
-      console.log('🔍 Token:', token);
+      try {
       const data = await adminService.getAllUsers(token);
-      console.log('🔍 Response data:', data);
       setAccounts(data);
       return { success: true, data };
     } catch (err) {
@@ -427,12 +423,8 @@ export const useGetBranches = () => {
   const getBranches = async () => {
     setLoading(true);
     setError(null);
-    
-    try {
-      console.log('🔍 Making request to get all branches');
-      console.log('🔍 Token:', token);
+      try {
       const data = await adminService.getAllBranches(token);
-      console.log('🔍 Branches response:', data);
       setBranches(data);
       return { success: true, data };
     } catch (err) {

@@ -32,59 +32,39 @@ const MessageRenderer = ({ message, onQuickAction }) => {
    * Xử lý click vào quick action
    * @param {object} action - Object chứa action type và data
    */  const handleQuickAction = (action) => {
-    console.log('🎬 MessageRenderer - handleQuickAction called with:', action);
-    console.log('🎬 Action type:', action.action);
-    console.log('🎬 Action data:', action.data);
-    
     switch (action.action) {
       case 'find_schedules':
         // Gửi query tìm lịch chiếu
-        console.log('🎬 Finding schedules for movie:', action.data.movie_title);
         onQuickAction(`Tôi muốn xem lịch chiếu phim ${action.data.movie_title}`);
-        break;
-          case 'schedule_conversation':
+        break;      case 'schedule_conversation':
         // Bắt đầu cuộc hội thoại về lịch chiếu
-        console.log('🎬 Starting schedule conversation');
         onQuickAction('Xem lịch chiếu');
         break;
         
       case 'search_conversation':
         // Bắt đầu cuộc hội thoại tìm kiếm
-        console.log('🎬 Starting search conversation');
         onQuickAction('Tìm phim hay');
         break;
         
       case 'get_now_showing':
         // Lấy danh sách phim đang chiếu
-        console.log('🎬 Getting now showing movies');
         onQuickAction('Phim gì đang chiếu?');
         break;
         
       case 'get_upcoming':
         // Lấy danh sách phim sắp chiếu
-        console.log('🎬 Getting upcoming movies');
         onQuickAction('Phim gì sắp chiếu?');
-        break;
-          case 'movie_details':
+        break;      case 'movie_details':
         // Navigate đến trang chi tiết phim với đúng route pattern
-        console.log('🎬 Navigating to movie details for ID:', action.data.movie_id);
-        console.log('🎬 Full action object:', JSON.stringify(action, null, 2));
-        
         if (!action.data.movie_id) {
           console.warn('⚠️ No movie_id found in action data');
           return;
         }
         
         const movieDetailsPath = getMovieDetailsPath(action.data.movie_id);
-        console.log('🎬 Generated path:', movieDetailsPath);
-        console.log('🎬 About to navigate to:', movieDetailsPath);
         navigate(movieDetailsPath);
-        break;
-          case 'book_ticket':
+        break;      case 'book_ticket':
         // Navigate đến trang đặt vé với đúng route pattern
-        console.log('🎬 Navigating to book ticket for movie ID:', action.data.movie_id);
-        console.log('🎬 Full action data for book_ticket:', action.data);
-        
         // Kiểm tra nếu không có movie_id, có thể lấy từ schedule_id thông qua backend
         if (!action.data.movie_id) {
           console.warn('⚠️ No movie_id found in action data, redirecting to movies page');
@@ -93,25 +73,19 @@ const MessageRenderer = ({ message, onQuickAction }) => {
         }
         
         const buyTicketPath = getBuyTicketPath(action.data.movie_id, action.data.branch_id);
-        console.log('🎬 Generated path:', buyTicketPath);
         navigate(buyTicketPath);
-        break;
-          case 'browse_movies':
+        break;      case 'browse_movies':
         // Navigate đến trang danh sách phim với status parameter
-        console.log('🎬 Navigating to movies list with status:', action.data?.status);
-        
         let moviesUrl = ROUTES.MOVIES;
         if (action.data?.status) {
           moviesUrl += `?status=${action.data.status}`;
         }
         
-        console.log('🎬 Generated movies URL:', moviesUrl);
         navigate(moviesUrl);
         break;
         
       default:
         // Gửi text action
-        console.log('🎬 Default action - sending text:', action.text);
         onQuickAction(action.text);
     }
   };

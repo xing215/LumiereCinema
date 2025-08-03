@@ -1,8 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { redisClient } = require('../config/redis.config');
 
-console.log('🔑 API Key preview:', process.env.GEMINI_API_KEY?.substring(0, 10) + '...');
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
@@ -245,22 +243,14 @@ const analyzeQuery = async (userQuery, sessionId = null, conversationContext = n
     if (shouldCache) {
       cacheKey = `analysis:${Buffer.from(userQuery.toLowerCase().trim()).toString('base64')}`;
       const cachedResult = await redisClient.get(cacheKey);
-      
-      if (cachedResult) {
-        console.log('🚀 Cache hit for query analysis');
+        if (cachedResult) {
         return JSON.parse(cachedResult);
       }
     }
-
-    console.log('🧠 Analyzing query with Gemini:', userQuery.substring(0, 50) + '...');
-    console.log('📝 Context:', conversationContext ? JSON.stringify(conversationContext, null, 2) : 'None');
     
     const masterPrompt = createMasterPrompt(userQuery, conversationContext);
-    const result = await model.generateContent(masterPrompt);
-    const response = await result.response;
+    const result = await model.generateContent(masterPrompt);    const response = await result.response;
     const text = response.text();
-
-    console.log('🔤 Raw Gemini response:', text.substring(0, 200) + '...');
 
     // Enhanced JSON parsing with multiple fallback strategies
     let parsedResult = parseGeminiResponse(text);
@@ -268,21 +258,16 @@ const analyzeQuery = async (userQuery, sessionId = null, conversationContext = n
     // Apply post-processing rules
     parsedResult = applyPostProcessingRules(parsedResult, userQuery, conversationContext);
 
-    console.log('✅ Final parsed result:', JSON.stringify(parsedResult, null, 2));
-
     // Cache result if applicable (only cache for 5 minutes for non-contextual queries)
     if (shouldCache && cacheKey) {
       await redisClient.setEx(cacheKey, 300, JSON.stringify(parsedResult));
     }
 
     return parsedResult;
-
   } catch (error) {
     console.error('❌ Error in analyzeQuery:', error);
-    
-    // Fallback analysis for when AI fails
+    // Fallback analysis for when service fails
     const fallbackResult = performFallbackAnalysis(userQuery, conversationContext);
-    console.log('🛟 Using fallback analysis:', JSON.stringify(fallbackResult, null, 2));
     
     return fallbackResult;
   }
@@ -294,32 +279,28 @@ const analyzeQuery = async (userQuery, sessionId = null, conversationContext = n
 function parseGeminiResponse(text) {
   // Strategy 1: Clean and parse normal JSON
   let cleanedText = text.replace(/```json|```/g, '').trim();
-  
-  try {
+    try {
     return JSON.parse(cleanedText);
   } catch (e1) {
-    console.log('Parse attempt 1 failed, trying strategy 2...');
+    // Fallback to strategy 2
   }
-
   // Strategy 2: Extract JSON from mixed content
   const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
     } catch (e2) {
-      console.log('Parse attempt 2 failed, trying strategy 3...');
+      // Fallback to strategy 3
     }
   }
 
   // Strategy 3: Fix common JSON issues
   try {
-    // Fix trailing commas
     let fixedJson = cleanedText.replace(/,(\s*[}\]])/g, '$1');
-    // Fix unescaped quotes
     fixedJson = fixedJson.replace(/([{,]\s*)(\w+):/g, '$1"$2":');
     return JSON.parse(fixedJson);
   } catch (e3) {
-    console.log('Parse attempt 3 failed, using fallback structure...');
+    // Use fallback structure
   }
 
   // Strategy 4: Create minimal structure from text analysis

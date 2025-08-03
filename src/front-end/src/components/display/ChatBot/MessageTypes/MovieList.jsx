@@ -9,9 +9,6 @@ import { ChevronRight, Star } from 'lucide-react';
  * và render thành danh sách compact với quick actions
  */
 const MovieList = ({ movies, onAction, status }) => {
-  console.log('🎬 MovieList - Received movies:', movies?.map(m => ({ id: m._id || m.id, title: m.title })));
-  console.log('🎬 MovieList - Received status:', status);
-  
   if (!movies || movies.length === 0) {
     return (
       <div className="text-gray-500 text-center p-4">
@@ -87,8 +84,7 @@ const MovieList = ({ movies, onAction, status }) => {
                 <div className="mt-2 flex flex-wrap gap-1">
                   {movie.quick_actions.map((action, actionIndex) => (                    <button
                       key={actionIndex}
-                      onClick={() => {
-                        const actionWithData = {
+                      onClick={() => {                        const actionWithData = {
                           ...action,
                           data: {
                             ...action.data,
@@ -96,11 +92,8 @@ const MovieList = ({ movies, onAction, status }) => {
                             movie_title: movie.title
                           }
                         };
-                        console.log('🎬 MovieList - Button clicked with action:', actionWithData);
-                        console.log('🎬 MovieList - Movie object:', movie);
-                        console.log('🎬 MovieList - Movie ID being used:', movie._id || movie.id);
                         onAction(actionWithData);
-                      }}                      className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
+                      }}className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
                     >
                       {action.text}
                     </button>
@@ -110,13 +103,10 @@ const MovieList = ({ movies, onAction, status }) => {
             </div>            {/* Arrow for detailed view */}
             <div className="flex-shrink-0 flex items-center">
               <button
-                onClick={() => {
-                  const movieDetailsAction = {
+                onClick={() => {                  const movieDetailsAction = {
                     action: 'movie_details',
                     data: { movie_id: movie._id || movie.id }
                   };
-                  console.log('🎬 MovieList - Arrow clicked with action:', movieDetailsAction);
-                  console.log('🎬 MovieList - Movie object for arrow:', movie);
                   onAction(movieDetailsAction);
                 }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -138,14 +128,12 @@ const MovieList = ({ movies, onAction, status }) => {
               } else if (status === 'now-showing') {
                 statusParam = 'now'; // Đang chiếu -> ?status=now
               }
-              
-              const browseAction = {
+                const browseAction = {
                 action: 'browse_movies',
                 text: 'Xem tất cả phim',
                 data: { status: statusParam }
               };
               
-              console.log('🎬 MovieList - Browse all movies with status:', statusParam);
               onAction(browseAction);
             }}
             className="text-purple-600 hover:text-purple-700 text-sm font-medium"

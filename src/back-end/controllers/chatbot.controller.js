@@ -36,14 +36,9 @@ const queryChatbot = async (req, res) => {
     }
     if (!sessionId) {
       return res.status(400).json({ error: 'sessionId là bắt buộc để duy trì hội thoại' });
-    }
-
-    // === BƯỚC 1: LẤY NGỮ CẢNH & PHÂN TÍCH CÂU HỎI ===
+    }    // === BƯỚC 1: LẤY NGỮ CẢNH & PHÂN TÍCH CÂU HỎI ===
     const context = await ConversationManager.getContext(sessionId);
     const analysis = await analyzeQuery(question.trim(), sessionId, context);
-
-    console.log('🧠 Analysis result:', JSON.stringify(analysis, null, 2));
-    console.log('🔍 Current context:', JSON.stringify(context, null, 2));
 
     let finalResponse;
 
@@ -95,16 +90,9 @@ const queryChatbot = async (req, res) => {
           break;
         }
         
-        try {
-          // Xác định từ khóa tìm kiếm
+        try {          // Xác định từ khóa tìm kiếm
           const searchQuery = analysis.entities.movie_title || analysis.entities.search_keyword;
           const searchReq = { query: { q: searchQuery } };
-          
-          console.log('🔍 Multi-field search:', {
-            query: searchQuery,
-            type: analysis.entities.search_type,
-            entities: analysis.entities
-          });
           
           await movieController.searchMovies(searchReq, mockRes);
           const movies = capturedData;
@@ -221,13 +209,9 @@ async function handleScheduleSearch(analysis, context, sessionId, question, mock
     json: function(data) { capturedData = data; }
   };
   
-  try {
-    const combinedEntities = { ...(context.entities || {}), ...(analysis.entities || {}) };
+  try {    const combinedEntities = { ...(context.entities || {}), ...(analysis.entities || {}) };
     const requiredParams = ['movie_title', 'location', 'date'];
     const missingParams = requiredParams.filter(param => !combinedEntities[param]);
-
-    console.log('🎯 Schedule search - Combined entities:', combinedEntities);
-    console.log('❓ Missing params:', missingParams);
 
     if (missingParams.length > 0) {
       await ConversationManager.smartUpdateContext(sessionId, {
@@ -246,10 +230,8 @@ async function handleScheduleSearch(analysis, context, sessionId, question, mock
     
     if (!movies || movies.length === 0) {
       await ConversationManager.clearContext(sessionId);
-      return ResponseFormatter.formatErrorResponse('movie_not_found');
-    }
+      return ResponseFormatter.formatErrorResponse('movie_not_found');    }
     const movieId = movies[0]._id;
-    console.log('🎬 Found movie:', movies[0].title, 'ID:', movieId);
 
     // 2. Tìm branch ID
     await branchController.getAvailableBranches(req, localMockRes);
@@ -260,19 +242,14 @@ async function handleScheduleSearch(analysis, context, sessionId, question, mock
     );
 
     if (!targetBranch) {
-      await ConversationManager.clearContext(sessionId);
-      return ResponseFormatter.formatErrorResponse('branch_not_found');
-    }
-    console.log('🏢 Found branch:', targetBranch.name, 'ID:', targetBranch._id);
-
-    // 3. Chuẩn hóa date format
+      await ConversationManager.clearContext(sessionId);      return ResponseFormatter.formatErrorResponse('branch_not_found');
+    }    // 3. Chuẩn hóa date format
     const normalizedDate = normalizeDateString(combinedEntities.date);
-    console.log('📅 Normalized date:', normalizedDate);
     
     // 4. Gọi API lịch chiếu
     const scheduleReq = { params: { branchId: targetBranch._id }, query: { date: normalizedDate, movieId } };
     await ticketController.getSchedulesByBranch(scheduleReq, localMockRes);
-    const schedules = capturedData;    console.log('📋 Schedule result:', schedules);
+    const schedules = capturedData;
 
     // 5. Format response và clear context - Thêm movieId và branchId vào schedules object
     const schedulesWithIds = {

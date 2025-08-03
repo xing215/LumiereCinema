@@ -223,11 +223,9 @@ export const useStartHoldSession = () => {
   
   let sessionId = sessionStorage.getItem('sessionId');
 
-  try {
-    if (!sessionId) {
+  try {    if (!sessionId) {
       sessionId = uuidv4();
       sessionStorage.setItem('sessionId', sessionId);
-      console.log('✅ New session created:', sessionId);
     }
 
     const response = await ticketService.holdSeats({
@@ -239,7 +237,6 @@ export const useStartHoldSession = () => {
     
     setError(null);
     setHoldSeatData(response);
-    console.log('✅ Hold session started:', response);
     
     return { success: true, data: response };
   } catch (err) {
