@@ -193,7 +193,7 @@ const RowTemplate = (props) => {
                                             <ActiveButton 
                                                 isHidden={value.isHidden}
                                                 onToggle={(newIsHidden) => props.onStatusChange?.(value.rowIndex, newIsHidden)}
-                                                disabled={value.disabled || props.isUpdating}
+                                                disabled={value.disabled}
                                                 activeLabel="Visible"
                                                 inactiveLabel="Hidden"
                                                 isUpdating={value.isUpdating || false}

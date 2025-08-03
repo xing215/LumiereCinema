@@ -41,6 +41,7 @@ export const useScreenManagement = () => {
   const [isAddingScreen, setIsAddingScreen] = useState(false);
   const [editingCell, setEditingCell] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updatingScreenId, setUpdatingScreenId] = useState(null); // Track which specific screen is being updated
 
   // New screen state
   const [newScreenData, setNewScreenData] = useState({
@@ -544,9 +545,12 @@ export const useScreenManagement = () => {
     }
     
     try {
-      setIsUpdating(true);
       const screenId = targetScreen.id || targetScreen._id;
       console.log('📝 [onStatusChange] Updating screen:', { screenId, newIsActive });
+      
+      // Set the specific screen being updated
+      setUpdatingScreenId(screenId);
+      setIsUpdating(true);
       
       const result = await updateScreen(branchId, screenId, { isActive: newIsActive });
       
@@ -593,6 +597,7 @@ export const useScreenManagement = () => {
         'An unexpected error occurred while updating the screen status. Please try again.'
       );
     } finally {
+      setUpdatingScreenId(null);
       setIsUpdating(false);
     }
   }, [branchId, screens, filterScreens, updateScreen, fetchScreens, isAddingScreen]);
@@ -690,7 +695,7 @@ export const useScreenManagement = () => {
           type: 'ActiveButton', 
           isHidden: !(screen.isActive !== false), // Convert isActive to isHidden (isHidden = !isActive)
           rowIndex: index + (isAddingScreen ? 1 : 0),
-          isUpdating: isUpdating
+          isUpdating: updatingScreenId === (screen._id || screen.id)
         }, 
         'EditSeatButton'
       ];
@@ -739,7 +744,7 @@ export const useScreenManagement = () => {
     console.log('📊 [getProcessedScreenData] Total rows:', allScreenRows.length);
     
     return allScreenRows;
-  }, [screens, isAddingScreen, newScreenData, isUpdating, filterScreens]);
+  }, [screens, isAddingScreen, newScreenData, isUpdating, filterScreens, updatingScreenId]);
 
   // Debug hook return data
   const screenData = getProcessedScreenData();
