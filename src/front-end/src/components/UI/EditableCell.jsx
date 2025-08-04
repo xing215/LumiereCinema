@@ -11,6 +11,7 @@ const EditableCell = ({
     onSave, 
     onCancel, 
     fieldType = 'text',
+    selectOptions = null, // Add selectOptions prop for select fieldType
     className = '',
     disabled = false,
     isUpdating = false,
@@ -67,7 +68,10 @@ const EditableCell = ({
                 }, 100);
             } else if (inputRef.current) {
                 inputRef.current.focus();
-                inputRef.current.select();
+                // Only call select() on input elements, not select elements
+                if (fieldType !== 'select' && typeof inputRef.current.select === 'function') {
+                    inputRef.current.select();
+                }
                 autoResizeTextarea(inputRef.current);
             }
         }
@@ -76,7 +80,8 @@ const EditableCell = ({
     const handleDoubleClick = (e) => {
         e.preventDefault();
         e.stopPropagation(); // Prevent row click events
-        if (!disabled && onStartEdit) {
+        // Don't allow editing if disabled, readonly, or no onStartEdit handler
+        if (!disabled && fieldType !== 'readonly' && onStartEdit) {
             onStartEdit();
         }
     };
@@ -188,6 +193,24 @@ const EditableCell = ({
                     />
                 </div>
             );
+        } else if (fieldType === 'select' && selectOptions) {
+            return (
+                <select
+                    ref={inputRef}
+                    value={editValue}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleBlur}
+                    className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+                    autoFocus
+                >
+                    {selectOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
+            );
         } else {
             return (
                 <textarea
@@ -211,9 +234,12 @@ const EditableCell = ({
     return (
         <div
             onDoubleClick={handleDoubleClick}
-            className={`w-full h-full min-h-[2rem] flex items-center cursor-pointer hover:bg-gray-100 rounded px-1 py-1 transition-colors ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${isUpdating ? 'bg-yellow-100 opacity-75' : ''} ${className}`}
+            className={`w-full h-full min-h-[2rem] flex items-center rounded px-1 py-1 transition-colors ${
+                disabled || fieldType === 'readonly' ? 'cursor-not-allowed opacity-50 bg-gray-50' : 
+                'cursor-pointer hover:bg-gray-100'
+            } ${isUpdating ? 'bg-yellow-100 opacity-75' : ''} ${className}`}
             title={
-                disabled ? '' : 
+                disabled || fieldType === 'readonly' ? 'This field cannot be edited' : 
                 isUpdating ? 'Updating...' : 
                 tooltipText ? tooltipText : 
                 'Double-click to edit (Ctrl+Enter to save, Esc to cancel)'

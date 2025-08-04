@@ -193,7 +193,7 @@ const RowTemplate = (props) => {
                                             <ActiveButton 
                                                 isHidden={value.isHidden}
                                                 onToggle={(newIsHidden) => props.onStatusChange?.(value.rowIndex, newIsHidden)}
-                                                disabled={value.disabled || props.isUpdating}
+                                                disabled={value.disabled}
                                                 activeLabel="Visible"
                                                 inactiveLabel="Hidden"
                                                 isUpdating={value.isUpdating || false}
@@ -238,10 +238,31 @@ const RowTemplate = (props) => {
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'AddLabel' ? (
                                     props.isHeader ? (
-                                        <span>Preview</span>
+                                        <span>Actions</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <PreviewButton/>
+                                        <div className="action-button flex justify-center gap-3 w-full" onClick={(e) => e.stopPropagation()}>
+                                            <button 
+                                                onClick={() => value.onConfirm?.()}
+                                                className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-yellow-600 rounded-lg hover:from-amber-700 hover:to-yellow-700 shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-amber-800"
+                                                title="Confirm Add"
+                                                style={{
+                                                    fontFamily: 'serif',
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                }}
+                                            >
+                                                ✓ OK
+                                            </button>
+                                            <button 
+                                                onClick={() => value.onCancel?.()}
+                                                className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-red-700 to-red-800 rounded-lg hover:from-red-800 hover:to-red-900 shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-red-900"
+                                                title="Cancel Add"
+                                                style={{
+                                                    fontFamily: 'serif',
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                }}
+                                            >
+                                                ✗ Cancel
+                                            </button>
                                         </div>
                                     )
                                 ) : (
@@ -259,6 +280,7 @@ const RowTemplate = (props) => {
                                             tooltipText={tooltipText}
                                             shouldTruncate={shouldTruncateText && !props.isExpanded}
                                             fieldType={(props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : 'text') }
+                                            selectOptions={props.selectOptions && props.selectOptions[index] ? props.selectOptions[index] : null}
                                         />
                                     ) : (
                                         <span

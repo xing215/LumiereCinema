@@ -20,7 +20,13 @@ const {
   createScreen,
   getScreenById,
   updateScreen,
-  deleteScreen
+  deleteScreen,
+  // Seat management functions
+  getScreenSeats,
+  createSeat,
+  bulkCreateSeats,
+  updateSeat,
+  deleteSeat
 } = require('../controllers/branch.controller.js');
 
 /**
@@ -49,5 +55,12 @@ router.post('/:branchId/screens', protect, restrictTo('branchmanager'), createSc
 router.get('/:branchId/screens/:screenId', protect, restrictTo('branchmanager'), getScreenById);
 router.patch('/:branchId/screens/:screenId', protect, restrictTo('branchmanager'), updateScreen);
 router.delete('/:branchId/screens/:screenId', protect, restrictTo('branchmanager'), deleteScreen);
+
+// Các thao tác quản lý seats của screen (bảo vệ, phân quyền branch manager)
+router.get('/:branchId/screens/:screenId/seats', protect, restrictTo('branchmanager'), getScreenSeats);
+router.post('/:branchId/screens/:screenId/seats', protect, restrictTo('branchmanager'), createSeat);
+router.post('/:branchId/screens/:screenId/seats/bulk', protect, restrictTo('branchmanager'), bulkCreateSeats);
+router.patch('/:branchId/screens/:screenId/seats/:seatId', protect, restrictTo('branchmanager'), updateSeat);
+router.delete('/:branchId/screens/:screenId/seats/:seatId', protect, restrictTo('branchmanager'), deleteSeat);
 
 module.exports = router;

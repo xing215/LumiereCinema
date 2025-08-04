@@ -18,6 +18,8 @@ const ManageTable = ({
     isUpdating,
     // Field types for EditableCell
     fieldTypes,
+    // Select options for dropdown fields
+    selectOptions,
     // Status change prop
     onStatusChange,
     // Review mode props
@@ -128,6 +130,8 @@ const ManageTable = ({
                             isUpdating={isUpdating}
                             // Field types for EditableCell
                             fieldTypes={fieldTypes}
+                            // Select options for dropdown fields
+                            selectOptions={selectOptions}
                             // Status change prop
                             onStatusChange={onStatusChange}
                         />

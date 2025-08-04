@@ -113,6 +113,11 @@ const API_CONFIG = {
     branchScreens: '/api/branches/:branchId/screens',    // GET/POST - Branch screens (use getApiUrlWithParams)
     branchScreenDetails: '/api/branches/:branchId/screens/:screenId', // GET/PATCH/DELETE - Screen details (use getApiUrlWithParams)
     
+    // Screen seat management (branchmanager only)
+    screenSeats: '/api/branches/:branchId/screens/:screenId/seats', // GET/POST - Screen seats (use getApiUrlWithParams)
+    screenSeatDetails: '/api/branches/:branchId/screens/:screenId/seats/:seatId', // GET/PATCH/DELETE - Seat details (use getApiUrlWithParams)
+    bulkCreateSeats: '/api/branches/:branchId/screens/:screenId/seats/bulk', // POST - Bulk create seats (use getApiUrlWithParams)
+    
     // Admin branch management (administrator only)
     adminBranches: '/api/admin/branches',               // GET/POST - All branches / Create branch
     adminBranchDetails: '/api/admin/branches/:branchId', // PATCH/DELETE - Branch management (use getApiUrlWithParams)

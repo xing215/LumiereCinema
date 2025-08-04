@@ -1264,9 +1264,9 @@ const getBranchScreens = async (req, res) => {
       }
 
       // 7. Validate size constraints
-      if (size.rows < 1 || size.rows > 30 || size.columns < 1 || size.columns > 50) {
+      if (size.rows < 1 || size.rows > 15 || size.columns < 1 || size.columns > 15) {
         return res.status(400).json({ 
-          message: 'Screen size must be between 1-30 rows and 1-50 columns.' 
+          message: 'Screen size must be between 1-15 rows and 1-15 columns.' 
         });
       }
 
@@ -1497,9 +1497,9 @@ const getBranchScreens = async (req, res) => {
           });
         }
 
-        if (size.rows < 1 || size.rows > 30 || size.columns < 1 || size.columns > 50) {
+        if (size.rows < 1 || size.rows > 15 || size.columns < 1 || size.columns > 15) {
           return res.status(400).json({ 
-            message: 'Screen size must be between 1-30 rows and 1-50 columns.' 
+            message: 'Screen size must be between 1-15 rows and 1-15 columns.' 
           });
         }
 
@@ -1655,6 +1655,618 @@ const getBranchScreens = async (req, res) => {
     }
   };
 
+  // =============================== SEAT MANAGEMENT ===============================
+
+  /**
+   * @desc    Get all seats for a screen
+   * @route   GET /api/branches/:branchId/screens/:screenId/seats
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const getScreenSeats = async (req, res) => {
+    try {
+      const { branchId, screenId } = req.params;
+      const { category, isHidden } = req.query;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can view seats.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only view seats for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 4. Verify screen exists and belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found or does not belong to your branch.' 
+        });
+      }
+
+      // 5. Build filter conditions
+      const filterConditions = {
+        screen: new mongoose.Types.ObjectId(screenId)
+      };
+
+      // Add optional filters
+      if (category) {
+        filterConditions.category = category;
+      }
+
+      if (isHidden !== undefined) {
+        filterConditions.isHidden = isHidden === 'true';
+      }
+
+      // 6. Get seats
+      const Seat = require('../models/Seat');
+      const seats = await Seat.find(filterConditions)
+        .sort({ 'location.row': 1, 'location.column': 1 });
+
+      res.status(200).json({
+        seats,
+        total: seats.length,
+        screen: {
+          _id: screen._id,
+          screenName: screen.screenName,
+          screenType: screen.screenType,
+          size: screen.size
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching screen seats:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Create a new seat for a screen
+   * @route   POST /api/branches/:branchId/screens/:screenId/seats
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const createSeat = async (req, res) => {
+    try {
+      const { branchId, screenId } = req.params;
+      const { seatNumber, location, category } = req.body;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can create seats.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage seats for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate required fields
+      if (!seatNumber || !location || !location.row || !location.column || !category) {
+        return res.status(400).json({ 
+          message: 'Seat number, location (row, column), and category are required.' 
+        });
+      }
+
+      // 4. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 5. Verify screen exists and belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId,
+        isActive: true 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found, inactive, or does not belong to your branch.' 
+        });
+      }
+
+      // 6. Validate location within screen size
+      let rowNumber;
+      if (typeof location.row === 'string') {
+        // Convert row letter (A, B, C, etc.) to number (1, 2, 3, etc.)
+        rowNumber = location.row.charCodeAt(0) - 64;
+      } else {
+        rowNumber = parseInt(location.row);
+      }
+
+      if (rowNumber < 1 || rowNumber > screen.size.rows ||
+          location.column < 1 || location.column > screen.size.columns) {
+        return res.status(400).json({ 
+          message: `Seat location must be within screen size (row: ${location.row}, column: ${location.column}, screen: ${screen.size.rows}x${screen.size.columns}).` 
+        });
+      }
+
+      // 7. Check for duplicate seat number in this screen
+      const Seat = require('../models/Seat');
+      const existingSeat = await Seat.findOne({ 
+        seatNumber: seatNumber.trim(), 
+        screen: screenId 
+      });
+
+      if (existingSeat) {
+        return res.status(409).json({ 
+          message: 'A seat with this number already exists in this screen.' 
+        });
+      }
+
+      // 8. Check for duplicate location in this screen
+      const existingLocation = await Seat.findOne({ 
+        screen: screenId,
+        'location.row': location.row,
+        'location.column': location.column
+      });
+
+      if (existingLocation) {
+        return res.status(409).json({ 
+          message: 'A seat already exists at this location.' 
+        });
+      }
+
+      // 9. Create new seat
+      const newSeat = new Seat({
+        seatNumber: seatNumber.trim(),
+        location: {
+          row: location.row,
+          column: parseInt(location.column)
+        },
+        screen: screenId,
+        category: category.trim(),
+        isHidden: false
+      });
+
+      await newSeat.save();
+
+      res.status(201).json({
+        message: 'Seat created successfully.',
+        seat: newSeat
+      });
+
+    } catch (error) {
+      console.error('Error creating seat:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Bulk create seats for a screen
+   * @route   POST /api/branches/:branchId/screens/:screenId/seats/bulk
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const bulkCreateSeats = async (req, res) => {
+    try {
+      const { branchId, screenId } = req.params;
+      const { seats } = req.body;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can bulk create seats.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage seats for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate seats array
+      if (!seats || !Array.isArray(seats) || seats.length === 0) {
+        return res.status(400).json({ 
+          message: 'Seats array is required and cannot be empty.' 
+        });
+      }
+
+      // 4. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 5. Verify screen exists and belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId,
+        isActive: true 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found, inactive, or does not belong to your branch.' 
+        });
+      }
+
+      // 6. Validate each seat data
+      const validatedSeats = [];
+      const errors = [];
+
+      for (let i = 0; i < seats.length; i++) {
+        const seat = seats[i];
+        
+        if (!seat.seatNumber || !seat.location || !seat.location.row || !seat.location.column || !seat.category) {
+          errors.push(`Seat ${i + 1}: Missing required fields`);
+          continue;
+        }
+
+        // Validate row - convert letter to number for bounds checking
+        let rowNumber;
+        if (typeof seat.location.row === 'string') {
+          // Convert row letter (A, B, C, etc.) to number (1, 2, 3, etc.)
+          rowNumber = seat.location.row.charCodeAt(0) - 64;
+        } else {
+          rowNumber = parseInt(seat.location.row);
+        }
+
+        if (rowNumber < 1 || rowNumber > screen.size.rows ||
+            seat.location.column < 1 || seat.location.column > screen.size.columns) {
+          errors.push(`Seat ${i + 1}: Location out of screen bounds (row: ${seat.location.row}, column: ${seat.location.column}, screen: ${screen.size.rows}x${screen.size.columns})`);
+          continue;
+        }
+
+        validatedSeats.push({
+          seatNumber: seat.seatNumber.trim(),
+          location: {
+            row: seat.location.row,
+            column: parseInt(seat.location.column)
+          },
+          screen: screenId,
+          category: seat.category.trim(),
+          isHidden: seat.isHidden || false
+        });
+      }
+
+      if (errors.length > 0) {
+        return res.status(400).json({ 
+          message: 'Validation errors',
+          errors
+        });
+      }
+
+      // 7. Check for duplicates within the batch and with existing seats
+      const Seat = require('../models/Seat');
+      const existingSeats = await Seat.find({ screen: screenId });
+      
+      const seatNumbers = new Set();
+      const locations = new Set();
+      
+      for (const existingSeat of existingSeats) {
+        seatNumbers.add(existingSeat.seatNumber);
+        locations.add(`${existingSeat.location.row}-${existingSeat.location.column}`);
+      }
+
+      for (let i = 0; i < validatedSeats.length; i++) {
+        const seat = validatedSeats[i];
+        const locationKey = `${seat.location.row}-${seat.location.column}`;
+        
+        if (seatNumbers.has(seat.seatNumber)) {
+          errors.push(`Seat ${i + 1}: Seat number '${seat.seatNumber}' already exists`);
+        }
+        
+        if (locations.has(locationKey)) {
+          errors.push(`Seat ${i + 1}: Location (${seat.location.row}, ${seat.location.column}) already occupied`);
+        }
+        
+        seatNumbers.add(seat.seatNumber);
+        locations.add(locationKey);
+      }
+
+      if (errors.length > 0) {
+        return res.status(409).json({ 
+          message: 'Duplicate errors',
+          errors
+        });
+      }
+
+      // 8. Create all seats
+      const createdSeats = await Seat.insertMany(validatedSeats);
+
+      res.status(201).json({
+        message: `${createdSeats.length} seats created successfully.`,
+        seats: createdSeats,
+        total: createdSeats.length
+      });
+
+    } catch (error) {
+      console.error('Error bulk creating seats:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Update an existing seat
+   * @route   PATCH /api/branches/:branchId/screens/:screenId/seats/:seatId
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const updateSeat = async (req, res) => {
+    try {
+      const { branchId, screenId, seatId } = req.params;
+      const { seatNumber, location, category, isHidden } = req.body;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can update seats.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage seats for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId) ||
+          !mongoose.Types.ObjectId.isValid(seatId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 4. Find the seat and verify it belongs to the screen
+      const Seat = require('../models/Seat');
+      const existingSeat = await Seat.findOne({ 
+        _id: seatId, 
+        screen: screenId 
+      });
+
+      if (!existingSeat) {
+        return res.status(404).json({ 
+          message: 'Seat not found or does not belong to this screen.' 
+        });
+      }
+
+      // 5. Verify screen belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found or does not belong to your branch.' 
+        });
+      }
+
+      // 6. Build update object
+      const updateData = {};
+
+      // Validate and set seat number if provided
+      if (seatNumber) {
+        const trimmedSeatNumber = seatNumber.trim();
+        
+        // Check for duplicate name (excluding current seat)
+        const duplicateSeat = await Seat.findOne({ 
+          seatNumber: trimmedSeatNumber, 
+          screen: screenId,
+          _id: { $ne: seatId }
+        });
+
+        if (duplicateSeat) {
+          return res.status(409).json({ 
+            message: 'A seat with this number already exists in this screen.' 
+          });
+        }
+
+        updateData.seatNumber = trimmedSeatNumber;
+      }
+
+        // Validate and set location if provided
+        if (location) {
+          if (!location.row || !location.column) {
+            return res.status(400).json({ 
+              message: 'Both row and column are required when updating location.' 
+            });
+          }
+
+          let rowNumber;
+          if (typeof location.row === 'string') {
+            // Convert row letter (A, B, C, etc.) to number (1, 2, 3, etc.)
+            rowNumber = location.row.charCodeAt(0) - 64;
+          } else {
+            rowNumber = parseInt(location.row);
+          }
+
+          if (rowNumber < 1 || rowNumber > screen.size.rows ||
+              location.column < 1 || location.column > screen.size.columns) {
+            return res.status(400).json({ 
+              message: `Location must be within screen size (row: ${location.row}, column: ${location.column}, screen: ${screen.size.rows}x${screen.size.columns}).` 
+            });
+          }
+
+        // Check for duplicate location (excluding current seat)
+        const duplicateLocation = await Seat.findOne({ 
+          screen: screenId,
+          'location.row': location.row,
+          'location.column': location.column,
+          _id: { $ne: seatId }
+        });
+
+        if (duplicateLocation) {
+          return res.status(409).json({ 
+            message: 'A seat already exists at this location.' 
+          });
+        }
+
+        updateData.location = {
+          row: location.row,
+          column: parseInt(location.column)
+        };
+      }
+
+      // Set category if provided
+      if (category) {
+        updateData.category = category.trim();
+      }
+
+      // Set hidden status if provided
+      if (typeof isHidden === 'boolean') {
+        updateData.isHidden = isHidden;
+      }
+
+      // 7. Update the seat
+      const updatedSeat = await Seat.findByIdAndUpdate(
+        seatId,
+        updateData,
+        { new: true, runValidators: true }
+      );
+
+      res.status(200).json({
+        message: 'Seat updated successfully.',
+        seat: updatedSeat
+      });
+
+    } catch (error) {
+      console.error('Error updating seat:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
+  /**
+   * @desc    Delete a seat
+   * @route   DELETE /api/branches/:branchId/screens/:screenId/seats/:seatId
+   * @access  Branch Manager (restricted to their assigned branch)
+   */
+  const deleteSeat = async (req, res) => {
+    try {
+      const { branchId, screenId, seatId } = req.params;
+
+      // 1. Validate branch manager permissions
+      if (!req.user.roles.includes('branchmanager')) {
+        return res.status(403).json({ 
+          message: 'Only branch managers can delete seats.' 
+        });
+      }
+
+      // 2. Check if branch manager belongs to this branch
+      if (!req.user.branch || req.user.branch.toString() !== branchId) {
+        return res.status(403).json({ 
+          message: 'You can only manage seats for your assigned branch.' 
+        });
+      }
+
+      // 3. Validate ObjectId formats
+      if (!mongoose.Types.ObjectId.isValid(branchId) || 
+          !mongoose.Types.ObjectId.isValid(screenId) ||
+          !mongoose.Types.ObjectId.isValid(seatId)) {
+        return res.status(400).json({ 
+          message: 'Invalid ID format.' 
+        });
+      }
+
+      // 4. Find the seat and verify it belongs to the screen
+      const Seat = require('../models/Seat');
+      const seat = await Seat.findOne({ 
+        _id: seatId, 
+        screen: screenId 
+      });
+
+      if (!seat) {
+        return res.status(404).json({ 
+          message: 'Seat not found or does not belong to this screen.' 
+        });
+      }
+
+      // 5. Verify screen belongs to this branch
+      const screen = await Screen.findOne({ 
+        _id: screenId, 
+        branch: branchId 
+      });
+
+      if (!screen) {
+        return res.status(404).json({ 
+          message: 'Screen not found or does not belong to your branch.' 
+        });
+      }
+
+      // 6. Check if seat is in any existing schedules or tickets
+      const Schedule = require('../models/Schedule');
+      const scheduleCount = await Schedule.countDocuments({ 
+        screen: screenId,
+        startTime: { $gte: new Date() } // Only future schedules
+      });
+
+      if (scheduleCount > 0) {
+        // If there are future schedules, just hide the seat instead of deleting
+        const hiddenSeat = await Seat.findByIdAndUpdate(
+          seatId,
+          { isHidden: true },
+          { new: true }
+        );
+
+        return res.status(200).json({
+          message: `Seat cannot be deleted due to existing schedules (${scheduleCount}). Seat has been hidden instead.`,
+          seat: hiddenSeat
+        });
+      }
+
+      // 7. Delete the seat
+      await Seat.findByIdAndDelete(seatId);
+
+      res.status(200).json({
+        message: 'Seat deleted successfully.',
+        deletedSeat: {
+          _id: seat._id,
+          seatNumber: seat.seatNumber,
+          location: seat.location
+        }
+      });
+
+    } catch (error) {
+      console.error('Error deleting seat:', error);
+      res.status(500).json({ 
+        message: 'Server error', 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
+    }
+  };
+
 module.exports = {
   createSnack,
   editSnack,
@@ -1672,5 +2284,11 @@ module.exports = {
   createScreen,
   getScreenById,
   updateScreen,
-  deleteScreen
+  deleteScreen,
+  // Seat management functions
+  getScreenSeats,
+  createSeat,
+  bulkCreateSeats,
+  updateSeat,
+  deleteSeat
 };

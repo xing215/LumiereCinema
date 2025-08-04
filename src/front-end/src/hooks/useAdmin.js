@@ -277,7 +277,7 @@ export const useAddMovie = () => {
     console.log('Adding movie with data:', movieData);
     
     try {
-      const data = await movieService.createMovie(movieData, token);
+      const data = await movieService.addMovie(movieData, token);
       console.log('Add movie response:', data);
       return { success: true, data };
     } catch (err) {

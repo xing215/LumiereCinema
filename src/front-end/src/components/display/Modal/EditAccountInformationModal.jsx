@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@styles/datepicker.css';
+import { showError } from '@/utils/sweetalert';
 
 const TickButton = ({ onTick, check }) => {
     return (
@@ -135,17 +136,6 @@ const DropdownTemplate = ({ text, className, value, onChange, options, disabled 
     );
 };
 
-// Role display mapping
-const roleDisplayMap = {
-    customer: 'Customer',
-    cashier: 'Cashier',
-    checkincounter: 'Check-in Counter',
-    branchmanager: 'Branch Manager',
-    administrator: 'Administrator'
-};
-
-const getRoleDisplay = (role) => roleDisplayMap[role] || role;
-
 const EditAccountInformationModal = ({ 
     onClose, 
     handleConfirm, 
@@ -179,20 +169,41 @@ const EditAccountInformationModal = ({
         }
     }, [isEdit, accountData?.roles]); // Only depend on roles, not entire accountData
 
+
     const handleChosenRole = (roleIndex) => {
+        // Nếu đang ở chế độ edit, kiểm tra các ràng buộc
+        if (isEdit) {
+            // Nếu đang là customer, không cho phép click vào role khác
+            if (chosenRole.has(1)) {
+                showError('Error', 'Customer role cannot be changed.');
+                return; // Không làm gì cả
+            }
+            
+            // Nếu đang là staff roles, không cho phép click vào customer role
+            if (roleIndex === 1) {
+                showError('Error', 'Customer role cannot be assigned.');
+                return; // Không làm gì cả
+            }
+        }
+
         setChosenRole((prev) => {
             const newSet = new Set(prev);
 
             const isCustomer = roleIndex === 1;
-
+            const isAdministrator = roleIndex === 5;
+            
             if (newSet.has(roleIndex)) {
+                // Nếu đã có role này, xóa nó
                 newSet.delete(roleIndex);
             } else {
-                if (isCustomer) {
+                if (isCustomer || isAdministrator) {
+                    // Customer hoặc Administrator: clear tất cả và chỉ add role này
                     newSet.clear();
-                    newSet.add(1);
+                    newSet.add(roleIndex);
                 } else {
-                    newSet.delete(1);
+                    // Role khác: xóa customer và administrator, rồi add role này
+                    newSet.delete(1); // xóa customer
+                    newSet.delete(5); // xóa administrator  
                     newSet.add(roleIndex);
                 }
             }
@@ -262,7 +273,7 @@ const EditAccountInformationModal = ({
                             onChange={(value) => handleFieldChange('password', value)}
                         />
                     )}
-                    {chosenRole.has(1) ? null : (
+                    {[2, 3, 4].some(chosenRole.has, chosenRole) ?(
                         <DropdownTemplate 
                             text="Branch" 
                             className="w-[100%]" 
@@ -278,7 +289,7 @@ const EditAccountInformationModal = ({
                                 label: branch.name
                             }))}
                         />
-                    )}
+                    ) : null }
                 </div>
                 <div className="relative flex h-full flex-col items-start justify-center gap-[20%]">
                     <div className="flex flex-col gap-2">

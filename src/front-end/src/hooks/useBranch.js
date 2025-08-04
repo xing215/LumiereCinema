@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { branchService, ticketService } from '@services';
 import { useUser } from '@contexts/UserContext';
 
@@ -83,7 +83,12 @@ export const useGetScreens = () => {
   const { currentBranch } = useSetCurrentBranch();
 
   const getScreens = async (branchId = currentBranch) => {
+    console.log('🔄 [useGetScreens] Starting fetch');
+    console.log('🏢 [useGetScreens] branchId:', branchId);
+    console.log('🔑 [useGetScreens] token available:', !!token);
+    
     if (!branchId) {
+      console.log('❌ [useGetScreens] No branch selected');
       setError('No branch selected');
       return { success: false, error: 'No branch selected' };
     }
@@ -92,10 +97,16 @@ export const useGetScreens = () => {
     setError(null);
     
     try {
+      console.log('📡 [useGetScreens] Calling branchService.getBranchScreens');
       const data = await branchService.getBranchScreens(branchId, token);
+      console.log('✅ [useGetScreens] API call success, data:', data);
+      
       setScreens(data);
       return { success: true, data };
     } catch (err) {
+      console.error('❌ [useGetScreens] API call failed:', err);
+      console.error('🔍 [useGetScreens] Error response:', err.response);
+      
       const errorMessage = err.response?.data?.message || 'Failed to fetch screens';
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -104,7 +115,31 @@ export const useGetScreens = () => {
     }
   };
 
-  return { getScreens, screens, loading, error };
+  return { getScreens, screens, setScreens, loading, error };
+};
+
+export const useCreateScreen = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const createScreen = async (branchId, screenData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.createBranchScreen(branchId, screenData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to create screen';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createScreen, loading, error };
 };
 
 export const useUpdateScreen = () => {
@@ -112,7 +147,7 @@ export const useUpdateScreen = () => {
   const [error, setError] = useState(null);
   const { token } = useUser();
 
-  const updateScreen = async (branchId, screenId, screenData) => {
+  const updateScreen = useCallback(async (branchId, screenId, screenData) => {
     setLoading(true);
     setError(null);
     
@@ -126,7 +161,7 @@ export const useUpdateScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   return { updateScreen, loading, error };
 };
@@ -354,4 +389,134 @@ export const useRemoveSnack = () => {
   };
 
   return { removeSnack, loading, error };
+};
+
+// Seat Management Hooks
+
+export const useGetScreenSeats = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [seats, setSeats] = useState([]);
+  const { token } = useUser();
+
+  const getScreenSeats = useCallback(async (branchId, screenId) => {
+    if (!branchId || !screenId) {
+      const errorMsg = 'Branch ID and Screen ID are required';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.getScreenSeats(branchId, screenId, token);
+      setSeats(data);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch seats';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  return { getScreenSeats, seats, setSeats, loading, error };
+};
+
+export const useCreateSeat = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const createSeat = async (branchId, screenId, seatData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.createSeat(branchId, screenId, seatData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to create seat';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createSeat, loading, error };
+};
+
+export const useBulkCreateSeats = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const bulkCreateSeats = useCallback(async (branchId, screenId, seatsData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.bulkCreateSeats(branchId, screenId, seatsData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to create seats';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  return { bulkCreateSeats, loading, error };
+};
+
+export const useUpdateSeat = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const updateSeat = useCallback(async (branchId, screenId, seatId, seatData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.updateSeat(branchId, screenId, seatId, seatData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to update seat';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  return { updateSeat, loading, error };
+};
+
+export const useRemoveSeat = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const removeSeat = async (branchId, screenId, seatId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await branchService.deleteSeat(branchId, screenId, seatId, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to remove seat';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { removeSeat, loading, error };
 };
