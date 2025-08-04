@@ -112,4 +112,10 @@ snackTicketSchema.pre('validate', function(next) {
 // Speed up invoice search by customer
 snackTicketSchema.index({ customer: 1 });
 
+// Thêm index cho snackTicketCode để tăng tốc độ lookup
+snackTicketSchema.index({ snackTicketCode: 1 });
+
+// Compound index cho các query phổ biến
+snackTicketSchema.index({ branch: 1, status: 1 });
+
 module.exports = mongoose.model('SnackTicket', snackTicketSchema);

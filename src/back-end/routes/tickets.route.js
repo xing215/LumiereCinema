@@ -20,6 +20,10 @@ const {
   updateTicket,
   deleteTicket,
   calculateDiscountedTotal,
+  // New ticket cache management functions
+  preloadTicketCache,
+  getTicketCacheStats,
+  clearTicketCache,
 } = require('../controllers/ticket.controller.js');
 
 // =============================================================================
@@ -160,6 +164,18 @@ router.post('/cache/cleanup', protect, restrictTo('administrator'), cleanupCache
  * Body: { routes: [{ branchId, scheduleId }] }
  */
 router.post('/cache/preload', protect, restrictTo('administrator'), preloadCache);
+
+/**
+ * Ticket Cache Management Routes
+ */
+// POST /cache/tickets/preload - Preload recent tickets to cache
+router.post('/cache/tickets/preload', protect, restrictTo('administrator'), preloadTicketCache);
+
+// GET /cache/tickets/stats - Get ticket cache statistics  
+router.get('/cache/tickets/stats', protect, restrictTo('administrator'), getTicketCacheStats);
+
+// DELETE /cache/tickets/clear - Clear ticket cache
+router.delete('/cache/tickets/clear', protect, restrictTo('administrator'), clearTicketCache);
 
 /**
  * GET /calculate-discounted-total

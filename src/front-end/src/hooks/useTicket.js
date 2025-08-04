@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { ticketService } from '@services';
 import { promotionService } from '@services/promotion.service';
@@ -377,26 +377,93 @@ export const useGetTicketDetailsByCode = () => {
     const [ticket, setTicket] = useState(null);
     const { token } = useUser();
 
-    // Hàm getTicket giờ không cần ticketType nữa
+    // Cache system để tránh gọi API trùng lặp
+    const ticketCache = useRef(new Map());
+    const CACHE_DURATION = 60000; // 1 phút cache
+    
+    // Debounce system
+    const lastRequestTime = useRef(0);
+    const activeRequest = useRef(null);
+    const REQUEST_DEBOUNCE = 500; // 500ms debounce
+
     const getTicket = async (ticketCode) => {
         if (!ticketCode) return;
+        
+        const cleanCode = ticketCode.trim().toUpperCase();
+        const currentTime = Date.now();
+        
+        // Kiểm tra debounce
+        if (currentTime - lastRequestTime.current < REQUEST_DEBOUNCE) {
+            return activeRequest.current;
+        }
+        
+        // Kiểm tra cache
+        const cachedData = ticketCache.current.get(cleanCode);
+        if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
+            setTicket(cachedData.data);
+            setError(null);
+            return { success: true, data: cachedData.data, fromCache: true };
+        }
+        
+        // Hủy request trước đó nếu có
+        if (activeRequest.current && activeRequest.current.controller) {
+            activeRequest.current.controller.abort();
+        }
+        
         setLoading(true);
         setError(null);
         setTicket(null);
+        lastRequestTime.current = currentTime;
         
+        // Tạo AbortController cho request mới
+        const controller = new AbortController();
+        const requestPromise = performTicketRequest(cleanCode, controller);
+        activeRequest.current = { controller, promise: requestPromise };
+        
+        return requestPromise;
+    };
+    
+    const performTicketRequest = async (ticketCode, controller) => {
         try {
-            // Use the ticket service to get movie ticket details
-            const response = await ticketService.getMovieTicketDetails(ticketCode, token);
-            setTicket(response); // Dữ liệu trả về giờ đã có trường ticketType
+            // Sử dụng AbortController để có thể cancel request
+            const response = await ticketService.getMovieTicketDetails(
+                ticketCode, 
+                token, 
+                { signal: controller.signal }
+            );
+            
+            // Cache kết quả
+            ticketCache.current.set(ticketCode, {
+                data: response,
+                timestamp: Date.now()
+            });
+            
+            setTicket(response);
+            activeRequest.current = null;
             return { success: true, data: response };
         } catch (err) {
+            if (err.name === 'AbortError') {
+                return { success: false, error: 'Request cancelled' };
+            }
+            
             const errorMessage = err.response?.data?.message || 'Ticket not found or an error occurred.';
             setError(errorMessage);
+            activeRequest.current = null;
             return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
         }
     };
+
+    // Cleanup function để clear cache khi component unmount
+    useEffect(() => {
+        return () => {
+            if (activeRequest.current && activeRequest.current.controller) {
+                activeRequest.current.controller.abort();
+            }
+        };
+    }, []);
+
     return { getTicket, ticket, loading, error };
 };
 
