@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const { nanoid } = require('nanoid');
+const nanoidCustom = require('nanoid').customAlphabet;
+
+const nanoid = nanoidCustom('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 8);
 
 const snackTicketSchema = new mongoose.Schema({
   // SnackTicketCode (PK): Unique invoice code, auto-generated
@@ -104,7 +106,7 @@ snackTicketSchema.pre('validate', function (next) {
 // Automatically generate snackTicketCode
 snackTicketSchema.pre('validate', function(next) {
     if (this.isNew) {
-        this.snackTicketCode = `SNACK-${nanoid(8).toUpperCase()}`;
+        this.snackTicketCode = `SNACK-${nanoid()}`;
     }
     next();
 });
