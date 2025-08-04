@@ -2,7 +2,8 @@
 import TicketDetail from '@components/UI/TicketDetail';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import CustomDropdown from '@components/UI/CustomDropdown.jsx';
-import { useApplyPromotion } from '@hooks/useTicket';
+import PromotionDropdown from '@components/UI/PromotionDropdown.jsx';
+import { useApplyPromotion, useGetPublicPromotions } from '@hooks/useTicket';
 import { useState, useEffect, useRef } from 'react';
 
 // ================================ COMPONENTS ================================
@@ -25,30 +26,23 @@ const DiscountDropdown = ({
     value, 
     onChange, 
     onBlur, 
-    promotion 
+    promotion,
+    productType = 'All'
 }) => {
-    const inputRef = useRef(null);
-    
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && typeof onBlur === 'function') {
-            inputRef.current && inputRef.current.blur();
-        }
-    };
-
     return (
         <div className={`h-auto w-[80vw] min-w-0 flex-row items-center justify-center gap-2 md:max-w-[350px] md:min-w-[250px] ${className}`}>
             <div className={`h-auto w-auto justify-start font-['Unbounded'] font-bold text-white ${labelClass}`}>
                 DISCOUNT:
             </div>
             <div className="z-3 h-auto flex-1">
-                <input
-                    type="text"
+                <PromotionDropdown
                     value={value}
                     onChange={onChange}
-                    className={`h-10 font-['Unbounded'] w-full rounded-md border bg-zinc-300 px-2 text-black ${promotion ? 'border-green-500 border-3' : 'border-white'}`}
                     onBlur={onBlur}
-                    onKeyDown={handleKeyDown}
-                    ref={inputRef}
+                    promotion={promotion}
+                    placeholder="Enter promotion code"
+                    className="w-full"
+                    productType={productType}
                 />
             </div>
         </div>
@@ -101,10 +95,45 @@ const MenuPayment = ({
     const [selectedPayment, setSelectedPayment] = useState('');
     const [timeLeft, setTimeLeft] = useState(null);
     const [isExpired, setIsExpired] = useState(false);
+    const typingTimeoutRef = useRef(null);
     
     const { applyPromotion, appliedPromotion, loading: promotionLoading, error } = useApplyPromotion();
+    const { fetchPublicPromotions, promotions } = useGetPublicPromotions();
+
+    // ================================ PRODUCT TYPE DETERMINATION ================================
+    
+    // Determine what type of product is being purchased
+    const getProductType = () => {
+        const hasMovieTicket = movieTicketData && movieTicketData.total > 0;
+        const hasSnackTicket = snackTicketData && snackTicketData.total > 0;
+        
+        console.log('Product type determination:', {
+            hasMovieTicket,
+            hasSnackTicket,
+            movieTotal: movieTicketData?.total,
+            snackTotal: snackTicketData?.total
+        });
+        
+        if (hasMovieTicket && hasSnackTicket) {
+            return 'All'; // Both movie and snack
+        } else if (hasMovieTicket) {
+            return 'Movie'; // Only movie ticket
+        } else if (hasSnackTicket) {
+            return 'Snack'; // Only snack
+        }
+        
+        return 'All'; // Default to show all if unclear
+    };
+    
+    const productType = getProductType();
+    console.log('Final product type:', productType);
 
     // ================================ TIMER EFFECTS ================================
+
+    // Fetch promotions on component mount
+    useEffect(() => {
+        fetchPublicPromotions();
+    }, []);
 
     useEffect(() => {
         if (!isSession || !sessionExpiresAt?.data?.expiresAt || loading) return;
@@ -128,6 +157,15 @@ const MenuPayment = ({
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
     }, [sessionExpiresAt, loading, onExpire]);
+
+    // Cleanup timeout on component unmount
+    useEffect(() => {
+        return () => {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // ================================ PROMOTION EFFECTS ================================
 
@@ -161,18 +199,61 @@ const MenuPayment = ({
     // ================================ EVENT HANDLERS ================================
 
     const handleDiscountChange = (e) => {
-        setDiscountValue(e.target.value);
-    };
-
-    const handleDiscountBlurOrEnter = async (e) => {
-        if (!discountValue.trim()) {
+        const newValue = e.target.value;
+        setDiscountValue(newValue);
+        
+        // Clear any existing timeout
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+        
+        // If user clears the input, immediately clear promotions
+        if (!newValue.trim()) {
             updateMovieTicket({ promotion: null, discount: 0 });
             updateSnackTicket({ promotion: null, discount: 0 });
             return;
         }
         
+        // Check if this value exactly matches a promotion code from dropdown
+        const matchedPromotion = promotions.find(promo => 
+            promo.promotionCode.toLowerCase() === newValue.trim().toLowerCase()
+        );
+        
+        if (matchedPromotion) {
+            // This is a selection from dropdown - apply immediately
+            applyPromotionCode(newValue.trim());
+        } else {
+            // This is typing - debounce the API call
+            typingTimeoutRef.current = setTimeout(() => {
+                applyPromotionCode(newValue.trim());
+            }, 1000); // Wait 1 second after user stops typing
+        }
+    };
+
+    const handleDiscountBlurOrEnter = async (e) => {
+        // Clear any pending timeout since user has finished input
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+        
+        const currentValue = discountValue.trim();
+        
+        if (!currentValue) {
+            return; // Already handled in onChange
+        }
+        
+        // Apply immediately when user finishes input
+        await applyPromotionCode(currentValue);
+    };
+
+    // Helper function to apply promotion code
+    const applyPromotionCode = async (code) => {
+        if (!code || appliedPromotion?.promotion?.promotionCode === code) {
+            return; // Don't apply if empty or already applied
+        }
+        
         await applyPromotion({
-            promotionCode: discountValue.trim(),
+            promotionCode: code,
             snackTotal: snackTicketData?.total,
             movieTotal: movieTicketData?.total,
             noLoginCustomerInfo: movieTicketData?.noLoginCustomerInfo || snackTicketData?.noLoginCustomerInfo
@@ -255,6 +336,8 @@ const MenuPayment = ({
                             value={discountValue}
                             onChange={handleDiscountChange}
                             onBlur={handleDiscountBlurOrEnter}
+                            promotion={movieTicketData?.promotion || snackTicketData?.promotion}
+                            productType={productType}
                         />
                         
                         {/* Payment Buttons */}
@@ -285,6 +368,7 @@ const MenuPayment = ({
                             onChange={handleDiscountChange}
                             onBlur={handleDiscountBlurOrEnter}
                             promotion={movieTicketData?.promotion || snackTicketData?.promotion}
+                            productType={productType}
                         />
                         
                         <div className="flex w-full flex-row items-center justify-center gap-2">

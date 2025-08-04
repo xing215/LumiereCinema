@@ -126,6 +126,7 @@ const API_CONFIG = {
     // ========================= PROMOTION ENDPOINTS =========================
     // Public promotion endpoints
     promotionBanner: '/api/admin/promotions/banner',    // GET - Promotion banner list
+    publicPromotions: '/api/admin/promotions/public',   // GET - Public promotions (with banners or loyalty codes)
     
     // Admin promotion management (administrator only)
     adminPromotions: '/api/admin/promotions/all',       // GET - All promotions

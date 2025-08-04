@@ -43,8 +43,14 @@ const promotionSchema = new mongoose.Schema({
 
   appliedLoyaltyRank: {
     type: String, // Store 'rankName' from LoyaltyRank
-    enum: ['SILVER', 'GOLD', 'PLATINUM'], // Only applies to this customer tier
-    default: 'SILVER', // Default to SILVER if not specified
+    default: null, // Default to null - anyone can apply if not specified
+    validate: {
+      validator: function(value) {
+        // Allow null/undefined or valid loyalty ranks
+        return value === null || value === undefined || ['SILVER', 'GOLD', 'PLATINUM'].includes(value);
+      },
+      message: '{VALUE} is not a valid loyalty rank. Must be SILVER, GOLD, PLATINUM, or null.'
+    }
   },
   
   // RemainingUse: Number of uses remaining

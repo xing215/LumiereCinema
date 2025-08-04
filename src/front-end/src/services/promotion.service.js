@@ -12,6 +12,12 @@ export const promotionService = {
     return response.data;
   },
 
+  getPublicPromotions: async (authToken = null) => {
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    const response = await axios.get(getApiUrl('publicPromotions'), { headers });
+    return response.data;
+  },
+
   // Admin promotion management (administrator only)
   getAllPromotions: async (authToken) => {
     const response = await axios.get(getApiUrl('adminPromotions'), {

@@ -54,6 +54,7 @@ export {
   useSelectSnack,
   useCalculateTotal,
   useApplyPromotion,
+  useGetPublicPromotions,
   useCreateTicket,
   useStartHoldSession,
   useClearSession,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { ticketService } from '@services';
+import { promotionService } from '@services/promotion.service';
 import { useUser } from '@contexts/UserContext';
 import { buildApiUrl, getApiUrl } from '@config/api.config';
 import { v4 as uuidv4 } from 'uuid';
@@ -90,7 +91,31 @@ export const useApplyPromotion = () => {
   return { applyPromotion, appliedPromotion, loading, error };
 };
 
-export const useCreateTicket = () => {
+export const useGetPublicPromotions = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [promotions, setPromotions] = useState([]);
+  const { token } = useUser();
+  
+  const fetchPublicPromotions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await promotionService.getPublicPromotions(token);
+      console.log('Public promotions fetched successfully:', response);
+      setPromotions(response);
+      return { success: true, data: response };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to fetch promotions';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { fetchPublicPromotions, promotions, loading, error };
+};export const useCreateTicket = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ticket, setTicket] = useState(null);
