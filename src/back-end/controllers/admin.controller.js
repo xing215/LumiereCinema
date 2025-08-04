@@ -411,6 +411,15 @@ const createPromotion = async (req, res) => {
     const promotion = new Promotion(data);
     await promotion.save();
     await redisClient.del('promotionList');
+    await redisClient.del('promotionBannerList');
+    // Clear all public promotion caches (guest and all loyalty ranks)
+    await Promise.all([
+      redisClient.del('publicPromotionList:guest'),
+      redisClient.del('publicPromotionList:none'),
+      redisClient.del('publicPromotionList:SILVER'),
+      redisClient.del('publicPromotionList:GOLD'),
+      redisClient.del('publicPromotionList:PLATINUM')
+    ]);
     res.status(201).json({ message: 'Promotion created successfully.', promotion });
   } catch (error) {
     console.error('Error creating promotion:', error);
@@ -431,6 +440,15 @@ const updatePromotion = async (req, res) => {
       return res.status(404).json({ message: 'Promotion not found.' });
     }
     await redisClient.del('promotionList');
+    await redisClient.del('promotionBannerList');
+    // Clear all public promotion caches (guest and all loyalty ranks)
+    await Promise.all([
+      redisClient.del('publicPromotionList:guest'),
+      redisClient.del('publicPromotionList:none'),
+      redisClient.del('publicPromotionList:SILVER'),
+      redisClient.del('publicPromotionList:GOLD'),
+      redisClient.del('publicPromotionList:PLATINUM')
+    ]);
     await redisClient.del(`promotion:${promotionCode.toUpperCase()}`);
     res.status(200).json({ message: 'Promotion updated successfully.', promotion });
   } catch (error) {
@@ -447,10 +465,157 @@ const deletePromotion = async (req, res) => {
       return res.status(404).json({ message: 'Promotion not found.' });
     }
     await redisClient.del('promotionList');
+    await redisClient.del('promotionBannerList');
+    // Clear all public promotion caches (guest and all loyalty ranks)
+    await Promise.all([
+      redisClient.del('publicPromotionList:guest'),
+      redisClient.del('publicPromotionList:none'),
+      redisClient.del('publicPromotionList:SILVER'),
+      redisClient.del('publicPromotionList:GOLD'),
+      redisClient.del('publicPromotionList:PLATINUM')
+    ]);
     await redisClient.del(`promotion:${promotionCode.toUpperCase()}`);
     res.status(200).json({ message: 'Promotion deleted successfully.' });
   } catch (error) {
     console.error('Error deleting promotion:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// Get public promotions (có cache)
+const getPublicPromotions = async (req, res) => {
+  try {    
+    // Extract user ID - use same pattern as ticket.controller.js
+    const userId = req.user && req.user?.id ? req.user?.id : null;
+    let user = null;
+    let userLoyaltyRank = null;
+    
+    // Get user information if logged in
+    if (userId) {
+      // req.user is already the full user object from getUser middleware
+      user = req.user;
+      userLoyaltyRank = user?.loyaltyRank?.rank || null;
+    }
+    
+    // Create cache key based on user's loyalty rank
+    const cacheKey = userId ? `publicPromotionList:${userLoyaltyRank || 'none'}` : 'publicPromotionList:guest';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.status(200).json(JSON.parse(cached));
+    }
+    
+    // Build promotion query with proper rank-specific filtering
+    let promotionQuery = {
+      isActive: true
+    };
+    
+    // Build conditions for different types of promotions
+    let queryConditions = [];
+    
+    // 1. Banner promotions - these follow the hierarchy rules (higher ranks can access lower)
+    let bannerCondition = {
+      $and: [
+        { bannerImage: { $ne: null } },
+        { bannerImage: { $ne: '' } },
+        { bannerImage: { $exists: true } }
+      ]
+    };
+    
+    // 2. Rank-specific code promotions - these are exclusive to matching ranks
+    if (userLoyaltyRank) {
+      // For logged-in users with rank: show banner promos + only their rank codes
+      queryConditions.push(bannerCondition);
+      queryConditions.push({
+        $and: [
+          { promotionCode: { $regex: new RegExp(userLoyaltyRank, 'i') } },
+          { 
+            $or: [
+              { bannerImage: null }, 
+              { bannerImage: '' },
+              { bannerImage: { $exists: false } }
+            ] 
+          }
+        ]
+      });
+      console.log(`Adding banner promos + ${userLoyaltyRank} rank codes only`);
+      console.log('Banner condition:', JSON.stringify(bannerCondition, null, 2));
+    } else if (!userId) {
+      // For non-logged-in users: show all promotions (will be filtered by loyaltyFilter)
+      queryConditions.push(bannerCondition);
+      queryConditions.push({
+        promotionCode: { $regex: /(SILVER|GOLD|PLATINUM)/i }
+      });
+      console.log('Adding all promos for non-logged-in user');
+    } else {
+      // For logged-in users without rank: only banner promotions
+      queryConditions.push(bannerCondition);
+      console.log('Adding only banner promos for user without rank');
+    }
+    
+    promotionQuery.$or = queryConditions;
+    console.log('Promotion query conditions:', JSON.stringify(queryConditions, null, 2));
+    
+    // Filter by loyalty rank eligibility
+    let loyaltyFilter = {};
+    if (!userId) {
+      // Non-logged-in users: only promotions with no loyalty rank requirement
+      loyaltyFilter = {
+        $or: [
+          { appliedLoyaltyRank: null },
+          { appliedLoyaltyRank: '' }
+        ]
+      };
+    } else if (userLoyaltyRank) {
+      // Logged-in users: promotions with no requirement OR matching their rank or lower
+      const accessibleRanks = [];
+      
+      // Define rank hierarchy (higher ranks can access lower rank promotions)
+      if (userLoyaltyRank === 'PLATINUM') {
+        accessibleRanks.push('SILVER', 'GOLD', 'PLATINUM');
+      } else if (userLoyaltyRank === 'GOLD') {
+        accessibleRanks.push('SILVER', 'GOLD');
+      } else if (userLoyaltyRank === 'SILVER') {
+        accessibleRanks.push('SILVER');
+      }
+      
+      loyaltyFilter = {
+        $or: [
+          { appliedLoyaltyRank: null }, // No requirement
+          { appliedLoyaltyRank: '' }, // Empty requirement
+          { appliedLoyaltyRank: { $in: accessibleRanks } } // Accessible ranks
+        ]
+      };
+    } else {
+      // Logged-in user but no loyalty rank: only promotions with no requirement
+      loyaltyFilter = {
+        $or: [
+          { appliedLoyaltyRank: null },
+          { appliedLoyaltyRank: '' }
+        ]
+      };
+    }
+    
+    // Combine promotion query with loyalty filter
+    const finalQuery = {
+      $and: [
+        promotionQuery,
+        loyaltyFilter
+      ]
+    };
+    
+    console.log('Final query:', JSON.stringify(finalQuery, null, 2));
+    const promotions = await Promotion.find(finalQuery);
+    
+    if (!promotions || promotions.length === 0) {
+      return res.status(404).json({ message: 'No applicable promotions found.' });
+    }
+    
+    // Cache for 1 hour
+    await redisClient.set(cacheKey, JSON.stringify(promotions), { EX: 3600 });
+    console.log(promotions);
+    res.status(200).json(promotions);
+  } catch (error) {
+    console.error('Error getting public promotions:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
@@ -766,6 +931,7 @@ module.exports = {
   getAllPromotions,
   getPromotionBannerList,
   getPromotionByCode,
+  getPublicPromotions,
   createPromotion,
   updatePromotion,
   deletePromotion,

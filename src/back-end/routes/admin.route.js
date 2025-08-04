@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, restrictTo } = require('../middlewares/auth.middleware.js');
+const { protect, restrictTo, getUser } = require('../middlewares/auth.middleware.js');
 
 const {
   createUser,
@@ -14,6 +14,7 @@ const {
   getAllPromotions,
   getPromotionBannerList,
   getPromotionByCode,
+  getPublicPromotions,
   createPromotion,
   updatePromotion,
   deletePromotion,
@@ -37,6 +38,7 @@ router.delete('/users/:userId', protect, restrictTo('administrator'), deleteUser
 // Quản lý promotion
 router.get('/promotions/all', protect, restrictTo('administrator'), getAllPromotions);
 router.get('/promotions/banner', getPromotionBannerList);
+router.get('/promotions/public', getUser, getPublicPromotions);
 router.get('/promotions/:promotionCode', protect, restrictTo('administrator'), getPromotionByCode);
 router.post('/promotions', protect, restrictTo('administrator'), createPromotion);
 router.patch('/promotions/:promotionCode', protect, restrictTo('administrator'), updatePromotion);

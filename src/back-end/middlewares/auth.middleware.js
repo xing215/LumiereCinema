@@ -37,23 +37,20 @@ const protect = async (req, res, next) => {
 
 // Không cần protected cx có thể lấy được user.id nếu có
 const getUser = async (req, res, next) => {
-    let token;
-
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
-            token = req.headers.authorization.split(' ')[1];
+            const token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = await User.findById(decoded.id).select('-hashedPassword');
-            next();
+            return next();
         } catch (error) {
-            req.user = { id: null }; // If token is invalid, set user to null
-            next();
+            console.log('Token validation failed:', error.message);
+            req.user = null; // If token is invalid, set user to null
+            return next();
         }
-    }
-
-    if (!token) {
-        req.user = { id: null }; // If no token, set user to null
-        next();
+    } else {
+        req.user = null; // If no token, set user to null
+        return next();
     }
 };
 

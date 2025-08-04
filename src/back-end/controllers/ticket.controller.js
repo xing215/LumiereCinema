@@ -701,7 +701,6 @@ const calculateTotalAndUpdateStock = async (snackList, branchId, session = null)
 };
 
 // API handler: Tính số tiền giảm sau khi áp mã (cho frontend gọi để hiển thị trước khi thanh toán)
-// API handler: Tính số tiền giảm sau khi áp mã (cho frontend gọi để hiển thị trước khi thanh toán)
 const calculateDiscountedTotal = async (req, res) => {
   try {
     console.log('Calculate Discounted Total Request:', req.body);
@@ -771,13 +770,28 @@ const calculateDiscountedTotal = async (req, res) => {
         if (promotion.remainingUse !== null && promotion.remainingUse <= 0) {
           throw new Error('Promotion has no remaining uses.');
         }
-        if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
+        if (user && promotion.appliedLoyaltyRank && promotion.appliedLoyaltyRank.trim() !== '') {
+          // Check if user's rank can access this promotion (hierarchy: PLATINUM > GOLD > SILVER)
+          const userRank = user.loyaltyRank.rank;
+          const promoRank = promotion.appliedLoyaltyRank;
+          
+          const rankHierarchy = { 'SILVER': 1, 'GOLD': 2, 'PLATINUM': 3 };
+          const userRankLevel = rankHierarchy[userRank] || 0;
+          const promoRankLevel = rankHierarchy[promoRank] || 0;
+          
+          if (userRankLevel < promoRankLevel) {
+            throw new Error('Promotion not applicable for your loyalty rank.');
+          }
+        }
+        if (!user && promotion.appliedLoyaltyRank && promotion.appliedLoyaltyRank.trim() !== '') {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
-        if (!user && promotion.appliedLoyaltyRank ) {
-          throw new Error('Promotion not applicable for your loyalty rank.');
-        }
-        snackDiscount = Math.min(snackTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
+        
+        // Calculate discount with proper maximum handling
+        const calculatedDiscount = snackTotal * promotion.discountRate / 100.0;
+        snackDiscount = promotion.maximumDiscount !== null 
+          ? Math.min(calculatedDiscount, promotion.maximumDiscount)
+          : calculatedDiscount;
       } catch (error) {
         snackError = error.message;
         failedItems++;
@@ -796,13 +810,28 @@ const calculateDiscountedTotal = async (req, res) => {
         if (promotion.remainingUse !== null && promotion.remainingUse <= 0) {
           throw new Error('Promotion has no remaining uses.');
         }
-        if (user && promotion.appliedLoyaltyRank && user.loyaltyRank.rank !== promotion.appliedLoyaltyRank) {
+        if (user && promotion.appliedLoyaltyRank && promotion.appliedLoyaltyRank.trim() !== '') {
+          // Check if user's rank can access this promotion (hierarchy: PLATINUM > GOLD > SILVER)
+          const userRank = user.loyaltyRank.rank;
+          const promoRank = promotion.appliedLoyaltyRank;
+          
+          const rankHierarchy = { 'SILVER': 1, 'GOLD': 2, 'PLATINUM': 3 };
+          const userRankLevel = rankHierarchy[userRank] || 0;
+          const promoRankLevel = rankHierarchy[promoRank] || 0;
+          
+          if (userRankLevel < promoRankLevel) {
+            throw new Error('Promotion not applicable for your loyalty rank.');
+          }
+        }
+        if (!user && promotion.appliedLoyaltyRank && promotion.appliedLoyaltyRank.trim() !== '') {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
-        if (!user && promotion.appliedLoyaltyRank ) {
-          throw new Error('Promotion not applicable for your loyalty rank.');
-        }
-        movieDiscount = Math.min(movieTotal * promotion.discountRate / 100.0, promotion.maximumDiscount);
+        
+        // Calculate discount with proper maximum handling
+        const calculatedDiscount = movieTotal * promotion.discountRate / 100.0;
+        movieDiscount = promotion.maximumDiscount !== null 
+          ? Math.min(calculatedDiscount, promotion.maximumDiscount)
+          : calculatedDiscount;
       } catch (error) {
         movieError = error.message;
         failedItems++;
@@ -865,20 +894,36 @@ const applyDiscounts = async ({ user, promotionCode, snackTotal, movieTotal, ses
     if (promo.remainingUse !== null && promo.remainingUse <= 0) {
       throw { status: 400, message: 'Promotion has no remaining uses.' };
     }
-    if (promo.appliedLoyaltyRank && !user) {
+    if (promo.appliedLoyaltyRank && promo.appliedLoyaltyRank.trim() !== '' && !user) {
       throw { status: 400, message: 'Promotion requires a customer.' };
     }
-    if (promo.appliedLoyaltyRank && user.loyaltyRank.rank !== promo.appliedLoyaltyRank) {
-      throw { status: 400, message: 'Promotion not applicable for your loyalty rank.' };
+    if (promo.appliedLoyaltyRank && promo.appliedLoyaltyRank.trim() !== '' && user) {
+      // Check if user's rank can access this promotion (hierarchy: PLATINUM > GOLD > SILVER)
+      const userRank = user.loyaltyRank.rank;
+      const promoRank = promo.appliedLoyaltyRank;
+      
+      const rankHierarchy = { 'SILVER': 1, 'GOLD': 2, 'PLATINUM': 3 };
+      const userRankLevel = rankHierarchy[userRank] || 0;
+      const promoRankLevel = rankHierarchy[promoRank] || 0;
+      
+      if (userRankLevel < promoRankLevel) {
+        throw { status: 400, message: 'Promotion not applicable for your loyalty rank.' };
+      }
     }
     // Snack discount
     if (snackTotal && (promo.appliedProduct === 'Snack' || promo.appliedProduct === 'All') && snackTotal >= promo.minimumSpend) {
-      snackDiscount = Math.min(snackTotal * promo.discountRate / 100.0, promo.maximumDiscount);
+      const calculatedSnackDiscount = snackTotal * promo.discountRate / 100.0;
+      snackDiscount = promo.maximumDiscount !== null 
+        ? Math.min(calculatedSnackDiscount, promo.maximumDiscount)
+        : calculatedSnackDiscount;
       finalSnackTotal -= snackDiscount;
     }
     // Movie discount
     if (movieTotal && (promo.appliedProduct === 'Movie' || promo.appliedProduct === 'All') && movieTotal >= promo.minimumSpend) {
-      movieDiscount = Math.min(movieTotal * promo.discountRate / 100.0, promo.maximumDiscount);
+      const calculatedMovieDiscount = movieTotal * promo.discountRate / 100.0;
+      movieDiscount = promo.maximumDiscount !== null 
+        ? Math.min(calculatedMovieDiscount, promo.maximumDiscount)
+        : calculatedMovieDiscount;
       finalMovieTotal -= movieDiscount;
     }
     if (promo.remainingUse !== null) {
@@ -934,6 +979,7 @@ const createTicket = async (req, res) => {
     console.log('Create Ticket Request:', req.body);
 
     let userId = req.user && req.user?.id ? req.user?.id : null;
+    console.log('User ID:', userId);
     let customer = null;
     if (userId) {
       const user = await User.findById(userId);
