@@ -111,11 +111,6 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
         const cleanedCode = decodedText.replace(/"/g, "");
         setTicketCode(cleanedCode);
         handleSearch(cleanedCode);
-        
-        // Tự động ẩn scanner sau khi scan thành công
-        setTimeout(() => {
-            setIsScannerVisible(false);
-        }, 1000);
     };
 
     // Cleanup timeout khi component unmount
