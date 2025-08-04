@@ -92,7 +92,12 @@ const TicketDetail = ({ movieTicketData, snackTicketData, isStaff = false }) => 
                             <Detail label="Promotion" value={promotion} isStaff={isStaff} />
                         )}
                         {discountValue !== 0 && (
-                            <Detail label="Discount amount" value={discountValue.toLocaleString('en-US')} isStaff={isStaff} />
+                            <>
+                                <div className="lg:text-md w-auto font-['Unbounded'] text-xs lg:text-[15px] font-semibold text-white">
+                                    <Detail label="Subtotal" value={(total - discountValue).toLocaleString('en-US')} isStaff={isStaff} />
+                                    <Detail label="Discount amount" value={discountValue.toLocaleString('en-US')} isStaff={isStaff} />
+                                </div>
+                            </>
                         )}
                     <div className="lg:text-lg w-auto font-['Unbounded'] text-md font-semibold text-white">
                         Total: <br/> {total.toLocaleString('en-US')} vnd
