@@ -57,15 +57,14 @@ app.listen(PORT, async () => {
   // Preload ticket cache sau khi server khởi động
   try {
     const TicketCacheManager = require('./utils/ticketCacheManager');
-    console.log('🔄 Initializing ticket cache...');
     
     // Delay 5 giây để đảm bảo database đã kết nối
     setTimeout(async () => {
       const result = await TicketCacheManager.preloadRecentTickets();
       if (result.error) {
-        console.warn('⚠️ Failed to preload ticket cache:', result.error);
+        console.warn('Failed to preload ticket cache:', result.error);
       } else {
-        console.log('✅ Ticket cache initialized successfully');
+        console.log('Ticket cache initialized successfully');
       }
     }, 5000);
     
