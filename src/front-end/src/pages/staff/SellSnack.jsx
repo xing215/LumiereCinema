@@ -11,20 +11,6 @@ import { useUser } from '@contexts/UserContext.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 
 
-const InputSeller = ({ value, onBlur, onChange }) => (
-    <div className='absolute right-[5%] top-[4%] flex flex-row items-center justify-center md:w-[50%] lg:w-[25%] min-w-[260px]'>
-        <div className="w-[40%] text-white text-right mr-2 text-lg font-normal font-['Unbounded']">Employee:</div>
-        <input
-            type="text"
-            name="name"
-            value={value}
-            onChange={onChange}
-            onBlur={onBlur}
-            className={`bg-opacity-70 h-8 w-[60%]  disabled:bg-zinc-300/5 disabled:text-white disabled:ring-1 disabled:ring-amber-50 rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:px-4 focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
-            required
-        />
-    </div>
-);
 
 const MENU_STEPS = {
     SNACK: 0,
@@ -155,15 +141,6 @@ const SellSnack = () => {
     };
     const goToPreviousStep = () => setCurrentStep(prev => (prev > 0 ? prev - 1 : 0));
 
-    const [employeeId, setEmployeeId] = useState('');
-    const handleEmployeeIdChange = (e) => setEmployeeId(e.target.value);
-    const handleEmployeeIdBlur = () => {
-        if (employeeId.trim() === '') {
-            setEmployeeId('');
-        } else {
-            updateSnackTicket({ seller: employeeId });
-        }
-    };
 
     const renderCurrentMenu = () => {
         switch (currentStep) {
@@ -229,7 +206,6 @@ case MENU_STEPS.PAYMENT:
                         />
                     </div>
                 }
-                <InputSeller value={employeeId || ''} onChange={handleEmployeeIdChange} onBlur={handleEmployeeIdBlur} />
                 {renderCurrentMenu()}
                 <SelectBranchButton isLoading={branchLoading} branchName={branch?.name} />
             </MobileNotSupported>

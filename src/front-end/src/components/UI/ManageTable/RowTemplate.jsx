@@ -244,6 +244,25 @@ const RowTemplate = (props) => {
                                             <PreviewButton/>
                                         </div>
                                     )
+                                ) : value && typeof value === 'object' && value.type === 'StatusIndicator' ? (
+                                    props.isHeader ? (
+                                        <span>Status</span>
+                                    ) : (
+                                        <div className="flex flex-col gap-1 w-full items-center">
+                                            <div className={`flex items-center justify-center w-6 h-6 rounded-full text-sm font-bold ${
+                                                value.isValid 
+                                                    ? 'bg-green-100 text-green-600' 
+                                                    : 'bg-red-100 text-red-600'
+                                            }`}>
+                                                {value.isValid ? '✓' : '✗'}
+                                            </div>
+                                            {value.errors && (
+                                                <span className="text-red-600 text-xs text-center max-w-full break-words">
+                                                    {value.errors}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )
                                 ) : (
                                     // Check if this cell should be editable
                                     props.editableFields && props.editableFields.includes(index) && !props.isHeader ? (

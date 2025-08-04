@@ -2,7 +2,7 @@
  * Branch Service
  * Handles all branch-related API calls
  */
-import axios from 'axios';
+import axios from "axios";
 import { getApiUrl, getApiUrlWithParams } from '@config/api.config';
 
 export const branchService = {
