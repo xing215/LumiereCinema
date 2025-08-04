@@ -12,6 +12,11 @@ const QrScannerView = ({ onScanSuccess, onClose }) => {
 
     const html5QrCodeRef = useRef(null);
     const isScannerRunningRef = useRef(false);
+    
+    // Cache và debounce cho scan results
+    const lastScannedCode = useRef(null);
+    const lastScanTime = useRef(0);
+    const scanCooldown = 2000; // 2 giây cooldown giữa các lần scan
 
     useEffect(() => {
         const html5QrCode = new Html5Qrcode(readerId, { verbose: false });
@@ -25,10 +30,24 @@ const QrScannerView = ({ onScanSuccess, onClose }) => {
                     { facingMode: "environment" },
                     {
                         fps: 10,
-                        qrbox: null
-                    },
+                        qrbox: null                    },
                     (decodedText, decodedResult) => {
-                        latestCallbacks.current.onScanSuccess(decodedText);
+                        const cleanedCode = decodedText.replace(/"/g, "");
+                        const currentTime = Date.now();
+                        
+                        // Kiểm tra debounce - tránh scan trùng lặp
+                        if (
+                            lastScannedCode.current === cleanedCode && 
+                            currentTime - lastScanTime.current < scanCooldown
+                        ) {
+                            return; // Bỏ qua scan trùng lặp
+                        }
+                        
+                        // Cập nhật cache
+                        lastScannedCode.current = cleanedCode;
+                        lastScanTime.current = currentTime;
+                        
+                        latestCallbacks.current.onScanSuccess(cleanedCode);
                     },
                     (errorMessage) => { /* Bỏ qua lỗi */ }
                 );

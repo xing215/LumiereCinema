@@ -108,9 +108,16 @@ ticketSchema.pre('validate', function (next) {
 // Auto-generate ticketCode
 ticketSchema.pre('validate', function(next) {
     if (this.isNew) {
-        this.ticketCode = nanoid(10).toUpperCase();
+      this.ticketCode = nanoid(10).toUpperCase();
     }
     next();
 });
+
+// Thêm index cho ticketCode để tăng tốc độ lookup
+ticketSchema.index({ ticketCode: 1 });
+
+// Compound index cho các query phổ biến
+ticketSchema.index({ branch: 1, status: 1 });
+ticketSchema.index({ customer: 1, status: 1 });
 
 module.exports = mongoose.model('Ticket', ticketSchema);

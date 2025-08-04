@@ -14,6 +14,7 @@ const Seat = require('../models/Seat');
 const SeatCategory = require('../models/SeatCategory');
 const { redisClient } = require('../config/redis.config');
 const CacheManager = require('../utils/cacheManager');
+const TicketCacheManager = require('../utils/ticketCacheManager');
 const EmailService = require('../utils/emailService');
 
 /**
@@ -1311,22 +1312,31 @@ const createTicket = async (req, res) => {
 const getTicketByCode = async (req, res) => {
     try {
         const { ticketCode } = req.params;
+        
+        // Kiểm tra cache trước sử dụng TicketCacheManager
+        const cachedTicket = await TicketCacheManager.getCachedTicket(ticketCode);
+        if (cachedTicket) {
+            return res.status(200).json(cachedTicket);
+        }
+        
         let ticket;
         let Model;
         let ticketType = '';
 
-        const movieTicket = await Ticket.findOne({ ticketCode: ticketCode });
+        // Tối ưu database query bằng cách sử dụng Promise.all
+        const [movieTicket, snackTicket] = await Promise.all([
+            Ticket.findOne({ ticketCode: ticketCode }).lean(),
+            SnackTicket.findOne({ snackTicketCode: ticketCode }).lean()
+        ]);
+        
         if (movieTicket) {
             Model = Ticket;
             ticketType = 'Movie';
             ticket = movieTicket;
-        } else {
-            const snackTicket = await SnackTicket.findOne({ snackTicketCode: ticketCode });
-            if (snackTicket) {
-                Model = SnackTicket;
-                ticketType = 'Snack';
-                ticket = snackTicket;
-            }
+        } else if (snackTicket) {
+            Model = SnackTicket;
+            ticketType = 'Snack';
+            ticket = snackTicket;
         }
 
         if (!ticket) {
@@ -1335,9 +1345,7 @@ const getTicketByCode = async (req, res) => {
 
         const previousScanTimestamp = ticket.lastScanAt || null;
         const isFirstScan = ticket.status === 'Confirmed';
-        const currentScanTimestamp = new Date();
-
-        if (isFirstScan) {
+        const currentScanTimestamp = new Date();        if (isFirstScan) {
             await Model.findByIdAndUpdate(ticket._id, {
                 status: 'CheckedIn',
                 lastScanAt: currentScanTimestamp
@@ -1347,6 +1355,9 @@ const getTicketByCode = async (req, res) => {
                 lastScanAt: currentScanTimestamp
             });
         }
+
+        // Invalidate cache since ticket was updated
+        await TicketCacheManager.invalidateTicket(ticketCode);
 
         let query = Model.findById(ticket._id).populate('branch', 'name address');
 
@@ -1362,14 +1373,15 @@ const getTicketByCode = async (req, res) => {
             });
         }
 
-        const populatedTicket = await query.lean();
-
-        const finalResponse = {
+        const populatedTicket = await query.lean();        const finalResponse = {
             ...populatedTicket,
             status: isFirstScan ? 'Confirmed' : populatedTicket.status,
             ticketType: ticketType,
             lastScanAt: previousScanTimestamp
         };
+
+        // Cache kết quả sử dụng TicketCacheManager
+        await TicketCacheManager.cacheTicket(ticketCode, finalResponse);
 
         return res.status(200).json(finalResponse);
 
@@ -1781,6 +1793,82 @@ const preloadCache = async (req, res) => {
     console.error('Error preloading cache:', error);
     return res.status(500).json({
       error: 'Failed to preload cache'
+    });  }
+};
+
+// ======= TICKET CACHE MANAGEMENT =======
+
+/**
+ * @desc    Preload recent tickets to cache for faster checkin
+ * @route   POST /api/tickets/cache/preload
+ * @access  Admin only
+ */
+const preloadTicketCache = async (req, res) => {
+  try {
+    const result = await TicketCacheManager.preloadRecentTickets();
+    
+    if (result.error) {
+      return res.status(500).json({ 
+        success: false, 
+        error: result.error 
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Ticket cache preloaded successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error preloading ticket cache:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to preload ticket cache'
+    });
+  }
+};
+
+/**
+ * @desc    Get ticket cache statistics
+ * @route   GET /api/tickets/cache/stats
+ * @access  Admin only
+ */
+const getTicketCacheStats = async (req, res) => {
+  try {
+    const stats = await TicketCacheManager.getCacheStats();
+    
+    return res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error getting cache stats:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to get cache statistics'
+    });
+  }
+};
+
+/**
+ * @desc    Clear ticket cache
+ * @route   DELETE /api/tickets/cache/clear
+ * @access  Admin only
+ */
+const clearTicketCache = async (req, res) => {
+  try {
+    const result = await TicketCacheManager.clearTicketCache();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Ticket cache cleared successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to clear cache'
     });
   }
 };
@@ -1798,7 +1886,12 @@ module.exports = {
   manageSeatHold,
   releaseBulkHolds,
   cleanupExpiredHolds,
-  getCacheStats,  cleanupCache,
+  getCacheStats,
+  cleanupCache,
   preloadCache,
   calculateDiscountedTotal,
+  // New ticket cache management functions
+  preloadTicketCache,
+  getTicketCacheStats,
+  clearTicketCache,
 };

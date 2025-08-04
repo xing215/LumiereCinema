@@ -7,17 +7,19 @@ import QrScannerView from '@components/display/QRScanView';
 
 const TicketDetails = ({ ticket, loading, error, isScannerVisible }) => {
     if (loading) {
-        return <p className="font-unbounded text-xl md:text-2xl font-bold text-white">SEARCHING...</p>;
+        return (
+            <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
+                <p className="font-unbounded text-xl md:text-2xl font-bold text-white">SEARCHING...</p>
+            </div>
+        );
     }
     if (error) {
         return <p className="font-unbounded text-xl md:text-2xl font-bold text-red-500">{error}</p>;
     }
     if (!ticket) {
         return <p className="font-unbounded text-xl md:text-2xl pb-2 font-bold text-gray-400">ENTER TICKET CODE</p>;
-    }
-
-    if (ticket.ticketType === 'Movie') {
-        console.log(ticket);
+    }    if (ticket.ticketType === 'Movie') {
         return (
             <div className="h-auto md:h-auto max-h-[350px] md:max-h-[500px] md:overflow-y-auto w-full flex flex-col items-center">
                 <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">TICKET DETAILS</p>
@@ -70,6 +72,10 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
     const [ticketCode, setTicketCode] = useState('');
     const { getTicket, ticket, loading, error } = useGetTicketDetailsByCode();
     const [isScannerVisible, setIsScannerVisible] = useState(initialScannerVisible);
+    
+    // Debounce và cache cho search
+    const searchTimeoutRef = useRef(null);
+    const lastSearchCode = useRef('');
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
@@ -77,9 +83,23 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
     }, []);
 
     const handleSearch = (code) => {
-        if (code && code.trim()) {
-            getTicket(code.trim().toUpperCase());
+        if (!code || !code.trim()) return;
+        
+        const cleanCode = code.trim().toUpperCase();
+        
+        // Tránh search trùng lặp
+        if (cleanCode === lastSearchCode.current) return;
+        lastSearchCode.current = cleanCode;
+        
+        // Clear timeout trước đó
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
         }
+        
+        // Debounce search
+        searchTimeoutRef.current = setTimeout(() => {
+            getTicket(cleanCode);
+        }, 300);
     };
     
     const handleKeyPress = (event) => {
@@ -87,13 +107,25 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
             handleSearch(ticketCode);
             inputRef.current.blur(); // Remove focus from input after search
         }
-    };
-
-    const handleScanSuccess = (decodedText) => {
+    };    const handleScanSuccess = (decodedText) => {
         const cleanedCode = decodedText.replace(/"/g, "");
         setTicketCode(cleanedCode);
         handleSearch(cleanedCode);
+        
+        // Tự động ẩn scanner sau khi scan thành công
+        setTimeout(() => {
+            setIsScannerVisible(false);
+        }, 1000);
     };
+
+    // Cleanup timeout khi component unmount
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const inputRef = useRef(null);
 
