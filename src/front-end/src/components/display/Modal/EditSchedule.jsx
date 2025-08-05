@@ -24,6 +24,23 @@ const EditScheduleModal = ({
         endTime: ''
     });
 
+    // Utility function to convert date to Vietnam timezone string
+    const toVietnamDateString = useCallback((date) => {
+        const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+        const vietnamTime = new Date(utcTime + (7 * 3600000)); // UTC+7
+        // Format manually to avoid UTC conversion
+        const year = vietnamTime.getFullYear();
+        const month = String(vietnamTime.getMonth() + 1).padStart(2, '0');
+        const day = String(vietnamTime.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }, []);
+
+    // Utility function to convert any date to Vietnam timezone
+    const toVietnamTime = useCallback((date) => {
+        const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+        return new Date(utcTime + (7 * 3600000)); // UTC+7
+    }, []);
+
     // Calculate end time based on movie duration
     const calculateEndTime = useCallback((startTime, durationMinutes) => {
         if (!startTime || !durationMinutes) return '';
@@ -67,18 +84,22 @@ const EditScheduleModal = ({
                 }
             }
 
-            // Extract date and time from schedule
+            // Extract date and time from schedule - convert to Vietnam timezone
             const startDateTime = new Date(schedule.startTime);
             const endDateTime = new Date(schedule.endTime);
+            
+            // Convert to Vietnam timezone for display
+            const vietnamStartTime = toVietnamTime(startDateTime);
+            const vietnamEndTime = toVietnamTime(endDateTime);
             
             setFormData({
                 movie: schedule.movie?.title || '',
                 movieId: schedule.movie?._id || '',
-                date: startDateTime.toISOString().split('T')[0],
+                date: toVietnamDateString(startDateTime), // Use Vietnam timezone date
                 screen: screenName,
                 screenId: screenId,
-                startTime: startDateTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-                endTime: endDateTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
+                startTime: vietnamStartTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                endTime: vietnamEndTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
             });
         } else {
             // Reset overflow when popup closes
@@ -90,7 +111,7 @@ const EditScheduleModal = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = ''; // Reset overflow on unmount
         };
-    }, [isOpen, schedule, screens]);
+    }, [isOpen, schedule, screens, toVietnamDateString, toVietnamTime]);
 
     // Update end time when movie or start time changes
     useEffect(() => {

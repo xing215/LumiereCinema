@@ -13,25 +13,33 @@ import { useGetMovies } from '@hooks/useAdmin';
 import AddScheduleModal from '@/components/display/Modal/AddSchedule';
 import EditScheduleModal from '@/components/display/Modal/EditSchedule';
 import ScheduleUploadModal from '@/components/display/Modal/ScheduleUploadModal';
-// Add Schedule Modal Component
 
-
-const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEditSchedule, screens = []}) => {
+const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEditSchedule, screens = [], toVietnamTime}) => {
     const scheduleGridRef = useRef(null);
 
-    
     // Helper function to convert time to position on timeline (allows negative values)
     const getTimePosition = useCallback((timeString, selectedDate) => {
-        // Create date objects in Vietnam timezone (UTC+7)
+        // Parse the schedule time string and convert to Vietnam timezone
         const scheduleTime = new Date(timeString);
+        const vietnamScheduleTime = toVietnamTime(scheduleTime);
+        
+        console.log('Original schedule time:', scheduleTime);
+        console.log('Vietnam schedule time:', vietnamScheduleTime);
         
         // Timeline starts at 23:30 the previous day in Vietnam timezone
         const timelineStart = new Date(selectedDate);
         timelineStart.setDate(timelineStart.getDate() - 1);
         timelineStart.setHours(23, 30, 0, 0);
         
-        // Calculate minutes from timeline start
-        const timeDiff = scheduleTime - timelineStart;
+        // Convert timeline start to Vietnam timezone for proper comparison
+        const vietnamTimelineStart = toVietnamTime(timelineStart);
+        
+        console.log('Timeline start (local):', timelineStart);
+        console.log('Timeline start (Vietnam):', vietnamTimelineStart);
+
+        // Calculate minutes from timeline start using Vietnam timezone
+        const timeDiff = vietnamScheduleTime - vietnamTimelineStart;
+        console.log('Time difference in minutes:', timeDiff / (1000 * 60));
         const minutes = timeDiff / (1000 * 60);
         
         // Timeline covers 24 hours = 1440 minutes
@@ -39,12 +47,14 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
         
         // Return percentage (can be negative for continuous effect)
         return (minutes / timelineMinutes) * 100;
-    }, []);
+    }, [toVietnamTime]);
     
     // Helper function to get schedule duration in percentage
     const getScheduleDuration = useCallback((startTime, endTime) => {
-        const start = new Date(startTime);
-        const end = new Date(endTime);
+        // Convert both times to Vietnam timezone
+        const start = toVietnamTime(new Date(startTime));
+        const end = toVietnamTime(new Date(endTime));
+        
         const durationMs = end - start;
         const durationMinutes = durationMs / (1000 * 60);
         
@@ -53,7 +63,7 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
         
         // Return percentage width
         return (durationMinutes / timelineMinutes) * 100;
-    }, []);
+    }, [toVietnamTime]);
     
     // Group schedules by screen index
     const schedulesByScreen = useMemo(() => {
@@ -206,16 +216,26 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                         <div key={screenIndex} className="relative h-[40px]">
                             {/* Schedule blocks for this screen */}
                             {schedulesByScreen[screenIndex]?.map((schedule, scheduleIndex) => {
-                                const startTime = new Date(schedule.startTime);
-                                const endTime = new Date(schedule.endTime);
+                                // Convert schedule times to Vietnam timezone
+                                const startTime = toVietnamTime(new Date(schedule.startTime));
+                                const endTime = toVietnamTime(new Date(schedule.endTime));
                                 
                                 // Check if this is a continuous movie (started before the timeline)
                                 // Timeline starts at 23:30 the previous day in Vietnam timezone
                                 const timelineStart = new Date(selectedDate);
                                 timelineStart.setDate(timelineStart.getDate() - 1);
                                 timelineStart.setHours(23, 30, 0, 0);
+                                const vietnamTimelineStart = toVietnamTime(timelineStart);
                                 
-                                const isContinuous = startTime < timelineStart && endTime > timelineStart;
+                                const isContinuous = startTime < vietnamTimelineStart && endTime > vietnamTimelineStart;
+
+                                console.log('Schedule (Vietnam timezone):', {
+                                    title: schedule.movie.title,
+                                    startTime: startTime.toString(),
+                                    endTime: endTime.toString(),
+                                    timelineStart: vietnamTimelineStart.toString(),
+                                    isContinuous
+                                });
                                 
                                 // Calculate position and duration (allowing negative values for continuous effect)
                                 const startPos = getTimePosition(schedule.startTime, selectedDate);
@@ -317,38 +337,105 @@ const ScheduleManagePage = () => {
     const [isInitialLoad, setIsInitialLoad] = useState(true); // Track if this is the initial load
     const { schedules, loading, error, fetchSchedules } = useGetSchedules();
     
-    // Filter schedules based on selected date and show ongoing movies
+    // Fixed filtering logic for schedules
     const filteredSchedules = useMemo(() => {
         const selectedDateStr = getVietnamDateString(selectedDate);
+        
+        console.log('=== FIXED FILTER DEBUG ===');
+        console.log('Selected date string (Vietnam):', selectedDateStr);
+        console.log('Selected date object:', selectedDate);
         
         // Timeline boundaries in Vietnam timezone
         const timelineStart = new Date(selectedDate);
         timelineStart.setDate(timelineStart.getDate() - 1);
         timelineStart.setHours(23, 30, 0, 0);
+        const vietnamTimelineStart = toVietnamTime(timelineStart);
         
-        const timelineEnd = new Date(timelineStart);
-        timelineEnd.setHours(timelineEnd.getHours() + 24); // 24 hours later
+        const vietnamTimelineEnd = new Date(vietnamTimelineStart);
+        vietnamTimelineEnd.setHours(vietnamTimelineEnd.getHours() + 24); // 24 hours later
         
-        return schedules.filter(schedule => {
-            const scheduleStartTime = new Date(schedule.startTime);
-            const scheduleEndTime = new Date(schedule.endTime);
+        console.log('Timeline start (Vietnam):', vietnamTimelineStart);
+        console.log('Timeline end (Vietnam):', vietnamTimelineEnd);
+        
+        const filtered = schedules.filter(schedule => {
+            // Convert schedule times to Vietnam timezone for comparison
+            const scheduleStartTime = toVietnamTime(new Date(schedule.startTime));
+            const scheduleEndTime = toVietnamTime(new Date(schedule.endTime));
             
-            // Get schedule date in Vietnam timezone
-            const scheduleDate = getVietnamDateString(scheduleStartTime);
+            console.log('Schedule comparison:', {
+                title: schedule.movie?.title,
+                scheduleStartTime: scheduleStartTime.toString(),
+                scheduleEndTime: scheduleEndTime.toString(),
+                timelineStart: vietnamTimelineStart.toString(),
+                timelineEnd: vietnamTimelineEnd.toString()
+            });
             
-            // Show schedules for the selected date in Vietnam timezone
-            if (scheduleDate === selectedDateStr) {
+            // NEW LOGIC: Check if the schedule's "primary day" matches the selected date
+            // For schedules that span midnight, we determine the primary day based on which day
+            // has more of the schedule's duration
+            
+            // Calculate the schedule's total duration
+            const totalDuration = scheduleEndTime.getTime() - scheduleStartTime.getTime();
+            
+            // Calculate how much of the schedule falls on each day
+            let primaryDay = new Date(scheduleStartTime);
+            primaryDay.setHours(0, 0, 0, 0);
+            
+            // If the schedule spans midnight, we need to determine which day it "belongs to"
+            if (scheduleStartTime.getDate() !== scheduleEndTime.getDate()) {
+                // Schedule spans midnight - calculate which day gets more duration
+                const midnightBoundary = new Date(scheduleStartTime);
+                midnightBoundary.setDate(midnightBoundary.getDate() + 1);
+                midnightBoundary.setHours(0, 0, 0, 0);
+                
+                const durationOnStartDay = midnightBoundary.getTime() - scheduleStartTime.getTime();
+                const durationOnEndDay = scheduleEndTime.getTime() - midnightBoundary.getTime();
+                
+                // If more duration is on the end day, that's the primary day
+                if (durationOnEndDay > durationOnStartDay) {
+                    primaryDay = new Date(scheduleEndTime);
+                    primaryDay.setHours(0, 0, 0, 0);
+                }
+            }
+            
+            // Convert primary day to Vietnam timezone for comparison
+            const vietnamPrimaryDay = toVietnamTime(primaryDay);
+            const vietnamSelectedDay = toVietnamTime(new Date(selectedDate));
+            vietnamSelectedDay.setHours(0, 0, 0, 0);
+            
+            // Check if the primary day matches the selected date
+            const isPrimaryDayMatch = vietnamPrimaryDay.getTime() === vietnamSelectedDay.getTime();
+            
+            console.log('Primary day logic:', {
+                isPrimaryDayMatch,
+                vietnamPrimaryDay: vietnamPrimaryDay.toString(),
+                vietnamSelectedDay: vietnamSelectedDay.toString()
+            });
+            
+            // Also check if schedule overlaps with the timeline window (for continuous display)
+            const startsWithinTimeline = scheduleStartTime >= vietnamTimelineStart && scheduleStartTime < vietnamTimelineEnd;
+            const isOngoingDuringTimeline = scheduleStartTime < vietnamTimelineStart && scheduleEndTime > vietnamTimelineStart;
+            const overlapsTimeline = startsWithinTimeline || isOngoingDuringTimeline;
+            
+            // Show schedule if either:
+            // 1. Its primary day matches the selected date, OR
+            // 2. It overlaps with the timeline (for edge cases and continuous display)
+            const shouldShow = isPrimaryDayMatch || overlapsTimeline;
+            
+            if (shouldShow) {
+                console.log('✓ Included by primary day match or timeline overlap');
                 return true;
             }
             
-            // Show movies that overlap with our timeline (even if they start before it)
-            if (scheduleStartTime < timelineEnd && scheduleEndTime > timelineStart) {
-                return true;
-            }
-            
+            console.log('✗ Excluded - no match');
             return false;
         });
-    }, [selectedDate, schedules, getVietnamDateString]);
+        
+        console.log('Filtered schedules count:', filtered.length);
+        console.log('=== END FIXED FILTER DEBUG ===');
+        
+        return filtered;
+    }, [selectedDate, schedules, getVietnamDateString, toVietnamTime]);
     
     // Debug: Log when schedules change
     useEffect(() => {
@@ -611,6 +698,7 @@ const ScheduleManagePage = () => {
                         screens={userBranch?.screens || []}
                         onAddSchedule={handleAddSchedule}
                         onEditSchedule={handleEditSchedule}
+                        toVietnamTime={toVietnamTime}
                     />
                 )}
 
