@@ -27,7 +27,7 @@ router.get('/search', searchMovies);
 router.post('/', protect, restrictTo('administrator'), addMovie);
 
 // Administrator only routes for movie management
-router.get('/all', protect, restrictTo('administrator'), getAllMovies); // Warning: Bao gồm cả phim Archived, nên chỉ dùng manage
+router.get('/all', protect, restrictTo('administrator', 'branchmanager'), getAllMovies); // Warning: Bao gồm cả phim Archived, nên chỉ dùng manage
 router.put('/:movieId', protect, restrictTo('administrator'), updateMovie);
 router.patch('/:movieId', protect, restrictTo('administrator'), updateMovie);
 router.delete('/:movieId', protect, restrictTo('administrator'), deleteMovie);

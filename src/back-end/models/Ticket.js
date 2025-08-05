@@ -24,8 +24,8 @@ const ticketSchema = new mongoose.Schema({
 
   // Staff member who sold the ticket (for counter sales)
   seller: {
-    type: String,
-    default: null,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
 
   // Branch reference for quick queries without populate
