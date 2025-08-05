@@ -23,8 +23,6 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
         const scheduleTime = new Date(timeString);
         const vietnamScheduleTime = toVietnamTime(scheduleTime);
         
-        console.log('Original schedule time:', scheduleTime);
-        console.log('Vietnam schedule time:', vietnamScheduleTime);
         
         // Timeline starts at 23:30 the previous day in Vietnam timezone
         const timelineStart = new Date(selectedDate);
@@ -34,12 +32,9 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
         // Convert timeline start to Vietnam timezone for proper comparison
         const vietnamTimelineStart = toVietnamTime(timelineStart);
         
-        console.log('Timeline start (local):', timelineStart);
-        console.log('Timeline start (Vietnam):', vietnamTimelineStart);
 
         // Calculate minutes from timeline start using Vietnam timezone
         const timeDiff = vietnamScheduleTime - vietnamTimelineStart;
-        console.log('Time difference in minutes:', timeDiff / (1000 * 60));
         const minutes = timeDiff / (1000 * 60);
         
         // Timeline covers 24 hours = 1440 minutes
@@ -229,13 +224,7 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                                 
                                 const isContinuous = startTime < vietnamTimelineStart && endTime > vietnamTimelineStart;
 
-                                console.log('Schedule (Vietnam timezone):', {
-                                    title: schedule.movie.title,
-                                    startTime: startTime.toString(),
-                                    endTime: endTime.toString(),
-                                    timelineStart: vietnamTimelineStart.toString(),
-                                    isContinuous
-                                });
+
                                 
                                 // Calculate position and duration (allowing negative values for continuous effect)
                                 const startPos = getTimePosition(schedule.startTime, selectedDate);
@@ -341,9 +330,6 @@ const ScheduleManagePage = () => {
     const filteredSchedules = useMemo(() => {
         const selectedDateStr = getVietnamDateString(selectedDate);
         
-        console.log('=== FIXED FILTER DEBUG ===');
-        console.log('Selected date string (Vietnam):', selectedDateStr);
-        console.log('Selected date object:', selectedDate);
         
         // Timeline boundaries in Vietnam timezone
         const timelineStart = new Date(selectedDate);
@@ -354,21 +340,13 @@ const ScheduleManagePage = () => {
         const vietnamTimelineEnd = new Date(vietnamTimelineStart);
         vietnamTimelineEnd.setHours(vietnamTimelineEnd.getHours() + 24); // 24 hours later
         
-        console.log('Timeline start (Vietnam):', vietnamTimelineStart);
-        console.log('Timeline end (Vietnam):', vietnamTimelineEnd);
         
         const filtered = schedules.filter(schedule => {
             // Convert schedule times to Vietnam timezone for comparison
             const scheduleStartTime = toVietnamTime(new Date(schedule.startTime));
             const scheduleEndTime = toVietnamTime(new Date(schedule.endTime));
             
-            console.log('Schedule comparison:', {
-                title: schedule.movie?.title,
-                scheduleStartTime: scheduleStartTime.toString(),
-                scheduleEndTime: scheduleEndTime.toString(),
-                timelineStart: vietnamTimelineStart.toString(),
-                timelineEnd: vietnamTimelineEnd.toString()
-            });
+
             
             // NEW LOGIC: Check if the schedule's "primary day" matches the selected date
             // For schedules that span midnight, we determine the primary day based on which day
@@ -406,12 +384,7 @@ const ScheduleManagePage = () => {
             // Check if the primary day matches the selected date
             const isPrimaryDayMatch = vietnamPrimaryDay.getTime() === vietnamSelectedDay.getTime();
             
-            console.log('Primary day logic:', {
-                isPrimaryDayMatch,
-                vietnamPrimaryDay: vietnamPrimaryDay.toString(),
-                vietnamSelectedDay: vietnamSelectedDay.toString()
-            });
-            
+
             // Also check if schedule overlaps with the timeline window (for continuous display)
             const startsWithinTimeline = scheduleStartTime >= vietnamTimelineStart && scheduleStartTime < vietnamTimelineEnd;
             const isOngoingDuringTimeline = scheduleStartTime < vietnamTimelineStart && scheduleEndTime > vietnamTimelineStart;
@@ -423,16 +396,12 @@ const ScheduleManagePage = () => {
             const shouldShow = isPrimaryDayMatch || overlapsTimeline;
             
             if (shouldShow) {
-                console.log('✓ Included by primary day match or timeline overlap');
                 return true;
             }
             
-            console.log('✗ Excluded - no match');
             return false;
         });
         
-        console.log('Filtered schedules count:', filtered.length);
-        console.log('=== END FIXED FILTER DEBUG ===');
         
         return filtered;
     }, [selectedDate, schedules, getVietnamDateString, toVietnamTime]);
@@ -591,23 +560,18 @@ const ScheduleManagePage = () => {
         try {
             
             // Process each schedule
-            console.log('=== UPLOAD DEBUG ===');
-            console.log('Selected data for upload:', selectedData);
             const promises = selectedData.map(async (schedule) => {
                 // Find the screen ID by name
                 const screen = userBranch?.screens?.find(s => 
                     s.screenName.toString() === schedule.screenName.toString()
                 );
-                console.log('Screen found:', screen);
                 if (!screen) {
                     throw new Error(`Screen "${schedule.screenName}" not found`);
                 }
-                console.log('Schedule data:', schedule);
                 // Find the movie ID by title
                 const movie = movies.find(m => 
                     m.title.toLowerCase() === schedule.movieName.toLowerCase()
                 );
-                console.log('Movie found:', movie);
                 if (!movie) {
                     throw new Error(`Movie "${schedule.movieName}" not found`);
                 }
@@ -623,8 +587,6 @@ const ScheduleManagePage = () => {
             });
 
             const results = await Promise.all(promises);
-            console.log('=== UPLOAD RESULTS ===');
-            console.log('Upload results:', results);
             
             // Check if all succeeded
             const failures = results.filter(result => !result.success);
@@ -639,7 +601,6 @@ const ScheduleManagePage = () => {
             handleCloseUploadModal();
             
         } catch (error) {
-            console.log(error);
             alert('Failed to import schedules. Please check the data and try again.');
         } finally {
             setImportLoading(false);
