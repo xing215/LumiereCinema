@@ -192,9 +192,10 @@ const MenuPayment = ({
         }
         
         if (error) {
+            console.error(error);
             showError(
                 'Promotion Error',
-                'Error applying promotion'
+                 error
             );
             setDiscountValue('');
             updateMovieTicket({ promotion: null, discount: 0 });

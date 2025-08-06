@@ -25,7 +25,7 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
     );
 };
 
-export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden }) => {
+export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden=false }) => {
     const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow) * 2).toString() + '%]';
     
     const handleClick = () => {
@@ -142,8 +142,8 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                             const current = seats[i];
                                             const next = seats[i + 1];
                                             const isTaken = (current.status === 'occupied' || current.status === 'holding');
-                                            isHidden = current.isHidden;
-                                            nextIsHidden = next && next.isHidden;
+                                            const isHidden = current.isHidden;
+                                            const nextIsHidden = next && next.isHidden;
                                             const nextIsTaken = next && (next.status === 'occupied' || next.status === 'holding');
                                             if (
                                                 current.category.toLowerCase() === 'couple' &&
