@@ -5,6 +5,9 @@ import SnackSelect from '@components/UI/SnackSelect';
 import Combo1 from '@assets/img/combo1.png';
 import { useUser } from '@contexts/UserContext';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 // ================================ MAIN COMPONENT ================================
 
 const MenuSelectSnack = ({ 
@@ -41,7 +44,10 @@ const MenuSelectSnack = ({
         const snackObj = Array.isArray(snacks) ? snacks.find(s => s.shortname === shortname) : null;
         const stock = snackObj?.stock.total ?? Infinity;
         if (newQuantity > stock) {
-            alert(`Only ${stock} of this snack is available in stock.`);
+            showWarning(
+                'Stock Unavailable',
+                `Only ${stock} of this snack is available in stock.`
+            );
             return;
         }
 
@@ -87,7 +93,10 @@ const MenuSelectSnack = ({
 
     const handleNext = () => {
         if (mustBuy && (!snackTicketData?.snackList || snackTicketData.snackList.length === 0)) {
-            alert('Please select at least one snack before proceeding.');
+            showInfo(
+                'Selection Required',
+                'Please select at least one snack before proceeding.'
+            );
             return;
         }
         onNext();

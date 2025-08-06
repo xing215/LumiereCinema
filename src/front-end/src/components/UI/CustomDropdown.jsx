@@ -191,7 +191,7 @@ const CustomDropdown = ({
 
             {isOpen && (
                 <div
-                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 overflow-hidden rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}
+                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 overflow-y-scroll max-h-[50vh] rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}
                 >
                     {filteredOptions.length > 0 ? (
                         filteredOptions.map((option, index) => (

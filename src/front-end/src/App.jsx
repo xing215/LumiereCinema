@@ -4,7 +4,6 @@ import { ErrorProvider, useError } from '@contexts/ErrorContext.jsx';
 import ErrorModal from '@layouts/Error.jsx';
 import AppRoutes from '@routes/AppRoutes.jsx';
 
-
 const ErrorModalWrapper = () => {
     const { error, clearError } = useError();
     if (!error) return null;

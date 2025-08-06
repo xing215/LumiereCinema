@@ -5,6 +5,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routeConfig';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 // ================================ COMPONENTS ================================
 
 const InputField = ({ label, name, type = 'text', value, onChange, required = true, errors = null }) => (
@@ -94,7 +97,10 @@ const MenuInfo = ({
         if (canProceed) {
             onNext();
         } else {
-            alert('Please fill in all required customer information.');
+            showInfo(
+                'Information Required',
+                'Please fill in all required customer information.'
+            );
         }
     };
 

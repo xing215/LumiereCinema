@@ -71,9 +71,21 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
     };
 
     const processUploadedData = (data, type) => {
-        // Helper function to convert DD/MM/YYYY to YYYY-MM-DD
-        const convertDateFormat = (dateString) => {
-            if (!dateString) return '';
+        // Helper function to convert Excel date serial number or string date to YYYY-MM-DD
+        const convertDateFormat = (dateValue) => {
+            if (!dateValue) return '';
+            
+            // If it's a number (Excel serial date)
+            if (typeof dateValue === 'number') {
+                // Excel epoch starts at 1900-01-01, but JavaScript Date starts at 1970-01-01
+                // Excel serial date 1 = 1900-01-01
+                const excelEpoch = new Date(1900, 0, 1); // January 1, 1900
+                const date = new Date(excelEpoch.getTime() + (dateValue - 1) * 24 * 60 * 60 * 1000);
+                return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+            }
+            
+            // If it's already a string, handle different formats
+            const dateString = String(dateValue);
             
             // If already in YYYY-MM-DD format, return as is
             if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -88,6 +100,23 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
             }
             
             return dateString; // Return original if can't parse
+        };
+
+        // Helper function to convert Excel time decimal to HH:MM format
+        const convertTimeFormat = (timeValue) => {
+            if (!timeValue) return '';
+            
+            // If it's a decimal (Excel time format)
+            if (typeof timeValue === 'number') {
+                // Convert decimal to hours and minutes
+                const totalMinutes = Math.round(timeValue * 24 * 60);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+            
+            // If it's already a string, return as is
+            return String(timeValue);
         };
 
         switch (type) {
@@ -128,6 +157,17 @@ const UploadCSVButton = ({ onDataParsed, templateType = 'movie', disabled = fals
                         // Fix number parsing for ratings
                         ratingsAverage: parseNumber(row['Ratings Average'], 0),
                         ratingsQuantity: parseInteger(row['Ratings Quantity'], 0),
+                    };
+                });
+            case 'schedule':
+                return data.map((row, index) => {
+                    return {
+                        movieName: row['Movie Name'] || row['Movie Title'] || '',
+                        screenName: row['Screen Name'] || row['Screen'] || '',
+                        date: convertDateFormat(row['Date']) || '',
+                        startTime: convertTimeFormat(row['Start Time'] || row['StartTime']) || '',
+                        endTime: convertTimeFormat(row['End Time'] || row['EndTime']) || '', // Keep for backward compatibility
+                        rowIndex: index
                     };
                 });
             default:

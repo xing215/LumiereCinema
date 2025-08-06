@@ -455,6 +455,14 @@ const getBranchById = async (req, res) => {
       const { branchId } = req.params;
       const { movieId, screenId, startTime } = req.body;
 
+    console.log('Editing schedule:', {
+      branchId,
+      screenId,
+      movieId,
+      startTime
+    });
+
+
       // 1. Validate branch manager permissions
       if (!req.user.roles.includes('branchmanager')) {
         return res.status(403).json({ 
@@ -612,6 +620,14 @@ const editMovieSchedule = async (req, res) => {
   try {
     const { branchId, scheduleId } = req.params;
     const { movieId, screenId, startTime } = req.body;
+
+    console.log('Editing schedule:', {
+      branchId,
+      scheduleId,
+      movieId,
+      screenId,
+      startTime
+    });
 
     // 1. Validate branch manager permissions
     if (!req.user.roles.includes('branchmanager')) {
@@ -933,7 +949,7 @@ const getMovieSchedules = async (req, res) => {
     }
 
     // 4. Check cache first
-    const cacheKey = `schedules:branch:${branchId}:${JSON.stringify(req.query)}`;
+    const cacheKey = `schedules:branch:${branchId}`;
     try {
       const cachedSchedules = await redisClient.get(cacheKey);
       if (cachedSchedules) {

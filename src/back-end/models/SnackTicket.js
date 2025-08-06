@@ -50,8 +50,8 @@ const snackTicketSchema = new mongoose.Schema({
 
   // SellerId: Reference to cashier (if purchased at counter)
   seller: {
-    type: String,
-    default: null,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
 
   // Reference to promotion program (if any)
@@ -111,5 +111,11 @@ snackTicketSchema.pre('validate', function(next) {
 
 // Speed up invoice search by customer
 snackTicketSchema.index({ customer: 1 });
+
+// Thêm index cho snackTicketCode để tăng tốc độ lookup
+snackTicketSchema.index({ snackTicketCode: 1 });
+
+// Compound index cho các query phổ biến
+snackTicketSchema.index({ branch: 1, status: 1 });
 
 module.exports = mongoose.model('SnackTicket', snackTicketSchema);

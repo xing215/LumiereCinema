@@ -7,7 +7,7 @@ const backwardButton = ({ onClick, position = 'absolute' }) => {
     return (
         <button
             onClick={onClick}
-            className={`${positionClass} h-[45px] w-[45px] hover:cursor-pointer sm:h-[60px] sm:w-[60px] lg:h-[70px] lg:w-[70px] xl:h-[80px] xl:w-[80px]`}
+            className={`${positionClass} hidden sm:block h-[45px] w-[45px] hover:cursor-pointer sm:h-[60px] sm:w-[60px] lg:h-[70px] lg:w-[70px] xl:h-[80px] xl:w-[80px]`}
             aria-label="BackwardButton"
         >
             <div className="relative h-full w-full">

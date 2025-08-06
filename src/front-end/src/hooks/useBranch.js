@@ -241,6 +241,29 @@ export const useGetSchedules = () => {
   return { schedules, loading, error, fetchSchedules };
 };
 
+export const useScheduleMovieScreening = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useUser();
+
+  const scheduleMovieScreening = async (branchId, screeningData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await branchService.createBranchSchedule(branchId, screeningData, token);
+      return { success: true, data };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to schedule movie screening';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { scheduleMovieScreening, loading, error };
+};
+
 export const useUpdateSchedule = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

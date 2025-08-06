@@ -49,4 +49,27 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server is running at port ${PORT}`));
+
+// Khởi động server và preload ticket cache
+app.listen(PORT, async () => {
+  console.log(`Server is running at port ${PORT}`);
+  
+  // Preload ticket cache sau khi server khởi động
+  try {
+    const TicketCacheManager = require('./utils/ticketCacheManager');
+    console.log('🔄 Initializing ticket cache...');
+    
+    // Delay 5 giây để đảm bảo database đã kết nối
+    setTimeout(async () => {
+      const result = await TicketCacheManager.preloadRecentTickets();
+      if (result.error) {
+        console.warn('⚠️ Failed to preload ticket cache:', result.error);
+      } else {
+        console.log('✅ Ticket cache initialized successfully');
+      }
+    }, 5000);
+    
+  } catch (error) {
+    console.warn('⚠️ Ticket cache initialization failed:', error.message);
+  }
+});

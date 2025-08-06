@@ -453,10 +453,10 @@ const SeatLayout = ({
                 ) : (
                     <div 
                         ref={contentRef}
-                        className={`flex flex-row rounded-sm duration-300 gap-2 z-10 ${needsPanning ? 'p-8' : ''}`}
+                        className={`flex flex-row rounded-sm duration-300 gap-2 z-10 min-w-max ${needsPanning ? 'p-8' : ''}`}
                         style={{
                             transform: `translate(${transform.x}px, ${transform.y}px)`,
-                            transition: isDragging ? 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'transform 0.2s ease-out',
+                            transition: isDragging ? 'transform 0.1s ease-out' : 'transform 0.2s ease-out',
                             scale: transform.scale
                         }}
                     >
