@@ -30,6 +30,7 @@ const SearchSuggestions = ({ suggestions, onSelect, show, loading, inputRect }) 
         <div 
             className="bg-white rounded-xl shadow-2xl border border-gray-200 max-h-96 overflow-y-auto"
             style={dropdownStyle}
+            data-search-dropdown="true"
         >
             {loading ? (
                 <div className="px-4 py-6 text-center text-gray-500">
@@ -115,25 +116,22 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
             clearSuggestions();
             setShowSuggestions(false);
         }
-    };
-
-    // Handle suggestion selection
+    };    // Handle suggestion selection
     const handleSuggestionSelect = (movie) => {
         console.log('🎬 Movie selected:', movie);
         
         // Add to history
         addToHistory(movie.title);
         
-        // Reset states
+        // Reset states - SearchMovieCard will handle navigation
         setQuery('');
         setShowSuggestions(false);
         setIsInputVisible(false);
         setIsFocused(false);
         clearSuggestions();
         
-        // Navigate to movie details
-        navigate(getMovieDetailsPath(movie._id));
-    };    // Handle focus
+        // Note: Navigation is now handled by SearchMovieCard itself
+    };// Handle focus
     const handleFocus = () => {
         setIsFocused(true);
         if (query.trim().length >= 2) {
@@ -183,12 +181,17 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
             window.removeEventListener('scroll', handleScroll);
             window.removeEventListener('resize', handleResize);
         };
-    }, [showSuggestions]);
-
-    // Click outside handler
+    }, [showSuggestions]);    // Click outside handler
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (containerRef.current && !containerRef.current.contains(event.target)) {
+            // Check if click is inside the search container
+            const isInsideSearchContainer = containerRef.current && containerRef.current.contains(event.target);
+            
+            // Check if click is inside the dropdown (using data attribute)
+            const isInsideDropdown = event.target.closest('[data-search-dropdown="true"]');
+            
+            // Only hide suggestions if click is outside both areas
+            if (!isInsideSearchContainer && !isInsideDropdown) {
                 setIsFocused(false);
                 setShowSuggestions(false);
                 if (!query.trim()) {
@@ -199,13 +202,11 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [query]);
-
-    return (
+    }, [query]);return (
         <div className="relative z-10 w-screen items-center pt-7 md:pt-15 lg:pt-20 xl:pt-30">
             <div 
                 ref={containerRef}
-                className="relative"
+                className="relative h-[20px] md:h-[35px] lg:h-[50px] xl:h-[66px]"
             >
                 {/* Original Button Design */}
                 {!isInputVisible && (

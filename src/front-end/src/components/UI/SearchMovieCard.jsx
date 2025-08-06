@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getMovieDetailsPath } from '@routes/routeConfig';
 import fallbackImg from '@assets/img/PosterNotFound.png';
 
 /**
@@ -7,6 +9,7 @@ import fallbackImg from '@assets/img/PosterNotFound.png';
  */
 const SearchMovieCard = ({ movie, onClick }) => {
     console.log('🎬 SearchMovieCard render:', movie);
+    const navigate = useNavigate();
     
     if (!movie) {
         console.log('❌ SearchMovieCard: No movie data');
@@ -20,13 +23,29 @@ const SearchMovieCard = ({ movie, onClick }) => {
     const getReleaseYear = (releaseDate) => {
         if (!releaseDate) return '';
         return new Date(releaseDate).getFullYear();
-    };    return (
-        <div
+    };
+
+    // Handle card click - navigate to movie details
+    const handleCardClick = () => {
+        console.log('🎬 Movie card clicked:', movie);
+        
+        // Check if movie has ID for navigation
+        if (!movie._id) {
+            console.warn('⚠️ No movie_id found in movie data');
+            return;
+        }
+        
+        // Call the onClick callback first (for AiSearch state management)
+        if (onClick) {
+            onClick(movie);
+        }
+        
+        // Navigate to movie details page using the same method as MessageRenderer
+        const movieDetailsPath = getMovieDetailsPath(movie._id);
+        navigate(movieDetailsPath);
+    };return (        <div  
             className="px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:shadow-md"
-            onClick={() => {
-                console.log('🎬 Movie card clicked:', movie);
-                onClick?.(movie);
-            }}
+            onClick={handleCardClick}
         >
             <div className="flex items-start space-x-3">
                 {/* Movie Poster - Compact size for search */}
