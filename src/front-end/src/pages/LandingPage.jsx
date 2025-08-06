@@ -1,7 +1,6 @@
 import Header from '@layouts/LandingPage/Header.jsx';
 import Banner from '@layouts/LandingPage/Banner.jsx';
 import ChatBot from '@components/display/ChatBot';
-import AiSearch from '@components/display/AiSearch';
 import NowShowing from '@layouts/LandingPage/NowShowingMovie.jsx';
 import Maps from '@layouts/LandingPage/Maps.jsx';
 import UpComing from '@layouts/LandingPage/UpcomingMovie.jsx';
@@ -17,10 +16,7 @@ const LandingPage = () => {
     }, []);    return (
         <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
-            <div className="relative w-full">
-                <Banner />
-                <AiSearch />
-            </div>
+            <Banner />
             <NowShowing />
             <Maps cinemas={branches} />
             <UpComing />

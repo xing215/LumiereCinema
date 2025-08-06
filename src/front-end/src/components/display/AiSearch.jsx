@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import ChatbotIcon from '@assets/img/Chatbot-Icon.svg';
 import { useMovieAutocomplete, useSearchHistory } from '@hooks/useMovieSearch';
@@ -13,11 +14,23 @@ const Icon = () => {
     );
 };
 
-const SearchSuggestions = ({ suggestions, onSelect, show, loading }) => {
+const SearchSuggestions = ({ suggestions, onSelect, show, loading, inputRect }) => {
     if (!show) return null;
 
-    return (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 max-h-96 overflow-y-auto z-[9999]">
+    // Calculate position based on input element
+    const dropdownStyle = inputRect ? {
+        position: 'fixed',
+        top: inputRect.bottom + 8,
+        left: inputRect.left,
+        width: inputRect.width,
+        zIndex: 9999,
+    } : {};
+
+    const dropdownContent = (
+        <div 
+            className="bg-white rounded-xl shadow-2xl border border-gray-200 max-h-96 overflow-y-auto"
+            style={dropdownStyle}
+        >
             {loading ? (
                 <div className="px-4 py-6 text-center text-gray-500">
                     <div className="animate-pulse">
@@ -49,6 +62,9 @@ const SearchSuggestions = ({ suggestions, onSelect, show, loading }) => {
             ) : null}
         </div>
     );
+
+    // Render through portal to escape stacking context
+    return inputRect ? createPortal(dropdownContent, document.body) : null;
 };
 
 const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
@@ -56,6 +72,7 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isInputVisible, setIsInputVisible] = useState(false);
+    const [inputRect, setInputRect] = useState(null);
     const inputRef = useRef(null);
     const containerRef = useRef(null);
     const navigate = useNavigate();
@@ -69,6 +86,14 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
     
     const { history, addToHistory } = useSearchHistory(10);
     
+    // Update input position for portal
+    const updateInputRect = () => {
+        if (inputRef.current) {
+            const rect = inputRef.current.getBoundingClientRect();
+            setInputRect(rect);
+        }
+    };
+    
     // Handle button click to show input
     const handleButtonClick = () => {
         setIsInputVisible(true);
@@ -77,9 +102,7 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
                 inputRef.current.focus();
             }
         }, 100);
-    };
-
-    // Handle input changes
+    };    // Handle input changes
     const handleInputChange = (e) => {
         const value = e.target.value;
         setQuery(value);
@@ -87,6 +110,7 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
         if (value.trim().length >= 2) {
             getSuggestions(value);
             setShowSuggestions(true);
+            updateInputRect();
         } else {
             clearSuggestions();
             setShowSuggestions(false);
@@ -109,13 +133,12 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
         
         // Navigate to movie details
         navigate(getMovieDetailsPath(movie._id));
-    };
-
-    // Handle focus
+    };    // Handle focus
     const handleFocus = () => {
         setIsFocused(true);
         if (query.trim().length >= 2) {
             setShowSuggestions(true);
+            updateInputRect();
         }
     };
 
@@ -139,7 +162,28 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
                 inputRef.current.blur();
             }
         }
-    };
+    };    // Update position on scroll and resize
+    useEffect(() => {
+        const handleScroll = () => {
+            if (showSuggestions) {
+                updateInputRect();
+            }
+        };
+        
+        const handleResize = () => {
+            if (showSuggestions) {
+                updateInputRect();
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [showSuggestions]);
 
     // Click outside handler
     useEffect(() => {
@@ -189,22 +233,14 @@ const AiSearch = ({ placeholder = "Search movies, actors, directors..." }) => {
                         />
                         <Icon />
                     </div>
-                )}
-
-                {/* Suggestions dropdown */}
-                {isInputVisible && (
-                    <div 
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 transform w-[300px] md:w-[580px] lg:w-[850px] xl:w-[1350px]" 
-                        style={{ top: 'calc(50% + 15px)' }}
-                    >
-                        <SearchSuggestions
-                            suggestions={suggestions}
-                            onSelect={handleSuggestionSelect}
-                            show={showSuggestions}
-                            loading={loading}
-                        />
-                    </div>
-                )}
+                )}                {/* Suggestions dropdown */}
+                <SearchSuggestions
+                    suggestions={suggestions}
+                    onSelect={handleSuggestionSelect}
+                    show={showSuggestions}
+                    loading={loading}
+                    inputRect={inputRect}
+                />
             </div>
         </div>
     );
