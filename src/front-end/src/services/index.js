@@ -12,3 +12,6 @@ export { promotionService } from './promotion.service';
 export { ticketService } from './ticket.service';
 export { reportService } from './report.service';
 export { chatbotService } from './chatbot.service';
+
+// API interceptor service
+export { default as apiInterceptor } from './api.interceptor';
