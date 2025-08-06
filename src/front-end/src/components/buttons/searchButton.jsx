@@ -1,11 +1,12 @@
 import { Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const SearchButton = () => {
-    const navigate = useNavigate();
-    
     const handleClick = () => {
-        navigate('/search');
+        // Focus on the search input in the AiSearch component
+        const searchInput = document.querySelector('input[placeholder*="Search"]');
+        if (searchInput) {
+            searchInput.focus();
+        }
     };
 
     return (

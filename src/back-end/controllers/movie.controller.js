@@ -277,7 +277,7 @@ const getMovieDetails = async (req, res) => {
 
 
 /**
- * @desc    Search movies using Atlas Search with caching and enhanced features
+ * @desc    Search movies using simple regex search with caching
  * @route   GET /api/movies/search?q=...&page=1&limit=10
  * @access  Public
  */
@@ -312,117 +312,39 @@ const searchMovies = async (req, res) => {
             console.warn('Cache read error:', cacheError);
         }
 
+        // Build search query using regex (case-insensitive)
+        const searchRegex = new RegExp(keyword, 'i');
+        
+        const searchQuery = {
+            isHidden: false,
+            $or: [
+                { title: { $regex: searchRegex } },
+                { description: { $regex: searchRegex } },
+                { director: { $regex: searchRegex } },
+                { cast: { $in: [searchRegex] } },
+                { genre: { $in: [searchRegex] } }
+            ]
+        };
+
         // Get total count for pagination
-        const totalCountPipeline = [
-            {
-                $search: {
-                    index: 'movie_search_index',
-                    text: {
-                        query: keyword,
-                        path: [
-                            { value: "title", multi: "keywordAnalyzer", score: { boost: { value: 10 } } },
-                            { value: "cast", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
-                            { value: "director", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
-                            { value: "genre", multi: "keywordAnalyzer", score: { boost: { value: 3 } } },
-                            { value: "description", multi: "keywordAnalyzer", score: { boost: { value: 1 } } }
-                        ],
-                        fuzzy: {
-                            maxEdits: 1
-                        }
-                    }
-                }
-            },
-            {
-                $match: {
-                    isHidden: false
-                }
-            },
-            {
-                $count: "totalResults"
-            }
-        ];
+        const totalResults = await Movie.countDocuments(searchQuery);
+        const totalPages = Math.ceil(totalResults / limit);        // Execute search query with sorting and pagination
+        const movies = await Movie.find(searchQuery)
+            .select('_id title description posterURL duration genre ageRating director cast releaseDate ratingsAverage')
+            .sort({ ratingsAverage: -1, releaseDate: -1, title: 1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
 
-        // Main search pipeline with highlighting and field weighting
-        const searchPipeline = [
-            {
-                $search: {
-                    index: 'movie_search_index',
-                    text: {
-                        query: keyword,
-                        path: [
-                            { value: "title", multi: "keywordAnalyzer", score: { boost: { value: 10 } } },
-                            { value: "cast", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
-                            { value: "director", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
-                            { value: "genre", multi: "keywordAnalyzer", score: { boost: { value: 3 } } },
-                            { value: "description", multi: "keywordAnalyzer", score: { boost: { value: 1 } } }
-                        ],
-                        fuzzy: {
-                            maxEdits: 1
-                        }
-                    },
-                    highlight: {
-                        path: ["title", "description", "cast", "director", "genre"]
-                    }
-                }
-            },
-            {
-                $match: {
-                    isHidden: false
-                }
-            },
-            {
-                $addFields: {
-                    score: { $meta: "searchScore" },
-                    highlights: { $meta: "searchHighlights" }
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    title: 1,
-                    description: 1,
-                    posterURL: 1,
-                    duration: 1,
-                    genre: 1,
-                    ageRating: 1,
-                    director: 1,
-                    cast: 1,
-                    releaseDate: 1,
-                    ratingsAverage: 1,
-                    score: 1,
-                    highlights: 1,
-                    status: {
-                        $cond: {
-                            if: { $gt: ["$releaseDate", new Date()] },
-                            then: "Upcoming",
-                            else: "Now Showing"
-                        }
-                    }
-                }
-            },
-            {
-                $sort: { score: -1, releaseDate: -1 }
-            },
-            {
-                $skip: skip
-            },
-            {
-                $limit: limit
-            }
-        ];
-
-        // Execute both pipelines
-        const [totalCountResult, movies] = await Promise.all([
-            Movie.aggregate(totalCountPipeline),
-            Movie.aggregate(searchPipeline)
-        ]);
-
-        const totalResults = totalCountResult[0]?.totalResults || 0;
-        const totalPages = Math.ceil(totalResults / limit);
+        // Add status to each movie
+        const moviesWithStatus = movies.map(movie => ({
+            ...movie,
+            status: new Date(movie.releaseDate) > new Date() ? 'Upcoming' : 'Now Showing'
+        }));
 
         const response = {
             keyword: keyword,
-            results: movies,
+            results: moviesWithStatus,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
@@ -455,7 +377,7 @@ const searchMovies = async (req, res) => {
 };
 
 /**
- * @desc    Get search suggestions (autocomplete)
+ * @desc    Get search suggestions (autocomplete) using simple regex search
  * @route   GET /api/movies/search/suggest?q=...&limit=5
  * @access  Public
  */
@@ -484,118 +406,46 @@ const getSearchSuggestions = async (req, res) => {
             console.warn('Suggestions cache read error:', cacheError);
         }
 
-        // Atlas Search autocomplete pipeline
-        const suggestionsPipeline = [
-            {
-                $search: {
-                    index: 'movie_search_index',
-                    autocomplete: {
-                        query: keyword,
-                        path: "title", // Primary field for autocomplete
-                        fuzzy: {
-                            maxEdits: 1,
-                            prefixLength: 2
-                        }
-                    }
-                }
-            },
-            {
-                $match: {
-                    isHidden: false
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    title: 1,
-                    posterURL: 1,
-                    genre: 1,
-                    ageRating: 1,
-                    releaseDate: 1,
-                    score: { $meta: "searchScore" },
-                    status: {
-                        $cond: {
-                            if: { $gt: ["$releaseDate", new Date()] },
-                            then: "Upcoming",
-                            else: "Now Showing"
-                        }
-                    }
-                }
-            },
-            {
-                $sort: { score: -1, title: 1 }
-            },
-            {
-                $limit: limit
-            }
-        ];
-
-        // Also get suggestions from cast and director for more comprehensive results
-        const castDirectorSuggestionsPipeline = [
-            {
-                $search: {
-                    index: 'movie_search_index',
-                    text: {
-                        query: keyword,
-                        path: ["cast", "director"],
-                        fuzzy: {
-                            maxEdits: 1
-                        }
-                    }
-                }
-            },
-            {
-                $match: {
-                    isHidden: false
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    title: 1,
-                    posterURL: 1,
-                    genre: 1,
-                    ageRating: 1,
-                    director: 1,
-                    cast: 1,
-                    releaseDate: 1,
-                    score: { $meta: "searchScore" },
-                    status: {
-                        $cond: {
-                            if: { $gt: ["$releaseDate", new Date()] },
-                            then: "Upcoming",
-                            else: "Now Showing"
-                        }
-                    }
-                }
-            },
-            {
-                $sort: { score: -1, title: 1 }
-            },
-            {
-                $limit: Math.floor(limit / 2) || 1 }
-        ];
-
-        // Execute both pipelines
-        const [titleSuggestions, castDirectorSuggestions] = await Promise.all([
-            Movie.aggregate(suggestionsPipeline),
-            Movie.aggregate(castDirectorSuggestionsPipeline)
-        ]);
-
-        // Combine and deduplicate results
-        const combinedSuggestions = [...titleSuggestions];
-        const existingIds = new Set(titleSuggestions.map(movie => movie._id.toString()));
+        // Build search query using regex (case-insensitive)
+        const searchRegex = new RegExp(keyword, 'i');
         
-        castDirectorSuggestions.forEach(movie => {
-            if (!existingIds.has(movie._id.toString()) && combinedSuggestions.length < limit) {
-                combinedSuggestions.push(movie);
-                existingIds.add(movie._id.toString());
-            }
-        });
+        // Prioritize title matches first
+        const titleMatches = await Movie.find({
+            isHidden: false,
+            title: { $regex: searchRegex }
+        })
+        .select('_id title posterURL genre ageRating director cast releaseDate ratingsAverage')
+        .sort({ ratingsAverage: -1, title: 1 })
+        .limit(Math.ceil(limit / 2))
+        .lean();
+
+        // Then get matches from other fields
+        const otherMatches = await Movie.find({
+            isHidden: false,
+            title: { $not: { $regex: searchRegex } }, // Exclude title matches (already got them)
+            $or: [
+                { director: { $regex: searchRegex } },
+                { cast: { $in: [searchRegex] } },
+                { genre: { $in: [searchRegex] } }
+            ]
+        })
+        .select('_id title posterURL genre ageRating director cast releaseDate ratingsAverage')
+        .sort({ ratingsAverage: -1, title: 1 })
+        .limit(limit - titleMatches.length)
+        .lean();
+
+        // Combine results
+        const allSuggestions = [...titleMatches, ...otherMatches];
+
+        // Add status to each movie
+        const suggestionsWithStatus = allSuggestions.map(movie => ({
+            ...movie,
+            status: new Date(movie.releaseDate) > new Date() ? 'Upcoming' : 'Now Showing'
+        }));
 
         const response = {
             keyword: keyword,
-            suggestions: combinedSuggestions.slice(0, limit)
+            suggestions: suggestionsWithStatus.slice(0, limit)
         };
 
         // Cache suggestions for 2 minutes

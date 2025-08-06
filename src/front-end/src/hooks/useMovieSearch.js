@@ -167,12 +167,14 @@ export const useMovieAutocomplete = (options = {}) => {
   // Debounce and request management
   const debounceTimeoutRef = useRef(null);
   const lastRequestRef = useRef('');
-  
-  const getSuggestions = useCallback(async (keyword) => {
+    const getSuggestions = useCallback(async (keyword) => {
     const cleanKeyword = keyword.trim();
+    
+    console.log('🎯 useMovieAutocomplete.getSuggestions called with:', cleanKeyword);
     
     // Clear suggestions for short keywords
     if (cleanKeyword.length < minLength) {
+      console.log('❌ Keyword too short, minLength:', minLength);
       setSuggestions([]);
       setError(null);
       return;
@@ -180,39 +182,62 @@ export const useMovieAutocomplete = (options = {}) => {
     
     // Avoid duplicate requests
     if (cleanKeyword === lastRequestRef.current) {
+      console.log('🔄 Duplicate request ignored for:', cleanKeyword);
       return;
     }
     
     // Clear previous timeout
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
+      console.log('⏱ Cleared previous timeout');
     }
     
+    console.log('⏱ Setting timeout for', debounceDelay, 'ms');
     debounceTimeoutRef.current = setTimeout(async () => {
+      console.log('🚀 Timeout executed, making API call');
       setLoading(true);
       setError(null);
       lastRequestRef.current = cleanKeyword;
       
       try {
+        console.log('📞 Calling movieSearchService.getSearchSuggestions');
         const result = await movieSearchService.getSearchSuggestions({
           keyword: cleanKeyword,
           limit: maxSuggestions,
           token
         });
         
-        if (result.success) {
-          // Format suggestions for frontend
-          const formattedSuggestions = result.suggestions.map(movie => ({
-            ...movie,
-            formatted: movieSearchService.formatMovieResult(movie)
-          }));
+        console.log('📨 Service result:', result);
+          if (result.success) {
+          console.log('✅ Raw suggestions from API:', result.suggestions);
           
+          // Format suggestions for frontend - ensure we have proper data structure
+          const formattedSuggestions = result.suggestions.map(movie => {
+            console.log('🔄 Formatting movie:', movie);
+            return {
+              _id: movie._id,
+              title: movie.title,
+              posterURL: movie.posterURL,
+              genre: movie.genre || [],
+              ageRating: movie.ageRating,
+              director: movie.director,
+              cast: movie.cast || [],
+              releaseDate: movie.releaseDate,
+              ratingsAverage: movie.ratingsAverage || 0,
+              status: movie.status,
+              duration: movie.duration
+            };
+          });
+          
+          console.log('✅ Formatted suggestions:', formattedSuggestions);
           setSuggestions(formattedSuggestions);
         } else {
+          console.error('❌ Service error:', result.error);
           setError(result.error || 'Failed to get suggestions');
           setSuggestions([]);
         }
       } catch (err) {
+        console.error('💥 Catch block error:', err);
         setError('Suggestions request failed');
         setSuggestions([]);
       } finally {

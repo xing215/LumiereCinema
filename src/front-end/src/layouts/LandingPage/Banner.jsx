@@ -5,7 +5,6 @@ import React from 'react';
 import BackwardButton from '@components/buttons/backwardButton';
 import ForwardButton from '@components/buttons/forwardButton';
 import Decoration from '@assets/img/Banner_Decoration.png';
-import AiSearch from '@components/display/AiSearch';
 import defaultBanner from '@assets/img/defaultBanner.png';
 
 const Decoration1 = () => {
@@ -131,10 +130,8 @@ return (
             {/*Bottom*/}
             <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-20 xl:blur-md" />
             <Decoration1 />
-            <Decoration2 />
-        </div>
+            <Decoration2 />        </div>
         <Label />
-        <AiSearch />
     </section>
 )};
 

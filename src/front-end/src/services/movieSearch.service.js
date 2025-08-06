@@ -85,12 +85,18 @@ class MovieSearchService {
    * @param {number} params.limit - Max suggestions (default: 5, max: 10)
    * @param {string} params.token - Auth token (optional)
    * @returns {Promise<Object>} Autocomplete suggestions
-   */
-  async getSearchSuggestions({ keyword, limit = 5, token = null }) {
+   */  async getSearchSuggestions({ keyword, limit = 5, token = null }) {
     try {
       const trimmedKeyword = keyword.trim();
       
+      console.log('🔍 MovieSearchService.getSearchSuggestions called with:', {
+        keyword: trimmedKeyword,
+        limit,
+        token: !!token
+      });
+      
       if (trimmedKeyword.length < 2) {
+        console.log('❌ Keyword too short, returning empty suggestions');
         return {
           success: true,
           data: { keyword: trimmedKeyword, suggestions: [] },
@@ -109,8 +115,13 @@ class MovieSearchService {
         }
       };
 
+      console.log('📡 Making API request to:', getApiUrl('searchSuggestions'));
+      console.log('📡 With params:', params);
+
       const response = await axios.get(getApiUrl('searchSuggestions'), config);
       const data = response.data;
+      
+      console.log('✅ API Response received:', data);
       
       return {
         success: true,
@@ -119,7 +130,7 @@ class MovieSearchService {
         suggestions: data.suggestions || []
       };
     } catch (error) {
-      console.error('Movie suggestions error:', error);
+      console.error('❌ Movie suggestions error:', error);
       return {
         success: false,
         error: error.message,
