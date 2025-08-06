@@ -44,6 +44,10 @@ const Banner = () => {
     const [banners, setBanners] = React.useState([]);
     const [current, setCurrent] = React.useState(0);
     const [loading, setLoading] = React.useState(true);
+    const [isDragging, setIsDragging] = React.useState(false);
+    const [startX, setStartX] = React.useState(0);
+    const [currentTranslate, setCurrentTranslate] = React.useState(0);
+    const [prevTranslate, setPrevTranslate] = React.useState(0);
 
     React.useEffect(() => {
         const fetchBanners = async () => {
@@ -75,42 +79,144 @@ const Banner = () => {
 
 
     const handlePrev = () => {
-        setCurrent((prev) => (banners.length ? (prev - 1 + banners.length) % banners.length : 0));
+        if (!banners.length) return;
+        setCurrent((prev) => {
+            const newIndex = prev === 0 ? banners.length - 1 : prev - 1;
+            setPrevTranslate(-newIndex * (100 / banners.length));
+            return newIndex;
+        });
     };
     const handleNext = () => {
-        setCurrent((prev) => (banners.length ? (prev + 1) % banners.length : 0));
+        if (!banners.length) return;
+        setCurrent((prev) => {
+            const newIndex = (prev + 1) % banners.length;
+            setPrevTranslate(-newIndex * (100 / banners.length));
+            return newIndex;
+        });
+    };
+
+    // Drag handlers
+    const handleDragStart = (e) => {
+        if (!banners.length) return;
+        setIsDragging(true);
+        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+        setStartX(clientX);
+        setCurrentTranslate(prevTranslate);
+    };
+
+    const handleDragMove = (e) => {
+        if (!isDragging || !banners.length) return;
+        e.preventDefault();
+        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+        const diff = clientX - startX;
+        const slideWidth = 100 / banners.length;
+        setCurrentTranslate(prevTranslate + (diff / window.innerWidth) * 100);
+    };
+
+    const handleDragEnd = () => {
+        if (!isDragging || !banners.length) return;
+        setIsDragging(false);
+        
+        const slideWidth = 100 / banners.length;
+        const movedBy = currentTranslate - prevTranslate;
+        
+        if (Math.abs(movedBy) > slideWidth / 3) {
+            if (movedBy > 0 && current > 0) {
+                // Dragged right, go to previous
+                handlePrev();
+            } else if (movedBy < 0 && current < banners.length - 1) {
+                // Dragged left, go to next
+                handleNext();
+            } else if (movedBy < 0 && current === banners.length - 1) {
+                // Last slide, go to first
+                setCurrent(0);
+                setPrevTranslate(0);
+            } else if (movedBy > 0 && current === 0) {
+                // First slide, go to last
+                setCurrent(banners.length - 1);
+                setPrevTranslate(-(banners.length - 1) * slideWidth);
+            } else {
+                // Snap back
+                setCurrentTranslate(prevTranslate);
+            }
+        } else {
+            // Snap back
+            setCurrentTranslate(prevTranslate);
+        }
     };
 
     // Auto-advance banner every 5 seconds
     React.useEffect(() => {
-        if (!banners.length) return;
+        if (!banners.length || isDragging) return;
         const interval = setInterval(() => {
-            setCurrent((prev) => (prev + 1) % banners.length);
+            handleNext();
         }, 5000);
         return () => clearInterval(interval);
-    }, [banners]);
+    }, [banners, isDragging]);
 
-    // Poster image scaling: responsive, max width/height, centered
+    // Update prevTranslate when current changes (not from dragging)
+    React.useEffect(() => {
+        if (!isDragging && banners.length) {
+            setPrevTranslate(-current * (100 / banners.length));
+            setCurrentTranslate(-current * (100 / banners.length));
+        }
+    }, [current, banners.length, isDragging]);
+
+    // Poster container with sliding animation
     const renderPoster = () => {
         if (loading) return <div className="flex items-center justify-center w-full h-60 text-white">Loading...</div>;
         if (!banners.length) {
             return (
-                <img
-                    src={defaultBanner}
-                    alt="Default Banner"
-                    className="w-full h-full block object-cover rounded-xl shadow-lg"
-                    style={{ minHeight: '180px' }}
-                />
+                <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '180px' }}>
+                    <img
+                        src={defaultBanner}
+                        alt="Default Banner"
+                        className="w-full h-full block object-cover rounded-xl shadow-lg"
+                    />
+                </div>
             );
         }
-        const img = banners[current]?.image || banners[current];
+        
         return (
-            <img
-                src={img}
-                alt={`Banner ${current + 1}`}
-                className="w-full h-full block object-cover rounded-xl shadow-lg"
-                style={{ minHeight: '180px' }}
-            />
+            <div className="relative w-full h-full overflow-hidden rounded-xl shadow-lg" style={{ minHeight: '180px' }}>
+                <div 
+                    className={`flex h-full ${isDragging ? '' : 'transition-transform duration-500 ease-in-out'}`}
+                    style={{ 
+                        transform: `translateX(${isDragging ? currentTranslate : -current * (100 / banners.length)}%)`,
+                        width: `${banners.length * 100}%`,
+                        cursor: isDragging ? 'grabbing' : 'grab'
+                    }}
+                    onMouseDown={handleDragStart}
+                    onMouseMove={handleDragMove}
+                    onMouseUp={handleDragEnd}
+                    onMouseLeave={handleDragEnd}
+                    onTouchStart={handleDragStart}
+                    onTouchMove={handleDragMove}
+                    onTouchEnd={handleDragEnd}
+                >
+                    {banners.map((banner, index) => {
+                        const img = banner?.image || banner;
+                        return (
+                            <div
+                                key={index}
+                                className="w-full h-full flex-shrink-0"
+                                style={{ 
+                                    width: `${100 / banners.length}%`,
+                                    userSelect: 'none',
+                                    pointerEvents: isDragging ? 'none' : 'auto'
+                                }}
+                            >
+                                <img
+                                    src={img}
+                                    alt={`Banner ${index + 1}`}
+                                    className="w-full h-full block object-cover"
+                                    draggable={false}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
         );
     };
 
@@ -118,9 +224,9 @@ return (
     <section className="relative z-10 w-screen min-w-0 max-w-none gap-8 bg-slate-950 lg:pt-3 overflow-hidden">
         <div className="relative w-screen flex items-center justify-center min-w-0 max-w-none">
             {/*Left*/}
-            <div className="absolute top-0 left-0 z-15 h-full w-30 bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-60 lg:w-95" />
+            <div className="absolute top-0 left-0 z-15 h-full w-8 bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
             {/*Right*/}
-            <div className="absolute top-0 right-0 z-15 h-full w-30 bg-gradient-to-l from-black via-slate-900/80 to-transparent sm:w-60 lg:w-95" />
+            <div className="absolute top-0 right-0 z-15 h-full w-8 bg-gradient-to-l from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
             {/* Slideable Poster */}
             {/* Only show navigation if there are banners to slide */}
             {banners.length > 0 && <BackwardButton onClick={handlePrev} position="absolute" />}
@@ -129,7 +235,7 @@ return (
             </div>
             {banners.length > 0 && <ForwardButton onClick={handleNext} position="absolute" />}
             {/*Bottom*/}
-            <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-20 xl:blur-md" />
+            <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-15 xl:blur-md" />
             <Decoration1 />
             <Decoration2 />
         </div>

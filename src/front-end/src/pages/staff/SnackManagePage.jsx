@@ -131,9 +131,9 @@ const SnackManagePage = () => {
                         branchName={userBranch?.name || user?.branch?.name || 'Unknown Branch'} 
                     />
                 )}
+                <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Snacks</div>
             </MobileNotSupported>
             
-            <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Snacks</div>
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
             <div className="absolute top-1/5 right-0 z-5 h-44 w-44 translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
             <div className="absolute left-1/3 z-5 h-52 w-52 -translate-y-2/3 transform rounded-full bg-blue-500 mix-blend-hard-light blur-[100px]" />

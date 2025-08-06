@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 // Layout Components
 import Header from '@layouts/LandingPage/Header.jsx';
-import ChatBot from '@components/display/ChatBot';
 import Footer from '@layouts/LandingPage/Footer.jsx';
 import { Title } from '@components/UI/label.jsx';
 
@@ -28,6 +27,9 @@ import {
     useGetSeatsBySchedule 
 } from '@hooks/useTicket';
 import { ROUTES } from '@routes/routeConfig';
+
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
 
 // ================================ CONSTANTS ================================
 const MENU_STEPS = {
@@ -140,7 +142,10 @@ const TicketPurchase = () => {
     const handleExpire = () => {
         console.log('Session expired, clearing session...', holdSeatData);
         setStartedHoldSession(false);
-        alert('Your session has expired. Please select your seats again.');
+        showWarning(
+            'Session Expired',
+            'Your session has expired. Please select your seats again.'
+        );
         updateMovieTicket({ seats: [] });
         setCurrentStep(MENU_STEPS.SEATS);
         clearHoldSeatData();
@@ -279,7 +284,10 @@ const TicketPurchase = () => {
              !movieTicketData.noLoginCustomerInfo.phone || 
              !movieTicketData.noLoginCustomerInfo.email)) {
             setCurrentStep(MENU_STEPS.INFO);
-            alert('Please fill in your information before proceeding.');
+            showInfo(
+                'Information Required',
+                'Please fill in your information before proceeding.'
+            );
             return;
         }
     }, [isAuthenticated]);
@@ -323,13 +331,19 @@ const TicketPurchase = () => {
             if (holdSessionError) {
                 console.log(holdSessionError);
                 if (holdSessionError.includes('seats')) {
-                    alert('Your seat selection have been occupied by other customers. Please adjust your selection.');
+                    showError(
+                        'Seats Unavailable',
+                        'Your seat selection has been occupied by other customers. Please adjust your selection.'
+                    );
                     setCurrentStep(MENU_STEPS.SEATS);
                     fetchSeats(movieTicketData.schedule._id);
                     updateMovieTicket({ seats: [] });
                     return;
                 }
-                alert('An error occurred while creating your ticket. Please try again.');
+                showError(
+                    'Hold Session Error',
+                    'An error occurred while holding your seats. Please try again.'
+                );
                 setCurrentStep(MENU_STEPS.PAYMENT);
             } else {
                 setStartedHoldSession(true);
@@ -357,7 +371,10 @@ const TicketPurchase = () => {
                 });
                 
                 if (changed) {
-                    alert('Some snacks in your selection exceed available stock and have been adjusted.');
+                    showWarning(
+                        'Stock Adjustment',
+                        'Some snacks in your selection exceed available stock and have been adjusted.'
+                    );
                     updateSnackTicket({ snackList: newSnackList, promotion: null, discount: 0 });
                 }
             }
@@ -373,20 +390,29 @@ const TicketPurchase = () => {
             console.error('Error creating ticket:', ticketError);
             
             if (ticketError.includes('seats')) {
-                alert('Your seat selection have been occupied by other customers. Please adjust your selection.');
+                showError(
+                    'Seats Unavailable',
+                    'Your seat selection has been occupied by other customers. Please adjust your selection.'
+                );
                 setCurrentStep(MENU_STEPS.SEATS);
                 fetchSeats(movieTicketData.schedule._id);
                 updateMovieTicket({ seats: [] });
                 return;
             } else if (ticketError.includes('snack')) {
-                alert('Your snack selection exceeds available stock. Please adjust your order.');
+                showError(
+                    'Stock Unavailable',
+                    'Your snack selection exceeds available stock. Please adjust your order.'
+                );
                 setCurrentStep(MENU_STEPS.SNACK);
                 getSnacks(snackTicketData?.branch?._id);
                 updateSnackTicket({ snackList: [] });
                 return;
             }
             
-            alert('An error occurred while creating your ticket. Please try again.');
+            showError(
+                'Ticket Creation Failed',
+                'An error occurred while creating your ticket. Please try again.'
+            );
             setCurrentStep(MENU_STEPS.PAYMENT);
         }
     }, [ticket, ticketError]);
@@ -491,7 +517,6 @@ const TicketPurchase = () => {
             <div className="pointer-events-none absolute top-[140px] left-[50px] h-20 w-20 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px] sm:top-[180px] sm:left-[80px] sm:h-28 sm:w-28 md:top-[220px] md:left-[120px] md:h-36 md:w-36 lg:top-[275px] lg:left-[168px] lg:h-44 lg:w-44" />
             <div className="pointer-events-none absolute -right-[40px] -bottom-0 h-[250px] w-[200px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] sm:-right-[60px] sm:-bottom-0 sm:h-[350px] sm:w-[300px] md:-right-[80px] md:-bottom-0 md:h-[450px] md:w-[400px] lg:-right-100 lg:-bottom-0 lg:h-[580.90px] lg:w-[517.76px]" />
             <div className="pointer-events-none absolute right-[40px] bottom-0 h-20 w-20 rounded-full bg-amber-300/60 mix-blend-lighten blur-[100px] sm:right-[60px] sm:bottom-0 sm:h-28 sm:w-28 md:right-[80px] md:bottom-0 md:h-36 md:w-36 lg:right-100 lg:bottom-0 lg:h-44 lg:w-44" />
-            <ChatBot />
             
             <Footer />
         </div>

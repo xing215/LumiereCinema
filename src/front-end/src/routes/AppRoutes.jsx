@@ -2,6 +2,7 @@ import {React, useEffect} from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import ProtectedRoute from '@components/ProtectedRoute.jsx';
+import ApiInterceptorProvider from '@components/ApiInterceptorProvider.jsx';
 import { ROUTES, routeConfig, getRedirectPath } from '@routes/routeConfig.js';
 
 const ScrollToTop = () => {
@@ -54,18 +55,20 @@ const RouteHandler = ({ route }) => {
 const AppRoutes = () => {
     return (
         <Router>
-            <ScrollToTop />
-            <Routes>
-                {routeConfig.map((route, index) => (
-                    <Route
-                        key={index}
-                        path={route.path}
-                        element={<RouteHandler route={route} />}
-                    />
-                ))}
-                {/* Fallback route for 404 Not Found */}
-                <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
-            </Routes>
+            <ApiInterceptorProvider>
+                <ScrollToTop />
+                <Routes>
+                    {routeConfig.map((route, index) => (
+                        <Route
+                            key={index}
+                            path={route.path}
+                            element={<RouteHandler route={route} />}
+                        />
+                    ))}
+                    {/* Fallback route for 404 Not Found */}
+                    <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
+                </Routes>
+            </ApiInterceptorProvider>
         </Router>
     );
 };

@@ -8,6 +8,9 @@ import CinemaPopUp from '@components/UI/CinemaPopUp';
 import { useFetchBranches } from '@hooks/useBranch';
 import { useGetSchedules } from '@hooks/useBranch';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 // ================================ TIME SELECTION COMPONENTS ================================
 const TimeButton = ({ time, seats, schedule, isSelected, onSelect }) => {
     return (
@@ -180,11 +183,20 @@ const MenuSelectScreen = ({ onNext, onBack, movieTicketData, updateMovieTicket, 
             getSnacks(movieTicketData?.branch?._id);
         } else {
             if (!movieTicketData.branch._id) {
-                alert('Please select a cinema first.');
+                showInfo(
+                    'Selection Required',
+                    'Please select a cinema first.'
+                );
             } else if (!movieTicketData.schedule._id) {
-                alert('Please select a showtime.');
+                showInfo(
+                    'Selection Required',
+                    'Please select a showtime.'
+                );
             } else {
-                alert('Please select both cinema and showtime before proceeding.');
+                showInfo(
+                    'Selection Required',
+                    'Please select both cinema and showtime before proceeding.'
+                );
             }
         }
     };
