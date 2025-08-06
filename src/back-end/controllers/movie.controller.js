@@ -62,8 +62,11 @@ const getNowShowingMovies = async (req, res) => {
                         remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
                     }
 
-                    // Find all schedules for this movie to collect branch IDs
-                    const allSchedules = await Schedule.find({ movie: movie._id }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    // Find all schedules for this movie to collect branch IDs (only future schedules)
+                    const allSchedules = await Schedule.find({ 
+                        movie: movie._id,
+                        startTime: { $gte: now }
+                    }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
                     const branchSet = new Set();
                     allSchedules.forEach(sch => {
                         const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
@@ -160,8 +163,11 @@ const getUpcomingMovies = async (req, res) => {
                         remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
                     }
 
-                    // Find all schedules for this movie to collect branch IDs
-                    const allSchedules = await Schedule.find({ movie: movie._id }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    // Find all schedules for this movie to collect branch IDs (only future schedules)
+                    const allSchedules = await Schedule.find({ 
+                        movie: movie._id,
+                        startTime: { $gte: now }
+                    }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
                     const branchSet = new Set();
                     allSchedules.forEach(sch => {
                         const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
@@ -245,8 +251,11 @@ const getMovieDetails = async (req, res) => {
             ratingsQuantity = ratingStats[0].ratingsQuantity || 0;
         }
 
-        // Find all schedules for this movie, populate screen.branch
-        const schedules = await Schedule.find({ movie: movie._id })
+        // Find all schedules for this movie, populate screen.branch (only future schedules)
+        const schedules = await Schedule.find({ 
+            movie: movie._id,
+            startTime: { $gte: new Date() }
+        })
             .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
 
         // Collect unique branch IDs
