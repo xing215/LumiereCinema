@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 // ================================ SEAT COMPONENTS ================================
 
 
-export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true }) => {
+export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true, isHidden = false }) => {
     const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
     
     const handleClick = () => {
@@ -16,8 +16,8 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
 
     return (
         <div 
-            className={`${seatSize} min-w-[30px] group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
-            onClick={handleClick}
+            className={`${seatSize} min-w-[30px] ${isHidden ? 'opacity-0' : 'opacity-100'} group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
+            onClick={isHidden ? undefined : handleClick}
         >
             <div className={`h-full z-1 md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`} />
             <div className={`h-[20%] z-1 w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`} />
@@ -25,7 +25,7 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
     );
 };
 
-export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true }) => {
+export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden }) => {
     const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow) * 2).toString() + '%]';
     
     const handleClick = () => {
@@ -36,8 +36,8 @@ export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, i
 
     return (
         <div 
-            className={`${seatSize} min-w-[68px] group relative flex flex-row gap-2 ${isTaken || !canCursor ? 'pointer-events-none' : 'cursor-pointer'}`}
-            onClick={handleClick}
+            className={`${seatSize} min-w-[68px] ${isHidden ? 'opacity-0' : 'opacity-100'} group relative flex flex-row gap-2 ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
+            onClick={isHidden ? undefined : handleClick}
         >
             <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
             <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
@@ -142,16 +142,18 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                             const current = seats[i];
                                             const next = seats[i + 1];
                                             const isTaken = (current.status === 'occupied' || current.status === 'holding');
+                                            isHidden = current.isHidden;
+                                            nextIsHidden = next && next.isHidden;
                                             const nextIsTaken = next && (next.status === 'occupied' || next.status === 'holding');
                                             if (
-                                                current.category === 'VIP' &&
+                                                current.category.toLowerCase() === 'couple' &&
                                                 next &&
-                                                next.category === 'VIP'
+                                                next.category.toLowerCase() === 'couple'
                                             ) {
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber + '-' + next.seatNumber}
-                                                        className={`w-[14px] h-1.5 rounded-[1px] ${isTaken || nextIsTaken ? 'bg-gray-400' : 'bg-yellow-400'}`}
+                                                        className={`w-[14px] h-1.5 rounded-[1px] ${isHidden && nextIsHidden ? 'opacity-0' : 'opacity-100'} ${isTaken || nextIsTaken ? 'bg-gray-400' : 'bg-yellow-400'}`}
                                                     />
                                                 );
                                                 i += 2;
@@ -159,7 +161,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, transform, needsPanning, o
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber}
-                                                        className={`w-1.5 h-1.5 rounded-[1px] ${isTaken ? 'bg-gray-400' : (current.category === 'VIP' ? 'bg-yellow-400' : 'bg-blue-400')}`}
+                                                        className={`w-1.5 h-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${isTaken ? 'bg-gray-400' : (current.category.toLowerCase() === 'couple' ? 'bg-yellow-400' : 'bg-blue-400')}`}
                                                     />
                                                 );
                                                 i += 1;
@@ -485,9 +487,9 @@ const SeatLayout = ({
 
                                             // Check for couple seat: both VIP
                                             if (
-                                                current.category === 'VIP' &&
+                                                current.category.toLowerCase() === 'couple' &&
                                                 next &&
-                                                next.category === 'VIP'
+                                                next.category.toLowerCase() === 'couple'
                                             ) {
                                                 seatElements.push(
                                                     <CoupleSeat
@@ -498,6 +500,7 @@ const SeatLayout = ({
                                                         onClick={() => onClick?.([current.seatNumber, next.seatNumber])}
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
+                                                        isHidden={current.isHidden || next.isHidden}
                                                     />
                                                 );
                                                 i += 2;
@@ -505,8 +508,9 @@ const SeatLayout = ({
                                                 seatElements.push(
                                                     <Seats
                                                         key={current.seatNumber}
-                                                        seatColor={current.category === 'VIP' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
+                                                        seatColor={current.category.toLowerCase() === 'couple' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
                                                         isTaken={current.status === 'occupied' || current.status === 'holding'}
+                                                        isHidden={current.isHidden}
                                                         isSelected={selectedSeats.includes(current.seatNumber)}
                                                         onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}

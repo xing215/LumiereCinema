@@ -970,11 +970,12 @@ const createTicket = async (req, res) => {
     const { 
       noLoginCustomerInfo, 
       branch, 
-      seller, 
       promotionCode,
       movieTicket,
       snackTicket 
     } = req.body;
+
+    let {seller} = req.body;
 
     console.log('Create Ticket Request:', req.body);
 
@@ -985,6 +986,7 @@ const createTicket = async (req, res) => {
       const user = await User.findById(userId);
       if (user && user.roles.includes('cashier')) {
         customer = null; // If cashier, do not use userId as customer
+        seller = user; // Use userId as seller if cashier
       } else {
         customer = user; // Use userId as customer if not a cashier
       }
