@@ -192,7 +192,6 @@ const MenuPayment = ({
         }
         
         if (error) {
-            console.error(error);
             showError(
                 'Promotion Error',
                  error
