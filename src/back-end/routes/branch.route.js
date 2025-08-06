@@ -44,7 +44,7 @@ router.patch('/:branchId/snacks/:snackId', protect, restrictTo('branchmanager'),
 router.delete('/:branchId/snacks/:snackId', protect, restrictTo('branchmanager'), deleteSnack);
 
 // Các thao tác quản lý schedule của branch (bảo vệ, phân quyền branch manager)
-router.get('/:branchId/schedules', protect, restrictTo('branchmanager'), getMovieSchedules);
+router.get('/:branchId/schedules', protect, restrictTo('branchmanager', 'administrator'), getMovieSchedules);
 router.post('/:branchId/schedules', protect, restrictTo('branchmanager'), scheduleMovieScreening);
 router.patch('/:branchId/schedules/:scheduleId', protect, restrictTo('branchmanager'), editMovieSchedule);
 router.delete('/:branchId/schedules/:scheduleId', protect, restrictTo('branchmanager'), deleteMovieSchedule);

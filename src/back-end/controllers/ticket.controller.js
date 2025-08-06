@@ -971,11 +971,12 @@ const createTicket = async (req, res) => {
     const { 
       noLoginCustomerInfo, 
       branch, 
-      seller, 
       promotionCode,
       movieTicket,
       snackTicket 
     } = req.body;
+
+    let {seller} = req.body;
 
     console.log('Create Ticket Request:', req.body);
 

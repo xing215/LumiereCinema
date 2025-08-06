@@ -627,6 +627,8 @@ const createBranch = async (req, res) => {
   try {
     const { name, address, city, imageURL, location } = req.body;
 
+    console.log('📝 [createBranch] Received data:', { name, address, city, imageURL, location });
+
     // Validate required fields
     if (!name || !address || !city) {
       return res.status(400).json({ 
@@ -654,6 +656,15 @@ const createBranch = async (req, res) => {
           message: 'Location coordinates must be an array of [longitude, latitude].' 
         });
       }
+      // Validate that coordinates are valid numbers
+      const [longitude, latitude] = location.coordinates;
+      if (typeof longitude !== 'number' || typeof latitude !== 'number' || 
+          isNaN(longitude) || isNaN(latitude) ||
+          longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) {
+        return res.status(400).json({ 
+          message: 'Invalid coordinates. Longitude must be between -180 and 180, latitude between -90 and 90.' 
+        });
+      }
     }
 
     // Create new branch
@@ -666,8 +677,12 @@ const createBranch = async (req, res) => {
       isActive: true
     };
 
+    console.log('💾 [createBranch] Creating branch with data:', branchData);
+
     const branch = new Branch(branchData);
     await branch.save();
+
+    console.log('✅ [createBranch] Branch saved successfully:', branch);
 
     // Clear related caches
     await redisClient.del('branchList');
@@ -739,7 +754,18 @@ const updateBranch = async (req, res) => {
           message: 'Location coordinates must be an array of [longitude, latitude].' 
         });
       }
+      // Validate that coordinates are valid numbers
+      const [longitude, latitude] = updateData.location.coordinates;
+      if (typeof longitude !== 'number' || typeof latitude !== 'number' || 
+          isNaN(longitude) || isNaN(latitude) ||
+          longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) {
+        return res.status(400).json({ 
+          message: 'Invalid coordinates. Longitude must be between -180 and 180, latitude between -90 and 90.' 
+        });
+      }
     }
+
+    console.log('📝 [updateBranch] Final update data:', updateData);
 
     // Update branch
     const updatedBranch = await Branch.findByIdAndUpdate(
@@ -908,7 +934,8 @@ const updateBranchStatus = async (req, res) => {
  */
 const getAllBranches = async (req, res) => {
   try {
-    const branches = await Branch.find({ isActive: true }).select('_id name address city');
+    // For admin, get all branches regardless of status
+    const branches = await Branch.find({}).select('_id name address city imageURL location isActive createdAt updatedAt');
     
     res.status(200).json(branches);
   } catch (error) {
