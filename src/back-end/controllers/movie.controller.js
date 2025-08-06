@@ -277,63 +277,368 @@ const getMovieDetails = async (req, res) => {
 
 
 /**
- * @desc    Search movies using Atlas Search
- * @route   GET /api/movies/search?q=...
+ * @desc    Search movies using Atlas Search with caching and enhanced features
+ * @route   GET /api/movies/search?q=...&page=1&limit=10
  * @access  Public
  */
 const searchMovies = async (req, res) => {
     try {
-        const keyword = req.query.q;
+        const keyword = req.query.q?.trim();
         if (!keyword) {
-            return res.status(400).json({ message: 'Please provide search keyword.' });
+            return res.status(400).json({ 
+                message: 'Search keyword is required.',
+                results: [],
+                totalResults: 0,
+                currentPage: 1,
+                totalPages: 0
+            });
         }
 
-        // Use aggregation pipeline with $search stage
-        const movies = await Movie.aggregate([
+        // Pagination parameters
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+        const skip = (page - 1) * limit;
+
+        // Create cache key based on search parameters
+        const cacheKey = `search:movies:${keyword.toLowerCase()}:${page}:${limit}`;
+
+        try {
+            // Check cache first
+            const cachedResults = await redisClient.get(cacheKey);
+            if (cachedResults) {
+                return res.status(200).json(JSON.parse(cachedResults));
+            }
+        } catch (cacheError) {
+            console.warn('Cache read error:', cacheError);
+        }
+
+        // Get total count for pagination
+        const totalCountPipeline = [
             {
                 $search: {
-                    index: 'movie_search_index', // Index name created on MongoDB Atlas
+                    index: 'movie_search_index',
                     text: {
                         query: keyword,
-                        path: {
-                            'wildcard': '*' // Search across all indexed fields (title, description, cast, director)
-                        },
+                        path: [
+                            { value: "title", multi: "keywordAnalyzer", score: { boost: { value: 10 } } },
+                            { value: "cast", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
+                            { value: "director", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
+                            { value: "genre", multi: "keywordAnalyzer", score: { boost: { value: 3 } } },
+                            { value: "description", multi: "keywordAnalyzer", score: { boost: { value: 1 } } }
+                        ],
                         fuzzy: {
-                            maxEdits: 1 // Allow 1 character difference (handle typos)
+                            maxEdits: 1
                         }
                     }
                 }
             },
             {
                 $match: {
-                    isHidden: false // Only show non-hidden movies
+                    isHidden: false
                 }
             },
             {
-                $project: { // Similar to .select(), only get necessary fields
+                $count: "totalResults"
+            }
+        ];
+
+        // Main search pipeline with highlighting and field weighting
+        const searchPipeline = [
+            {
+                $search: {
+                    index: 'movie_search_index',
+                    text: {
+                        query: keyword,
+                        path: [
+                            { value: "title", multi: "keywordAnalyzer", score: { boost: { value: 10 } } },
+                            { value: "cast", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
+                            { value: "director", multi: "keywordAnalyzer", score: { boost: { value: 5 } } },
+                            { value: "genre", multi: "keywordAnalyzer", score: { boost: { value: 3 } } },
+                            { value: "description", multi: "keywordAnalyzer", score: { boost: { value: 1 } } }
+                        ],
+                        fuzzy: {
+                            maxEdits: 1
+                        }
+                    },
+                    highlight: {
+                        path: ["title", "description", "cast", "director", "genre"]
+                    }
+                }
+            },
+            {
+                $match: {
+                    isHidden: false
+                }
+            },
+            {
+                $addFields: {
+                    score: { $meta: "searchScore" },
+                    highlights: { $meta: "searchHighlights" }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
                     title: 1,
+                    description: 1,
                     posterURL: 1,
                     duration: 1,
                     genre: 1,
                     ageRating: 1,
-                    ratingsAverage: 1,
+                    director: 1,
+                    cast: 1,
                     releaseDate: 1,
-                    isHidden: 1,
-                    score: { $meta: "searchScore" } // Get relevance score from Atlas Search
+                    ratingsAverage: 1,
+                    score: 1,
+                    highlights: 1,
+                    status: {
+                        $cond: {
+                            if: { $gt: ["$releaseDate", new Date()] },
+                            then: "Upcoming",
+                            else: "Now Showing"
+                        }
+                    }
                 }
             },
             {
-                $sort: { score: -1 } // Sort by highest relevance score
+                $sort: { score: -1, releaseDate: -1 }
             },
             {
-                $limit: 3 // Limit results to avoid overload
+                $skip: skip
             },
+            {
+                $limit: limit
+            }
+        ];
+
+        // Execute both pipelines
+        const [totalCountResult, movies] = await Promise.all([
+            Movie.aggregate(totalCountPipeline),
+            Movie.aggregate(searchPipeline)
         ]);
 
-        res.status(200).json(movies);
+        const totalResults = totalCountResult[0]?.totalResults || 0;
+        const totalPages = Math.ceil(totalResults / limit);
+
+        const response = {
+            keyword: keyword,
+            results: movies,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalResults: totalResults,
+                limit: limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        };
+
+        // Cache the results for 5 minutes (search results can change frequently)
+        try {
+            await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
+        } catch (cacheError) {
+            console.warn('Cache write error:', cacheError);
+        }
+
+        res.status(200).json(response);
 
     } catch (error) {
         console.error('Search Movies Error:', error);
+        res.status(500).json({ 
+            message: 'Server error occurred.',
+            results: [],
+            totalResults: 0,
+            currentPage: 1,
+            totalPages: 0
+        });
+    }
+};
+
+/**
+ * @desc    Get search suggestions (autocomplete)
+ * @route   GET /api/movies/search/suggest?q=...&limit=5
+ * @access  Public
+ */
+const getSearchSuggestions = async (req, res) => {
+    try {
+        const keyword = req.query.q?.trim();
+        if (!keyword || keyword.length < 2) {
+            return res.status(400).json({ 
+                message: 'Search keyword must be at least 2 characters.',
+                suggestions: []
+            });
+        }
+
+        const limit = Math.min(10, Math.max(1, parseInt(req.query.limit) || 5));
+        
+        // Create cache key for suggestions
+        const cacheKey = `suggest:movies:${keyword.toLowerCase()}:${limit}`;
+
+        try {
+            // Check cache first (shorter cache time for suggestions)
+            const cachedSuggestions = await redisClient.get(cacheKey);
+            if (cachedSuggestions) {
+                return res.status(200).json(JSON.parse(cachedSuggestions));
+            }
+        } catch (cacheError) {
+            console.warn('Suggestions cache read error:', cacheError);
+        }
+
+        // Atlas Search autocomplete pipeline
+        const suggestionsPipeline = [
+            {
+                $search: {
+                    index: 'movie_search_index',
+                    autocomplete: {
+                        query: keyword,
+                        path: "title", // Primary field for autocomplete
+                        fuzzy: {
+                            maxEdits: 1,
+                            prefixLength: 2
+                        }
+                    }
+                }
+            },
+            {
+                $match: {
+                    isHidden: false
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    posterURL: 1,
+                    genre: 1,
+                    ageRating: 1,
+                    releaseDate: 1,
+                    score: { $meta: "searchScore" },
+                    status: {
+                        $cond: {
+                            if: { $gt: ["$releaseDate", new Date()] },
+                            then: "Upcoming",
+                            else: "Now Showing"
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { score: -1, title: 1 }
+            },
+            {
+                $limit: limit
+            }
+        ];
+
+        // Also get suggestions from cast and director for more comprehensive results
+        const castDirectorSuggestionsPipeline = [
+            {
+                $search: {
+                    index: 'movie_search_index',
+                    text: {
+                        query: keyword,
+                        path: ["cast", "director"],
+                        fuzzy: {
+                            maxEdits: 1
+                        }
+                    }
+                }
+            },
+            {
+                $match: {
+                    isHidden: false
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    posterURL: 1,
+                    genre: 1,
+                    ageRating: 1,
+                    director: 1,
+                    cast: 1,
+                    releaseDate: 1,
+                    score: { $meta: "searchScore" },
+                    status: {
+                        $cond: {
+                            if: { $gt: ["$releaseDate", new Date()] },
+                            then: "Upcoming",
+                            else: "Now Showing"
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { score: -1, title: 1 }
+            },
+            {
+                $limit: Math.floor(limit / 2) || 1 }
+        ];
+
+        // Execute both pipelines
+        const [titleSuggestions, castDirectorSuggestions] = await Promise.all([
+            Movie.aggregate(suggestionsPipeline),
+            Movie.aggregate(castDirectorSuggestionsPipeline)
+        ]);
+
+        // Combine and deduplicate results
+        const combinedSuggestions = [...titleSuggestions];
+        const existingIds = new Set(titleSuggestions.map(movie => movie._id.toString()));
+        
+        castDirectorSuggestions.forEach(movie => {
+            if (!existingIds.has(movie._id.toString()) && combinedSuggestions.length < limit) {
+                combinedSuggestions.push(movie);
+                existingIds.add(movie._id.toString());
+            }
+        });
+
+        const response = {
+            keyword: keyword,
+            suggestions: combinedSuggestions.slice(0, limit)
+        };
+
+        // Cache suggestions for 2 minutes
+        try {
+            await redisClient.setEx(cacheKey, 120, JSON.stringify(response));
+        } catch (cacheError) {
+            console.warn('Suggestions cache write error:', cacheError);
+        }
+
+        res.status(200).json(response);
+
+    } catch (error) {
+        console.error('Get Search Suggestions Error:', error);
+        res.status(500).json({ 
+            message: 'Server error occurred.',
+            suggestions: []
+        });
+    }
+};
+
+/**
+ * @desc    Clear search cache (admin utility)
+ * @route   DELETE /api/movies/search/cache
+ * @access  Administrator
+ */
+const clearSearchCache = async (req, res) => {
+    try {
+        // Get all search-related cache keys
+        const searchKeys = await redisClient.keys('search:movies:*');
+        const suggestKeys = await redisClient.keys('suggest:movies:*');
+        
+        const allKeys = [...searchKeys, ...suggestKeys];
+        
+        if (allKeys.length > 0) {
+            await redisClient.del(allKeys);
+        }
+
+        res.status(200).json({
+            message: 'Search cache cleared successfully.',
+            clearedKeys: allKeys.length
+        });
+    } catch (error) {
+        console.error('Clear Search Cache Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
     }
 };
@@ -393,10 +698,17 @@ const addMovie = async (req, res) => {
 
         const newMovie = new Movie(movieToAdd);
         await newMovie.save();
-        
-        // Clear cache to update with new data
+          // Clear cache to update with new data
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
+        
+        // Clear search cache as well
+        const searchKeys = await redisClient.keys('search:movies:*');
+        const suggestKeys = await redisClient.keys('suggest:movies:*');
+        const allSearchKeys = [...searchKeys, ...suggestKeys];
+        if (allSearchKeys.length > 0) {
+            await redisClient.del(allSearchKeys);
+        }
         
         res.status(201).json({
             message: 'Movie added successfully.',
@@ -438,8 +750,7 @@ const updateMovie = async (req, res) => {
             { $set: updateData },
             { new: true, runValidators: true }
         );
-        
-        if (!movie) {
+          if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
         
@@ -447,6 +758,14 @@ const updateMovie = async (req, res) => {
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         await redisClient.del(`movie:${movieId}`);
+        
+        // Clear search cache as well
+        const searchKeys = await redisClient.keys('search:movies:*');
+        const suggestKeys = await redisClient.keys('suggest:movies:*');
+        const allSearchKeys = [...searchKeys, ...suggestKeys];
+        if (allSearchKeys.length > 0) {
+            await redisClient.del(allSearchKeys);
+        }
         
         res.status(200).json({
             message: 'Movie updated successfully.',
@@ -488,14 +807,21 @@ const deleteMovie = async (req, res) => {
             // Delete all ratings for this movie first
             await MovieRating.deleteMany({ movieId: movieId });
         }
-        
-        // Perform hard delete - permanently remove from database
+          // Perform hard delete - permanently remove from database
         await Movie.findByIdAndDelete(movieId);
         
         // Clear related cache
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         await redisClient.del(`movie:${movieId}`);
+        
+        // Clear search cache as well
+        const searchKeys = await redisClient.keys('search:movies:*');
+        const suggestKeys = await redisClient.keys('suggest:movies:*');
+        const allSearchKeys = [...searchKeys, ...suggestKeys];
+        if (allSearchKeys.length > 0) {
+            await redisClient.del(allSearchKeys);
+        }
         
         res.status(200).json({
             message: 'Movie has been permanently deleted from database.',
@@ -593,6 +919,8 @@ module.exports = {
     getUpcomingMovies,
     getMovieDetails,
     searchMovies,
+    getSearchSuggestions,
+    clearSearchCache,
     getAllMovies,
     addMovie,
     updateMovie,

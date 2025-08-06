@@ -10,6 +10,8 @@ const {
     getUpcomingMovies,
     getMovieDetails,
     searchMovies,
+    getSearchSuggestions,
+    clearSearchCache,
     getAllMovies,
     addMovie,
     updateMovie,
@@ -22,9 +24,11 @@ const {
 router.get('/now-showing', getNowShowingMovies);
 router.get('/upcoming', getUpcomingMovies);
 router.get('/search', searchMovies);
+router.get('/search/suggest', getSearchSuggestions);
 
 // Administrator only routes
 router.post('/', protect, restrictTo('administrator'), addMovie);
+router.delete('/search/cache', protect, restrictTo('administrator'), clearSearchCache);
 
 // Administrator only routes for movie management
 router.get('/all', protect, restrictTo('administrator'), getAllMovies); // Warning: Bao gồm cả phim Archived, nên chỉ dùng manage

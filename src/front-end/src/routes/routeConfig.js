@@ -7,6 +7,7 @@ import StaffForgotPwd from '@pages/staff/ForgotPwd';
 import ChangePwd from '@pages/ChangePwd';
 import StaffChangePwd from '@pages/staff/ChangePwd';
 import MovieListPage from '@pages/MovieList.jsx';
+import MovieSearchPage from '@pages/MovieSearchPage.jsx';
 import MovieDetail from '@pages/MovieDetail';
 import CheckInCounterPage from '@pages/staff/CheckInCounterPage.jsx';
 import ScheduleManagePage from '@pages/staff/ScheduleManagePage.jsx';
@@ -40,9 +41,9 @@ export const ROUTES = {
     REGISTER: '/register',
     ACTIVATION: '/activate',
     LOGIN: '/login',
-    RESET_PASSWORD: '/reset-password',
-    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
+    RESET_PASSWORD: '/reset-password',    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
+    MOVIE_SEARCH: '/search',
     MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
     BUY_TICKET: '/buy-ticket',
@@ -117,16 +118,15 @@ export const routeConfig = [
         component: ResetPwdEmail,
         type: 'public',
         requiresAuth: false
-    },
-    {
+    },    {
         path: ROUTES.MOVIES,
         component: MovieListPage,
         type: 'public',
         requiresAuth: false
     },
     {
-        path: ROUTES.MOVIE_DETAILS,
-        component: MovieDetail,
+        path: ROUTES.MOVIE_SEARCH,
+        component: MovieSearchPage,
         type: 'public',
         requiresAuth: false
     },
