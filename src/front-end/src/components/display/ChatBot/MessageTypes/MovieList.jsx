@@ -8,7 +8,7 @@ import { ChevronRight, Star } from 'lucide-react';
  * Kiến thức: Component này nhận array of movies từ backend
  * và render thành danh sách compact với quick actions
  */
-const MovieList = ({ movies, onAction, status }) => {
+const MovieList = ({ movies, onAction, status, onMovieInteraction }) => {
   if (!movies || movies.length === 0) {
     return (
       <div className="text-gray-500 text-center p-4">
@@ -16,6 +16,16 @@ const MovieList = ({ movies, onAction, status }) => {
       </div>
     );
   }
+
+  // Report movie list view interaction when component mounts
+  React.useEffect(() => {
+    if (onMovieInteraction && movies && movies.length > 0) {
+      onMovieInteraction(movies, 'list_view', { 
+        count: movies.length, 
+        status 
+      });
+    }
+  }, [movies, onMovieInteraction, status]);
 
   return (
     <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -82,9 +92,17 @@ const MovieList = ({ movies, onAction, status }) => {
               </div>              {/* Quick Actions */}
               {movie.quick_actions && movie.quick_actions.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {movie.quick_actions.map((action, actionIndex) => (                    <button
+                  {movie.quick_actions.map((action, actionIndex) => (
+                    <button
                       key={actionIndex}
-                      onClick={() => {                        const actionWithData = {
+                      onClick={() => {
+                        // Report quick action interaction
+                        onMovieInteraction && onMovieInteraction(movie, 'quick_action', {
+                          action: action.action,
+                          text: action.text
+                        });
+                        
+                        const actionWithData = {
                           ...action,
                           data: {
                             ...action.data,
@@ -93,7 +111,8 @@ const MovieList = ({ movies, onAction, status }) => {
                           }
                         };
                         onAction(actionWithData);
-                      }}className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
+                      }}
+                      className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
                     >
                       {action.text}
                     </button>
@@ -103,7 +122,11 @@ const MovieList = ({ movies, onAction, status }) => {
             </div>            {/* Arrow for detailed view */}
             <div className="flex-shrink-0 flex items-center">
               <button
-                onClick={() => {                  const movieDetailsAction = {
+                onClick={() => {
+                  // Report movie details click interaction
+                  onMovieInteraction && onMovieInteraction(movie, 'details_click');
+                  
+                  const movieDetailsAction = {
                     action: 'movie_details',
                     data: { movie_id: movie._id || movie.id }
                   };

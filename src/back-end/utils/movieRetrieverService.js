@@ -10,150 +10,221 @@ const { generateQueryEmbedding } = require('./embeddingService');
 class MovieRetrieverService {
   /**
    * Initialize the service
-   */
-  constructor() {
+   */  constructor() {
     this.collectionName = 'movies';
-    this.vectorFieldName = 'textEmbedding';
-    this.indexName = 'vector_index_movies';
+    this.vectorFieldName = 'embedding';
+    this.indexName = 'search_movies_index';
   }
-
   /**
-   * Perform semantic search for movies
-   * @param {string} query - User query
+   * Perform intelligent search for movies using LLM analysis
+   * @param {Object} analysis - LLM analysis object with entities and search_type
    * @param {Object} options - Search options
    * @returns {Promise<Array>} Search results
    */
-  async searchMovies(query, options = {}) {
+  async searchMovies(analysis, options = {}) {
+    const { entities } = analysis;
+    const { search_type, search_keyword, movie_title } = entities;
     const {
       limit = 10,
       includeUpcoming = true,
       includeNowShowing = true,
-      genreFilter = null,
       minRating = 0
-    } = options;
+    } = options;    let pipeline = [];
+    let queryToEmbed = movie_title || search_keyword;
+
+    console.log(`🧠 Intelligent Retriever building query for search_type: ${search_type}`);
 
     try {
-      // Generate query embedding
-      const queryEmbedding = await generateQueryEmbedding(query);
+      // ================== SPECIALIZED SEARCHES ==================
       
-      if (!queryEmbedding || queryEmbedding.length === 0) {
-        console.warn('Failed to generate query embedding for:', query);
-        return [];
+      if (search_type === 'genre') {
+        console.log(`🎯 Performing targeted GENRE search for: "${search_keyword}"`);
+        
+        pipeline = [
+          {
+            $match: {
+              isHidden: false,
+              genre: { $regex: new RegExp(search_keyword, 'i') },
+              ...(minRating > 0 && { ratingsAverage: { $gte: minRating } }),
+              ...(includeUpcoming && !includeNowShowing && { releaseDate: { $gt: new Date() } }),
+              ...(includeNowShowing && !includeUpcoming && { releaseDate: { $lte: new Date() } })
+            }
+          },
+          {
+            $addFields: {
+              searchScore: 1.0, // High confidence for exact genre match
+              searchMethod: 'genre_targeted',
+              status: {
+                $cond: {
+                  if: { $gt: ['$releaseDate', new Date()] },
+                  then: 'Upcoming',
+                  else: 'Now Showing'
+                }
+              }
+            }
+          },
+          { 
+            $sort: { 
+              ratingsAverage: -1, 
+              ratingsQuantity: -1,
+              releaseDate: -1 
+            } 
+          },
+          { $limit: limit }
+        ];
+      }
+      
+      else if (search_type === 'director') {
+        console.log(`🎯 Performing targeted DIRECTOR search for: "${search_keyword}"`);
+        
+        pipeline = [
+          {
+            $match: {
+              isHidden: false,
+              director: { $regex: new RegExp(search_keyword, 'i') },
+              ...(minRating > 0 && { ratingsAverage: { $gte: minRating } }),
+              ...(includeUpcoming && !includeNowShowing && { releaseDate: { $gt: new Date() } }),
+              ...(includeNowShowing && !includeUpcoming && { releaseDate: { $lte: new Date() } })
+            }
+          },
+          {
+            $addFields: {
+              searchScore: 1.0, // High confidence for exact director match
+              searchMethod: 'director_targeted',
+              status: {
+                $cond: {
+                  if: { $gt: ['$releaseDate', new Date()] },
+                  then: 'Upcoming',
+                  else: 'Now Showing'
+                }
+              }
+            }
+          },
+          { 
+            $sort: { 
+              ratingsAverage: -1, 
+              releaseDate: -1 
+            } 
+          },
+          { $limit: limit }
+        ];
+      }
+      
+      else if (search_type === 'cast') {
+        console.log(`🎯 Performing targeted CAST search for: "${search_keyword}"`);
+        
+        pipeline = [
+          {
+            $match: {
+              isHidden: false,
+              cast: { $regex: new RegExp(search_keyword, 'i') },
+              ...(minRating > 0 && { ratingsAverage: { $gte: minRating } }),
+              ...(includeUpcoming && !includeNowShowing && { releaseDate: { $gt: new Date() } }),
+              ...(includeNowShowing && !includeUpcoming && { releaseDate: { $lte: new Date() } })
+            }
+          },
+          {
+            $addFields: {
+              searchScore: 1.0, // High confidence for exact cast match
+              searchMethod: 'cast_targeted',
+              status: {
+                $cond: {
+                  if: { $gt: ['$releaseDate', new Date()] },
+                  then: 'Upcoming',
+                  else: 'Now Showing'
+                }
+              }
+            }
+          },
+          { 
+            $sort: { 
+              ratingsAverage: -1, 
+              releaseDate: -1 
+            } 
+          },
+          { $limit: limit }
+        ];
+      }
+      
+      // ================== HYBRID SEARCH (TITLE OR GENERAL) ==================
+      else {
+        console.log(`🚀 Performing Hybrid Vector + Text Search for: "${queryToEmbed}"`);
+        
+        // Try vector search first
+        const queryEmbedding = await generateQueryEmbedding(queryToEmbed);
+        
+        if (queryEmbedding && queryEmbedding.length > 0) {
+          // Use vector search with text fallback
+          pipeline = [
+            {
+              $vectorSearch: {
+                index: this.indexName,
+                path: this.vectorFieldName,
+                queryVector: queryEmbedding,
+                numCandidates: Math.max(limit * 10, 150),
+                limit: limit * 2
+              }
+            },
+            {
+              $addFields: {
+                searchScore: { $meta: 'vectorSearchScore' },
+                searchMethod: 'vector_hybrid'
+              }
+            },
+            {
+              $match: {
+                isHidden: false,
+                ...(minRating > 0 && { ratingsAverage: { $gte: minRating } }),
+                ...(includeUpcoming && !includeNowShowing && { releaseDate: { $gt: new Date() } }),
+                ...(includeNowShowing && !includeUpcoming && { releaseDate: { $lte: new Date() } })
+              }
+            },
+            {
+              $addFields: {
+                status: {
+                  $cond: {
+                    if: { $gt: ['$releaseDate', new Date()] },
+                    then: 'Upcoming',
+                    else: 'Now Showing'
+                  }
+                }
+              }
+            },
+            {
+              $sort: {
+                searchScore: -1,
+                ratingsAverage: -1,
+                releaseDate: -1
+              }
+            },
+            { $limit: limit }
+          ];
+        } else {
+          // Fallback to text search
+          console.log('⚠️ Vector embedding failed, using text search fallback');
+          return await this.fallbackMovieSearch(queryToEmbed, options);
+        }
       }
 
-      // Build aggregation pipeline
-      const pipeline = [
-        // Vector search stage
-        {
-          $vectorSearch: {
-            index: this.indexName,
-            path: this.vectorFieldName,
-            queryVector: queryEmbedding,
-            numCandidates: Math.max(limit * 10, 100),
-            limit: limit * 2 // Get more results for filtering
-          }
-        },
-        // Add similarity score
-        {
-          $addFields: {
-            searchScore: { $meta: 'vectorSearchScore' }
-          }
-        },
-        // Apply filters
-        {
-          $match: {
-            isHidden: false,
-            ...(genreFilter && { genre: { $in: [genreFilter] } }),
-            ...(minRating > 0 && { ratingsAverage: { $gte: minRating } }),
-            // Status filter based on release date
-            ...(includeUpcoming && !includeNowShowing && { releaseDate: { $gt: new Date() } }),
-            ...(includeNowShowing && !includeUpcoming && { releaseDate: { $lte: new Date() } })
-          }
-        },
-        // Add computed status field
-        {
-          $addFields: {
-            status: {
-              $cond: {
-                if: { $gt: ['$releaseDate', new Date()] },
-                then: 'Upcoming',
-                else: 'Now Showing'
-              }
-            }
-          }
-        },
-        // Project relevant fields
-        {
-          $project: {
-            _id: 1,
-            title: 1,
-            description: 1,
-            posterURL: 1,
-            duration: 1,
-            genre: 1,
-            ageRating: 1,
-            director: 1,
-            cast: 1,
-            language: 1,
-            releaseDate: 1,
-            ratingsAverage: 1,
-            ratingsQuantity: 1,
-            status: 1,
-            searchScore: 1,
-            // Add formatted fields for better display
-            genreString: {
-              $cond: {
-                if: { $isArray: '$genre' },
-                then: { $reduce: { input: '$genre', initialValue: '', in: { $concat: ['$$value', { $cond: { if: { $eq: ['$$value', ''] }, then: '', else: ', ' } }, '$$this'] } } },
-                else: '$genre'
-              }
-            },
-            castString: {
-              $cond: {
-                if: { $isArray: '$cast' },
-                then: { 
-                  $reduce: { 
-                    input: { $slice: ['$cast', 3] }, 
-                    initialValue: '', 
-                    in: { $concat: ['$$value', { $cond: { if: { $eq: ['$$value', ''] }, then: '', else: ', ' } }, '$$this'] } 
-                  } 
-                },
-                else: '$cast'
-              }
-            },
-            durationFormatted: {
-              $concat: [
-                { $toString: { $floor: { $divide: ['$duration', 60] } } },
-                'h ',
-                { $toString: { $mod: ['$duration', 60] } },
-                'm'
-              ]
-            }
-          }
-        },
-        // Sort by relevance score and rating
-        {
-          $sort: {
-            searchScore: -1,
-            ratingsAverage: -1,
-            releaseDate: -1
-          }
-        },
-        // Limit final results
-        {
-          $limit: limit
-        }
-      ];
-
+      // ================== EXECUTE SEARCH ==================
       const movies = await Movie.aggregate(pipeline);
       
-      console.log(`Found ${movies.length} movies for query: "${query}"`);
-      return movies;
+      // Add formatted fields to all results
+      const enhancedMovies = movies.map(movie => ({
+        ...movie,
+        genreString: Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre,
+        castString: Array.isArray(movie.cast) ? movie.cast.slice(0, 3).join(', ') : movie.cast,
+        durationFormatted: movie.duration ? `${Math.floor(movie.duration / 60)}h ${movie.duration % 60}m` : '',
+        searchType: search_type || 'general'
+      }));
+
+      console.log(`✅ Found ${enhancedMovies.length} movies using ${search_type || 'hybrid'} search`);
+      return enhancedMovies;
       
     } catch (error) {
-      console.error('Error in movie vector search:', error);
-      // Fallback to regular search if vector search fails
-      return await this.fallbackMovieSearch(query, options);
+      console.error(`Error in intelligent movie search for type '${search_type}':`, error);
+      // Fallback to simple search
+      return await this.fallbackMovieSearch(queryToEmbed || 'popular movies', options);
     }
   }
 
@@ -421,6 +492,363 @@ class MovieRetrieverService {
         { text: 'Tìm phim khác', action: 'search_movies' }
       ]
     };
+  }
+
+  // === STATEFUL RAG SUPPORT METHODS ===
+  
+  /**
+   * Get movie by ID (for context retrieval)
+   * @param {string} movieId - Movie ID
+   * @returns {Promise<Object|null>} Movie object or null
+   */
+  async getMovieById(movieId) {
+    try {
+      const movie = await Movie.findById(movieId)
+        .select('title description posterURL duration genre ageRating director cast language releaseDate ratingsAverage ratingsQuantity')
+        .lean();
+      
+      if (!movie) return null;
+
+      // Add computed fields
+      const now = new Date();
+      return {
+        ...movie,
+        status: new Date(movie.releaseDate) > now ? 'Upcoming' : 'Now Showing',
+        genreString: Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre,
+        castString: Array.isArray(movie.cast) ? movie.cast.slice(0, 3).join(', ') : movie.cast,
+        durationFormatted: movie.duration ? `${Math.floor(movie.duration / 60)}h ${movie.duration % 60}m` : ''
+      };
+    } catch (error) {
+      console.error('Error getting movie by ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Find similar movies based on genre/director/cast
+   * @param {Array} baseMovieIds - Array of movie IDs to find similar to
+   * @param {Object} options - Search options
+   * @returns {Promise<Array>} Similar movies
+   */
+  async findSimilarMovies(baseMovieIds, options = {}) {
+    const { limit = 5 } = options;
+    
+    try {
+      // Get base movies first
+      const baseMovies = await Movie.find({ 
+        _id: { $in: baseMovieIds }, 
+        isHidden: false 
+      })
+      .select('genre director cast')
+      .lean();
+
+      if (baseMovies.length === 0) return [];
+
+      // Extract characteristics from base movies
+      const allGenres = [...new Set(baseMovies.flatMap(m => Array.isArray(m.genre) ? m.genre : [m.genre]))];
+      const allDirectors = [...new Set(baseMovies.map(m => m.director).filter(Boolean))];
+      const allCast = [...new Set(baseMovies.flatMap(m => Array.isArray(m.cast) ? m.cast.slice(0, 3) : [m.cast]).filter(Boolean))];
+
+      // Build search criteria
+      const searchCriteria = {
+        _id: { $nin: baseMovieIds }, // Exclude base movies
+        isHidden: false,
+        $or: [
+          { genre: { $in: allGenres } },
+          { director: { $in: allDirectors } },
+          { cast: { $in: allCast } }
+        ]
+      };
+
+      const similarMovies = await Movie.find(searchCriteria)
+        .select('title description posterURL duration genre ageRating director cast language releaseDate ratingsAverage ratingsQuantity')
+        .sort({ ratingsAverage: -1, ratingsQuantity: -1 })
+        .limit(limit)
+        .lean();
+
+      // Add computed fields
+      const now = new Date();
+      return similarMovies.map(movie => ({
+        ...movie,
+        status: new Date(movie.releaseDate) > now ? 'Upcoming' : 'Now Showing',
+        genreString: Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre,
+        castString: Array.isArray(movie.cast) ? movie.cast.slice(0, 3).join(', ') : movie.cast,
+        durationFormatted: movie.duration ? `${Math.floor(movie.duration / 60)}h ${movie.duration % 60}m` : '',
+        searchScore: 0.8, // High relevance for similar movies
+        searchMethod: 'similarity'
+      }));
+
+    } catch (error) {
+      console.error('Error finding similar movies:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get popular/trending movies
+   * @param {Object} options - Search options
+   * @returns {Promise<Array>} Popular movies
+   */
+  async getPopularMovies(options = {}) {
+    const { limit = 10, includeUpcoming = false } = options;
+    
+    try {
+      const now = new Date();
+      const matchCriteria = {
+        isHidden: false,
+        ratingsAverage: { $gte: 7.0 }, // Only high-rated movies
+        ratingsQuantity: { $gte: 10 }, // With enough reviews
+        ...(includeUpcoming ? {} : { releaseDate: { $lte: now } })
+      };
+
+      const popularMovies = await Movie.find(matchCriteria)
+        .select('title description posterURL duration genre ageRating director cast language releaseDate ratingsAverage ratingsQuantity')
+        .sort({ 
+          ratingsAverage: -1, 
+          ratingsQuantity: -1, 
+          releaseDate: -1 
+        })
+        .limit(limit)
+        .lean();
+
+      // Add computed fields
+      return popularMovies.map(movie => ({
+        ...movie,
+        status: new Date(movie.releaseDate) > now ? 'Upcoming' : 'Now Showing',
+        genreString: Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre,
+        castString: Array.isArray(movie.cast) ? movie.cast.slice(0, 3).join(', ') : movie.cast,
+        durationFormatted: movie.duration ? `${Math.floor(movie.duration / 60)}h ${movie.duration % 60}m` : '',
+        searchScore: 0.9, // High relevance for popular movies
+        searchMethod: 'popularity'
+      }));    } catch (error) {
+      console.error('Error getting popular movies:', error);
+      return [];
+    }
+  }
+
+  // ================ STATEFUL RAG CONTEXT-AWARE METHODS ================
+  /**
+   * Get now showing movies with interaction context
+   */
+  async getNowShowingWithContext(interactionContext = {}) {
+    try {
+      console.log('🎬 Getting now showing movies with context');
+      const movies = await this.getMoviesByFilters({ status: 'now-showing' });
+      
+      // Prioritize movies similar to previously interacted ones
+      if (interactionContext.lastInteractedMovieId) {
+        return this._prioritizeByContext(movies, interactionContext);
+      }
+      
+      return movies;
+    } catch (error) {
+      console.error('Error getting now showing movies with context:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get upcoming movies with interaction context
+   */
+  async getUpcomingWithContext(interactionContext = {}) {
+    try {
+      console.log('🎬 Getting upcoming movies with context');
+      const movies = await this.getMoviesByFilters({ status: 'upcoming' });
+      
+      // Prioritize movies similar to previously interacted ones
+      if (interactionContext.lastInteractedMovieId) {
+        return this._prioritizeByContext(movies, interactionContext);
+      }
+      
+      return movies;
+    } catch (error) {
+      console.error('Error getting upcoming movies with context:', error);
+      return [];
+    }
+  }
+  /**
+   * Search movies with interaction context
+   */
+  async searchMoviesWithContext(analysis, interactionContext = {}) {
+    try {
+      console.log('🔍 Searching movies with context:', analysis.entities);
+      const movies = await this.searchMovies(analysis);
+      
+      // Prioritize movies similar to previously interacted ones
+      if (interactionContext.lastInteractedMovieId) {
+        return this._prioritizeByContext(movies, interactionContext);
+      }
+      
+      return movies;
+    } catch (error) {
+      console.error('Error searching movies with context:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get movie details with interaction context
+   */
+  async getMovieDetailsWithContext(movieId, interactionContext = {}) {
+    try {
+      console.log('📄 Getting movie details with context:', movieId);
+      const movie = await Movie.findById(movieId).lean();
+      
+      if (!movie) return null;
+      
+      // Add context-aware metadata
+      movie.contextual = {
+        isFromPreviousInteraction: movieId === interactionContext.lastInteractedMovieId,
+        interactionHistory: interactionContext.movieInteractionCount || 0
+      };
+      
+      return movie;
+    } catch (error) {
+      console.error('Error getting movie details with context:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get schedules with interaction context
+   */  async getSchedulesWithContext(entities, interactionContext = {}) {
+    try {
+      console.log('📅 Getting schedules with context:', entities);
+      
+      // Use context to fill missing movie information
+      let movieTitle = entities.movie_title || interactionContext.lastInteractedMovieTitle;
+      let movieId = entities.movie_id || interactionContext.lastInteractedMovieId;
+      
+      if (!movieTitle && !movieId) {
+        throw new Error('No movie information available in entities or context');
+      }
+      
+      // If we have movieId, proceed directly; otherwise search for movie
+      if (!movieId && movieTitle) {
+        const analysis = {
+          entities: {
+            search_type: 'title',
+            movie_title: movieTitle,
+            search_keyword: movieTitle
+          }
+        };
+        
+        const movies = await this.searchMovies(analysis, { limit: 1 });
+        if (movies.length === 0) {
+          throw new Error('Movie not found');
+        }
+        movieId = movies[0]._id;
+        movieTitle = movies[0].title;
+      }
+      
+      // Now get schedules for the movie
+      const schedules = await this._getSchedulesForMovie(
+        movieId, 
+        entities.location, 
+        entities.date || new Date().toISOString().split('T')[0]
+      );
+      
+      // Add context information
+      schedules.contextual = {
+        movieTitle,
+        movieId,
+        fromInteractionContext: !entities.movie_title && !!interactionContext.lastInteractedMovieTitle
+      };
+      
+      return schedules;
+    } catch (error) {
+      console.error('Error getting schedules with context:', error);
+      return null;
+    }
+  }
+  /**
+   * Search movies for schedule with interaction context
+   */
+  async searchMoviesForScheduleWithContext(movieTitle, interactionContext = {}) {
+    try {
+      console.log('🎬🗓️ Searching movies for schedule with context:', movieTitle);
+      
+      // Create analysis object for title search
+      const analysis = {
+        entities: {
+          search_type: 'title',
+          movie_title: movieTitle,
+          search_keyword: movieTitle
+        }
+      };
+      
+      const movies = await this.searchMovies(analysis, { limit: 5 });
+      
+      // Mark movies with schedule context
+      const scheduleFocusedMovies = movies.map(movie => ({
+        ...movie,
+        context: 'schedule',
+        contextual: {
+          searchedForSchedule: true,
+          relatedToPreviousInteraction: movie._id === interactionContext.lastInteractedMovieId
+        }
+      }));
+      
+      return scheduleFocusedMovies;
+    } catch (error) {
+      console.error('Error searching movies for schedule with context:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Helper: Prioritize movies based on interaction context
+   */
+  _prioritizeByContext(movies, interactionContext) {
+    if (!interactionContext.lastInteractedMovieId || !movies.length) {
+      return movies;
+    }
+    
+    // Sort movies: previously interacted movie and similar ones first
+    return movies.sort((a, b) => {
+      // Prioritize the exact movie from context
+      if (a._id.toString() === interactionContext.lastInteractedMovieId) return -1;
+      if (b._id.toString() === interactionContext.lastInteractedMovieId) return 1;
+      
+      // Prioritize movies with same genre as context movie
+      if (interactionContext.lastInteractedMovieGenre) {
+        const aMatchesGenre = a.genre?.includes(interactionContext.lastInteractedMovieGenre);
+        const bMatchesGenre = b.genre?.includes(interactionContext.lastInteractedMovieGenre);
+        
+        if (aMatchesGenre && !bMatchesGenre) return -1;
+        if (bMatchesGenre && !aMatchesGenre) return 1;
+      }
+      
+      // Default sort by rating or popularity
+      return (b.rating || 0) - (a.rating || 0);
+    });
+  }
+
+  /**
+   * Helper: Get schedules for a specific movie
+   */
+  async _getSchedulesForMovie(movieId, location, date) {
+    try {
+      // This is a simplified version - in reality you'd need to:
+      // 1. Find branch by location
+      // 2. Get schedules for that branch, movie, and date
+      // For now, return a mock structure that matches the expected format
+      
+      const movie = await Movie.findById(movieId).lean();
+      
+      return {
+        movie_id: movieId,
+        movie_title: movie?.title || 'Unknown Movie',
+        branch_location: location || 'Unknown Location',
+        date: date,
+        schedules: [], // Would be populated with actual schedule data
+        total_schedules: 0
+      };
+      
+    } catch (error) {
+      console.error('Error getting schedules for movie:', error);
+      throw error;
+    }
   }
 }
 

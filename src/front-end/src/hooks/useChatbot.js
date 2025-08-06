@@ -170,12 +170,11 @@ const useChatbot = () => {  // Lấy thông tin user để theo dõi trạng th�
   const sendQuickAction = useCallback((actionText) => {
     sendMessage(actionText);
   }, [sendMessage]);
-
   return {
     messages,
     isLoading,
     error,
-    sessionId,
+    sessionId, // Expose sessionId for context reporting
     sendMessage,
     clearMessages,
     sendQuickAction

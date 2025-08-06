@@ -12,11 +12,10 @@ const { generateQueryEmbedding } = require('./embeddingService');
 class ScheduleRetrieverService {
   /**
    * Initialize the service
-   */
-  constructor() {
+   */  constructor() {
     this.collectionName = 'schedules';
-    this.vectorFieldName = 'textEmbedding';
-    this.indexName = 'vector_index_schedules';
+    this.vectorFieldName = 'embedding';
+    this.indexName = 'search_schedules_index';
   }
 
   /**
@@ -540,13 +539,21 @@ class ScheduleRetrieverService {
           limit: Math.ceil(limit * 0.7) // 70% for schedules
         });
       }
-      
-      if (includeMovies) {
+        if (includeMovies) {
         // Import movie retriever service dynamically to avoid circular dependency
         const MovieRetrieverService = require('./movieRetrieverService');
         const movieRetriever = new MovieRetrieverService();
         
-        results.movies = await movieRetriever.searchMovies(query, {
+        // Create analysis object for movie search
+        const analysisObject = {
+          entities: {
+            search_type: 'keyword',
+            search_keyword: query,
+            movie_title: query.includes('phim') ? query : null
+          }
+        };
+        
+        results.movies = await movieRetriever.searchMovies(analysisObject, {
           ...options,
           limit: Math.ceil(limit * 0.3) // 30% for movies
         });

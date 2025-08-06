@@ -454,6 +454,569 @@ class ResponseFormatter {
       ]
     };
   }
+
+  // === STATEFUL RAG SUPPORT METHODS ===
+  
+  /**
+   * Generate contextual quick actions based on user interaction history
+   * @param {Object} interactionContext - User interaction context
+   * @param {string} responseType - Type of response (movie_list, schedule_list, etc.)
+   * @param {Object} currentData - Current response data
+   * @returns {Array} Contextual quick actions
+   */
+  generateContextualQuickActions(interactionContext = null, responseType = '', currentData = {}) {
+    const quickActions = [];
+    
+    if (!interactionContext) {
+      return this.getDefaultQuickActions(responseType, currentData);
+    }
+
+    // Generate actions based on last interaction
+    if (interactionContext.lastInteractedMovieId && responseType === 'movie_list') {
+      // If user was viewing a movie, suggest related actions
+      quickActions.push({
+        text: 'Xem lịch chiếu phim vừa xem',
+        action: 'find_schedules',
+        data: { movie_id: interactionContext.lastInteractedMovieId },
+        priority: 'high'
+      });
+    }
+
+    // Generate actions based on frequent branches
+    if (interactionContext.frequentBranches?.length > 0 && 
+        ['movie_list', 'search_conversation'].includes(responseType)) {
+      // Get branch name (this would need to be resolved from branch ID)
+      quickActions.push({
+        text: 'Xem lịch tại rạp thường xuyên',
+        action: 'find_schedules',
+        data: { branch_id: interactionContext.frequentBranches[0] },
+        priority: 'medium'
+      });
+    }
+
+    // Generate actions based on preferred genres
+    if (interactionContext.preferredGenres?.length > 0 && responseType === 'search_conversation') {
+      const preferredGenre = interactionContext.preferredGenres[0];
+      quickActions.push({
+        text: `Tìm phim ${preferredGenre}`,
+        action: 'search_movies',
+        data: { genre: preferredGenre },
+        priority: 'medium'
+      });
+    }
+
+    // Generate actions based on recent flow
+    if (interactionContext.recentFlow?.length > 0) {
+      const lastFlow = interactionContext.recentFlow[interactionContext.recentFlow.length - 1];
+      
+      if (lastFlow.type === 'movie_view' && responseType !== 'movie_details') {
+        quickActions.push({
+          text: 'Quay lại phim vừa xem',
+          action: 'movie_details',
+          data: { movie_id: lastFlow.data.lastInteractedMovieId },
+          priority: 'low'
+        });
+      }
+
+      if (lastFlow.type === 'schedule_view' && responseType !== 'schedule_list') {
+        quickActions.push({
+          text: 'Xem lại lịch chiếu',
+          action: 'find_schedules',
+          data: lastFlow.data,
+          priority: 'low'
+        });
+      }
+    }
+
+    // Merge with default actions and prioritize
+    const defaultActions = this.getDefaultQuickActions(responseType, currentData);
+    const allActions = [...quickActions, ...defaultActions];
+    
+    // Sort by priority (high > medium > low > default)
+    const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+    allActions.sort((a, b) => {
+      const aPriority = priorityOrder[a.priority] ?? 3;
+      const bPriority = priorityOrder[b.priority] ?? 3;
+      return aPriority - bPriority;
+    });
+
+    // Return top 4 actions
+    return allActions.slice(0, 4);
+  }
+
+  /**
+   * Get default quick actions for a response type
+   * @param {string} responseType - Type of response
+   * @param {Object} currentData - Current response data
+   * @returns {Array} Default quick actions
+   */
+  getDefaultQuickActions(responseType, currentData = {}) {
+    switch (responseType) {
+      case 'movie_list':
+        return [
+          { text: 'Xem lịch chiếu', action: 'schedule_conversation' },
+          { text: 'Phim đang chiếu', action: 'get_now_showing' },
+          { text: 'Phim sắp chiếu', action: 'get_upcoming' },
+          { text: 'Tìm phim khác', action: 'search_conversation' }
+        ];
+      
+      case 'schedule_list':
+        return [
+          { text: 'Đặt vé ngay', action: 'start_booking' },
+          { text: 'Xem ngày khác', action: 'change_date' },
+          { text: 'Tìm phim khác', action: 'search_conversation' },
+          { text: 'Xem rạp khác', action: 'change_branch' }
+        ];
+      
+      case 'search_conversation':
+        return [
+          { text: 'Phim đang chiếu', action: 'get_now_showing' },
+          { text: 'Phim sắp chiếu', action: 'get_upcoming' },
+          { text: 'Tìm theo thể loại', action: 'search_by_genre' },
+          { text: 'Xem lịch chiếu', action: 'schedule_conversation' }
+        ];
+      
+      default:
+        return [
+          { text: 'Phim đang chiếu', action: 'get_now_showing' },
+          { text: 'Tìm phim hay', action: 'search_conversation' },
+          { text: 'Xem lịch chiếu', action: 'schedule_conversation' }
+        ];
+    }
+  }
+
+  /**
+   * Enhanced format movie list with contextual actions
+   * @param {Array} movies - Movie array
+   * @param {Object} query - Query parameters
+   * @param {Object} interactionContext - User interaction context
+   * @returns {Object} Enhanced movie list response
+   */
+  formatMovieListWithContext(movies, query = {}, interactionContext = null) {
+    if (!movies || movies.length === 0) {
+      return this.formatErrorResponse('movie_not_found');
+    }
+
+    // Generate base response
+    const baseResponse = this.formatMovieList(movies, query);
+    
+    // Generate contextual suggestions
+    const contextualSuggestions = this.generateContextualQuickActions(
+      interactionContext, 
+      'movie_list', 
+      { movies, query }
+    );
+
+    // Enhance each movie with contextual quick actions
+    const enhancedMovies = movies.map(movie => {
+      let quickActions = [
+        { text: 'Xem lịch chiếu', action: 'find_schedules', data: { movie_title: movie.title, movie_id: movie._id } },
+        { text: 'Xem chi tiết', action: 'movie_details', data: { movie_id: movie._id } }
+      ];
+
+      // Add contextual actions based on interaction history
+      if (interactionContext?.frequentBranches?.length > 0) {
+        quickActions.unshift({
+          text: 'Xem tại rạp thường xuyên',
+          action: 'find_schedules',
+          data: { 
+            movie_title: movie.title, 
+            movie_id: movie._id,
+            branch_id: interactionContext.frequentBranches[0]
+          }
+        });
+      }
+
+      return {
+        ...movie,
+        quick_actions: quickActions.slice(0, 3) // Limit to 3 actions per movie
+      };
+    });
+
+    return {
+      ...baseResponse,
+      data: enhancedMovies,
+      suggestions: contextualSuggestions,
+      contextEnhanced: !!interactionContext
+    };
+  }
+
+  /**
+   * Enhanced format search conversation with contextual suggestions
+   * @param {Object} interactionContext - User interaction context
+   * @returns {Object} Enhanced search conversation response
+   */
+  formatSearchConversationWithContext(interactionContext = null) {
+    const baseResponse = this.formatSearchConversationResponse();
+    
+    if (!interactionContext) {
+      return baseResponse;
+    }
+
+    // Generate contextual message
+    let enhancedMessage = baseResponse.message;
+    const contextualSuggestions = [];
+
+    // Add context-aware suggestions
+    if (interactionContext.viewedMovies?.length > 0) {
+      enhancedMessage += '\n\n💡 Gợi ý dựa trên phim bạn đã xem:';
+      contextualSuggestions.push({
+        text: 'Phim tương tự với sở thích',
+        action: 'search_similar',
+        data: { baseMovies: interactionContext.viewedMovies.slice(-2) }
+      });
+    }
+
+    if (interactionContext.preferredGenres?.length > 0) {
+      const preferredGenre = interactionContext.preferredGenres[0];
+      contextualSuggestions.push({
+        text: `Phim ${preferredGenre} hay nhất`,
+        action: 'search_movies',
+        data: { genre: preferredGenre }
+      });
+    }
+
+    // Get default suggestions
+    const defaultSuggestions = this.generateContextualQuickActions(
+      interactionContext,
+      'search_conversation'
+    );
+
+    return {
+      ...baseResponse,
+      message: enhancedMessage,
+      suggestions: [...contextualSuggestions, ...defaultSuggestions].slice(0, 4),
+      contextEnhanced: true
+    };  }
+
+  /**
+   * MAIN FORMATTING FUNCTION - Central dispatcher for all response formatting
+   * This replaces all the scattered formatting calls throughout the system
+   */
+  formatFinalResponse(analysis, retrievedData, interactionContext = {}) {
+    console.log('🎨 Formatting final response for intent:', analysis.intent);
+    
+    try {
+      switch (analysis.intent) {
+        case 'get_now_showing': {
+          if (!retrievedData) {
+            return this.formatErrorResponse('api_error');
+          }
+          return this.formatMovieListWithContext(
+            retrievedData, 
+            { status: 'now-showing' }, 
+            interactionContext
+          );
+        }
+
+        case 'get_upcoming': {
+          if (!retrievedData) {
+            return this.formatErrorResponse('api_error');
+          }
+          return this.formatMovieListWithContext(
+            retrievedData, 
+            { status: 'upcoming' }, 
+            interactionContext
+          );
+        }
+
+        case 'search_movies': {
+          if (!retrievedData) {
+            const searchQuery = analysis.entities.movie_title || analysis.entities.search_keyword;
+            if (!searchQuery) {
+              return this.formatSmartMissingQuestion('movie_title', { entities: analysis.entities });
+            }
+            return this.formatErrorResponse('movie_not_found');
+          }
+          return this.formatMovieListWithContext(
+            retrievedData, 
+            analysis.entities, 
+            interactionContext
+          );
+        }
+
+        case 'movie_details': {
+          if (!retrievedData) {
+            return this.formatErrorResponse('movie_not_found');
+          }
+          return this.formatMovieDetailsWithContext(retrievedData, interactionContext);
+        }
+
+        case 'find_schedules': {
+          if (!retrievedData) {
+            // Check what's missing based on entities
+            const combinedEntities = { 
+              ...(analysis.entities || {}),
+              movie_title: analysis.entities.movie_title || interactionContext.lastInteractedMovieTitle,
+              movie_id: analysis.entities.movie_id || interactionContext.lastInteractedMovieId
+            };
+            
+            const requiredParams = ['movie_title', 'location', 'date'];
+            const missingParams = requiredParams.filter(param => !combinedEntities[param]);
+            
+            if (missingParams.length > 0) {
+              return this.formatSmartMissingQuestion(missingParams[0], { entities: combinedEntities });
+            }
+            
+            return this.formatErrorResponse('schedule_not_found');
+          }
+          return this.formatScheduleResponseWithContext(retrievedData, analysis.entities, interactionContext);
+        }
+
+        case 'search_for_schedule': {
+          if (!retrievedData) {
+            const movieTitle = analysis.entities.movie_title;
+            if (!movieTitle) {
+              return this.formatSmartMissingQuestion('movie_title', { entities: analysis.entities });
+            }
+            return this.formatErrorResponse('movie_not_found');
+          }
+          return this.formatMovieListForScheduleWithContext(retrievedData, analysis.entities, interactionContext);
+        }
+
+        case 'search_conversation': {
+          return this.formatSearchConversationResponseWithContext(interactionContext);
+        }
+
+        case 'schedule_conversation': {
+          return this.formatScheduleConversationResponseWithContext(interactionContext);
+        }
+
+        case 'non_movie_related': {
+          return this.formatNonMovieResponseWithContext(interactionContext);
+        }
+
+        default: {
+          // Default greeting with context awareness
+          return this.formatGreetingWithContext(interactionContext);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error in formatFinalResponse:', error);
+      return this.formatErrorResponse('api_error');
+    }
+  }
+
+  /**
+   * Enhanced greeting with context awareness
+   */
+  formatGreetingWithContext(interactionContext = {}) {
+    const baseMessage = this.getRandomTemplate('greeting');
+    
+    // Default suggestions
+    let suggestions = [
+      { text: 'Phim đang chiếu', action: 'get_now_showing' },
+      { text: 'Phim sắp chiếu', action: 'get_upcoming' },
+      { text: 'Tìm phim', action: 'search_movies' },
+      { text: 'Xem lịch chiếu', action: 'find_schedules' }
+    ];
+
+    // Enhanced suggestions based on interaction context
+    if (interactionContext.lastInteractedMovieTitle) {
+      suggestions.unshift({
+        text: `Xem lịch chiếu ${interactionContext.lastInteractedMovieTitle}`,
+        action: 'find_schedules',
+        data: {
+          movie_title: interactionContext.lastInteractedMovieTitle,
+          movie_id: interactionContext.lastInteractedMovieId
+        }
+      });
+    }    return {
+      type: 'greeting',
+      message: baseMessage,
+      suggestions: suggestions.slice(0, 4),
+      sessionId: interactionContext.sessionId,
+      contextEnhanced: !!interactionContext.lastInteractedMovieTitle
+    };
+  }
+
+  /**
+   * Enhanced movie details with context awareness
+   */
+  formatMovieDetailsWithContext(movie, interactionContext = {}) {
+    const baseResponse = this.formatMovieDetails(movie);
+    
+    // Add contextual quick actions
+    const contextualActions = [];
+    
+    // Always add schedule viewing
+    contextualActions.push({
+      text: `Xem lịch chiếu ${movie.title}`,
+      action: 'find_schedules',
+      data: {
+        movie_id: movie._id,
+        movie_title: movie.title
+      }
+    });
+    
+    // Add similar movies suggestion if we have genre info
+    if (movie.genre) {
+      contextualActions.push({
+        text: `Phim ${movie.genre} khác`,
+        action: 'search_movies',
+        data: {
+          search_keyword: movie.genre
+        }
+      });
+    }
+    
+    return {
+      ...baseResponse,
+      botData: {
+        ...baseResponse.botData,
+        quick_actions: [...(baseResponse.botData?.quick_actions || []), ...contextualActions].slice(0, 3),
+        contextual: true,
+        interactionContext
+      }
+    };
+  }
+
+  /**
+   * Enhanced schedule response with context awareness
+   */
+  formatScheduleResponseWithContext(scheduleData, entities = {}, interactionContext = {}) {
+    const baseResponse = this.formatScheduleResponse(scheduleData, entities);
+    
+    // Add contextual suggestions based on interaction history
+    const contextualSuggestions = [];
+    
+    if (interactionContext.lastInteractedMovieTitle && 
+        interactionContext.lastInteractedMovieTitle !== scheduleData.movie_title) {
+      contextualSuggestions.push({
+        text: `Lịch chiếu ${interactionContext.lastInteractedMovieTitle}`,
+        action: 'find_schedules',
+        data: {
+          movie_title: interactionContext.lastInteractedMovieTitle
+        }
+      });
+    }
+    
+    return {
+      ...baseResponse,
+      suggestions: [...(baseResponse.suggestions || []), ...contextualSuggestions].slice(0, 4),
+      contextEnhanced: contextualSuggestions.length > 0
+    };
+  }
+
+  /**
+   * Enhanced movie list for schedule with context awareness
+   */
+  formatMovieListForScheduleWithContext(movies, entities = {}, interactionContext = {}) {
+    const baseResponse = this.formatMovieListForSchedule(movies, entities);
+    
+    // Prioritize movies based on context
+    if (interactionContext.lastInteractedMovieId && baseResponse.botData?.data) {
+      const prioritizedMovies = baseResponse.botData.data.sort((a, b) => {
+        if (a._id === interactionContext.lastInteractedMovieId) return -1;
+        if (b._id === interactionContext.lastInteractedMovieId) return 1;
+        return 0;
+      });
+      
+      baseResponse.botData.data = prioritizedMovies;
+      baseResponse.contextEnhanced = true;
+    }
+    
+    return baseResponse;
+  }
+
+  /**
+   * Enhanced search conversation response with context awareness
+   */
+  formatSearchConversationResponseWithContext(interactionContext = {}) {
+    const baseResponse = this.formatSearchConversationResponse();
+    
+    // Add contextual suggestions based on previous interactions
+    const contextualSuggestions = [];
+    
+    if (interactionContext.lastInteractedMovieGenre) {
+      contextualSuggestions.push({
+        text: `Phim ${interactionContext.lastInteractedMovieGenre} khác`,
+        action: 'search_movies',
+        data: {
+          search_keyword: interactionContext.lastInteractedMovieGenre
+        }
+      });
+    }
+    
+    if (interactionContext.lastInteractedMovieTitle) {
+      contextualSuggestions.push({
+        text: `Phim tương tự ${interactionContext.lastInteractedMovieTitle}`,
+        action: 'search_movies',
+        data: {
+          search_keyword: `similar to ${interactionContext.lastInteractedMovieTitle}`
+        }
+      });
+    }
+    
+    return {
+      ...baseResponse,
+      botData: {
+        ...baseResponse.botData,
+        quick_actions: [...(baseResponse.botData?.quick_actions || []), ...contextualSuggestions].slice(0, 4)
+      },
+      contextEnhanced: contextualSuggestions.length > 0
+    };
+  }
+
+  /**
+   * Enhanced schedule conversation response with context awareness
+   */
+  formatScheduleConversationResponseWithContext(interactionContext = {}) {
+    const baseResponse = this.formatScheduleConversationResponse();
+    
+    // If we have a movie from context, suggest it immediately
+    if (interactionContext.lastInteractedMovieTitle) {
+      const contextualMessage = `Tuyệt! Bạn có muốn xem lịch chiếu của "${interactionContext.lastInteractedMovieTitle}" mà bạn vừa quan tâm không?`;
+      
+      const contextualActions = [{
+        text: `Lịch chiếu ${interactionContext.lastInteractedMovieTitle}`,
+        action: 'find_schedules',
+        data: {
+          movie_title: interactionContext.lastInteractedMovieTitle,
+          movie_id: interactionContext.lastInteractedMovieId
+        }
+      }];
+      
+      return {
+        ...baseResponse,
+        message: contextualMessage,
+        botData: {
+          ...baseResponse.botData,
+          quick_actions: [...contextualActions, ...(baseResponse.botData?.quick_actions || [])].slice(0, 4)
+        },
+        contextEnhanced: true
+      };
+    }
+    
+    return baseResponse;
+  }
+
+  /**
+   * Enhanced non-movie response with context awareness
+   */
+  formatNonMovieResponseWithContext(interactionContext = {}) {
+    const baseResponse = this.formatNonMovieResponse();
+    
+    // Add contextual movie suggestions to redirect conversation
+    const contextualSuggestions = [];
+    
+    if (interactionContext.lastInteractedMovieTitle) {
+      contextualSuggestions.push({
+        text: `Quay lại ${interactionContext.lastInteractedMovieTitle}`,
+        action: 'movie_details',
+        data: {
+          movie_id: interactionContext.lastInteractedMovieId
+        }
+      });
+    }
+    
+    return {
+      ...baseResponse,
+      suggestions: [...contextualSuggestions, ...(baseResponse.suggestions || [])].slice(0, 4),
+      contextEnhanced: contextualSuggestions.length > 0
+    };
+  }
 }
 
 module.exports = new ResponseFormatter();

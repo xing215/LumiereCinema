@@ -1,7 +1,6 @@
 const { redisClient } = require('../config/redis.config');
 
-class ConversationManager {
-  constructor() {
+class ConversationManager {  constructor() {
     this.defaultContext = {
       sessionId: null,
       lastIntent: null,
@@ -10,7 +9,18 @@ class ConversationManager {
       step: 'initial',
       conversationHistory: [],
       lastActivity: new Date().toISOString(),
-      consecutiveFailures: 0
+      consecutiveFailures: 0,
+      // === STATEFUL RAG CONTEXT ===
+      interactionContext: {
+        lastInteractedMovieId: null,
+        lastInteractedScheduleId: null,
+        lastInteractionType: null,
+        lastInteractionTime: null,
+        viewedMovies: [],
+        preferredGenres: [],
+        frequentBranches: [],
+        conversationalFlow: []
+      }
     };
   }
 
@@ -201,17 +211,17 @@ class ConversationManager {
 
     return false;
   }
-
   // [ENHANCED] Clear context with optional soft reset
   async clearContext(sessionId, softReset = false) {
     try {
       if (softReset) {
-        // Soft reset: chỉ clear booking data, giữ lại preferences
+        // Soft reset: chỉ clear booking data, giữ lại preferences và interaction context
         const currentContext = await this.getContext(sessionId);
         const cleanContext = {
           ...this.defaultContext,
           sessionId,
           userPreferences: currentContext.userPreferences || {},
+          interactionContext: currentContext.interactionContext || this.defaultContext.interactionContext,
           lastActivity: new Date().toISOString()
         };
         await this.saveContext(sessionId, cleanContext);
@@ -224,6 +234,174 @@ class ConversationManager {
       console.log(`🧹 Context cleared for session: ${sessionId}`);
     } catch (error) {
       console.error('Error clearing context:', error);
+    }
+  }
+
+  // === STATEFUL RAG METHODS ===
+  
+  /**
+   * Update interaction context for Stateful RAG
+   * @param {string} sessionId 
+   * @param {object} interactionData - { lastInteractedMovieId, lastInteractionType, etc. }
+   */
+  async updateInteractionContext(sessionId, interactionData) {
+    try {
+      const context = await this.getContext(sessionId);
+      
+      const currentInteractionContext = context.interactionContext || this.defaultContext.interactionContext;
+      
+      // Update main interaction data
+      const updatedInteractionContext = {
+        ...currentInteractionContext,
+        ...interactionData,
+        lastInteractionTime: new Date().toISOString()
+      };
+
+      // Add to conversational flow for context tracking
+      if (interactionData.lastInteractionType) {
+        const flowEntry = {
+          type: interactionData.lastInteractionType,
+          data: interactionData,
+          timestamp: new Date().toISOString()
+        };
+        
+        updatedInteractionContext.conversationalFlow.push(flowEntry);
+        // Keep last 20 interactions
+        if (updatedInteractionContext.conversationalFlow.length > 20) {
+          updatedInteractionContext.conversationalFlow = updatedInteractionContext.conversationalFlow.slice(-20);
+        }
+      }
+
+      // Track viewed movies
+      if (interactionData.lastInteractedMovieId) {
+        const movieId = interactionData.lastInteractedMovieId;
+        if (!updatedInteractionContext.viewedMovies.includes(movieId)) {
+          updatedInteractionContext.viewedMovies.push(movieId);
+        }
+        // Keep last 10 viewed movies
+        if (updatedInteractionContext.viewedMovies.length > 10) {
+          updatedInteractionContext.viewedMovies = updatedInteractionContext.viewedMovies.slice(-10);
+        }
+      }
+
+      // Track preferred branches
+      if (interactionData.branchId) {
+        const branchId = interactionData.branchId;
+        if (!updatedInteractionContext.frequentBranches.includes(branchId)) {
+          updatedInteractionContext.frequentBranches.push(branchId);
+        }
+        // Keep last 5 frequent branches
+        if (updatedInteractionContext.frequentBranches.length > 5) {
+          updatedInteractionContext.frequentBranches = updatedInteractionContext.frequentBranches.slice(-5);
+        }
+      }
+
+      const updatedContext = {
+        ...context,
+        interactionContext: updatedInteractionContext,
+        lastActivity: new Date().toISOString()
+      };
+
+      await this.saveContext(sessionId, updatedContext);
+      
+      console.log(`🔄 Interaction context updated for session: ${sessionId}`, {
+        interactionType: interactionData.lastInteractionType,
+        movieId: interactionData.lastInteractedMovieId
+      });
+      
+      return updatedContext;
+    } catch (error) {
+      console.error('Error updating interaction context:', error);
+      return await this.getContext(sessionId);
+    }
+  }
+
+  /**
+   * Get contextual information for RAG enhancement
+   * @param {string} sessionId 
+   */
+  async getContextualInformation(sessionId) {
+    try {
+      const context = await this.getContext(sessionId);
+      const interactionContext = context.interactionContext || this.defaultContext.interactionContext;
+      
+      return {
+        // Recent interactions
+        lastInteractedMovieId: interactionContext.lastInteractedMovieId,
+        lastInteractedScheduleId: interactionContext.lastInteractedScheduleId,
+        lastInteractionType: interactionContext.lastInteractionType,
+        lastInteractionTime: interactionContext.lastInteractionTime,
+        
+        // User preferences
+        viewedMovies: interactionContext.viewedMovies || [],
+        preferredGenres: interactionContext.preferredGenres || [],
+        frequentBranches: interactionContext.frequentBranches || [],
+        
+        // Conversational flow (last 5 interactions)
+        recentFlow: (interactionContext.conversationalFlow || []).slice(-5),
+        
+        // General context
+        conversationHistory: (context.conversationHistory || []).slice(-3), // Last 3 messages
+        lastIntent: context.lastIntent,
+        entities: context.entities
+      };
+    } catch (error) {
+      console.error('Error getting contextual information:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Generate context-aware suggestions based on interaction history
+   * @param {string} sessionId 
+   */
+  async generateContextualSuggestions(sessionId) {
+    try {
+      const contextInfo = await this.getContextualInformation(sessionId);
+      const suggestions = [];
+
+      // Suggest based on last interacted movie
+      if (contextInfo.lastInteractedMovieId) {
+        switch (contextInfo.lastInteractionType) {
+          case 'movie_view':
+            suggestions.push({
+              text: 'Xem lịch chiếu phim này',
+              action: 'find_schedules',
+              context: { movieId: contextInfo.lastInteractedMovieId }
+            });
+            break;
+          case 'schedule_view':
+            suggestions.push({
+              text: 'Đặt vé cho suất chiếu này',
+              action: 'book_tickets',
+              context: { scheduleId: contextInfo.lastInteractedScheduleId }
+            });
+            break;
+        }
+      }
+
+      // Suggest based on viewed movies (similar genres/styles)
+      if (contextInfo.viewedMovies.length > 0) {
+        suggestions.push({
+          text: 'Tìm phim tương tự',
+          action: 'search_similar',
+          context: { baseMovieIds: contextInfo.viewedMovies.slice(-2) }
+        });
+      }
+
+      // Suggest based on frequent branches
+      if (contextInfo.frequentBranches.length > 0) {
+        suggestions.push({
+          text: 'Xem lịch chiếu tại rạp thường xuyên',
+          action: 'find_schedules',
+          context: { branchId: contextInfo.frequentBranches[0] }
+        });
+      }
+
+      return suggestions;
+    } catch (error) {
+      console.error('Error generating contextual suggestions:', error);
+      return [];
     }
   }
 }

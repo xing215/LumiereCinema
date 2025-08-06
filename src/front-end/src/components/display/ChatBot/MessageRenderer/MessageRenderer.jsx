@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MovieCard, MovieList, ScheduleList, QuickActions } from '../MessageTypes';
 import { ROUTES, getMovieDetailsPath, getBuyTicketPath } from '@routes/routeConfig';
+import { useContextReporting } from '@hooks/useContextReporting';
 
 /**
  * MessageRenderer - Component render tin nhắn dựa theo type từ backend
@@ -16,8 +17,9 @@ import { ROUTES, getMovieDetailsPath, getBuyTicketPath } from '@routes/routeConf
  * 4. 'follow_up_question' -> QuickActions với suggestions
  * 5. 'text' hoặc default -> Plain text message
  */
-const MessageRenderer = ({ message, onQuickAction }) => {
-  const navigate = useNavigate();  // Nếu message không có botData, render text thường
+const MessageRenderer = ({ message, onQuickAction, sessionId }) => {
+  const navigate = useNavigate();
+  const { reportMovieInteraction, reportScheduleInteraction, reportChatInteraction } = useContextReporting(sessionId);// Nếu message không có botData, render text thường
   if (!message.botData || !message.botData.type) {
     return (
       <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
@@ -27,16 +29,21 @@ const MessageRenderer = ({ message, onQuickAction }) => {
   }
 
   const { type, data, quick_actions, suggestions } = message.botData;
-
   /**
    * Xử lý click vào quick action
    * @param {object} action - Object chứa action type và data
-   */  const handleQuickAction = (action) => {
+   */
+  const handleQuickAction = (action) => {
+    // Report chat interaction for context tracking
+    reportChatInteraction(action);
+
     switch (action.action) {
       case 'find_schedules':
         // Gửi query tìm lịch chiếu
         onQuickAction(`Tôi muốn xem lịch chiếu phim ${action.data.movie_title}`);
-        break;      case 'schedule_conversation':
+        break;
+
+      case 'schedule_conversation':
         // Bắt đầu cuộc hội thoại về lịch chiếu
         onQuickAction('Xem lịch chiếu');
         break;
@@ -54,7 +61,9 @@ const MessageRenderer = ({ message, onQuickAction }) => {
       case 'get_upcoming':
         // Lấy danh sách phim sắp chiếu
         onQuickAction('Phim gì sắp chiếu?');
-        break;      case 'movie_details':
+        break;
+
+      case 'movie_details':
         // Navigate đến trang chi tiết phim với đúng route pattern
         if (!action.data.movie_id) {
           console.warn('⚠️ No movie_id found in action data');
@@ -63,7 +72,9 @@ const MessageRenderer = ({ message, onQuickAction }) => {
         
         const movieDetailsPath = getMovieDetailsPath(action.data.movie_id);
         navigate(movieDetailsPath);
-        break;      case 'book_ticket':
+        break;
+
+      case 'book_ticket':
         // Navigate đến trang đặt vé với đúng route pattern
         // Kiểm tra nếu không có movie_id, có thể lấy từ schedule_id thông qua backend
         if (!action.data.movie_id) {
@@ -74,7 +85,9 @@ const MessageRenderer = ({ message, onQuickAction }) => {
         
         const buyTicketPath = getBuyTicketPath(action.data.movie_id, action.data.branch_id);
         navigate(buyTicketPath);
-        break;      case 'browse_movies':
+        break;
+
+      case 'browse_movies':
         // Navigate đến trang danh sách phim với status parameter
         let moviesUrl = ROUTES.MOVIES;
         if (action.data?.status) {
@@ -98,12 +111,12 @@ const MessageRenderer = ({ message, onQuickAction }) => {
           <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
-          
-          {/* Movie Card */}
+            {/* Movie Card */}
           <MovieCard 
             movie={data} 
             onAction={handleQuickAction}
             quickActions={quick_actions}
+            onMovieInteraction={reportMovieInteraction}
           />
         </div>
       );    case 'movie_list':
@@ -113,12 +126,12 @@ const MessageRenderer = ({ message, onQuickAction }) => {
           <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
-          
-          {/* Movie List */}
+            {/* Movie List */}
           <MovieList 
             movies={data} 
             onAction={handleQuickAction}
             status={message.botData.status} // Truyền status vào MovieList
+            onMovieInteraction={reportMovieInteraction}
           />
         </div>
       );    case 'movie_list_for_schedule':
@@ -128,12 +141,12 @@ const MessageRenderer = ({ message, onQuickAction }) => {
           <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
-          
-          {/* Movie List với focus vào lịch chiếu */}
+            {/* Movie List với focus vào lịch chiếu */}
           <MovieList 
             movies={data} 
             onAction={handleQuickAction}
             context="schedule" // Đánh dấu context để MovieList biết ưu tiên button lịch chiếu
+            onMovieInteraction={reportMovieInteraction}
           />
           
           {/* Quick Actions */}
@@ -151,12 +164,12 @@ const MessageRenderer = ({ message, onQuickAction }) => {
           <div className="inline-block px-3 py-2 rounded-xl bg-sky-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white max-w-[250px] sm:max-w-xs lg:max-w-md text-sm break-words">
             {message.message}
           </div>
-          
-          {/* Schedule List */}
+            {/* Schedule List */}
           <ScheduleList 
             scheduleData={data}
             onAction={handleQuickAction}
             suggestions={suggestions}
+            onScheduleInteraction={reportScheduleInteraction}
           />
         </div>      );case 'follow_up_question':
       return (
