@@ -128,17 +128,7 @@ const LunarPoints = () => {
         );
     }
 
-    // Loading state
-    if (loading) {
-        return (
-            <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
-                <div className="text-white text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                    <p>Loading...</p>
-                </div>
-            </div>
-        );
-    }
+    
 
     return (
         <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
