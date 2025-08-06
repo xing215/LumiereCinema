@@ -87,6 +87,15 @@ const MainBody = () => {
     if (selectedBranch && selectedBranch._id) {
         filteredMovies = filteredMovies.filter(m => Array.isArray(m.branches) && m.branches.includes(String(selectedBranch._id)));
     }
+    // Sort movies: movies with schedules (branches) first, then movies without schedules
+    filteredMovies = filteredMovies.sort((a, b) => {
+        const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
+        const bHasSchedules = Array.isArray(b.branches) && b.branches.length > 0;
+        
+        if (aHasSchedules && !bHasSchedules) return -1;
+        if (!aHasSchedules && bHasSchedules) return 1;
+        return 0; // Keep original order for movies with same schedule status
+    });
     let allLoading = loadingNowShowing || loadingUpcoming;
     
     return (

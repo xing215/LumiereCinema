@@ -20,6 +20,20 @@ const UpComingFrame = () => {
     };
     const { fetchComingSoon, movies: upcomingMovies, loading } = useFetchComingSoon();
     React.useEffect(() => { fetchComingSoon(); }, []);
+    
+    // Sort movies: movies with schedules (branches) first, then movies without schedules
+    const sortedUpcomingMovies = React.useMemo(() => {
+        if (!upcomingMovies) return [];
+        return [...upcomingMovies].sort((a, b) => {
+            const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
+            const bHasSchedules = Array.isArray(b.branches) && b.branches.length > 0;
+            
+            if (aHasSchedules && !bHasSchedules) return -1;
+            if (!aHasSchedules && bHasSchedules) return 1;
+            return 0; // Keep original order for movies with same schedule status
+        });
+    }, [upcomingMovies]);
+    
     const scrollRef = React.useRef(null);
     const scrollByAmount = 350;
     const [showScrollButtons, setShowScrollButtons] = React.useState(false);
@@ -52,10 +66,10 @@ const UpComingFrame = () => {
                 scrollRef.current.removeEventListener('scroll', checkScroll);
             }
         };
-    }, [upcomingMovies]);
+    }, [sortedUpcomingMovies]);
 
     // Hide the component if not loading and no movies
-    if (!loading && (!upcomingMovies || upcomingMovies.length === 0)) {
+    if (!loading && (!sortedUpcomingMovies || sortedUpcomingMovies.length === 0)) {
         return null;
     }
     return (
@@ -79,8 +93,8 @@ const UpComingFrame = () => {
                         <div className="flex items-center justify-center w-full py-10">
                             <div className="text-white font-['Unbounded'] text-lg">Loading movies...</div>
                         </div>
-                    ) : upcomingMovies && upcomingMovies.length > 0 ? (
-                        upcomingMovies.map((movie, idx) => (
+                    ) : sortedUpcomingMovies && sortedUpcomingMovies.length > 0 ? (
+                        sortedUpcomingMovies.map((movie, idx) => (
                             <MovieCardWithOverlay
                                 key={movie._id || idx}
                                 movie={movie}
