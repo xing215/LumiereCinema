@@ -2,7 +2,7 @@
 
 const ResponseFormatter = require('../utils/responseFormatter.js');
 const ConversationManager = require('../utils/conversationManager.js');
-const { analyzeQuery } = require('../utils/LLMService.js');
+const { analyzeQuery, analyzeQueryWithRAG, generateRAGResponse } = require('../utils/LLMService.js');
 
 // Import các controller nghiệp vụ
 const movieController = require('./movie.controller.js');
@@ -36,20 +36,34 @@ const queryChatbot = async (req, res) => {
     }
     if (!sessionId) {
       return res.status(400).json({ error: 'sessionId là bắt buộc để duy trì hội thoại' });
-    }    // === BƯỚC 1: LẤY NGỮ CẢNH & PHÂN TÍCH CÂU HỎI ===
+    }    // === BƯỚC 1: LẤY NGỮ CẢNH & PHÂN TÍCH CÂU HỎI VỚI RAG ===
     const context = await ConversationManager.getContext(sessionId);
-    const analysis = await analyzeQuery(question.trim(), sessionId, context);
+    
+    // Try RAG-enhanced analysis first
+    let analysis = await analyzeQueryWithRAG(question.trim(), sessionId, context);
+    
+    // Generate RAG-enhanced response if applicable
+    let ragResponse = null;
+    if (analysis.useRAG && analysis.ragContext) {
+      ragResponse = await generateRAGResponse(analysis, analysis.ragContext, question.trim());
+    }
 
     let finalResponse;
 
-    // === BƯỚC 2: XỬ LÝ CÂU HỎI KHÔNG LIÊN QUAN PHIM ===
+    // === BƯỚC 2: RETURN RAG RESPONSE IF AVAILABLE ===
+    if (ragResponse) {
+      await ConversationManager.addToHistory(sessionId, question, ragResponse, analysis);
+      return res.status(200).json(ragResponse);
+    }
+
+    // === BƯỚC 3: XỬ LÝ CÂU HỎI KHÔNG LIÊN QUAN PHIM ===
     if (analysis.intent === 'non_movie_related') {
       finalResponse = ResponseFormatter.formatNonMovieResponse();
       await ConversationManager.addToHistory(sessionId, question, finalResponse, analysis);
       return res.status(200).json(finalResponse);
     }
 
-    // === BƯỚC 3: XỬ LÝ CHỨC NĂNG getScheduleByBranch (QUAN TRỌNG NHẤT) ===
+    // === BƯỚC 4: XỬ LÝ CHỨC NĂNG getScheduleByBranch (QUAN TRỌNG NHẤT) ===
     if (analysis.intent === 'find_schedules') {
       finalResponse = await handleScheduleSearch(analysis, context, sessionId, question, mockRes, req);
       
@@ -57,7 +71,7 @@ const queryChatbot = async (req, res) => {
       return res.status(200).json(finalResponse);
     }
 
-    // === BƯỚC 4: XỬ LÝ 4 CHỨC NĂNG CỐT LÕI KHÁC ===
+    // === BƯỚC 5: XỬ LÝ 4 CHỨC NĂNG CỐT LÕI KHÁC ===
     switch (analysis.intent) {
       case 'get_now_showing': {
         try {
@@ -188,7 +202,7 @@ const queryChatbot = async (req, res) => {
       }
     }
 
-    // === BƯỚC 5: LƯU LỊCH SỬ VÀ TRẢ VỀ PHẢN HỒI ===
+    // === BƯỚC 6: LƯU LỊCH SỬ VÀ TRẢ VỀ PHẢN HỒI ===
     await ConversationManager.addToHistory(sessionId, question, finalResponse, analysis);
 
     return res.status(200).json(finalResponse);

@@ -1,6 +1,9 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { redisClient } = require('../config/redis.config');
 
+// Import RAG services (lazy loading to avoid circular dependencies)
+let MovieRetrieverService, ScheduleRetrieverService;
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
@@ -450,75 +453,229 @@ function performFallbackAnalysis(userQuery, conversationContext) {
 }
 
 /**
- * Utility functions for entity extraction
+ * RAG-enhanced query analysis and response generation
  */
-function extractLocationFromQuery(query) {
-  const lowerQuery = query.toLowerCase();
-  
-  // Mapping các tên chi nhánh Lumiere Cinema
-  if (lowerQuery.includes('nguyễn văn cừ') || lowerQuery.includes('chi nhánh chính') || lowerQuery.includes('rạp chính')) {
-    return 'Nguyễn Văn Cừ';
-  }
-  if (lowerQuery.includes('nguyễn huệ') || lowerQuery.includes('trung tâm') || lowerQuery.includes('downtown') || lowerQuery.includes('quận 1')) {
-    return 'Nguyễn Huệ';
-  }
-  if (lowerQuery.includes('huỳnh tấn phát') || lowerQuery.includes('quận 7') || lowerQuery.includes('q7') || lowerQuery.includes('phú mỹ hưng')) {
-    return 'Huỳnh Tấn Phát';
-  }
-  
-  return query.trim();
-}
-
-function extractDateFromQuery(query) {
-  const lowerQuery = query.toLowerCase();
-  if (lowerQuery.includes('hôm nay')) return 'hôm nay';
-  if (lowerQuery.includes('mai')) return 'ngày mai';
-  if (lowerQuery.includes('thứ 7')) return 'thứ 7';
-  
-  // Extract date patterns
-  const dateMatch = query.match(/(\d{1,2}\/\d{1,2}(?:\/\d{4})?)/);
-  if (dateMatch) return dateMatch[1];
-  
-  return query.trim();
-}
-
-function normalizeLocation(location) {
-  const mapping = {
-    // Chi nhánh Nguyễn Văn Cừ
-    'nguyễn văn cừ': 'Nguyễn Văn Cừ',
-    'nguyen van cu': 'Nguyễn Văn Cừ',
-    'chi nhánh chính': 'Nguyễn Văn Cừ',
-    'rạp chính': 'Nguyễn Văn Cừ',
+async function analyzeQueryWithRAG(userQuery, sessionId, conversationContext = null) {
+  try {
+    // First, perform traditional intent analysis
+    const traditionalAnalysis = await analyzeQuery(userQuery, sessionId, conversationContext);
     
-    // Chi nhánh Nguyễn Huệ
-    'nguyễn huệ': 'Nguyễn Huệ',
-    'nguyen hue': 'Nguyễn Huệ',
-    'trung tâm': 'Nguyễn Huệ',
-    'downtown': 'Nguyễn Huệ',
-    'quận 1': 'Nguyễn Huệ',
-    'q1': 'Nguyễn Huệ',
-    'district 1': 'Nguyễn Huệ',
+    // Check if we should enhance with RAG
+    const shouldUseRAG = ['search_movies', 'find_schedules', 'movie_details'].includes(traditionalAnalysis.intent);
     
-    // Chi nhánh Huỳnh Tấn Phát
-    'huỳnh tấn phát': 'Huỳnh Tấn Phát',
-    'huynh tan phat': 'Huỳnh Tấn Phát',
-    'quận 7': 'Huỳnh Tấn Phát',
-    'q7': 'Huỳnh Tấn Phát',
-    'phú mỹ hưng': 'Huỳnh Tấn Phát',
-    'phu my hung': 'Huỳnh Tấn Phát'
-  };
-  
-  return mapping[location.toLowerCase()] || location;
+    if (!shouldUseRAG) {
+      return traditionalAnalysis;
+    }
+    
+    // Lazy load RAG services
+    if (!MovieRetrieverService) {
+      MovieRetrieverService = require('./movieRetrieverService');
+      ScheduleRetrieverService = require('./scheduleRetrieverService');
+    }
+    
+    // Enhance analysis with RAG context
+    const ragContext = await gatherRAGContext(userQuery, traditionalAnalysis);
+    
+    return {
+      ...traditionalAnalysis,
+      ragContext,
+      useRAG: true
+    };
+    
+  } catch (error) {
+    console.error('Error in RAG analysis:', error);
+    // Fallback to traditional analysis
+    return await analyzeQuery(userQuery, sessionId, conversationContext);
+  }
 }
 
-function normalizeDateInput(date) {
-  const lowerDate = date.toLowerCase();
-  if (lowerDate.includes('hôm nay')) return 'hôm nay';
-  if (lowerDate.includes('mai')) return 'ngày mai';
-  if (lowerDate.includes('thứ 7')) return 'thứ 7';
-  return date;
+/**
+ * Gather relevant context using RAG services
+ */
+async function gatherRAGContext(query, analysis) {
+  try {
+    const context = {
+      movies: [],
+      schedules: [],
+      relevantInfo: []
+    };
+    
+    // Initialize services
+    const movieRetriever = new MovieRetrieverService();
+    const scheduleRetriever = new ScheduleRetrieverService();
+    
+    // Gather context based on intent
+    switch (analysis.intent) {
+      case 'search_movies': {
+        // Get relevant movies using vector search
+        const movieQuery = analysis.entities.movie_title || analysis.entities.search_keyword || query;
+        context.movies = await movieRetriever.searchMovies(movieQuery, { limit: 5 });
+        break;
+      }
+      
+      case 'find_schedules': {
+        // Get relevant schedules and movies
+        const scheduleQuery = analysis.entities.movie_title || query;
+        const searchOptions = {
+          limit: 5,
+          ...(analysis.entities.location && { branchId: null }), // Will be resolved later
+          ...(analysis.entities.date && { date: analysis.entities.date })
+        };
+        
+        context.schedules = await scheduleRetriever.searchSchedules(scheduleQuery, searchOptions);
+        
+        // Also get related movies
+        if (analysis.entities.movie_title) {
+          context.movies = await movieRetriever.searchMovies(analysis.entities.movie_title, { limit: 3 });
+        }
+        break;
+      }
+      
+      case 'movie_details': {
+        // Get specific movie with schedules
+        if (analysis.entities.movie_title) {
+          const movies = await movieRetriever.searchMovies(analysis.entities.movie_title, { limit: 1 });
+          if (movies.length > 0) {
+            const movieWithSchedules = await movieRetriever.getMovieWithSchedules(movies[0]._id);
+            context.movies = [movies[0]];
+            context.schedules = movieWithSchedules?.schedules || [];
+          }
+        }
+        break;
+      }
+    }
+    
+    // Add context summary
+    context.summary = {
+      movieCount: context.movies.length,
+      scheduleCount: context.schedules.length,
+      hasRelevantData: context.movies.length > 0 || context.schedules.length > 0
+    };
+    
+    return context;
+    
+  } catch (error) {
+    console.error('Error gathering RAG context:', error);
+    return { movies: [], schedules: [], relevantInfo: [], summary: { hasRelevantData: false } };
+  }
+}
+
+/**
+ * Generate RAG-enhanced response
+ */
+async function generateRAGResponse(analysis, ragContext, originalQuery) {
+  try {
+    if (!analysis.useRAG || !ragContext.summary.hasRelevantData) {
+      return null; // Fall back to traditional response
+    }
+    
+    // Create enhanced context for LLM
+    const contextPrompt = buildRAGContextPrompt(ragContext, originalQuery, analysis);
+    
+    // Generate response using LLM with RAG context
+    const prompt = `${contextPrompt}
+    
+    User Query: "${originalQuery}"
+    Intent: ${analysis.intent}
+    Entities: ${JSON.stringify(analysis.entities)}
+    
+    Based on the above context and search results, provide a helpful and accurate response.
+    Include specific movie titles, schedules, and details from the retrieved data.
+    Keep the response natural and conversational in Vietnamese.
+    
+    Format your response as JSON with:
+    - type: response type
+    - message: main response message
+    - data: relevant structured data
+    - suggestions: follow-up action suggestions
+    `;
+    
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    
+    try {
+      const parsedResponse = JSON.parse(text);
+      parsedResponse.ragEnhanced = true;
+      parsedResponse.dataSource = 'vector_search';
+      return parsedResponse;
+    } catch (parseError) {
+      // If JSON parsing fails, return structured response
+      return {
+        type: 'rag_response',
+        message: text,
+        ragEnhanced: true,
+        dataSource: 'vector_search',
+        data: ragContext
+      };
+    }
+    
+  } catch (error) {
+    console.error('Error generating RAG response:', error);
+    return null;
+  }
+}
+
+/**
+ * Build context prompt for RAG
+ */
+function buildRAGContextPrompt(ragContext, query, analysis) {
+  let contextPrompt = "RETRIEVED CONTEXT FROM LUMIERE CINEMA DATABASE:\n\n";
+  
+  // Add movie context
+  if (ragContext.movies.length > 0) {
+    contextPrompt += "RELEVANT MOVIES:\n";
+    ragContext.movies.forEach((movie, index) => {
+      contextPrompt += `${index + 1}. ${movie.title}
+   - Genre: ${movie.genreString || 'N/A'}
+   - Director: ${movie.director || 'N/A'}
+   - Cast: ${movie.castString || 'N/A'}
+   - Rating: ${movie.ratingsAverage || 'N/A'}/10
+   - Status: ${movie.status || 'N/A'}
+   - Duration: ${movie.durationFormatted || movie.duration + ' min' || 'N/A'}
+   - Release Date: ${movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString('vi-VN') : 'N/A'}
+   - Description: ${movie.description ? movie.description.substring(0, 200) + '...' : 'N/A'}
+
+`;
+    });
+  }
+  
+  // Add schedule context
+  if (ragContext.schedules.length > 0) {
+    contextPrompt += "\nRELEVANT SCHEDULES:\n";
+    ragContext.schedules.forEach((schedule, index) => {
+      contextPrompt += `${index + 1}. ${schedule.movie.title}
+   - Cinema: ${schedule.branch.name}
+   - Address: ${schedule.branch.address}
+   - Screen: ${schedule.screen.screenName}
+   - Date: ${schedule.dateFormatted}
+   - Time: ${schedule.timeFormatted}
+   - Available Seats: ${schedule.availableSeats}/${schedule.screen.totalSeats}
+
+`;
+    });
+  }
+  
+  // Add search context
+  contextPrompt += `\nSEARCH CONTEXT:
+- Query analyzed as: ${analysis.intent}
+- Found ${ragContext.movies.length} relevant movies
+- Found ${ragContext.schedules.length} relevant schedules
+- User query: "${query}"
+
+INSTRUCTIONS:
+- Use the retrieved data to provide accurate, specific answers
+- Reference actual movie titles, schedules, and cinema information
+- If data is incomplete, ask for clarification
+- Provide actionable next steps
+`;
+
+  return contextPrompt;
 }
 
 module.exports = {
-  analyzeQuery
+  analyzeQuery,
+  analyzeQueryWithRAG,
+  generateRAGResponse,
+  gatherRAGContext
 };
