@@ -75,20 +75,6 @@ const MenuSelectSnack = ({
         updateSnackTicket({ snackList: newSnackList, total });
     };
 
-    const handleSnackAdd = (shortname, snackName, price) => {
-        const snacksArr = Array.isArray(snackTicketData?.snackList) ? [...snackTicketData.snackList] : [];
-        const existing = snacksArr.find(item => item.shortname === shortname);
-        const newQty = (existing?.quantity || 0) + 1;
-        handleSnackChange(shortname, newQty, snackName, price);
-    };
-
-    const handleSnackRemove = (shortname, snackName, price) => {
-        const snacksArr = Array.isArray(snackTicketData?.snackList) ? [...snackTicketData.snackList] : [];
-        const existing = snacksArr.find(item => item.shortname === shortname);
-        const newQty = Math.max((existing?.quantity || 0) - 1, 0);
-        handleSnackChange(shortname, newQty, snackName, price);
-    };
-
     // ================================ NAVIGATION FUNCTIONS ================================
 
     const handleNext = () => {
