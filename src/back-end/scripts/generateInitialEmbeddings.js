@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Movie = require('../models/Movie');
 const Schedule = require('../models/Schedule');
+const Screen = require('../models/Screen');
+const Branch = require('../models/Branch');
 const { 
   prepareMovieDocument, 
   prepareScheduleDocument, 
