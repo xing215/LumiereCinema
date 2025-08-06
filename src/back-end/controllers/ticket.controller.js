@@ -971,11 +971,12 @@ const createTicket = async (req, res) => {
     const { 
       noLoginCustomerInfo, 
       branch, 
-      seller, 
       promotionCode,
       movieTicket,
       snackTicket 
     } = req.body;
+
+    let {seller} = req.body;
 
     console.log('Create Ticket Request:', req.body);
 
@@ -986,6 +987,7 @@ const createTicket = async (req, res) => {
       const user = await User.findById(userId);
       if (user && user.roles.includes('cashier')) {
         customer = null; // If cashier, do not use userId as customer
+        seller = user._id
       } else {
         customer = user; // Use userId as customer if not a cashier
       }
@@ -1203,7 +1205,11 @@ const createTicket = async (req, res) => {
         // Logged in customer - always use email from User model
         const customerData = await User.findById(customer).select('email name');
         if (customerData) {
-          customerEmail = customerData.email; // Use user's email from database
+          if(noLoginCustomerInfo.email) {
+            customerEmail = noLoginCustomerInfo.email; // Use email from noLoginCustomerInfo if provided
+          } else {
+            customerEmail = customerData.email; // Use user's email from database
+          }
           customerName = customerData.name || 'Customer';
         }
       } else if (noLoginCustomerInfo) {

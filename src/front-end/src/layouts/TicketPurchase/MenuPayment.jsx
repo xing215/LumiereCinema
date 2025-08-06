@@ -6,6 +6,9 @@ import PromotionDropdown from '@components/UI/PromotionDropdown.jsx';
 import { useApplyPromotion, useGetPublicPromotions } from '@hooks/useTicket';
 import { useState, useEffect, useRef } from 'react';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 // ================================ COMPONENTS ================================
 
 const PaymentButton = ({ text, selected, onSelect }) => (
@@ -189,7 +192,10 @@ const MenuPayment = ({
         }
         
         if (error) {
-            alert('Error applying promotion');
+            showError(
+                'Promotion Error',
+                 error
+            );
             setDiscountValue('');
             updateMovieTicket({ promotion: null, discount: 0 });
             updateSnackTicket({ promotion: null, discount: 0 });
@@ -262,7 +268,10 @@ const MenuPayment = ({
 
     const handleSelectPayment = (method) => {
         if (isExpired) {
-            alert('Session has expired. Please start over.');
+            showError(
+                'Session Expired',
+                'Session has expired. Please start over.'
+            );
             return;
         }
         setSelectedPayment(method);
@@ -272,12 +281,18 @@ const MenuPayment = ({
 
     const handlePayment = async () => {
         if (isExpired) {
-            alert('Session has expired. Please start over.');
+            showError(
+                'Session Expired',
+                'Session has expired. Please start over.'
+            );
             return;
         }
         
         if (!selectedPayment) {
-            alert('Please select a payment method before continuing.');
+            showInfo(
+                'Payment Method Required',
+                'Please select a payment method before continuing.'
+            );
             return;
         }
         
@@ -285,7 +300,10 @@ const MenuPayment = ({
             onNext();
         } catch (error) {
             console.error('Payment error:', error);
-            alert('Payment failed. Please try again.');
+            showError(
+                'Payment Failed',
+                'Payment failed. Please try again.'
+            );
         }
     };
 

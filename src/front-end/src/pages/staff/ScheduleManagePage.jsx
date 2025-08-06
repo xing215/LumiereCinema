@@ -7,266 +7,34 @@ import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
 import AddButton from "@components/buttons/Staff/AddButton.jsx";
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'; 
 import { useUser } from '@contexts/UserContext';
-import { useGetBranchById, useGetSchedules } from '@hooks/useBranch';
+import { useGetBranchById, useGetSchedules, useUpdateSchedule, useRemoveSchedule } from '@hooks/useBranch';
+import { useScheduleMovieScreening } from '@hooks/useBranch';
 import { useGetMovies } from '@hooks/useAdmin';
-import CustomDropdown from '@components/UI/CustomDropdown.jsx'; 
+import AddScheduleModal from '@/components/display/Modal/AddSchedule';
+import EditScheduleModal from '@/components/display/Modal/EditSchedule';
+import ScheduleUploadModal from '@/components/display/Modal/ScheduleUploadModal';
 
-// Add Schedule Modal Component
-const AddScheduleModal = ({ isOpen, onClose, selectedTime, selectedScreen, selectedDate }) => {
-    const [formData, setFormData] = useState({
-        movie: '',
-        movieId: '',
-        date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
-        screen: selectedScreen || '',
-        startTime: selectedTime || '',
-        endTime: ''
-    });
-
-    const { getMovies, movies, loading: moviesLoading } = useGetMovies();
-
-    // Calculate end time based on movie duration
-    const calculateEndTime = useCallback((startTime, durationMinutes) => {
-        if (!startTime || !durationMinutes) return '';
-        
-        const [hours, minutes] = startTime.split(':').map(Number);
-        const startDate = new Date();
-        startDate.setHours(hours, minutes, 0, 0);
-        
-        const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
-        
-        return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
-    }, []);
-
-    useEffect(() => {
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden'; // Prevent background scroll
-            setFormData({
-                movie: '',
-                movieId: '',
-                date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
-                screen: selectedScreen || '',
-                startTime: selectedTime || '',
-                endTime: ''
-            });
-            // Fetch movies when modal opens
-            getMovies();
-        } else {
-            // Reset overflow when popup closes
-            document.body.style.overflow = '';
-        }
-
-        // Cleanup function to ensure overflow is reset
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = ''; // Reset overflow on unmount
-        };
-    }, [isOpen]);
-
-    // Update end time when movie or start time changes
-    useEffect(() => {
-        if (formData.movieId && formData.startTime) {
-            const selectedMovie = movies.find(movie => movie._id === formData.movieId);
-            if (selectedMovie && selectedMovie.duration) {
-                const endTime = calculateEndTime(formData.startTime, selectedMovie.duration);
-                setFormData(prev => ({
-                    ...prev,
-                    endTime
-                }));
-            }
-        }
-    }, [formData.movieId, formData.startTime, movies, calculateEndTime]);
-
-    const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleMovieChange = (e) => {
-        const { value } = e.target;
-        const selectedMovie = movies.find(movie => movie._id === value);
-        setFormData(prev => ({
-            ...prev,
-            movie: selectedMovie ? selectedMovie.title : '',
-            movieId: value
-        }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // TODO: Implement schedule creation logic
-        console.log('Schedule form data:', formData);
-        onClose();
-    };
-
-    const handleCancel = () => {
-        onClose();
-    };
-
-    // Prepare movie options for dropdown
-    const movieOptions = movies.map(movie => ({
-        value: movie._id,
-        label: `${movie.title} (${movie.duration}min)`
-    }));
-
-    return (
-        <div 
-            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000000000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
-            onClick={handleBackdropClick}
-        >
-            <div className="relative w-auto h-auto rounded-xl shadow-xl flex flex-col items-center justify-center">
-                {/* Close button */}
-                <button
-                    onClick={e => {
-                        e.stopPropagation();
-                        onClose();
-                    }}
-                    className="absolute -top-12 -right-2 md:-top-15 lg:-right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
-                >
-                    ×
-                </button>
-                
-                {/* Modal Content */}
-                <div className="w-[678px] h-[495px] relative">
-                    <div className="w-[678px] h-[495px] left-0 top-0 absolute bg-slate-900/40 rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px]" />
-                    
-                    <form onSubmit={handleSubmit} className="absolute inset-0 p-[76px_76px_45px_76px] flex flex-col justify-between">
-                        {/* Form Fields */}
-                        <div className="w-[525px] h-80 flex flex-col justify-start items-start gap-3.5">
-                            {/* Movie Field */}
-                            <div className="w-[529px] inline-flex justify-start items-start gap-3.5">
-                                <div className="w-[529px] h-10 rounded-xl">
-                                    <CustomDropdown
-                                        value={formData.movieId}
-                                        onChange={handleMovieChange}
-                                        name="movieId"
-                                        placeholder={moviesLoading ? "• • •" : "Select Movie"}
-                                        bgColor="-zinc-300/70"
-                                        hoverColor="zinc-200"
-                                        borderColor="transparent"
-                                        textColor="black"
-                                        bgOpacity=""
-                                        height="h-full"
-                                        textAlign="left"
-                                        options={movieOptions}
-                                        disabled={moviesLoading}
-                                    />
-                                </div>
-                                <div className="w-36 justify-start text-white text-xl font-normal font-['Libre_Franklin']">Movie</div>
-                            </div>
-
-                            {/* Date and Screen Row */}
-                            <div className="inline-flex justify-start items-start gap-3.5">
-                                <div className="w-64 h-10 bg-zinc-300/70 rounded-xl">
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleInputChange}
-                                        className="w-full h-full bg-transparent rounded-xl px-3 text-black focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
-                                        required
-                                    />
-                                </div>
-                                <div className="w-60 justify-start text-white text-xl font-normal font-['Libre_Franklin']">Date</div>
-                                <div className="w-64 h-10 bg-zinc-300/70 rounded-xl">
-                                    <input
-                                        type="number"
-                                        name="screen"
-                                        value={formData.screen}
-                                        onChange={handleInputChange}
-                                        placeholder="Screen Number"
-                                        min="1"
-                                        className="w-full h-full bg-transparent rounded-xl px-3 text-black placeholder-gray-600 focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
-                                        required
-                                    />
-                                </div>
-                                <div className="w-36 justify-start text-white text-xl font-normal font-['Libre_Franklin']">Screen</div>
-                            </div>
-
-                            {/* Start Time Field (Read-only, showing clicked time) */}
-                            <div className="w-[525px] h-10 bg-zinc-300/70 rounded-xl">
-                                <input
-                                    type="time"
-                                    name="startTime"
-                                    value={formData.startTime}
-                                    className="w-full h-full bg-transparent rounded-xl px-3 text-black focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
-                                    readOnly
-                                />
-                            </div>
-                            <div className="justify-start text-white text-xl font-normal font-['Libre_Franklin']">Start Time</div>
-                            
-                            {/* End Time Field (Auto-calculated) */}
-                            <div className="w-[525px] h-10 bg-zinc-300/70 rounded-xl">
-                                <input
-                                    type="time"
-                                    name="endTime"
-                                    value={formData.endTime}
-                                    className="w-full h-full bg-transparent rounded-xl px-3 text-black focus:ring-2 focus:ring-purple-500 focus:outline-none font-['Libre_Franklin'] text-base"
-                                    readOnly
-                                />
-                            </div>
-                            <div className="justify-start text-white text-xl font-normal font-['Libre_Franklin']">End Time (Auto-calculated)</div>
-                            
-                            <div className="w-20 h-3.5 bg-zinc-300/0" />
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="h-9 inline-flex justify-start items-center gap-3.5">
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="w-48 h-10 relative"
-                            >
-                                <div className="w-48 h-10 left-0 top-0 absolute bg-slate-900 rounded-2xl shadow-[inset_0px_0px_60.654205322265625px_3.639252185821533px_rgba(155,47,255,1.00)]" />
-                                <div className="w-40 h-5 left-[14.42px] top-[8.91px] absolute text-center justify-start text-white text-lg font-bold font-['Unbounded']">CANCEL</div>
-                            </button>
-                            <button
-                                type="submit"
-                                className="w-48 h-10 relative"
-                                disabled={!formData.movieId || moviesLoading}
-                            >
-                                <div className={`w-48 h-10 left-0 top-0 absolute rounded-2xl shadow-[inset_0px_0px_60.654205322265625px_3.639252185821533px_rgba(155,47,255,1.00)] ${!formData.movieId || moviesLoading ? 'bg-gray-500' : 'bg-pink-400'}`} />
-                                <div className="w-40 h-5 left-[14.42px] top-[8.91px] absolute text-center justify-start text-white text-lg font-bold font-['Unbounded']">
-                                    {moviesLoading ? '• • •' : 'CONFIRM'}
-                                </div>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
-}; 
-
-const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) => {
+const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEditSchedule, screens = [], toVietnamTime}) => {
     const scheduleGridRef = useRef(null);
-    
+
     // Helper function to convert time to position on timeline (allows negative values)
     const getTimePosition = useCallback((timeString, selectedDate) => {
-        const time = new Date(timeString);
+        // Parse the schedule time string and convert to Vietnam timezone
+        const scheduleTime = new Date(timeString);
+        const vietnamScheduleTime = toVietnamTime(scheduleTime);
         
-        // Timeline starts at 23:30 the previous day
+        
+        // Timeline starts at 23:30 the previous day in Vietnam timezone
         const timelineStart = new Date(selectedDate);
         timelineStart.setDate(timelineStart.getDate() - 1);
         timelineStart.setHours(23, 30, 0, 0);
         
-        // Calculate minutes from timeline start
-        const timeDiff = time - timelineStart;
+        // Convert timeline start to Vietnam timezone for proper comparison
+        const vietnamTimelineStart = toVietnamTime(timelineStart);
+        
+
+        // Calculate minutes from timeline start using Vietnam timezone
+        const timeDiff = vietnamScheduleTime - vietnamTimelineStart;
         const minutes = timeDiff / (1000 * 60);
         
         // Timeline covers 24 hours = 1440 minutes
@@ -274,12 +42,14 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
         
         // Return percentage (can be negative for continuous effect)
         return (minutes / timelineMinutes) * 100;
-    }, []);
+    }, [toVietnamTime]);
     
     // Helper function to get schedule duration in percentage
     const getScheduleDuration = useCallback((startTime, endTime) => {
-        const start = new Date(startTime);
-        const end = new Date(endTime);
+        // Convert both times to Vietnam timezone
+        const start = toVietnamTime(new Date(startTime));
+        const end = toVietnamTime(new Date(endTime));
+        
         const durationMs = end - start;
         const durationMinutes = durationMs / (1000 * 60);
         
@@ -288,14 +58,25 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
         
         // Return percentage width
         return (durationMinutes / timelineMinutes) * 100;
-    }, []);
+    }, [toVietnamTime]);
     
-    // Group schedules by screen
+    // Group schedules by screen index
     const schedulesByScreen = useMemo(() => {
         const grouped = {};
+        
         schedules.forEach(schedule => {
-            const screenName = schedule.screen.screenName;
-            const screenIndex = parseInt(screenName) - 1; // Convert to 0-based index
+            // Find the screen index based on screen ID or screen name
+            let screenIndex = 0;
+            if (schedule.screen) {
+                // Try to find screen index by matching screen ID or name
+                const foundScreenIndex = screens.findIndex(s => 
+                    s._id === schedule.screen._id || 
+                    s._id === schedule.screen.id ||
+                    s.screenName === schedule.screen.screenName ||
+                    s.screenName === schedule.screen.name
+                );
+                screenIndex = foundScreenIndex !== -1 ? foundScreenIndex : 0;
+            }
             
             if (!grouped[screenIndex]) {
                 grouped[screenIndex] = [];
@@ -303,7 +84,7 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
             grouped[screenIndex].push(schedule);
         });
         return grouped;
-    }, [schedules]);
+    }, [schedules, screens]);
     
     const handleScheduleClick = useCallback((event) => {
         if (!scheduleGridRef.current) return;
@@ -315,21 +96,33 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
         // Calculate which time was clicked (24 hours across the width, starting from 23:30 the night before)
         const timelineMinutes = 24 * 60; // 1440 minutes in a day
         const minuteWidth = rect.width / timelineMinutes;
-        // Minutes since 23:30
-        let clickedMinute = Math.floor(x / minuteWidth);
-        // Convert to actual hour/minute
-        let clickedHour = Math.floor((clickedMinute + 1410) / 60) % 24; // 1410 = 23*60+30
-        let rawMinuteInHour = (clickedMinute + 1410) % 60;
         
-        // Snap to nearest 15-minute interval (0, 15, 30, 45)
-        const snappedMinute = Math.round(rawMinuteInHour / 15) * 15;
-        let clickedMinuteInHour = snappedMinute;
+        // Minutes since the start of the timeline (23:30 previous day)
+        const clickedMinute = Math.floor(x / minuteWidth);
         
-        // Handle minute overflow (e.g., 60 minutes becomes next hour)
-        if (clickedMinuteInHour >= 60) {
-            clickedMinuteInHour = 0;
-            clickedHour += 1;
+        // Create the timeline start time in Vietnam timezone
+        const timelineStart = new Date(selectedDate);
+        timelineStart.setDate(timelineStart.getDate() - 1);
+        timelineStart.setHours(23, 30, 0, 0);
+        
+        // Add clicked minutes to timeline start to get the actual clicked time
+        const clickedTime = new Date(timelineStart.getTime() + (clickedMinute * 60 * 1000));
+        
+        // Snap to nearest 15-minute interval
+        const minutes = clickedTime.getMinutes();
+        const snappedMinutes = Math.round(minutes / 15) * 15;
+        clickedTime.setMinutes(snappedMinutes, 0, 0);
+        
+        // Handle minute overflow
+        if (clickedTime.getMinutes() >= 60) {
+            clickedTime.setMinutes(0);
+            clickedTime.setHours(clickedTime.getHours() + 1);
         }
+        
+        // Format time string
+        const clickedHour = clickedTime.getHours();
+        const clickedMinuteInHour = clickedTime.getMinutes();
+        const timeString = `${clickedHour < 10 ? `0${clickedHour}` : clickedHour}:${clickedMinuteInHour < 10 ? `0${clickedMinuteInHour}` : clickedMinuteInHour}`;
         
         // Calculate which screen was clicked
         const screenHeight = 40; // Each screen is 40px height
@@ -337,15 +130,14 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
         
         // Validate the clicked position
         if (clickedScreen >= 0 && clickedScreen < screen) {
-            const timeString = `${clickedHour < 10 ? `0${clickedHour}` : clickedHour}:${clickedMinuteInHour < 10 ? `0${clickedMinuteInHour}` : clickedMinuteInHour}`;
-            console.log(`Clicked: Time ${timeString}, Screen ${clickedScreen}`);
-            
             // Call the onAddSchedule callback to show the modal
             if (onAddSchedule) {
-                onAddSchedule(timeString, clickedScreen + 1); // Convert back to 1-based screen numbering
+                // Pass screen name instead of index + 1
+                const screenName = screens[clickedScreen]?.screenName || (clickedScreen + 1).toString();
+                onAddSchedule(timeString, screenName);
             }
         }
-    }, [screen]);
+    }, [screen, screens, onAddSchedule, selectedDate]);
     
     return (
         <div className='absolute bottom-1/10 h-[67%] flex w-full items-start justify-center'>
@@ -392,9 +184,11 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
                 
                 <div className="relative flex min-h-full items-start justify-start w-[4%] flex-col bg-black/20">
                     {Array.from({ length: screen }, (_, index) => {
+                        // Get screen name from screens array or fallback to index + 1
+                        const screenName = screens[index]?.screenName || (index + 1).toString();
                         return (
                             <div key={index} className="relative flex items-center justify-center h-[40px] w-full flex-shrink-0">
-                                <span className="text-bold font-unbounded text-2xl font-black">{index + 1}</span>
+                                <span className="text-bold font-unbounded text-2xl font-black">{screenName}</span>
                                 {/* Separator line between screens (not after the last one) */}
                                 {index < screen - 1 && (
                                     <div className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-gray-600/60" />
@@ -417,15 +211,20 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
                         <div key={screenIndex} className="relative h-[40px]">
                             {/* Schedule blocks for this screen */}
                             {schedulesByScreen[screenIndex]?.map((schedule, scheduleIndex) => {
-                                const startTime = new Date(schedule.startTime);
-                                const endTime = new Date(schedule.endTime);
+                                // Convert schedule times to Vietnam timezone
+                                const startTime = toVietnamTime(new Date(schedule.startTime));
+                                const endTime = toVietnamTime(new Date(schedule.endTime));
                                 
                                 // Check if this is a continuous movie (started before the timeline)
+                                // Timeline starts at 23:30 the previous day in Vietnam timezone
                                 const timelineStart = new Date(selectedDate);
                                 timelineStart.setDate(timelineStart.getDate() - 1);
                                 timelineStart.setHours(23, 30, 0, 0);
+                                const vietnamTimelineStart = toVietnamTime(timelineStart);
                                 
-                                const isContinuous = startTime < timelineStart && endTime > timelineStart;
+                                const isContinuous = startTime < vietnamTimelineStart && endTime > vietnamTimelineStart;
+
+
                                 
                                 // Calculate position and duration (allowing negative values for continuous effect)
                                 const startPos = getTimePosition(schedule.startTime, selectedDate);
@@ -458,15 +257,10 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
                                         title={`${schedule.movie.title}\n${startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}\nTickets sold: ${schedule.ticketsSold}${isContinuous ? '\n(Continuing from previous period)' : ''}`}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            console.log('Schedule clicked:', schedule);
-                                            console.log('Position details:', {
-                                                startPos: startPos,
-                                                duration: duration,
-                                                isContinuous: isContinuous,
-                                                actualStartTime: startTime.toISOString(),
-                                                timelineStart: timelineStart.toISOString()
-                                            });
-                                            alert(`Schedule: ${schedule.movie.title}\nTime: ${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}\nPosition: ${startPos.toFixed(1)}%\nDuration: ${duration.toFixed(1)}%\nTickets sold: ${schedule.ticketsSold}${isContinuous ? '\n(Continuing from previous period)' : ''}`);
+                                            // Open edit modal instead of showing alert
+                                            if (onEditSchedule) {
+                                                onEditSchedule(schedule);
+                                            }
                                         }}
                                     >
                                         <div className="relative pt-0.5 px-2 text-[10px] font-libre-franklin text-white font-medium truncate">
@@ -497,11 +291,124 @@ const Schedule = ({screen = 20, schedules = [], selectedDate, onAddSchedule}) =>
 };
 
 const ScheduleManagePage = () => {
+    // Utility function to convert any date to Vietnam timezone (UTC+7)
+    const toVietnamTime = useCallback((date) => {
+        const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+        return new Date(utcTime + (7 * 3600000)); // UTC+7
+    }, []);
+    
+    // Utility function to get date string in Vietnam timezone
+    const getVietnamDateString = useCallback((date) => {
+        const vietnamTime = toVietnamTime(date);
+        // Format manually to avoid UTC conversion
+        const year = vietnamTime.getFullYear();
+        const month = String(vietnamTime.getMonth() + 1).padStart(2, '0');
+        const day = String(vietnamTime.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }, [toVietnamTime]);
+
+    const { scheduleMovieScreening, loading: postingScreening, error: postScreeningError } = useScheduleMovieScreening();
+    const { updateSchedule, loading: updatingSchedule, error: updateScheduleError } = useUpdateSchedule();
+    const { removeSchedule, loading: removingSchedule, error: removeScheduleError } = useRemoveSchedule();
+    const { getMovies, movies } = useGetMovies();
     const { user } = useUser();
     const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
     const {token} = useUser();
-    const [selectedDate, setSelectedDate] = useState(new Date()); // Current date state
+    const [selectedDate, setSelectedDate] = useState(() => {
+        // Set today's date in Vietnam timezone (UTC+7)
+        const now = new Date();
+        const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const vietnamTime = new Date(utcTime + (7 * 3600000));
+        vietnamTime.setHours(0, 0, 0, 0);
+        return vietnamTime;
+    });
+    const [isInitialDateSet, setIsInitialDateSet] = useState(false); // Track if initial date was set
+    const [isInitialLoad, setIsInitialLoad] = useState(true); // Track if this is the initial load
     const { schedules, loading, error, fetchSchedules } = useGetSchedules();
+    
+    // Fixed filtering logic for schedules
+    const filteredSchedules = useMemo(() => {
+        const selectedDateStr = getVietnamDateString(selectedDate);
+        
+        
+        // Timeline boundaries in Vietnam timezone
+        const timelineStart = new Date(selectedDate);
+        timelineStart.setDate(timelineStart.getDate() - 1);
+        timelineStart.setHours(23, 30, 0, 0);
+        const vietnamTimelineStart = toVietnamTime(timelineStart);
+        
+        const vietnamTimelineEnd = new Date(vietnamTimelineStart);
+        vietnamTimelineEnd.setHours(vietnamTimelineEnd.getHours() + 24); // 24 hours later
+        
+        
+        const filtered = schedules.filter(schedule => {
+            // Convert schedule times to Vietnam timezone for comparison
+            const scheduleStartTime = toVietnamTime(new Date(schedule.startTime));
+            const scheduleEndTime = toVietnamTime(new Date(schedule.endTime));
+            
+
+            
+            // NEW LOGIC: Check if the schedule's "primary day" matches the selected date
+            // For schedules that span midnight, we determine the primary day based on which day
+            // has more of the schedule's duration
+            
+            // Calculate the schedule's total duration
+            const totalDuration = scheduleEndTime.getTime() - scheduleStartTime.getTime();
+            
+            // Calculate how much of the schedule falls on each day
+            let primaryDay = new Date(scheduleStartTime);
+            primaryDay.setHours(0, 0, 0, 0);
+            
+            // If the schedule spans midnight, we need to determine which day it "belongs to"
+            if (scheduleStartTime.getDate() !== scheduleEndTime.getDate()) {
+                // Schedule spans midnight - calculate which day gets more duration
+                const midnightBoundary = new Date(scheduleStartTime);
+                midnightBoundary.setDate(midnightBoundary.getDate() + 1);
+                midnightBoundary.setHours(0, 0, 0, 0);
+                
+                const durationOnStartDay = midnightBoundary.getTime() - scheduleStartTime.getTime();
+                const durationOnEndDay = scheduleEndTime.getTime() - midnightBoundary.getTime();
+                
+                // If more duration is on the end day, that's the primary day
+                if (durationOnEndDay > durationOnStartDay) {
+                    primaryDay = new Date(scheduleEndTime);
+                    primaryDay.setHours(0, 0, 0, 0);
+                }
+            }
+            
+            // Convert primary day to Vietnam timezone for comparison
+            const vietnamPrimaryDay = toVietnamTime(primaryDay);
+            const vietnamSelectedDay = toVietnamTime(new Date(selectedDate));
+            vietnamSelectedDay.setHours(0, 0, 0, 0);
+            
+            // Check if the primary day matches the selected date
+            const isPrimaryDayMatch = vietnamPrimaryDay.getTime() === vietnamSelectedDay.getTime();
+            
+
+            // Also check if schedule overlaps with the timeline window (for continuous display)
+            const startsWithinTimeline = scheduleStartTime >= vietnamTimelineStart && scheduleStartTime < vietnamTimelineEnd;
+            const isOngoingDuringTimeline = scheduleStartTime < vietnamTimelineStart && scheduleEndTime > vietnamTimelineStart;
+            const overlapsTimeline = startsWithinTimeline || isOngoingDuringTimeline;
+            
+            // Show schedule if either:
+            // 1. Its primary day matches the selected date, OR
+            // 2. It overlaps with the timeline (for edge cases and continuous display)
+            const shouldShow = isPrimaryDayMatch || overlapsTimeline;
+            
+            if (shouldShow) {
+                return true;
+            }
+            
+            return false;
+        });
+        
+        
+        return filtered;
+    }, [selectedDate, schedules, getVietnamDateString, toVietnamTime]);
+    
+    // Debug: Log when schedules change
+    useEffect(() => {
+    }, [schedules]);
     
     // Modal state management
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -510,6 +417,15 @@ const ScheduleManagePage = () => {
         selectedScreen: '',
     });
 
+    // Edit modal state management
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
+
+    // Upload modal state management
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [uploadedData, setUploadedData] = useState([]);
+    const [importLoading, setImportLoading] = useState(false);
+
     useEffect(() => {
         if (user && user.roles?.includes('branchmanager') && user.branch) {
             getBranchById(user.branch._id);
@@ -517,53 +433,41 @@ const ScheduleManagePage = () => {
     }, [user]);
 
     useEffect(() => {
-        if (userBranch?._id) {
-            fetchSchedules(null, userBranch._id);
-        }
-    }, [userBranch]);
+        // Fetch movies for upload validation
+        getMovies();
+    }, []);
 
-    // Set selected date to first schedule's date when schedules are fetched successfully
     useEffect(() => {
-        if (!loading && !error && schedules && schedules.length > 0) {
-            const firstScheduleDate = new Date(schedules[0].startTime);
-            setSelectedDate(firstScheduleDate);
+        if (userBranch?._id) {
+            fetchSchedules(null, userBranch._id).then(() => {
+                setIsInitialLoad(false); // Mark initial load as complete
+            });
         }
-    }, [schedules, loading, error]);
+    }, [userBranch]); // Remove fetchSchedules from dependency array
 
-    console.log('User token:', token);
-    console.log('User branch:', userBranch);
-    console.log('Schedules:', schedules);
-    console.log('Loading:', loading);
-    console.log('Error:', error);
-    
-    // Filter schedules based on selected date and show ongoing movies
-    const filteredSchedules = useMemo(() => {
-        const selectedDateStr = selectedDate.toISOString().split('T')[0]; // Get YYYY-MM-DD format
-        const timelineStart = new Date(selectedDate);
-        timelineStart.setDate(timelineStart.getDate() - 1);
-        timelineStart.setHours(23, 30, 0, 0); // 23:30 of previous day
-        
-        const timelineEnd = new Date(timelineStart);
-        timelineEnd.setHours(timelineEnd.getHours() + 24); // 24 hours later
-        
-        return schedules.filter(schedule => {
-            const scheduleDate = new Date(schedule.startTime).toISOString().split('T')[0];
-            const scheduleStartTime = new Date(schedule.startTime);
-            const scheduleEndTime = new Date(schedule.endTime);
+    // Set selected date to earliest schedule date after today when schedules are fetched successfully - ONLY INITIALLY
+    useEffect(() => {
+        if (!loading && !error && schedules && schedules.length > 0 && !isInitialDateSet) {
+            // Get today's date in Vietnam timezone
+            const today = toVietnamTime(new Date());
+            today.setHours(0, 0, 0, 0);
             
-            // Show schedules for the selected date
-            if (scheduleDate === selectedDateStr) {
-                return true;
+            const futureSchedules = schedules
+                .map(s => {
+                    const scheduleTime = new Date(s.startTime);
+                    const vietnamScheduleTime = toVietnamTime(scheduleTime);
+                    vietnamScheduleTime.setHours(0, 0, 0, 0); // Set to start of day for comparison
+                    return vietnamScheduleTime;
+                })
+                .filter(d => d >= today) // Use >= to include today's schedules
+                .sort((a, b) => a - b);
+                
+            if (futureSchedules.length > 0) {
+                setSelectedDate(futureSchedules[0]);
             }
-            
-            // Show movies that overlap with our timeline (even if they start before it)
-            if (scheduleStartTime < timelineEnd && scheduleEndTime > timelineStart) {
-                return true;
-            }
-            
-            return false;
-        });
-    }, [selectedDate]);
+            setIsInitialDateSet(true); // Mark that initial date has been set
+        }
+    }, [schedules, loading, error, isInitialDateSet, toVietnamTime]);
     
     const handleDateChange = useCallback((newDate) => {
         setSelectedDate(newDate);
@@ -571,21 +475,137 @@ const ScheduleManagePage = () => {
     
     // Handle opening the add schedule modal
     const handleAddSchedule = useCallback((selectedTime, selectedScreen) => {
+        // Parse the clicked time and determine the correct date
+        const [hours, minutes] = selectedTime.split(':').map(Number);
+        
+        // Create a date object for the clicked time
+        let scheduleDate = new Date(selectedDate);
+
+        if (hours === 23 && minutes >= 30) {
+            scheduleDate.setDate(scheduleDate.getDate() - 1);}
+        
         setModalData({
             selectedTime,
-            selectedScreen
+            selectedScreen,
+            calculatedDate: scheduleDate // Pass the calculated date
         });
         setIsModalOpen(true);
-    }, []);
+    }, [selectedDate, getVietnamDateString]);
     
-    // Handle closing the modal
+    // Handle opening the add schedule modal from the Add button
+    const handleAddButtonClick = useCallback(() => {
+        const defaultDate = new Date(selectedDate);
+        setModalData({
+            selectedTime: '09:00', // Default time
+            selectedScreen: userBranch?.screens?.[0]?.screenName || '1', // Default to first screen
+            calculatedDate: defaultDate
+        });
+        setIsModalOpen(true);
+    }, [userBranch, selectedDate]);
+    
+    // Handle closing the modal (no need to refresh schedules since success handler already does it)
     const handleCloseModal = useCallback(() => {
         setIsModalOpen(false);
         setModalData({
             selectedTime: '',
-            selectedScreen: ''
+            selectedScreen: '',
+            calculatedDate: null
         });
+        // Note: No need to refresh schedules here since handleScheduleSuccess already does it
     }, []);
+
+    // Handle successful schedule addition/update
+    const handleScheduleSuccess = useCallback(async () => {
+        // Add a small delay to ensure database operation is complete
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Refresh schedules immediately after successful operation while preserving selected date
+        if (userBranch?._id) {
+            try {
+                await fetchSchedules(null, userBranch._id);
+            } catch (error) {
+            }
+        }
+        // Note: selectedDate is preserved since isInitialDateSet prevents automatic date changes
+    }, [userBranch]); // Remove fetchSchedules from dependency array
+
+    // Handle opening the edit schedule modal
+    const handleEditSchedule = useCallback((schedule) => {
+        setSelectedSchedule(schedule);
+        setIsEditModalOpen(true);
+    }, []);
+
+    // Handle closing the edit modal (no need to refresh schedules since success handler already does it)
+    const handleCloseEditModal = useCallback(() => {
+        setIsEditModalOpen(false);
+        setSelectedSchedule(null);
+        // Note: No need to refresh schedules here since handleScheduleSuccess already does it
+    }, []);
+
+    // Handle schedule upload
+    const handleScheduleUpload = useCallback((data) => {
+        setUploadedData(data);
+        setIsUploadModalOpen(true);
+    }, []);
+
+    // Handle closing upload modal
+    const handleCloseUploadModal = useCallback(() => {
+        setIsUploadModalOpen(false);
+        setUploadedData([]);
+    }, []);
+
+    // Handle confirming upload
+    const handleConfirmUpload = useCallback(async (selectedData) => {
+        setImportLoading(true);
+        try {
+            
+            // Process each schedule
+            const promises = selectedData.map(async (schedule) => {
+                // Find the screen ID by name
+                const screen = userBranch?.screens?.find(s => 
+                    s.screenName.toString() === schedule.screenName.toString()
+                );
+                if (!screen) {
+                    throw new Error(`Screen "${schedule.screenName}" not found`);
+                }
+                // Find the movie ID by title
+                const movie = movies.find(m => 
+                    m.title.toLowerCase() === schedule.movieName.toLowerCase()
+                );
+                if (!movie) {
+                    throw new Error(`Movie "${schedule.movieName}" not found`);
+                }
+
+                const scheduleData = {
+                    movieId: movie._id,
+                    screenId: screen._id,
+                    startTime: `${schedule.date}T${schedule.startTime}`,
+                    endTime: `${schedule.date}T${schedule.endTime}`, // Include endTime
+                };
+
+                return scheduleMovieScreening(userBranch._id, scheduleData);
+            });
+
+            const results = await Promise.all(promises);
+            
+            // Check if all succeeded
+            const failures = results.filter(result => !result.success);
+            if (failures.length > 0) {
+                alert(`${failures.length} out of ${selectedData.length} schedules failed to import. Check console for details.`);
+            } else {
+                alert(`Successfully imported ${selectedData.length} schedules!`);
+            }
+
+            // Refresh schedules and close modal
+            await handleScheduleSuccess();
+            handleCloseUploadModal();
+            
+        } catch (error) {
+            alert('Failed to import schedules. Please check the data and try again.');
+        } finally {
+            setImportLoading(false);
+        }
+    }, [userBranch, movies, scheduleMovieScreening, handleScheduleSuccess, handleCloseUploadModal]);
     
 
 
@@ -595,14 +615,24 @@ const ScheduleManagePage = () => {
                 <div className="font-unbounded absolute lg:top-1/10 xl:top-1/20 left-1/12 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
 
                 <div className="absolute right-1/12 z-60 flex items-end gap-4 lg:top-1/14 xl:top-1/24">
-                    <AddButton text="Add Schedule"/>
+                    <AddButton text="Add Schedule" onClick={handleAddButtonClick}/>
                     <div className="flex flex-col items-center">
-                        <DownloadTemplateButton />
-                        <UploadCSVButton />
+                        <DownloadTemplateButton 
+                            templatePath="/templates/ScheduleList-Template.xlsx"
+                            filename="ScheduleList-Template.xlsx"
+                            buttonText="Download template"
+                            disabled={loading || importLoading}
+                        />
+                        <UploadCSVButton 
+                            templateType="schedule"
+                            onDataParsed={handleScheduleUpload}
+                            disabled={loading || importLoading}
+                        />
                     </div>
                     <DateChosenButton 
                         selectedDate={selectedDate}
                         onDateChange={handleDateChange}
+                        scheduleDates={schedules.map(schedule => new Date(schedule.startTime))}
                     />
                     
                 </div>
@@ -615,7 +645,7 @@ const ScheduleManagePage = () => {
                             Error loading schedules: {error}
                         </div>
                     </div>
-                ) : loading ? (
+                ) : (loading && isInitialLoad) ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-white text-2xl p-5 font-bold font-['Unbounded'] animate-pulse">
                             • • •
@@ -626,7 +656,10 @@ const ScheduleManagePage = () => {
                         schedules={filteredSchedules} 
                         selectedDate={selectedDate} 
                         screen={userBranch?.screens?.length} 
+                        screens={userBranch?.screens || []}
                         onAddSchedule={handleAddSchedule}
+                        onEditSchedule={handleEditSchedule}
+                        toVietnamTime={toVietnamTime}
                     />
                 )}
 
@@ -639,7 +672,40 @@ const ScheduleManagePage = () => {
                 onClose={handleCloseModal}
                 selectedTime={modalData.selectedTime}
                 selectedScreen={modalData.selectedScreen}
-                selectedDate={selectedDate}
+                selectedDate={modalData.calculatedDate || selectedDate}
+                screens={userBranch?.screens || []}
+                scheduleMovieScreening={scheduleMovieScreening}
+                branchId={user?.branch?._id}
+                onScheduleSuccess={handleScheduleSuccess}
+                isLoading={postingScreening}
+                movies={movies || []}
+            />
+
+            {/* Edit Schedule Modal */}
+            <EditScheduleModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                schedule={selectedSchedule}
+                screens={userBranch?.screens || []}
+                updateSchedule={updateSchedule}
+                removeSchedule={removeSchedule}
+                branchId={user?.branch?._id}
+                onScheduleSuccess={handleScheduleSuccess}
+                isUpdating={updatingSchedule}
+                isDeleting={removingSchedule}
+                movies={movies || []}
+            />
+
+            {/* Schedule Upload Modal */}
+            <ScheduleUploadModal
+                isOpen={isUploadModalOpen}
+                onClose={handleCloseUploadModal}
+                uploadedData={uploadedData}
+                onConfirm={handleConfirmUpload}
+                isLoading={importLoading}
+                screens={userBranch?.screens || []}
+                movies={movies || []}
+                existingSchedules={schedules || []}
             />
 
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />

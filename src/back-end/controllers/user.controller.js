@@ -215,8 +215,38 @@ const getWishlist = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    await redisClient.set(cacheKey, JSON.stringify(user.wishlist), { EX: 3600 }); // Cache for 1 hour
-    res.status(200).json({ wishlist: user.wishlist });
+    // Add branches information for each movie in wishlist
+    const Schedule = require('../models/Schedule');
+    const wishlistWithBranches = await Promise.all(
+      user.wishlist.map(async (movie) => {
+        if (!movie) return null; // Skip if movie is null
+
+        // Find all schedules for this movie (only future schedules)
+        const schedules = await Schedule.find({ 
+          movie: movie._id,
+          startTime: { $gte: new Date() }
+        }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+
+        // Collect unique branch IDs
+        const branchSet = new Set();
+        schedules.forEach(sch => {
+          const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+          if (branchId) branchSet.add(branchId);
+        });
+        const branches = Array.from(branchSet);
+
+        // Return movie object with branches
+        const movieObj = movie.toObject();
+        movieObj.branches = branches;
+        return movieObj;
+      })
+    );
+
+    // Filter out null movies
+    const validWishlist = wishlistWithBranches.filter(movie => movie !== null);
+
+    await redisClient.set(cacheKey, JSON.stringify(validWishlist), { EX: 3600 }); // Cache for 1 hour
+    res.status(200).json({ wishlist: validWishlist });
   } catch (error) {
     console.error('Error getting wishlist:', error);
     res.status(500).json({ message: 'Server error', error });

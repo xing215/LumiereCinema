@@ -455,6 +455,14 @@ const getBranchById = async (req, res) => {
       const { branchId } = req.params;
       const { movieId, screenId, startTime } = req.body;
 
+    console.log('Editing schedule:', {
+      branchId,
+      screenId,
+      movieId,
+      startTime
+    });
+
+
       // 1. Validate branch manager permissions
       if (!req.user.roles.includes('branchmanager')) {
         return res.status(403).json({ 
@@ -612,6 +620,14 @@ const editMovieSchedule = async (req, res) => {
   try {
     const { branchId, scheduleId } = req.params;
     const { movieId, screenId, startTime } = req.body;
+
+    console.log('Editing schedule:', {
+      branchId,
+      scheduleId,
+      movieId,
+      screenId,
+      startTime
+    });
 
     // 1. Validate branch manager permissions
     if (!req.user.roles.includes('branchmanager')) {
@@ -911,17 +927,17 @@ const deleteMovieSchedule = async (req, res) => {
 const getMovieSchedules = async (req, res) => {
   try {
     const { branchId } = req.params;
-    const { movieId, screenId, fromDate, toDate, page = 1, limit = 50 } = req.query;
+    const { movieId, screenId, fromDate, toDate, page = 1, limit = 50, pagination = false } = req.query;
 
     // 1. Validate branch manager permissions
-    if (!req.user.roles.includes('branchmanager')) {
+    if (!req.user.roles.includes('branchmanager') && !req.user.roles.includes('administrator')) {
       return res.status(403).json({ 
-        message: 'Only branch managers can view schedules.' 
+        message: 'Only branch managers and administrators can view schedules.' 
       });
     }
 
     // 2. Check if branch manager belongs to this branch
-    if (!req.user.branch || req.user.branch.toString() !== branchId) {
+    if ((req.user.roles.includes('branchmanager') && !req.user.roles.includes('administrator')) && (!req.user.branch || req.user.branch.toString() !== branchId)) {
       return res.status(403).json({ 
         message: 'You can only view schedules for your assigned branch.' 
       });
@@ -933,7 +949,7 @@ const getMovieSchedules = async (req, res) => {
     }
 
     // 4. Check cache first
-    const cacheKey = `schedules:branch:${branchId}:${JSON.stringify(req.query)}`;
+    const cacheKey = `schedules:branch:${branchId}`;
     try {
       const cachedSchedules = await redisClient.get(cacheKey);
       if (cachedSchedules) {
@@ -1048,8 +1064,10 @@ const getMovieSchedules = async (req, res) => {
 
     // Stage 5: Sort by start time
     pipeline.push({ $sort: { startTime: 1 } });
+    let response = {};
 
     // 6. Execute aggregation with pagination
+    if (pagination === 'true') {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
@@ -1058,12 +1076,11 @@ const getMovieSchedules = async (req, res) => {
       Schedule.aggregate([...pipeline, { $skip: skip }, { $limit: limitNum }]),
       Schedule.aggregate([...pipeline, { $count: 'total' }])
     ]);
-
     const total = totalCount.length > 0 ? totalCount[0].total : 0;
 
     // 7. Prepare response
-    const response = {
-      schedules,
+    response = {
+     schedules,
       pagination: {
         currentPage: pageNum,
         totalPages: Math.ceil(total / limitNum),
@@ -1079,6 +1096,20 @@ const getMovieSchedules = async (req, res) => {
         toDate: toDate || null
       }
     };
+  } else {
+    // If pagination is not enabled, just return all results
+    const schedules = await Schedule.aggregate(pipeline);
+    response = {
+      schedules,
+      filters: {
+        branchId,
+        movieId: movieId || null,
+        screenId: screenId || null,
+        fromDate: fromDate || null,
+        toDate: toDate || null
+      }
+    };
+  }
 
     // 8. Cache the result for 5 minutes
     try {

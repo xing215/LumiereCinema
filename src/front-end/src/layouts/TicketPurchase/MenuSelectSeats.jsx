@@ -5,6 +5,9 @@ import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
 import SeatLayout, {Seats, CoupleSeat} from '@/layouts/TicketPurchase/SeatLayout';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 // ================================ COMPONENTS ================================
 
 const SeatName = ({ type, text, isCouple = false }) => (
@@ -69,7 +72,10 @@ const MenuSelectSeats = ({
         });
 
         if (newSelectedSeats.length > (movieTicketData.adultTickets + movieTicketData.discountedTickets)) {
-            alert('Please add more tickets');
+            showWarning(
+                'Too Many Seats',
+                'Please add more tickets'
+            );
         } else {
             updateMovieTicket({ seats: newSelectedSeats });
         }
@@ -137,18 +143,27 @@ const MenuSelectSeats = ({
 
     const handleNext = () => {
         if (!canProceed) {
-            alert('Please select at least one seat before proceeding.');
+            showInfo(
+                'Selection Required',
+                'Please select at least one seat before proceeding.'
+            );
             return;
         }
 
         if ((movieTicketData.adultTickets + movieTicketData.discountedTickets) !== movieTicketData?.seats.length) {
-            alert('Please select the same number of seats as tickets.');
+            showWarning(
+                'Seat Mismatch',
+                'Please select the same number of seats as tickets.'
+            );
             return;
         }
 
         // Check for seat gaps before proceeding
         if (checkSeatGaps(movieTicketData.seats)) {
-            alert('You cannot leave a single seat between selections.');
+            showWarning(
+                'Invalid Selection',
+                'You cannot leave a single seat between selections.'
+            );
             return;
         }
 

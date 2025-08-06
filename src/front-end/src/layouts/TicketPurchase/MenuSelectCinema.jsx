@@ -4,6 +4,9 @@ import {ChooseCinemaButton} from '@layouts/TicketPurchase/MenuSelectScreen';
 import {useFetchBranches} from '@/hooks/useBranch'; 
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 const MenuSelectCinema = ({ snackTicketData, updateSnackTicket, onBack, onNext, getSnacks }) => {
     const [isCinemaPopupOpen, setIsCinemaPopupOpen] = useState(false);
     const { fetchBranches, branches, loading: branchLoading, error: branchError } = useFetchBranches();
@@ -15,7 +18,10 @@ const MenuSelectCinema = ({ snackTicketData, updateSnackTicket, onBack, onNext, 
 
     const handleNextClick = () => {
         if (!snackTicketData.branch || !snackTicketData.branch._id) {
-            alert('Please select a cinema before proceeding.');
+            showInfo(
+                'Selection Required',
+                'Please select a cinema before proceeding.'
+            );
             return;
         }
         onNext();

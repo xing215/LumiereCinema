@@ -52,8 +52,8 @@ const snackTicketSchema = new mongoose.Schema({
 
   // SellerId: Reference to cashier (if purchased at counter)
   seller: {
-    type: String,
-    default: null,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
 
   // Reference to promotion program (if any)

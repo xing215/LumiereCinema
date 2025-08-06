@@ -36,27 +36,6 @@ export const useLogin = () => {
   return { loginUser, loading, error };
 };
 
-export const useAuthInterceptor = () => {
-  const { logout } = useUser();
-  const { showError } = useError();
-  useEffect(() => {
-    const axios = require('axios');
-    const interceptor = axios.interceptors.response.use(
-      response => response,
-      error => {
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-          logout();
-          showError('', 'You have to login to access this resource.');
-        }
-        return Promise.reject(error);
-      }
-    );
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
-  }, [logout, showError]);
-};
-
 export const useRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

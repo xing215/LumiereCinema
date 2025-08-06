@@ -342,7 +342,7 @@ const Wishlist = () => {
                                     /* Grid View */
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 min-h-[400px]">
                                         {currentPageData.map((movie, index) => (
-                                            <div key={movie._id || index} className="aspect-[300/470]">
+                                            <div key={movie._id || index} className="aspect-[300/470] scale-80 w-[123%] md:-my-15 -m-5 lg:-my-10 ">
                                                 <MovieCard 
                                                     movie={movie} 
                                                     page="Wishlist"

@@ -10,6 +10,20 @@ import { useFetchNowShowing } from '@hooks/useMovie';
 const NowShowingFrame = () => {
     const { fetchNowShowing, movies: nowShowingMovies, loading } = useFetchNowShowing();
     useEffect(() => { fetchNowShowing(); }, []);
+    
+    // Sort movies: movies with schedules (branches) first, then movies without schedules
+    const sortedNowShowingMovies = React.useMemo(() => {
+        if (!nowShowingMovies) return [];
+        return [...nowShowingMovies].sort((a, b) => {
+            const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
+            const bHasSchedules = Array.isArray(b.branches) && b.branches.length > 0;
+            
+            if (aHasSchedules && !bHasSchedules) return -1;
+            if (!aHasSchedules && bHasSchedules) return 1;
+            return 0; // Keep original order for movies with same schedule status
+        });
+    }, [nowShowingMovies]);
+    
     const scrollRef = useRef(null);
     const scrollByAmount = 350;
     const [showScrollButtons, setShowScrollButtons] = useState(false);
@@ -42,7 +56,7 @@ const NowShowingFrame = () => {
                 scrollRef.current.removeEventListener('scroll', checkScroll);
             }
         };
-    }, [nowShowingMovies]);
+    }, [sortedNowShowingMovies]);
 
     const handleScrollLeft = () => {
         if (scrollRef.current) {
@@ -55,7 +69,7 @@ const NowShowingFrame = () => {
         }
     };
 
-    if (!loading && (!nowShowingMovies || nowShowingMovies.length === 0)) {
+    if (!loading && (!sortedNowShowingMovies || sortedNowShowingMovies.length === 0)) {
         return null;
     }
     return (
@@ -79,8 +93,8 @@ const NowShowingFrame = () => {
                         <div className="flex items-center justify-center w-full py-10">
                             <div className="text-white font-['Unbounded'] text-lg">Loading movies...</div>
                         </div>
-                    ) : nowShowingMovies && nowShowingMovies.length > 0 ? (
-                        nowShowingMovies.map((movie, idx) => (
+                    ) : sortedNowShowingMovies && sortedNowShowingMovies.length > 0 ? (
+                        sortedNowShowingMovies.map((movie, idx) => (
                             <MovieCardWithOverlay
                                 key={movie._id || idx}
                                 movie={movie}
