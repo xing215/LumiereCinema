@@ -28,6 +28,9 @@ import {
 } from '@hooks/useTicket';
 import { ROUTES } from '@routes/routeConfig';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 // ================================ CONSTANTS ================================
 const MENU_STEPS = {
     SCREEN: 0,
@@ -139,7 +142,10 @@ const TicketPurchase = () => {
     const handleExpire = () => {
         console.log('Session expired, clearing session...', holdSeatData);
         setStartedHoldSession(false);
-        alert('Your session has expired. Please select your seats again.');
+        showWarning(
+            'Session Expired',
+            'Your session has expired. Please select your seats again.'
+        );
         updateMovieTicket({ seats: [] });
         setCurrentStep(MENU_STEPS.SEATS);
         clearHoldSeatData();
@@ -278,7 +284,10 @@ const TicketPurchase = () => {
              !movieTicketData.noLoginCustomerInfo.phone || 
              !movieTicketData.noLoginCustomerInfo.email)) {
             setCurrentStep(MENU_STEPS.INFO);
-            alert('Please fill in your information before proceeding.');
+            showInfo(
+                'Information Required',
+                'Please fill in your information before proceeding.'
+            );
             return;
         }
     }, [isAuthenticated]);
@@ -322,13 +331,19 @@ const TicketPurchase = () => {
             if (holdSessionError) {
                 console.log(holdSessionError);
                 if (holdSessionError.includes('seats')) {
-                    alert('Your seat selection have been occupied by other customers. Please adjust your selection.');
+                    showError(
+                        'Seats Unavailable',
+                        'Your seat selection has been occupied by other customers. Please adjust your selection.'
+                    );
                     setCurrentStep(MENU_STEPS.SEATS);
                     fetchSeats(movieTicketData.schedule._id);
                     updateMovieTicket({ seats: [] });
                     return;
                 }
-                alert('An error occurred while creating your ticket. Please try again.');
+                showError(
+                    'Hold Session Error',
+                    'An error occurred while holding your seats. Please try again.'
+                );
                 setCurrentStep(MENU_STEPS.PAYMENT);
             } else {
                 setStartedHoldSession(true);
@@ -356,7 +371,10 @@ const TicketPurchase = () => {
                 });
                 
                 if (changed) {
-                    alert('Some snacks in your selection exceed available stock and have been adjusted.');
+                    showWarning(
+                        'Stock Adjustment',
+                        'Some snacks in your selection exceed available stock and have been adjusted.'
+                    );
                     updateSnackTicket({ snackList: newSnackList, promotion: null, discount: 0 });
                 }
             }
@@ -372,20 +390,29 @@ const TicketPurchase = () => {
             console.error('Error creating ticket:', ticketError);
             
             if (ticketError.includes('seats')) {
-                alert('Your seat selection have been occupied by other customers. Please adjust your selection.');
+                showError(
+                    'Seats Unavailable',
+                    'Your seat selection has been occupied by other customers. Please adjust your selection.'
+                );
                 setCurrentStep(MENU_STEPS.SEATS);
                 fetchSeats(movieTicketData.schedule._id);
                 updateMovieTicket({ seats: [] });
                 return;
             } else if (ticketError.includes('snack')) {
-                alert('Your snack selection exceeds available stock. Please adjust your order.');
+                showError(
+                    'Stock Unavailable',
+                    'Your snack selection exceeds available stock. Please adjust your order.'
+                );
                 setCurrentStep(MENU_STEPS.SNACK);
                 getSnacks(snackTicketData?.branch?._id);
                 updateSnackTicket({ snackList: [] });
                 return;
             }
             
-            alert('An error occurred while creating your ticket. Please try again.');
+            showError(
+                'Ticket Creation Failed',
+                'An error occurred while creating your ticket. Please try again.'
+            );
             setCurrentStep(MENU_STEPS.PAYMENT);
         }
     }, [ticket, ticketError]);

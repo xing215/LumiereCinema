@@ -10,6 +10,9 @@ import BackwardButton from '@components/buttons/backwardButton2.jsx';
 import { useUser } from '@contexts/UserContext.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 
+// SweetAlert for popup notifications
+import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
+
 
 
 const MENU_STEPS = {
@@ -95,7 +98,10 @@ const SellSnack = () => {
                     return item;
                 });
                 if (changed) {
-                    alert('Some snacks in your selection exceed available stock and have been adjusted.');
+                    showWarning(
+                        'Stock Adjustment',
+                        'Some snacks in your selection exceed available stock and have been adjusted.'
+                    );
                     updateSnackTicket({ snackList: newSnackList, promotion: null, discount: 0 });
                 }
             }
@@ -116,18 +122,27 @@ const SellSnack = () => {
             setCurrentStep(MENU_STEPS.TICKET_DISPLAY);
         } else if (ticketError) {
             if (ticketError.includes('Not enough stock for snack')) {
-                alert('Your snack selection exceeds available stock. Please adjust your order.');
+                showError(
+                    'Stock Unavailable',
+                    'Your snack selection exceeds available stock. Please adjust your order.'
+                );
                 setCurrentStep(MENU_STEPS.SNACK);
                 updateSnackTicket({ snackList: [] });
                 getSnacks(snackTicketData?.branch?._id);
                 return;
             }
-            alert('An error occurred while creating your snack ticket. Please try again.');
+            showError(
+                'Ticket Creation Failed',
+                'An error occurred while creating your snack ticket. Please try again.'
+            );
             setCurrentStep(MENU_STEPS.PAYMENT);
         }
         // Alert if promotion can't be used (discount is 0 but promotion code exists)
         if (snackTicketData.promotionCode && snackTicketData.discounted === 0) {
-            alert('Promotion code cannot be used or is not valid for this purchase.');
+            showWarning(
+                'Promotion Invalid',
+                'Promotion code cannot be used or is not valid for this purchase.'
+            );
             updateSnackTicket({ promotionCode: '', promotion: null });
         }
     }, [ticket, ticketError, snackTicketData.promotionCode, snackTicketData.discounted]);
