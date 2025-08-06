@@ -40,8 +40,7 @@ export const ROUTES = {
     REGISTER: '/register',
     ACTIVATION: '/activate',
     LOGIN: '/login',
-    RESET_PASSWORD: '/reset-password',
-    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
+    RESET_PASSWORD: '/reset-password',    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
     MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
@@ -117,16 +116,9 @@ export const routeConfig = [
         component: ResetPwdEmail,
         type: 'public',
         requiresAuth: false
-    },
-    {
+    },    {
         path: ROUTES.MOVIES,
         component: MovieListPage,
-        type: 'public',
-        requiresAuth: false
-    },
-    {
-        path: ROUTES.MOVIE_DETAILS,
-        component: MovieDetail,
         type: 'public',
         requiresAuth: false
     },

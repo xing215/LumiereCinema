@@ -119,13 +119,13 @@ class TicketCacheManager {
                 await this.cacheTicket(ticket.snackTicketCode, cacheData);
             }
 
-            console.log(`✅ Preloaded ${recentMovieTickets.length} movie tickets and ${recentSnackTickets.length} snack tickets to cache`);
+            console.log(`Preloaded ${recentMovieTickets.length} movie tickets and ${recentSnackTickets.length} snack tickets to cache`);
             return {
                 movieTickets: recentMovieTickets.length,
                 snackTickets: recentSnackTickets.length
             };
         } catch (error) {
-            console.error('❌ Error preloading tickets:', error);
+            console.error('Error preloading tickets:', error);
             return { error: error.message };
         }
     }

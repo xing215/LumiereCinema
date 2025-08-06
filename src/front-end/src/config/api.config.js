@@ -78,17 +78,17 @@ const API_CONFIG = {
     adminUserRoles: '/api/admin/users/:userId/roles',   // PATCH - Update user roles (use getApiUrlWithParams)
     adminUserStatus: '/api/admin/users/:userId/status', // PATCH - Update user status (use getApiUrlWithParams)
     
-    // ========================= MOVIE ENDPOINTS =========================
-    // Public movie endpoints
+    // ========================= MOVIE ENDPOINTS =========================    // Public movie endpoints
     nowShowingMovies: '/api/movies/now-showing',        // GET - Now showing movies
     upcomingMovies: '/api/movies/upcoming',             // GET - Upcoming movies
     searchMovies: '/api/movies/search',                 // GET - Search movies (query params)
+    searchSuggestions: '/api/movies/search/suggest',    // GET - Search suggestions (query params)
     movieDetails: '/api/movies/:movieId',               // GET - Movie details (use getApiUrlWithParams)
     movieShowtimes: '/api/movies/:movieId/showscreen',  // GET - Movie showtimes (use getApiUrlWithParams)
     movieRatings: '/api/movies/:movieId/get-ratings',   // GET - Movie ratings summary (use getApiUrlWithParams)
-    
-    // Admin movie management (administrator only)
+      // Admin movie management (administrator only)
     allMovies: '/api/movies/all',                       // GET - All movies including archived
+    clearSearchCache: '/api/movies/search/cache',       // DELETE - Clear search cache (admin)
     addMovie: '/api/movies',                            // POST - Add new movie
     updateMovie: '/api/movies/:movieId',                // PUT/PATCH - Update movie (use getApiUrlWithParams)
     deleteMovie: '/api/movies/:movieId',                // DELETE - Delete movie (use getApiUrlWithParams)
