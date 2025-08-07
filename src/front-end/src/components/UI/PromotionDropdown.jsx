@@ -14,9 +14,11 @@
     - Uses CustomDropdown for consistent styling
 */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, use } from 'react';
 import { useGetPublicPromotions } from '@hooks/useTicket';
+import { useGetPromotions } from '@hooks/useAdmin';
 import CustomDropdown from './CustomDropdown';
+import {useUser} from '@contexts/UserContext';
 
 const PromotionDropdown = ({
     value,
@@ -27,13 +29,26 @@ const PromotionDropdown = ({
     placeholder = 'Enter promotion code',
     productType = 'All' // 'Movie', 'Snack', or 'All'
 }) => {
-    const { fetchPublicPromotions, promotions, loading } = useGetPublicPromotions();
+    const { fetchPublicPromotions, promotions: publicPromotions, loading } = useGetPublicPromotions();
+    const { getPromotions, promotions: allPromotion, loading: allLoading, error } = useGetPromotions();
+    const { user } = useUser();
+    const [promotions, setPromotions] = useState([]);
 
     // Fetch promotions on component mount
     useEffect(() => {
-        fetchPublicPromotions();
+        if (user && user.roles.includes('cashier')) {
+            getPromotions();
+        } else {
+            fetchPublicPromotions();
+        }
     }, []);
+    useEffect(() => {
+        setPromotions([...publicPromotions, ...allPromotion]);
+    } , [publicPromotions, allPromotion]);
 
+    useEffect(() => {
+        console.log('Promotions updated:', promotions);
+    }, [promotions]);
     // Filter promotions based on product type
     const filteredPromotions = promotions.filter(promo => {
         // If productType is 'All', show all promotions
@@ -80,7 +95,7 @@ const PromotionDropdown = ({
     };
     
     // If no promotions available, render as simple input field
-    if (!loading && filteredPromotions.length === 0) {
+    if (!(loading || allLoading) && filteredPromotions.length === 0) {
         return (
             <div className={className}>
                 <input
@@ -101,13 +116,13 @@ const PromotionDropdown = ({
     }
 
     return (
-        <div className={className}>
+        <div className={`${className} `}>
             <CustomDropdown
                 value={value}
                 onChange={handleChange}
                 onBlur={handleBlurOrEnter}
                 options={promotionOptions}
-                placeholder={loading ? 'Loading promotions...' : placeholder}
+                placeholder={(loading || allLoading) ? 'Loading promotions...' : placeholder}
                 name="promotionCode"
                 bgColor="zinc-300"
                 inputBgColor="zinc-300"
@@ -124,6 +139,7 @@ const PromotionDropdown = ({
                 allowOtherInput={true}
                 forceFillLabel={false}
                 width="w-full"
+                hideNoOptionMessage={true}
             />
         </div>
     );

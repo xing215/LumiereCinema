@@ -36,7 +36,7 @@ router.patch('/users/:userId/status', protect, restrictTo('administrator'), upda
 router.delete('/users/:userId', protect, restrictTo('administrator'), deleteUser);
 
 // Quản lý promotion
-router.get('/promotions/all', protect, restrictTo('administrator'), getAllPromotions);
+router.get('/promotions/all', protect, restrictTo('administrator', 'cashier'), getAllPromotions);
 router.get('/promotions/banner', getPromotionBannerList);
 router.get('/promotions/public', getUser, getPublicPromotions);
 router.get('/promotions/:promotionCode', protect, restrictTo('administrator'), getPromotionByCode);

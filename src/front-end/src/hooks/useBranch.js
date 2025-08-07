@@ -200,36 +200,60 @@ export const useGetSchedules = () => {
     setLoading(true);
     setError(null);
     try {
-      let response;
+      console.log('Fetching schedules for movie:', movieId, 'at branch:', branchId);
+      const params = movieId ? { movieId } : {};
+      const response = await branchService.getBranchSchedules(branchId, params, token);
+      console.log('Fetched schedules response:', response);
       
-      if (user?.roles?.includes('branchmanager')) {
-        // Use branch manager schedules endpoint
-        response = await branchService.getBranchSchedules(branchId, { movieId }, token);
-        setSchedules(response.schedules || []);
-      } else {
-        // Use ticket service for public schedules
-        const params = movieId ? { movieId } : {};
-        response = await ticketService.getSchedulesByBranch(branchId, params, token);
-        
-        // Transform the data for public use
-        const screens = response.screens || [];
-        const allSchedules = screens.flatMap(screen =>
+      let transformedSchedules = [];
+      
+      // Check if response has the new format with direct schedules array
+      if (response.schedules && Array.isArray(response.schedules)) {
+        // New format: direct schedules array (for branch managers)
+        transformedSchedules = response.schedules.map(schedule => ({
+          _id: schedule._id,
+          movie: schedule.movie,
+          screen: {
+            _id: schedule.screen._id,
+            name: schedule.screen.screenName,
+            totalSeats: schedule.screen.size ? (schedule.screen.size.rows * schedule.screen.size.columns) : 0,
+            screenType: schedule.screen.screenType,
+            size: schedule.screen.size
+          },
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+          ticketsSold: schedule.ticketsSold || 0,
+          occupiedSeats: schedule.OccupiedSeat || [],
+          availableSeatsCount: schedule.screen.size ? 
+            (schedule.screen.size.rows * schedule.screen.size.columns) - (schedule.ticketsSold || 0) : 0,
+        }));
+      } else if (response.screens && Array.isArray(response.screens)) {
+        // Old format: nested screens with schedules (for customers/cashiers)
+        transformedSchedules = response.screens.flatMap(screen =>
           (screen.schedules || []).map(schedule => ({
             _id: schedule._id,
             movie: schedule.movie,
             screen: {
-              _id: screen._id,
+              _id: screen.screenInfo?._id || screen._id,
               name: screen.screenInfo?.screenName || screen.screenName,
               totalSeats: screen.screenInfo?.totalSeats || screen.totalSeats,
+              screenType: screen.screenInfo?.screenType || screen.screenType,
+              size: screen.screenInfo?.size || screen.size
             },
             startTime: schedule.startTime,
             endTime: schedule.endTime,
             availableSeatsCount: schedule.seatInfo?.availableSeatsCount || 0,
+            occupiedSeats: schedule.seatInfo?.occupiedSeats || [],
+            heldSeats: schedule.seatInfo?.heldSeats || [],
+            ticketsSold: schedule.seatInfo?.occupiedSeatsCount || 0,
           }))
         );
-        console.log('Fetched schedules:', allSchedules);
-        setSchedules(allSchedules);
+      } else {
+        console.warn('Unexpected response format:', response);
       }
+      
+      console.log('Transformed schedules:', transformedSchedules);
+      setSchedules(transformedSchedules);
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch schedules';
       setError(errorMessage);

@@ -105,7 +105,7 @@ export const useSnackManagement = () => {
     
     const snackColumnConfig = [
         { width: 'w-15', truncate: false }, // TickButton
-        { width: 'w-20', truncate: false }, // ID (shortname) 
+        { width: 'w-20', truncate: true }, // ID (shortname) 
         { width: 'w-40', truncate: true },  // Name
         { width: 'w-40', truncate: false }, // Price (text input, not date picker)
         { width: 'w-40', truncate: false }, // DPrice (text input, not date picker)

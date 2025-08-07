@@ -18,172 +18,6 @@ const TicketCacheManager = require('../utils/ticketCacheManager');
 const EmailService = require('../utils/emailService');
 
 /**
- * @desc    Get list of schedules by branch, date, and movie
- * @route   GET /tickets/:branchId/schedule
- * @access  Public
- */
-const getSchedulesByBranch = async (req, res) => {
-  try {
-
-    const { branchId } = req.params;
-    const { movieId } = req.query;
-    const userId = req.user && req.user?.id ? req.user?.id : null;
-    //find user by userId
-    let user = null;
-    if (userId) {
-      user = await User.findById(userId).lean();
-    }
-    // Validate movieId if provided
-    if (movieId && !mongoose.Types.ObjectId.isValid(movieId)) {
-      return res.status(400).json({ error: 'Invalid movie ID format' });
-    }
-
-    // Try to get branch info from cache first
-    let branch = await CacheManager.getCachedBranchInfo(branchId);
-    if (!branch) {
-      branch = await Branch.findById(branchId).lean();
-      if (!branch) {
-        return res.status(404).json({ error: 'Branch not found' });
-      }
-      await CacheManager.cacheBranchInfo(branchId, branch);
-    }
-
-    // Build aggregation pipeline for all schedules of the movie in the branch
-    const now = new Date();
-    const isCashier = user && user.roles && user.roles.includes('cashier');
-    const timeMatch = isCashier
-      ? { endTime: { $gt: now } }
-      : { startTime: { $gt: now } };
-    const pipeline = [
-      { $match: { branch: new mongoose.Types.ObjectId(branchId), isActive: true } },
-      {
-        $lookup: {
-          from: 'schedules',
-          let: { screenId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ['$screen', '$$screenId'] },
-                ...(movieId ? { movie: new mongoose.Types.ObjectId(movieId) } : {}),
-                ...timeMatch // Match by startTime or endTime depending on user role
-              }
-            },
-            { $sort: { startTime: 1 } }
-          ],
-          as: 'schedules'
-        }
-      },
-      { $match: { 'schedules.0': { $exists: true } } },
-      { $unwind: '$schedules' },
-      {
-        $lookup: {
-          from: 'movies',
-          localField: 'schedules.movie',
-          foreignField: '_id',
-          as: 'movieData'
-        }
-      },
-      { $unwind: '$movieData' },
-      { $match: { 'movieData.isHidden': false } },
-      {
-        $lookup: {
-          from: 'seatholds',
-          let: { scheduleId: '$schedules._id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ['$schedule', '$$scheduleId'] },
-                expiresAt: { $gt: new Date() }
-              }
-            },
-            { $project: { seatNumber: 1, expiresAt: 1, holdReason: 1 } }
-          ],
-          as: 'seatHolds'
-        }
-      },
-      {
-        $addFields: {
-          'schedules.totalSeats': { $multiply: ['$size.rows', '$size.columns'] },
-          'schedules.occupiedSeatsCount': { $size: { $ifNull: ['$schedules.OccupiedSeat', []] } },
-          'schedules.heldSeatsCount': { $size: '$seatHolds' },
-          'schedules.heldSeats': '$seatHolds'
-        }
-      },
-      {
-        $addFields: {
-          'schedules.availableSeatsCount': {
-            $subtract: [
-              '$schedules.totalSeats',
-              { $add: ['$schedules.occupiedSeatsCount', '$schedules.heldSeatsCount'] }
-            ]
-          }
-        }
-      },
-      {
-        $project: {
-          screenInfo: {
-            _id: '$_id',
-            screenName: '$screenName',
-            screenType: '$screenType',
-            totalSeats: '$schedules.totalSeats',
-            size: '$size'
-          },
-          schedule: {
-            _id: '$schedules._id',
-            startTime: '$schedules.startTime',
-            endTime: '$schedules.endTime',
-            movie: {
-              _id: '$movieData._id',
-              title: '$movieData.title',
-              duration: '$movieData.duration',
-              genre: '$movieData.genre',
-              posterURL: '$movieData.posterURL',
-              rating: '$movieData.rating'
-            },
-            seatInfo: {
-              totalSeats: '$schedules.totalSeats',
-              occupiedSeats: { $ifNull: ['$schedules.OccupiedSeat', []] },
-              occupiedSeatsCount: '$schedules.occupiedSeatsCount',
-              heldSeats: '$schedules.heldSeats',
-              heldSeatsCount: '$schedules.heldSeatsCount',
-              availableSeatsCount: '$schedules.availableSeatsCount'
-            }
-          }
-        }
-      },
-      {
-        $group: {
-          _id: '$screenInfo._id',
-          screenInfo: { $first: '$screenInfo' },
-          schedules: { $push: '$schedule' }
-        }
-      }
-    ];
-
-    const result = await Screen.aggregate(pipeline);
-
-    const screens = result.map(screenData => ({
-      screenInfo: screenData.screenInfo,
-      schedules: screenData.schedules
-    }));
-
-    return res.status(200).json({
-      movieFilter: movieId || null,
-      totalScreens: screens.length,
-      totalSchedules: screens.reduce((sum, screen) => sum + screen.schedules.length, 0),
-      screens: screens
-    });
-
-  } catch (error) {
-    console.error('Error fetching schedules:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
-/**
  * @desc    Get seat map with status (available, occupied, holding)
  * @route   GET /tickets/screen/:scheduleId
  * @access  Public
@@ -712,7 +546,7 @@ const calculateDiscountedTotal = async (req, res) => {
     if (userId) {
       const userBody = await User.findById(userId);
       if (userBody && userBody.roles.includes('cashier')) {
-        user = null; // If cashier, do not use userId as customer
+        user = null; 
       } else {
         user = userBody; // Use userId as customer if not a cashier
       }
@@ -815,6 +649,8 @@ const calculateDiscountedTotal = async (req, res) => {
           // Check if user's rank can access this promotion (hierarchy: PLATINUM > GOLD > SILVER)
           const userRank = user.loyaltyRank.rank;
           const promoRank = promotion.appliedLoyaltyRank;
+          console.log('User Rank:', userRank, 'Promotion Rank:', promoRank);
+          console.log('Rank Hierarchy:', promotion.appliedLoyaltyRank);
           
           const rankHierarchy = { 'SILVER': 1, 'GOLD': 2, 'PLATINUM': 3 };
           const userRankLevel = rankHierarchy[userRank] || 0;
@@ -824,7 +660,7 @@ const calculateDiscountedTotal = async (req, res) => {
             throw new Error('Promotion not applicable for your loyalty rank.');
           }
         }
-        if (!user && promotion.appliedLoyaltyRank && promotion.appliedLoyaltyRank.trim() !== '') {
+        if (!user && promotion.appliedLoyaltyRank && promotion.appliedLoyaltyRank.trim().toUpperCase !== '') {
           throw new Error('Promotion not applicable for your loyalty rank.');
         }
         
@@ -1880,7 +1716,6 @@ const clearTicketCache = async (req, res) => {
 };
 
 module.exports = {
-  getSchedulesByBranch, 
   getSeatMapBySchedule,
   createTicket,
   getTicketByCode,

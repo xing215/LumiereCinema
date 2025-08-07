@@ -4,7 +4,6 @@ const router = express.Router();
 const { protect, restrictTo, getUser } = require('../middlewares/auth.middleware.js');
 
 const { 
-  getSchedulesByBranch, 
   getSeatMapBySchedule,
   createTicket,
   holdSeats,
@@ -30,12 +29,6 @@ const {
 // GENERAL TICKET ROUTES (Both Movie and Snack)
 // =============================================================================
 
-/**
- * GET /:branchId/schedule
- * Lấy danh sách lịch chiếu theo branch, ngày và phim
- * Query: ?date=YYYY-MM-DD&movieId=ObjectId (movieId optional)
- */
-router.get('/:branchId/schedule',getUser, getSchedulesByBranch);
 
 /**
  * GET /screen/:scheduleId
