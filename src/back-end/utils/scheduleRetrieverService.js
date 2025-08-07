@@ -5,25 +5,13 @@ const Branch = require('../models/Branch');
 const Screen = require('../models/Screen');
 const { generateQueryEmbedding } = require('./embeddingService');
 
-/**
- * Schedule Retriever Service
- * Handles vector-based search for schedules using MongoDB Atlas Vector Search
- */
 class ScheduleRetrieverService {
-  /**
-   * Initialize the service
-   */  constructor() {
+  constructor() {
     this.collectionName = 'schedules';
     this.vectorFieldName = 'embedding';
     this.indexName = 'search_schedules_index';
   }
 
-  /**
-   * Perform semantic search for schedules
-   * @param {string} query - User query
-   * @param {Object} options - Search options
-   * @returns {Promise<Array>} Search results
-   */
   async searchSchedules(query, options = {}) {
     const {
       limit = 10,
@@ -34,324 +22,132 @@ class ScheduleRetrieverService {
     } = options;
 
     try {
-      // Generate query embedding
       const queryEmbedding = await generateQueryEmbedding(query);
       
       if (!queryEmbedding || queryEmbedding.length === 0) {
         console.warn('Failed to generate query embedding for:', query);
         return [];
       }
+      
+      const matchConditions = {
+        'movieData.isHidden': false,
+        'branchData.isActive': true,
+        'screenData.isActive': true,
+        ...(!includeExpired && { endTime: { $gte: new Date() } })
+      };
 
-      // Build aggregation pipeline
+      if (branchId) matchConditions['branchData._id'] = new mongoose.Types.ObjectId(branchId);
+      if (movieId) matchConditions['movieData._id'] = new mongoose.Types.ObjectId(movieId);
+
+      // SỬA LỖI MÚI GIỜ TẠI ĐÂY
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        matchConditions.startTime = { $gte: startOfDay, $lte: endOfDay };
+      }
+
       const pipeline = [
-        // Vector search stage
         {
           $vectorSearch: {
             index: this.indexName,
             path: this.vectorFieldName,
             queryVector: queryEmbedding,
             numCandidates: Math.max(limit * 10, 100),
-            limit: limit * 2 // Get more results for filtering
+            limit: limit * 2
           }
         },
-        // Add similarity score
-        {
-          $addFields: {
-            searchScore: { $meta: 'vectorSearchScore' }
-          }
-        },
-        // Populate related data
-        {
-          $lookup: {
-            from: 'movies',
-            localField: 'movie',
-            foreignField: '_id',
-            as: 'movieData'
-          }
-        },
-        {
-          $lookup: {
-            from: 'screens',
-            localField: 'screen', 
-            foreignField: '_id',
-            as: 'screenData'
-          }
-        },
-        {
-          $lookup: {
-            from: 'branches',
-            localField: 'screenData.branch',
-            foreignField: '_id',
-            as: 'branchData'
-          }
-        },
-        // Unwind arrays
-        {
-          $unwind: {
-            path: '$movieData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $unwind: {
-            path: '$screenData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $unwind: {
-            path: '$branchData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        // Apply filters
-        {
-          $match: {
-            'movieData.isHidden': false, // Only show schedules for visible movies
-            'branchData.isActive': true, // Only active branches
-            'screenData.isActive': true, // Only active screens
-            ...(branchId && { 'branchData._id': new mongoose.Types.ObjectId(branchId) }),
-            ...(movieId && { 'movieData._id': new mongoose.Types.ObjectId(movieId) }),
-            ...(date && { 
-              startTime: {
-                $gte: new Date(date + 'T00:00:00.000Z'),
-                $lt: new Date(date + 'T23:59:59.999Z')
-              }
-            }),
-            ...(!includeExpired && { endTime: { $gte: new Date() } })
-          }
-        },
-        // Project relevant fields
+        { $addFields: { searchScore: { $meta: 'vectorSearchScore' } } },
+        { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieData' } },
+        { $lookup: { from: 'screens', localField: 'screen', foreignField: '_id', as: 'screenData' } },
+        { $lookup: { from: 'branches', localField: 'screenData.branch', foreignField: '_id', as: 'branchData' } },
+        { $unwind: { path: '$movieData', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$screenData', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$branchData', preserveNullAndEmptyArrays: true } },
+        { $match: matchConditions },
         {
           $project: {
-            _id: 1,
-            startTime: 1,
-            endTime: 1,
-            searchScore: 1,
-            OccupiedSeat: 1,
-            movie: {
-              _id: '$movieData._id',
-              title: '$movieData.title',
-              description: '$movieData.description',
-              posterURL: '$movieData.posterURL',
-              duration: '$movieData.duration',
-              genre: '$movieData.genre',
-              ageRating: '$movieData.ageRating',
-              ratingsAverage: '$movieData.ratingsAverage'
-            },
-            screen: {
-              _id: '$screenData._id',
-              screenName: '$screenData.screenName',
-              screenType: '$screenData.screenType',
-              totalSeats: '$screenData.totalSeats'
-            },
-            branch: {
-              _id: '$branchData._id',
-              name: '$branchData.name',
-              address: '$branchData.address',
-              city: '$branchData.city'
-            },
-            // Add computed fields
-            availableSeats: {
-              $subtract: [
-                { $ifNull: ['$screenData.totalSeats', 0] },
-                { $size: { $ifNull: ['$OccupiedSeat', []] } }
-              ]
-            },
-            dateFormatted: {
-              $dateToString: {
-                format: '%Y-%m-%d',
-                date: '$startTime'
-              }
-            },
-            timeFormatted: {
-              $dateToString: {
-                format: '%H:%M',
-                date: '$startTime'
-              }
-            }
+            _id: 1, startTime: 1, endTime: 1, searchScore: 1, OccupiedSeat: 1,
+            movie: { _id: '$movieData._id', title: '$movieData.title', posterURL: '$movieData.posterURL', duration: '$movieData.duration', genre: '$movieData.genre', ageRating: '$movieData.ageRating', ratingsAverage: '$movieData.ratingsAverage' },
+            screen: { _id: '$screenData._id', screenName: '$screenData.screenName', screenType: '$screenData.screenType', totalSeats: '$screenData.totalSeats' },
+            branch: { _id: '$branchData._id', name: '$branchData.name', address: '$branchData.address', city: '$branchData.city' },
+            availableSeats: { $subtract: [{ $ifNull: ['$screenData.totalSeats', 0] }, { $size: { $ifNull: ['$OccupiedSeat', []] } }] },
+            dateFormatted: { $dateToString: { format: '%Y-%m-%d', date: '$startTime', timezone: 'Asia/Ho_Chi_Minh' } },
+            timeFormatted: { $dateToString: { format: '%H:%M', date: '$startTime', timezone: 'Asia/Ho_Chi_Minh' } }
           }
         },
-        // Sort by relevance score and start time
-        {
-          $sort: {
-            searchScore: -1,
-            startTime: 1
-          }
-        },
-        // Limit final results
-        {
-          $limit: limit
-        }
+        { $sort: { searchScore: -1, startTime: 1 } },
+        { $limit: limit }
       ];
 
       const schedules = await Schedule.aggregate(pipeline);
-      
       console.log(`Found ${schedules.length} schedules for query: "${query}"`);
       return schedules;
       
     } catch (error) {
       console.error('Error in schedule vector search:', error);
-      // Fallback to regular search if vector search fails
       return await this.fallbackScheduleSearch(query, options);
     }
   }
 
-  /**
-   * Fallback search using regular text search
-   * @param {string} query - Search query
-   * @param {Object} options - Search options
-   * @returns {Promise<Array>} Search results
-   */
   async fallbackScheduleSearch(query, options = {}) {
     const {
-      limit = 10,
-      branchId = null,
-      movieId = null,
-      date = null,
-      includeExpired = false
+      limit = 10, branchId = null, movieId = null, date = null, includeExpired = false
     } = options;
 
     try {
       const searchRegex = new RegExp(query, 'i');
       
+      const matchConditions = {
+        $or: [
+          { 'movieData.title': { $regex: searchRegex } }, { 'movieData.description': { $regex: searchRegex } },
+          { 'movieData.genre': { $in: [searchRegex] } }, { 'movieData.director': { $regex: searchRegex } },
+          { 'movieData.cast': { $in: [searchRegex] } }, { 'branchData.name': { $regex: searchRegex } },
+          { 'branchData.address': { $regex: searchRegex } }, { 'branchData.city': { $regex: searchRegex } },
+          { 'screenData.screenName': { $regex: searchRegex } }
+        ],
+        'movieData.isHidden': false, 'branchData.isActive': true, 'screenData.isActive': true,
+        ...(!includeExpired && { endTime: { $gte: new Date() } })
+      };
+
+      if (branchId) matchConditions['branchData._id'] = new mongoose.Types.ObjectId(branchId);
+      if (movieId) matchConditions['movieData._id'] = new mongoose.Types.ObjectId(movieId);
+
+      // SỬA LỖI MÚI GIỜ TẠI ĐÂY
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        matchConditions.startTime = { $gte: startOfDay, $lte: endOfDay };
+      }
+      
       const pipeline = [
-        // Populate related data first
-        {
-          $lookup: {
-            from: 'movies',
-            localField: 'movie',
-            foreignField: '_id',
-            as: 'movieData'
-          }
-        },
-        {
-          $lookup: {
-            from: 'screens',
-            localField: 'screen',
-            foreignField: '_id',
-            as: 'screenData'
-          }
-        },
-        {
-          $lookup: {
-            from: 'branches',
-            localField: 'screenData.branch',
-            foreignField: '_id',
-            as: 'branchData'
-          }
-        },
-        // Unwind arrays
-        {
-          $unwind: {
-            path: '$movieData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $unwind: {
-            path: '$screenData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $unwind: {
-            path: '$branchData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        // Apply text search and filters
-        {
-          $match: {
-            $or: [
-              { 'movieData.title': { $regex: searchRegex } },
-              { 'movieData.description': { $regex: searchRegex } },
-              { 'movieData.genre': { $in: [searchRegex] } },
-              { 'movieData.director': { $regex: searchRegex } },
-              { 'movieData.cast': { $in: [searchRegex] } },
-              { 'branchData.name': { $regex: searchRegex } },
-              { 'branchData.address': { $regex: searchRegex } },
-              { 'branchData.city': { $regex: searchRegex } },
-              { 'screenData.screenName': { $regex: searchRegex } }
-            ],
-            'movieData.isHidden': false,
-            'branchData.isActive': true,
-            'screenData.isActive': true,
-            ...(branchId && { 'branchData._id': new mongoose.Types.ObjectId(branchId) }),
-            ...(movieId && { 'movieData._id': new mongoose.Types.ObjectId(movieId) }),
-            ...(date && { 
-              startTime: {
-                $gte: new Date(date + 'T00:00:00.000Z'),
-                $lt: new Date(date + 'T23:59:59.999Z')
-              }
-            }),
-            ...(!includeExpired && { endTime: { $gte: new Date() } })
-          }
-        },
-        // Project results
+        { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieData' } },
+        { $lookup: { from: 'screens', localField: 'screen', foreignField: '_id', as: 'screenData' } },
+        { $lookup: { from: 'branches', localField: 'screenData.branch', foreignField: '_id', as: 'branchData' } },
+        { $unwind: { path: '$movieData', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$screenData', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$branchData', preserveNullAndEmptyArrays: true } },
+        { $match: matchConditions },
         {
           $project: {
-            _id: 1,
-            startTime: 1,
-            endTime: 1,
-            searchScore: 1, // Will be 1 for fallback
-            OccupiedSeat: 1,
-            movie: {
-              _id: '$movieData._id',
-              title: '$movieData.title',
-              description: '$movieData.description',
-              posterURL: '$movieData.posterURL',
-              duration: '$movieData.duration',
-              genre: '$movieData.genre',
-              ageRating: '$movieData.ageRating',
-              ratingsAverage: '$movieData.ratingsAverage'
-            },
-            screen: {
-              _id: '$screenData._id',
-              screenName: '$screenData.screenName',
-              screenType: '$screenData.screenType',
-              totalSeats: '$screenData.totalSeats'
-            },
-            branch: {
-              _id: '$branchData._id',
-              name: '$branchData.name',
-              address: '$branchData.address',
-              city: '$branchData.city'
-            },
-            availableSeats: {
-              $subtract: [
-                { $ifNull: ['$screenData.totalSeats', 0] },
-                { $size: { $ifNull: ['$OccupiedSeat', []] } }
-              ]
-            },
-            dateFormatted: {
-              $dateToString: {
-                format: '%Y-%m-%d',
-                date: '$startTime'
-              }
-            },
-            timeFormatted: {
-              $dateToString: {
-                format: '%H:%M',
-                date: '$startTime'
-              }
-            }
+            _id: 1, startTime: 1, endTime: 1, searchScore: 1, OccupiedSeat: 1,
+            movie: { _id: '$movieData._id', title: '$movieData.title', posterURL: '$movieData.posterURL', duration: '$movieData.duration', genre: '$movieData.genre', ageRating: '$movieData.ageRating', ratingsAverage: '$movieData.ratingsAverage' },
+            screen: { _id: '$screenData._id', screenName: '$screenData.screenName', screenType: '$screenData.screenType', totalSeats: '$screenData.totalSeats' },
+            branch: { _id: '$branchData._id', name: '$branchData.name', address: '$branchData.address', city: '$branchData.city' },
+            availableSeats: { $subtract: [{ $ifNull: ['$screenData.totalSeats', 0] }, { $size: { $ifNull: ['$OccupiedSeat', []] } }] },
+            dateFormatted: { $dateToString: { format: '%Y-%m-%d', date: '$startTime', timezone: 'Asia/Ho_Chi_Minh' } },
+            timeFormatted: { $dateToString: { format: '%H:%M', date: '$startTime', timezone: 'Asia/Ho_Chi_Minh' } }
           }
         },
-        // Sort by start time
-        {
-          $sort: {
-            startTime: 1
-          }
-        },
-        {
-          $limit: limit
-        }
+        { $sort: { startTime: 1 } },
+        { $limit: limit }
       ];
 
       const schedules = await Schedule.aggregate(pipeline);
       
-      // Add fallback score
       schedules.forEach(schedule => {
         schedule.searchScore = 1;
         schedule.searchMethod = 'fallback';
@@ -366,150 +162,63 @@ class ScheduleRetrieverService {
     }
   }
 
-  /**
-   * Get schedules by specific criteria (helper method)
-   * @param {Object} filters - Filter criteria
-   * @returns {Promise<Array>} Filtered schedules
-   */
   async getSchedulesByFilters(filters = {}) {
     const {
-      branchId,
-      movieId,
-      date,
-      startDate,
-      endDate,
-      limit = 20,
-      includeExpired = false
+      branchId, movieId, date, startDate, endDate, limit = 20, includeExpired = false
     } = filters;
 
     try {
       const pipeline = [
-        // Populate related data
-        {
-          $lookup: {
-            from: 'movies',
-            localField: 'movie',
-            foreignField: '_id',
-            as: 'movieData'
-          }
-        },
-        {
-          $lookup: {
-            from: 'screens',
-            localField: 'screen',
-            foreignField: '_id',
-            as: 'screenData'
-          }
-        },
-        {
-          $lookup: {
-            from: 'branches',
-            localField: 'screenData.branch',
-            foreignField: '_id',
-            as: 'branchData'
-          }
-        },
-        // Unwind
-        {
-          $unwind: {
-            path: '$movieData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $unwind: {
-            path: '$screenData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $unwind: {
-            path: '$branchData',
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        // Apply filters
-        {
-          $match: {
-            'movieData.isHidden': false,
-            'branchData.isActive': true,
-            'screenData.isActive': true,
-            ...(branchId && { 'branchData._id': new mongoose.Types.ObjectId(branchId) }),
-            ...(movieId && { 'movieData._id': new mongoose.Types.ObjectId(movieId) }),
-            ...(date && { 
-              startTime: {
-                $gte: new Date(date + 'T00:00:00.000Z'),
-                $lt: new Date(date + 'T23:59:59.999Z')
-              }
-            }),
-            ...(startDate && endDate && {
-              startTime: {
-                $gte: new Date(startDate + 'T00:00:00.000Z'),
-                $lte: new Date(endDate + 'T23:59:59.999Z')
-              }
-            }),
-            ...(!includeExpired && { endTime: { $gte: new Date() } })
-          }
-        },
-        // Project results
+        { $lookup: { from: 'movies', localField: 'movie', foreignField: '_id', as: 'movieData' } },
+        { $lookup: { from: 'screens', localField: 'screen', foreignField: '_id', as: 'screenData' } },
+        { $lookup: { from: 'branches', localField: 'screenData.branch', foreignField: '_id', as: 'branchData' } },
+        { $unwind: { path: '$movieData', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$screenData', preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$branchData', preserveNullAndEmptyArrays: true } }
+      ];
+      
+      const matchStage = {
+        'movieData.isHidden': false, 'branchData.isActive': true, 'screenData.isActive': true,
+        ...(!includeExpired && { endTime: { $gte: new Date() } })
+      };
+
+      if (branchId) matchStage['branchData._id'] = new mongoose.Types.ObjectId(branchId);
+      if (movieId) matchStage['movieData._id'] = new mongoose.Types.ObjectId(movieId);
+
+      // SỬA LỖI MÚI GIỜ TẠI ĐÂY
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        matchStage.startTime = { $gte: startOfDay, $lte: endOfDay };
+      }
+      
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        matchStage.startTime = { $gte: start, $lte: end };
+      }
+      
+      pipeline.push({ $match: matchStage });
+      
+      pipeline.push(
         {
           $project: {
-            _id: 1,
-            startTime: 1,
-            endTime: 1,
-            OccupiedSeat: 1,
-            movie: {
-              _id: '$movieData._id',
-              title: '$movieData.title',
-              description: '$movieData.description',
-              posterURL: '$movieData.posterURL',
-              duration: '$movieData.duration',
-              genre: '$movieData.genre',
-              ageRating: '$movieData.ageRating',
-              ratingsAverage: '$movieData.ratingsAverage'
-            },
-            screen: {
-              _id: '$screenData._id',
-              screenName: '$screenData.screenName',
-              screenType: '$screenData.screenType',
-              totalSeats: '$screenData.totalSeats'
-            },
-            branch: {
-              _id: '$branchData._id',
-              name: '$branchData.name',
-              address: '$branchData.address',
-              city: '$branchData.city'
-            },
-            availableSeats: {
-              $subtract: [
-                { $ifNull: ['$screenData.totalSeats', 0] },
-                { $size: { $ifNull: ['$OccupiedSeat', []] } }
-              ]
-            },
-            dateFormatted: {
-              $dateToString: {
-                format: '%Y-%m-%d',
-                date: '$startTime'
-              }
-            },
-            timeFormatted: {
-              $dateToString: {
-                format: '%H:%M',
-                date: '$startTime'
-              }
-            }
+            _id: 1, startTime: 1, endTime: 1, OccupiedSeat: 1,
+            movie: { _id: '$movieData._id', title: '$movieData.title', posterURL: '$movieData.posterURL', duration: '$movieData.duration', genre: '$movieData.genre', ageRating: '$movieData.ageRating' },
+            screen: { _id: '$screenData._id', screenName: '$screenData.screenName', screenType: '$screenData.screenType', totalSeats: '$screenData.totalSeats' },
+            branch: { _id: '$branchData._id', name: '$branchData.name', address: '$branchData.address' },
+            availableSeats: { $subtract: [{ $ifNull: ['$screenData.totalSeats', 0] }, { $size: { $ifNull: ['$OccupiedSeat', []] } }] },
+            dateFormatted: { $dateToString: { format: '%Y-%m-%d', date: '$startTime', timezone: 'Asia/Ho_Chi_Minh' } },
+            timeFormatted: { $dateToString: { format: '%H:%M', date: '$startTime', timezone: 'Asia/Ho_Chi_Minh' } }
           }
         },
-        // Sort by start time
-        {
-          $sort: {
-            startTime: 1
-          }
-        },
-        {
-          $limit: limit
-        }
-      ];
+        { $sort: { startTime: 1 } },
+        { $limit: limit }
+      );
 
       const schedules = await Schedule.aggregate(pipeline);
       return schedules;
@@ -520,12 +229,6 @@ class ScheduleRetrieverService {
     }
   }
 
-  /**
-   * Combine and rank results from both movie and schedule searches
-   * @param {string} query - User query
-   * @param {Object} options - Search options
-   * @returns {Promise<Object>} Combined results
-   */
   async hybridSearch(query, options = {}) {
     const { limit = 10, includeMovies = true, includeSchedules = true } = options;
     
@@ -533,18 +236,15 @@ class ScheduleRetrieverService {
       const results = {};
       
       if (includeSchedules) {
-        // Search schedules
         results.schedules = await this.searchSchedules(query, {
           ...options,
-          limit: Math.ceil(limit * 0.7) // 70% for schedules
+          limit: Math.ceil(limit * 0.7)
         });
       }
         if (includeMovies) {
-        // Import movie retriever service dynamically to avoid circular dependency
         const MovieRetrieverService = require('./movieRetrieverService');
         const movieRetriever = new MovieRetrieverService();
         
-        // Create analysis object for movie search
         const analysisObject = {
           entities: {
             search_type: 'keyword',
@@ -555,7 +255,7 @@ class ScheduleRetrieverService {
         
         results.movies = await movieRetriever.searchMovies(analysisObject, {
           ...options,
-          limit: Math.ceil(limit * 0.3) // 30% for movies
+          limit: Math.ceil(limit * 0.3)
         });
       }
       
@@ -580,12 +280,6 @@ class ScheduleRetrieverService {
     }
   }
 
-  /**
-   * Format schedule results for chatbot response
-   * @param {Array} schedules - Schedule results
-   * @param {Object} context - Additional context
-   * @returns {Object} Formatted response
-   */
   formatScheduleResults(schedules, context = {}) {
     if (!schedules || schedules.length === 0) {
       return {
