@@ -34,7 +34,7 @@ import { useEffect, useRef } from 'react';
 // Component này nhận prop 'onMinimize' để xử lý sự kiện click
 const ChatWindow = ({ onMinimize }) => {
   // Sử dụng hook chatbot để quản lý tin nhắn và logic
-  const { messages, isLoading, sendMessage, sendQuickAction } = useChatbot();
+  const { messages, isLoading, sendMessage, sendQuickAction, sessionId } = useChatbot();
   
   // Ref để tham chiếu đến message container
   const messagesEndRef = useRef(null);
@@ -119,10 +119,10 @@ const ChatWindow = ({ onMinimize }) => {
                     className="w-6 h-6 rounded-full" 
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <MessageRenderer 
+                <div className="flex-1 min-w-0">                  <MessageRenderer 
                     message={message} 
                     onQuickAction={handleQuickAction}
+                    sessionId={sessionId}
                   />
                 </div>
               </div>

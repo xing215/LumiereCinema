@@ -167,10 +167,10 @@ const API_CONFIG = {
     reportBranches: '/api/reports/branches',            // GET - Branch list (admin only)
     reportBranch: '/api/reports/branch',                // GET - Branch for manager
     revenueSummary: '/api/reports/revenue-summary',     // GET - Revenue summary (query: startDate, endDate, branchId)
-    
-    // ========================= CHATBOT ENDPOINTS =========================
+      // ========================= CHATBOT ENDPOINTS =========================
     // Chatbot endpoints
     chatbotQuery: '/api/chatbot/query',                 // POST - Chatbot query
+    chatbotUpdateContext: '/api/chatbot/update-context', // POST - Update interaction context
     
     // ========================= QR CODE ENDPOINTS =========================
     // QR code generation

@@ -8,7 +8,7 @@ import { ChevronRight, Star } from 'lucide-react';
  * Kiến thức: Component này nhận array of movies từ backend
  * và render thành danh sách compact với quick actions
  */
-const MovieList = ({ movies, onAction, status }) => {
+const MovieList = ({ movies, onAction, status, onMovieInteraction }) => {
   if (!movies || movies.length === 0) {
     return (
       <div className="text-gray-500 text-center p-4">
@@ -16,6 +16,16 @@ const MovieList = ({ movies, onAction, status }) => {
       </div>
     );
   }
+
+  // Report movie list view interaction when component mounts
+  React.useEffect(() => {
+    if (onMovieInteraction && movies && movies.length > 0) {
+      onMovieInteraction(movies, 'list_view', { 
+        count: movies.length, 
+        status 
+      });
+    }
+  }, [movies, onMovieInteraction, status]);
 
   return (
     <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -45,16 +55,29 @@ const MovieList = ({ movies, onAction, status }) => {
               </h4>
 
               {/* Meta info */}
-              <div className="space-y-1 text-xs text-gray-600">
-                {/* Genre */}
-                {movie.genre && (
+              <div className="space-y-1 text-xs text-gray-600">                {/* Age Rating */}
+                {movie.ageRating && (
                   <div className="flex items-center gap-1 flex-wrap">
-                    <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs break-words">
-                      {movie.genre}
+                    <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs break-words">
+                      {movie.ageRating}
                     </span>
-                    {movie.ageRating && (
-                      <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs break-words">
-                        {movie.ageRating}
+                  </div>
+                )}
+
+                {/* Genres - Only show first 2 for compactness */}
+                {movie.genre && Array.isArray(movie.genre) && movie.genre.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {movie.genre.slice(0, 2).map((genre, idx) => (
+                      <span 
+                        key={idx}
+                        className="text-xs bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium"
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                    {movie.genre.length > 2 && (
+                      <span className="text-xs text-gray-400 font-medium">
+                        +{movie.genre.length - 2}
                       </span>
                     )}
                   </div>
@@ -62,14 +85,14 @@ const MovieList = ({ movies, onAction, status }) => {
 
                 {/* Rating & Duration */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {movie.rating && (
+                  {movie.ratingsAverage > 0 && (
                     <div className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                      <span className="text-xs">{movie.rating}</span>
+                      <span className="text-xs">{movie.ratingsAverage.toFixed(1)}</span>
                     </div>
                   )}
                   {movie.duration && (
-                    <span className="text-xs">{movie.duration}</span>
+                    <span className="text-xs">{movie.duration}min</span>
                   )}
                 </div>
 
@@ -82,9 +105,17 @@ const MovieList = ({ movies, onAction, status }) => {
               </div>              {/* Quick Actions */}
               {movie.quick_actions && movie.quick_actions.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {movie.quick_actions.map((action, actionIndex) => (                    <button
+                  {movie.quick_actions.map((action, actionIndex) => (
+                    <button
                       key={actionIndex}
-                      onClick={() => {                        const actionWithData = {
+                      onClick={() => {
+                        // Report quick action interaction
+                        onMovieInteraction && onMovieInteraction(movie, 'quick_action', {
+                          action: action.action,
+                          text: action.text
+                        });
+                        
+                        const actionWithData = {
                           ...action,
                           data: {
                             ...action.data,
@@ -93,7 +124,8 @@ const MovieList = ({ movies, onAction, status }) => {
                           }
                         };
                         onAction(actionWithData);
-                      }}className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
+                      }}
+                      className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-1 rounded text-xs font-medium hover:from-purple-600 hover:to-indigo-700 transition-all break-words"
                     >
                       {action.text}
                     </button>
@@ -103,7 +135,11 @@ const MovieList = ({ movies, onAction, status }) => {
             </div>            {/* Arrow for detailed view */}
             <div className="flex-shrink-0 flex items-center">
               <button
-                onClick={() => {                  const movieDetailsAction = {
+                onClick={() => {
+                  // Report movie details click interaction
+                  onMovieInteraction && onMovieInteraction(movie, 'details_click');
+                  
+                  const movieDetailsAction = {
                     action: 'movie_details',
                     data: { movie_id: movie._id || movie.id }
                   };

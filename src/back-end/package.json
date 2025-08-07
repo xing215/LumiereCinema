@@ -1,10 +1,12 @@
 {
   "name": "lumiere-backend",
   "version": "1.0.0",
-  "main": "app.js",
-  "scripts": {
+  "main": "app.js",  "scripts": {
     "start": "node app.js",
-    "dev": "concurrently \"redis-server.exe\" \"nodemon app.js\""
+    "dev": "concurrently \"redis-server.exe\" \"nodemon app.js\"",
+    "test-rag": "node testRAGSetup.js",
+    "generate-embeddings": "node scripts/generateInitialEmbeddings.js",
+    "rag-setup": "npm run test-rag && npm run generate-embeddings"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
