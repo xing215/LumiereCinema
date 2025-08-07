@@ -267,7 +267,7 @@ const SeatLayout = ({
             {/* Seat Layout Container */}
             <div 
                 ref={containerRef}
-                className={`w-full h-full rounded-xl relative ${needsScrolling ? 'overflow-auto ring-1 ring-white no-scrollbar' : 'overflow-hidden flex justify-center items-center'}`}
+                className={`w-full h-full rounded-xl relative ${needsScrolling ? 'overflow-auto ring-1 ring-white' : 'overflow-hidden flex justify-center items-center'}`}
             >
                 {loading && !clearSessionLoading ? (
                     <div className="md:text-md h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white mx-2">

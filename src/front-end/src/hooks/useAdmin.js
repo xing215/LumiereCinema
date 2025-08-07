@@ -152,7 +152,9 @@ export const useGetPromotions = () => {
     setError(null);
     
     try {
-      const data = await promotionService.getAllPromotions(token);
+      const response = await promotionService.getAllPromotions(token);
+      // Backend returns direct array of promotions
+      const data = Array.isArray(response) ? response : [];
       setPromotions(data);
       return { success: true, data };
     } catch (err) {
@@ -177,8 +179,9 @@ export const useAddPromotion = () => {
     setError(null);
     
     try {
-      const data = await promotionService.createPromotion(promotionData, token);
-      return { success: true, data };
+      const response = await promotionService.createPromotion(promotionData, token);
+      // Backend returns { message: '...', promotion: {...} }
+      return { success: true, data: response.promotion || response };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add promotion';
       setError(errorMessage);
@@ -201,8 +204,9 @@ export const useUpdatePromotion = () => {
     setError(null);
     
     try {
-      const data = await promotionService.updatePromotion(promotionId, promotionData, token);
-      return { success: true, data };
+      const response = await promotionService.updatePromotion(promotionId, promotionData, token);
+      // Backend returns { message: '...', promotion: {...} }
+      return { success: true, data: response.promotion || response };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to update promotion';
       setError(errorMessage);
@@ -225,8 +229,9 @@ export const useRemovePromotion = () => {
     setError(null);
     
     try {
-      const data = await promotionService.deletePromotion(promotionId, token);
-      return { success: true, data };
+      const response = await promotionService.deletePromotion(promotionId, token);
+      // Backend returns { message: '...' }
+      return { success: true, data: response };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to remove promotion';
       setError(errorMessage);
