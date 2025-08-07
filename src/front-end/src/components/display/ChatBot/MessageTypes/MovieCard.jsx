@@ -54,18 +54,43 @@ const MovieCard = ({ movie, onAction, quickActions = [], onMovieInteraction }) =
         </h3>
 
         {/* Meta Info */}
-        <div className="space-y-1 text-xs text-gray-600">
-          {/* Genre & Age Rating */}
+        <div className="space-y-1 text-xs text-gray-600">          {/* Genre & Age Rating */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs font-medium break-words">
-              {movie.genre}
-            </span>
+            {/* Genres - Only show first 1 genre and +n for others */}
+            {movie.genre && (
+              <div className="flex flex-wrap gap-1">
+                {Array.isArray(movie.genre) ? (
+                  <>
+                    <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs font-medium">
+                      {movie.genre[0]}
+                    </span>
+                    {movie.genre.length > 1 && (
+                      <span className="text-xs text-gray-400 font-medium">
+                        +{movie.genre.length - 1}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  // If genre is a string, split by comma and show first one
+                  <>
+                    <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs font-medium">
+                      {movie.genre.split(',')[0].trim()}
+                    </span>
+                    {movie.genre.split(',').length > 1 && (
+                      <span className="text-xs text-gray-400 font-medium">
+                        +{movie.genre.split(',').length - 1}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
             {movie.ageRating && (
               <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs font-medium break-words">
                 {movie.ageRating}
               </span>
             )}
-          </div>          {/* Duration & Release Date */}
+          </div>{/* Duration & Release Date */}
           <div className="flex items-center gap-4 flex-wrap">
             {movie.duration && (
               <div className="flex items-center gap-1">
@@ -79,10 +104,8 @@ const MovieCard = ({ movie, onAction, quickActions = [], onMovieInteraction }) =
                 <span className="text-xs">{movie.releaseDate}</span>
               </div>
             )}
-          </div>
-
-          {/* Rating */}
-          {movie.rating && (
+          </div>          {/* Rating */}
+          {movie.rating && movie.rating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 text-yellow-500 fill-current" />
               <span className="text-xs">{movie.rating}</span>

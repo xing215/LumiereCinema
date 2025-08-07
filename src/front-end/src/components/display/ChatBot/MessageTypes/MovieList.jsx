@@ -55,16 +55,29 @@ const MovieList = ({ movies, onAction, status, onMovieInteraction }) => {
               </h4>
 
               {/* Meta info */}
-              <div className="space-y-1 text-xs text-gray-600">
-                {/* Genre */}
-                {movie.genre && (
+              <div className="space-y-1 text-xs text-gray-600">                {/* Age Rating */}
+                {movie.ageRating && (
                   <div className="flex items-center gap-1 flex-wrap">
-                    <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs break-words">
-                      {movie.genre}
+                    <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs break-words">
+                      {movie.ageRating}
                     </span>
-                    {movie.ageRating && (
-                      <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs break-words">
-                        {movie.ageRating}
+                  </div>
+                )}
+
+                {/* Genres - Only show first 2 for compactness */}
+                {movie.genre && Array.isArray(movie.genre) && movie.genre.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {movie.genre.slice(0, 2).map((genre, idx) => (
+                      <span 
+                        key={idx}
+                        className="text-xs bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium"
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                    {movie.genre.length > 2 && (
+                      <span className="text-xs text-gray-400 font-medium">
+                        +{movie.genre.length - 2}
                       </span>
                     )}
                   </div>
@@ -72,14 +85,14 @@ const MovieList = ({ movies, onAction, status, onMovieInteraction }) => {
 
                 {/* Rating & Duration */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {movie.rating && (
+                  {movie.ratingsAverage > 0 && (
                     <div className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                      <span className="text-xs">{movie.rating}</span>
+                      <span className="text-xs">{movie.ratingsAverage.toFixed(1)}</span>
                     </div>
                   )}
                   {movie.duration && (
-                    <span className="text-xs">{movie.duration}</span>
+                    <span className="text-xs">{movie.duration}min</span>
                   )}
                 </div>
 
