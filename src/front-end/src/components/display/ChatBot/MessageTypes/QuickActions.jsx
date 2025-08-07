@@ -8,9 +8,8 @@ import React from 'react';
  * từ backend response và render thành buttons
  */
 const QuickActions = ({ suggestions = [], quickActions = [], onAction }) => {
-  // Combine suggestions and quickActions
+  // Only show quickActions, remove suggestions
   const allActions = [
-    ...suggestions.map(s => ({ ...s, type: 'suggestion' })),
     ...(Array.isArray(quickActions) ? quickActions.map(qa => ({ ...qa, type: 'action' })) : [])
   ];
   if (allActions.length === 0) return null;
