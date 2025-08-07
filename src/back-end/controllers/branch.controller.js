@@ -3,6 +3,7 @@ const Snack = require('../models/Snack.js');
 const Movie = require('../models/Movie.js');
 const Schedule = require('../models/Schedule.js');
 const Screen = require('../models/Screen.js');
+const User = require('../models/User.js');
 const mongoose = require('mongoose');
 const { redisClient } = require('../config/redis.config.js');
 const CacheManager = require('../utils/cacheManager.js');
@@ -922,34 +923,81 @@ const deleteMovieSchedule = async (req, res) => {
 /**
  * @desc    Get all movie schedules for a branch
  * @route   GET /api/branches/:branchId/schedules
- * @access  Branch Manager (restricted to their assigned branch)
+ * @access  Branch Manager (restricted to their assigned branch), Cashier, Customer
  */
 const getMovieSchedules = async (req, res) => {
   try {
     const { branchId } = req.params;
     const { movieId, screenId, fromDate, toDate, page = 1, limit = 50, pagination = false } = req.query;
+    const userId = req.user && req.user?.id ? req.user?.id : null;
 
-    // 1. Validate branch manager permissions
-    if (!req.user.roles.includes('branchmanager') && !req.user.roles.includes('administrator')) {
-      return res.status(403).json({ 
-        message: 'Only branch managers and administrators can view schedules.' 
-      });
+    // 1. Get user information
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId).lean();
     }
 
-    // 2. Check if branch manager belongs to this branch
-    if ((req.user.roles.includes('branchmanager') && !req.user.roles.includes('administrator')) && (!req.user.branch || req.user.branch.toString() !== branchId)) {
-      return res.status(403).json({ 
-        message: 'You can only view schedules for your assigned branch.' 
-      });
+    // 2. Determine access permissions and time filtering based on user role
+    const now = new Date();
+    let timeMatchConditions = {};
+    let accessLevel = 'customer'; // default
+
+    if (req.user && req.user.roles) {
+      if (req.user.roles.includes('branchmanager') || req.user.roles.includes('administrator')) {
+        accessLevel = 'branchmanager';
+        // Branch managers can see all schedules (past, present, future)
+        // No time filtering applied
+      } else if (req.user.roles.includes('cashier')) {
+        accessLevel = 'cashier';
+        // Cashiers can sell tickets for ongoing movies (endTime > now)
+        timeMatchConditions.endTime = { $gt: now };
+      } else {
+        accessLevel = 'customer';
+        // Customers can only see future schedules (startTime > now)
+        timeMatchConditions.startTime = { $gt: now };
+      }
+    } else {
+      // No user authentication - treat as customer
+      accessLevel = 'customer';
+      timeMatchConditions.startTime = { $gt: now };
     }
 
-    // 3. Validate branch ID format
+    // 3. Validate branch manager permissions for management functions
+    if (accessLevel === 'branchmanager') {
+      // Check if branch manager belongs to this branch (administrators can access any branch)
+      if (req.user.roles.includes('branchmanager') && !req.user.roles.includes('administrator')) {
+        if (!req.user.branch || req.user.branch.toString() !== branchId) {
+          return res.status(403).json({ 
+            message: 'You can only view schedules for your assigned branch.' 
+          });
+        }
+      }
+    }
+
+    // 4. Validate branch ID format
     if (!mongoose.Types.ObjectId.isValid(branchId)) {
       return res.status(400).json({ message: 'Invalid branch ID format.' });
     }
 
-    // 4. Check cache first
-    const cacheKey = `schedules:branch:${branchId}`;
+    // 5. If movieId is provided, validate format and apply customer/cashier logic
+    if (movieId) {
+      if (!mongoose.Types.ObjectId.isValid(movieId)) {
+        return res.status(400).json({ message: 'Invalid movie ID format.' });
+      }
+      
+      // For customers and cashiers with specific movieId, apply the getSchedulesByBranch logic
+        return await getSchedulesByBranchLogic(req, res, branchId, movieId, user, accessLevel);
+    } else {
+      // If movieId is null, only branch managers can see all movies
+      if (accessLevel !== 'branchmanager') {
+        return res.status(403).json({ 
+          message: 'Only branch managers can view all movie schedules. Please specify a movieId.' 
+        });
+      }
+    }
+
+    // 6. Check cache first (for branch managers)
+    const cacheKey = `schedules:branch:${branchId}:${movieId || 'all'}:${accessLevel}`;
     try {
       const cachedSchedules = await redisClient.get(cacheKey);
       if (cachedSchedules) {
@@ -962,7 +1010,7 @@ const getMovieSchedules = async (req, res) => {
       console.warn('Cache error:', cacheError);
     }
 
-    // 5. Build aggregation pipeline
+    // 7. Build aggregation pipeline
     const pipeline = [
       // Stage 1: Lookup screens to filter by branch
       {
@@ -979,7 +1027,8 @@ const getMovieSchedules = async (req, res) => {
       // Stage 2: Match schedules for this branch
       {
         $match: {
-          'screenData.branch': new mongoose.Types.ObjectId(branchId)
+          'screenData.branch': new mongoose.Types.ObjectId(branchId),
+          ...timeMatchConditions
         }
       }
     ];
@@ -988,9 +1037,6 @@ const getMovieSchedules = async (req, res) => {
     const matchConditions = {};
 
     if (movieId) {
-      if (!mongoose.Types.ObjectId.isValid(movieId)) {
-        return res.status(400).json({ message: 'Invalid movie ID format.' });
-      }
       matchConditions.movie = new mongoose.Types.ObjectId(movieId);
     }
 
@@ -1002,7 +1048,7 @@ const getMovieSchedules = async (req, res) => {
     }
 
     if (fromDate || toDate) {
-      matchConditions.startTime = {};
+      matchConditions.startTime = { ...matchConditions.startTime };
       if (fromDate) {
         const fromDateTime = new Date(fromDate);
         if (isNaN(fromDateTime.getTime())) {
@@ -1035,7 +1081,10 @@ const getMovieSchedules = async (req, res) => {
 
     pipeline.push({ $unwind: '$movieData' });
 
-    // Stage 4: Project final structure
+    // Stage 4: Filter out hidden movies
+    pipeline.push({ $match: { 'movieData.isHidden': false } });
+
+    // Stage 5: Project final structure
     pipeline.push({
       $project: {
         _id: 1,
@@ -1062,56 +1111,58 @@ const getMovieSchedules = async (req, res) => {
       }
     });
 
-    // Stage 5: Sort by start time
+    // Stage 6: Sort by start time
     pipeline.push({ $sort: { startTime: 1 } });
     let response = {};
 
-    // 6. Execute aggregation with pagination
+    // 8. Execute aggregation with pagination
     if (pagination === 'true') {
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
-    const skip = (pageNum - 1) * limitNum;
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
 
-    const [schedules, totalCount] = await Promise.all([
-      Schedule.aggregate([...pipeline, { $skip: skip }, { $limit: limitNum }]),
-      Schedule.aggregate([...pipeline, { $count: 'total' }])
-    ]);
-    const total = totalCount.length > 0 ? totalCount[0].total : 0;
+      const [schedules, totalCount] = await Promise.all([
+        Schedule.aggregate([...pipeline, { $skip: skip }, { $limit: limitNum }]),
+        Schedule.aggregate([...pipeline, { $count: 'total' }])
+      ]);
+      const total = totalCount.length > 0 ? totalCount[0].total : 0;
 
-    // 7. Prepare response
-    response = {
-     schedules,
-      pagination: {
-        currentPage: pageNum,
-        totalPages: Math.ceil(total / limitNum),
-        totalSchedules: total,
-        hasNextPage: pageNum < Math.ceil(total / limitNum),
-        hasPrevPage: pageNum > 1
-      },
-      filters: {
-        branchId,
-        movieId: movieId || null,
-        screenId: screenId || null,
-        fromDate: fromDate || null,
-        toDate: toDate || null
-      }
-    };
-  } else {
-    // If pagination is not enabled, just return all results
-    const schedules = await Schedule.aggregate(pipeline);
-    response = {
-      schedules,
-      filters: {
-        branchId,
-        movieId: movieId || null,
-        screenId: screenId || null,
-        fromDate: fromDate || null,
-        toDate: toDate || null
-      }
-    };
-  }
+      // 9. Prepare response
+      response = {
+        schedules,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(total / limitNum),
+          totalSchedules: total,
+          hasNextPage: pageNum < Math.ceil(total / limitNum),
+          hasPrevPage: pageNum > 1
+        },
+        filters: {
+          branchId,
+          movieId: movieId || null,
+          screenId: screenId || null,
+          fromDate: fromDate || null,
+          toDate: toDate || null
+        },
+        accessLevel
+      };
+    } else {
+      // If pagination is not enabled, just return all results
+      const schedules = await Schedule.aggregate(pipeline);
+      response = {
+        schedules,
+        filters: {
+          branchId,
+          movieId: movieId || null,
+          screenId: screenId || null,
+          fromDate: fromDate || null,
+          toDate: toDate || null
+        },
+        accessLevel
+      };
+    }
 
-    // 8. Cache the result for 5 minutes
+    // 10. Cache the result for 5 minutes
     try {
       await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
     } catch (cacheError) {
@@ -1126,6 +1177,145 @@ const getMovieSchedules = async (req, res) => {
       message: 'Server error', 
       error: process.env.NODE_ENV === 'development' ? error.message : undefined 
     });
+  }
+};
+
+/**
+ * Helper function that implements getSchedulesByBranch logic for customers and cashiers
+ */
+const getSchedulesByBranchLogic = async (req, res, branchId, movieId, user, accessLevel) => {
+  try {
+    // Build aggregation pipeline similar to getSchedulesByBranch
+    const now = new Date();
+    console.log('Access Level:', accessLevel);
+    const timeMatch = accessLevel === 'cashier' || accessLevel === 'administrator' || accessLevel === 'branchmanager'
+      ? { endTime: { $gt: now } }
+      : { startTime: { $gt: now } };
+
+    const pipeline = [
+      { $match: { branch: new mongoose.Types.ObjectId(branchId), isActive: true } },
+      {
+        $lookup: {
+          from: 'schedules',
+          let: { screenId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$screen', '$$screenId'] },
+                movie: new mongoose.Types.ObjectId(movieId),
+                ...timeMatch
+              }
+            },
+            { $sort: { startTime: 1 } }
+          ],
+          as: 'schedules'
+        }
+      },
+      { $match: { 'schedules.0': { $exists: true } } },
+      { $unwind: '$schedules' },
+      {
+        $lookup: {
+          from: 'movies',
+          localField: 'schedules.movie',
+          foreignField: '_id',
+          as: 'movieData'
+        }
+      },
+      { $unwind: '$movieData' },
+      { $match: { 'movieData.isHidden': false } },
+      {
+        $lookup: {
+          from: 'seatholds',
+          let: { scheduleId: '$schedules._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$schedule', '$$scheduleId'] },
+                expiresAt: { $gt: new Date() }
+              }
+            },
+            { $project: { seatNumber: 1, expiresAt: 1, holdReason: 1 } }
+          ],
+          as: 'seatHolds'
+        }
+      },
+      {
+        $addFields: {
+          'schedules.totalSeats': { $multiply: ['$size.rows', '$size.columns'] },
+          'schedules.occupiedSeatsCount': { $size: { $ifNull: ['$schedules.OccupiedSeat', []] } },
+          'schedules.heldSeatsCount': { $size: '$seatHolds' },
+          'schedules.heldSeats': '$seatHolds'
+        }
+      },
+      {
+        $addFields: {
+          'schedules.availableSeatsCount': {
+            $subtract: [
+              '$schedules.totalSeats',
+              { $add: ['$schedules.occupiedSeatsCount', '$schedules.heldSeatsCount'] }
+            ]
+          }
+        }
+      },
+      {
+        $project: {
+          screenInfo: {
+            _id: '$_id',
+            screenName: '$screenName',
+            screenType: '$screenType',
+            totalSeats: '$schedules.totalSeats',
+            size: '$size'
+          },
+          schedule: {
+            _id: '$schedules._id',
+            startTime: '$schedules.startTime',
+            endTime: '$schedules.endTime',
+            movie: {
+              _id: '$movieData._id',
+              title: '$movieData.title',
+              duration: '$movieData.duration',
+              genre: '$movieData.genre',
+              posterURL: '$movieData.posterURL',
+              rating: '$movieData.rating'
+            },
+            seatInfo: {
+              totalSeats: '$schedules.totalSeats',
+              occupiedSeats: { $ifNull: ['$schedules.OccupiedSeat', []] },
+              occupiedSeatsCount: '$schedules.occupiedSeatsCount',
+              heldSeats: '$schedules.heldSeats',
+              heldSeatsCount: '$schedules.heldSeatsCount',
+              availableSeatsCount: '$schedules.availableSeatsCount'
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$screenInfo._id',
+          screenInfo: { $first: '$screenInfo' },
+          schedules: { $push: '$schedule' }
+        }
+      }
+    ];
+
+    const result = await Screen.aggregate(pipeline);
+
+    const screens = result.map(screenData => ({
+      screenInfo: screenData.screenInfo,
+      schedules: screenData.schedules
+    }));
+
+    return res.status(200).json({
+      movieFilter: movieId,
+      totalScreens: screens.length,
+      totalSchedules: screens.reduce((sum, screen) => sum + screen.schedules.length, 0),
+      screens: screens,
+      accessLevel
+    });
+
+  } catch (error) {
+    console.error('Error in getSchedulesByBranchLogic:', error);
+    throw error;
   }
 };
 

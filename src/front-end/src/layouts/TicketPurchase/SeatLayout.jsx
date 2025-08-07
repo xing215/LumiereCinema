@@ -52,6 +52,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
     const [miniMapDimensions, setMiniMapDimensions] = useState({ width: 0, height: 0 });
     const [viewportRect, setViewportRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
     const [hideMiniMap, setHideMiniMap] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const rowKeys = Object.keys(seatMap).sort();
 
     useEffect(() => {
@@ -111,19 +112,92 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
         const clickX = e.clientX - miniMapRect.left;
         const clickY = e.clientY - miniMapRect.top;
 
+        navigateToPosition(clickX, clickY);
+    };
+
+    const handleMiniMapMouseDown = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        handleMiniMapClick(e);
+    };
+
+    const handleMiniMapMouseMove = (e) => {
+        if (!isDragging || !containerRef.current || !miniMapRef.current) return;
+
+        const miniMapRect = miniMapRef.current.getBoundingClientRect();
+        const moveX = e.clientX - miniMapRect.left;
+        const moveY = e.clientY - miniMapRect.top;
+
+        navigateToPosition(moveX, moveY);
+    };
+
+    const handleMiniMapMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleMiniMapTouchStart = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        const touch = e.touches[0];
+        const miniMapRect = miniMapRef.current.getBoundingClientRect();
+        const touchX = touch.clientX - miniMapRect.left;
+        const touchY = touch.clientY - miniMapRect.top;
+        navigateToPosition(touchX, touchY);
+    };
+
+    const handleMiniMapTouchMove = (e) => {
+        if (!isDragging || !containerRef.current || !miniMapRef.current) return;
+        e.preventDefault();
+        
+        const touch = e.touches[0];
+        const miniMapRect = miniMapRef.current.getBoundingClientRect();
+        const touchX = touch.clientX - miniMapRect.left;
+        const touchY = touch.clientY - miniMapRect.top;
+
+        navigateToPosition(touchX, touchY);
+    };
+
+    const handleMiniMapTouchEnd = () => {
+        setIsDragging(false);
+    };
+
+    const navigateToPosition = (x, y) => {
+        if (!containerRef.current || !miniMapRef.current) return;
+
+        // Clamp coordinates to minimap bounds
+        const clampedX = Math.max(0, Math.min(x, miniMapDimensions.width));
+        const clampedY = Math.max(0, Math.min(y, miniMapDimensions.height));
+
         // Convert minimap coordinates to scroll position
         const scaleX = containerRef.current.scrollWidth / miniMapDimensions.width;
         const scaleY = containerRef.current.scrollHeight / miniMapDimensions.height;
         
-        const newScrollLeft = clickX * scaleX - containerRef.current.clientWidth / 2;
-        const newScrollTop = clickY * scaleY - containerRef.current.clientHeight / 2;
+        const newScrollLeft = clampedX * scaleX - containerRef.current.clientWidth / 2;
+        const newScrollTop = clampedY * scaleY - containerRef.current.clientHeight / 2;
 
         containerRef.current.scrollTo({
             left: Math.max(0, Math.min(newScrollLeft, containerRef.current.scrollWidth - containerRef.current.clientWidth)),
             top: Math.max(0, Math.min(newScrollTop, containerRef.current.scrollHeight - containerRef.current.clientHeight)),
-            behavior: 'smooth'
+            behavior: 'auto' // Changed from 'smooth' for better dragging experience
         });
     };
+
+    // Add global event listeners for mouse events when dragging
+    useEffect(() => {
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMiniMapMouseMove);
+            document.addEventListener('mouseup', handleMiniMapMouseUp);
+            document.addEventListener('touchmove', handleMiniMapTouchMove, { passive: false });
+            document.addEventListener('touchend', handleMiniMapTouchEnd);
+            
+            return () => {
+                document.removeEventListener('mousemove', handleMiniMapMouseMove);
+                document.removeEventListener('mouseup', handleMiniMapMouseUp);
+                document.removeEventListener('touchmove', handleMiniMapTouchMove);
+                document.removeEventListener('touchend', handleMiniMapTouchEnd);
+            };
+        }
+    }, [isDragging, miniMapDimensions]);
 
     if (!needsScrolling || hideMiniMap) return null;
 
@@ -131,12 +205,13 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
         <div className="absolute top-[10%] right-0 bg-black/80 p-2 rounded-lg z-40 border border-gray-600 backdrop-blur-lg">
             <div 
                 ref={miniMapRef}
-                className="relative bg-gray-800 rounded cursor-pointer overflow-hidden"
+                className={`relative bg-gray-800 rounded overflow-hidden select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                 style={{ 
                     width: miniMapDimensions.width, 
                     height: miniMapDimensions.height 
                 }}
-                onClick={handleMiniMapClick}
+                onMouseDown={handleMiniMapMouseDown}
+                onTouchStart={handleMiniMapTouchStart}
             >
                 {/* Mini seat layout */}
                 <div className="absolute inset-0 flex flex-col justify-center items-center">                    
@@ -219,23 +294,68 @@ const SeatLayout = ({
     loading, 
     clearSessionLoading 
 }) => {
+    console.log('SeatLayout rendered with schedule:', seatMap);
     const containerRef = useRef();
     const contentRef = useRef();
     const [needsScrolling, setNeedsScrolling] = useState(false);
+    const [originalSize, setOriginalSize] = useState({ width: 0, height: 0 });
+    const [scale, setScale] = useState(1);
 
     const rowKeys = Object.keys(seatMap).sort();
 
-    // Check if scrolling is needed
+    // Reset original size when seatMap changes
+    useEffect(() => {
+        setOriginalSize({ width: 0, height: 0 });
+    }, [JSON.stringify(seatMap)]);
+
+    // Check if scrolling is needed and calculate scaling
     useEffect(() => {
         const checkSize = () => {
             if (containerRef.current && contentRef.current) {
                 const containerRect = containerRef.current.getBoundingClientRect();
-                const contentRect = contentRef.current.getBoundingClientRect();
                 
-                const exceedsWidth = contentRect.width > containerRect.width;
-                const exceedsHeight = contentRect.height > containerRect.height;
+                // Get original content dimensions (before any transform)
+                let effectiveContentWidth;
+                let effectiveContentHeight;
+                
+                if (originalSize.width === 0 || originalSize.height === 0) {
+                    // First time - store original dimensions
+                    const contentRect = contentRef.current.getBoundingClientRect();
+                    const contentStyle = window.getComputedStyle(contentRef.current);
+                    
+                    const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
+                    const paddingRight = parseFloat(contentStyle.paddingRight) || 0;
+                    const paddingTop = parseFloat(contentStyle.paddingTop) || 0;
+                    const paddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
+                    
+                    effectiveContentWidth = contentRect.width - (paddingLeft + paddingRight);
+                    effectiveContentHeight = contentRect.height - (paddingTop + paddingBottom);
+                    
+                    // Store original dimensions
+                    setOriginalSize({
+                        width: effectiveContentWidth,
+                        height: effectiveContentHeight
+                    });
+                } else {
+                    // Use stored original dimensions
+                    effectiveContentWidth = originalSize.width;
+                    effectiveContentHeight = originalSize.height;
+                }
+                
+                const exceedsWidth = effectiveContentWidth > containerRect.width;
+                const exceedsHeight = effectiveContentHeight > containerRect.height;
                 
                 setNeedsScrolling(exceedsWidth || exceedsHeight);
+
+                // Calculate scale for non-scrolling mode
+                if (!exceedsWidth && !exceedsHeight) {
+                    const widthScale = containerRect.width / (effectiveContentWidth + containerRect.width * 0.1);
+                    const heightScale = containerRect.height / (effectiveContentHeight + containerRect.height * 0.1);
+                    const calculatedScale = Math.max(Math.min(widthScale, heightScale), 1);
+                    setScale(calculatedScale);
+                } else {
+                    setScale(1);
+                }
             }
         };
 
@@ -245,11 +365,12 @@ const SeatLayout = ({
             clearTimeout(timeout);
             window.removeEventListener('resize', checkSize);
         };
-    }, [JSON.stringify(seatMap), loading, clearSessionLoading]);
+    }, [JSON.stringify(seatMap), loading, clearSessionLoading, originalSize]);
 
-    // Reset scrolling when seatMap changes
+    // Reset scrolling and scaling when seatMap changes
     useEffect(() => {
         setNeedsScrolling(false);
+        setScale(1);
         if (containerRef.current) {
             containerRef.current.scrollTo(0, 0);
         }
@@ -277,6 +398,10 @@ const SeatLayout = ({
                     <div 
                         ref={contentRef}
                         className={`flex flex-row rounded-sm gap-2 z-10 min-w-max ${needsScrolling ? 'p-8' : ''}`}
+                        style={{
+                            transform: needsScrolling ? 'none' : `scale(${scale})`,
+                            transformOrigin: 'center center'
+                        }}
                     >
                         {/* Row Labels Column */}
                         <div className="flex flex-col gap-2 min-w-[40px] h-full">

@@ -7,6 +7,9 @@ import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
 import SeatLayout, { Seats, CoupleSeat } from '@/layouts/TicketPurchase/SeatLayout';
 
+// SweetAlert for popup notifications
+import { showWarning } from '@utils/sweetalert.js';
+
 // =============================================================================
 // SEAT NAME COMPONENT
 // =============================================================================
@@ -96,33 +99,68 @@ const SeatsScreen = ({
     const handleSeatToggle = (seatName) => {
         const seatNames = Array.isArray(seatName) ? seatName : [seatName];
         let newSelectedSeats = Array.isArray(movieTicketData?.seats) ? [...movieTicketData.seats] : [];
+        let newAdultTickets = movieTicketData.adultTickets || 0;
+        let newDiscountedTickets = movieTicketData.discountedTickets || 0;
 
         seatNames.forEach(name => {
             if (newSelectedSeats.includes(name)) {
+                // Remove seat and corresponding ticket
                 newSelectedSeats = newSelectedSeats.filter(seat => seat !== name);
+                // Remove one adult ticket first, then discounted if no adult tickets
+                if (newAdultTickets > 0) {
+                    newAdultTickets--;
+                } else if (newDiscountedTickets > 0) {
+                    newDiscountedTickets--;
+                }
             } else {
+                // Add seat and automatically add an adult ticket
                 newSelectedSeats.push(name);
+                newAdultTickets++;
             }
         });
 
-        if (newSelectedSeats.length > (movieTicketData.adultTickets + movieTicketData.discountedTickets)) {
-            alert('Please add more tickets');
-        } else {
-            console.log('Selected seats:', newSelectedSeats);
-            console.log('Current movie ticket data:', movieTicketData);
-            updateMovieTicket({ seats: newSelectedSeats });
+        console.log('Selected seats:', newSelectedSeats);
+        console.log('Adult tickets:', newAdultTickets, 'Discounted tickets:', newDiscountedTickets);
+        
+        updateMovieTicket({ 
+            seats: newSelectedSeats,
+            adultTickets: newAdultTickets,
+            discountedTickets: newDiscountedTickets
+        });
+    };
+
+    const handleTicketChange = (ticketType, changeFn) => {
+        const currentSeats = Array.isArray(movieTicketData?.seats) ? [...movieTicketData.seats] : [];
+        const currentAdult = movieTicketData.adultTickets || 0;
+        const currentDiscounted = movieTicketData.discountedTickets || 0;
+        const totalSeats = currentSeats.length;
+        
+        if (ticketType === 'adult') {
+            const newAdultCount = Math.max(0, Math.min(totalSeats, changeFn(currentAdult)));
+            // Adjust discounted tickets to match total seats
+            const newDiscountedCount = Math.max(0, totalSeats - newAdultCount);
+            
+            updateMovieTicket({ 
+                adultTickets: newAdultCount,
+                discountedTickets: newDiscountedCount
+            });
+        } else if (ticketType === 'discounted') {
+            const newDiscountedCount = Math.max(0, Math.min(totalSeats, changeFn(currentDiscounted)));
+            // Adjust adult tickets to match total seats
+            const newAdultCount = Math.max(0, totalSeats - newDiscountedCount);
+            
+            updateMovieTicket({ 
+                adultTickets: newAdultCount,
+                discountedTickets: newDiscountedCount
+            });
         }
     };
 
     const handleNext = () => {
         if (canProceed) {
-            if ((movieTicketData.adultTickets + movieTicketData.discountedTickets) !== movieTicketData?.seats.length) {
-                alert('Please select the same number of seats as tickets.');
-            } else {
-                if (onNext) onNext();
-            }
+            if (onNext) onNext();
         } else {
-            alert('Please select at least one seat before proceeding.');
+            showWarning('No Seats Selected', 'Please select at least one seat before proceeding.', 1000);
         }
     };
 
@@ -148,13 +186,13 @@ const SeatsScreen = ({
                                 ticket_type="Adult"
                                 price={'80,000'}
                                 amount={movieTicketData.adultTickets}
-                                onChange={fn => updateMovieTicket({ adultTickets: fn(movieTicketData.adultTickets) })}
+                                onChange={fn => handleTicketChange('adult', fn)}
                             />
                             <TicketSelect
                                 ticket_type="Student/ Elders"
                                 price={'45,000'}
                                 amount={movieTicketData.discountedTickets}
-                                onChange={fn => updateMovieTicket({ discountedTickets: fn(movieTicketData.discountedTickets) })}
+                                onChange={fn => handleTicketChange('discounted', fn)}
                                 hover_message='Please show your ID at the ticket counter.'
                             />
                         </div>

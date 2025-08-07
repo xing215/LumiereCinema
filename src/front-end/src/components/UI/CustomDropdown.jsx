@@ -50,12 +50,12 @@ const CustomDropdown = ({
     optionTextSize = 'text-sm sm:text-base md:text-lg', // Custom text size for options
     allowOtherInput = false, // Allow custom text input
     forceFillLabel = false, // Force fill label even if value is empty
-    width = 'w-full' // New: custom width
+    width = 'w-full', // New: custom width
+    hideNoOptionMessage = false
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const dropdownRef = useRef(null);
-
     // Filter options based on search input
     const filteredOptions = options.filter((option) => {
         if (!value || !allowOtherInput) return true;
@@ -190,9 +190,7 @@ const CustomDropdown = ({
             )}
 
             {isOpen && (
-                <div
-                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 overflow-y-scroll max-h-[50vh] rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}
-                >
+                <div className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 overflow-y-scroll max-h-[30vh] rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}>
                     {filteredOptions.length > 0 ? (
                         filteredOptions.map((option, index) => (
                             <button
@@ -205,13 +203,15 @@ const CustomDropdown = ({
                             </button>
                         ))
                     ) : (
-                        <div className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} opacity-60`}>
-                            No options found
-                        </div>
+                        !hideNoOptionMessage && (
+                            <div className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} opacity-60`}>
+                                No options found
+                            </div>
+                        )
                     )}
                 </div>
             )}
-        </div>
+        </div> 
     );
 };
 

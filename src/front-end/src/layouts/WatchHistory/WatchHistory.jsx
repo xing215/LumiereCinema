@@ -1,4 +1,3 @@
-import SideBar from "@/layouts/UserProfile/SideBar";
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import CustomDropdown from "@/components/UI/CustomDropdown";
@@ -415,42 +414,13 @@ const WatchHistory = () => {
     }
 
     return (
-    <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
+    <div className="overflow-hidden relative flex w-full items-center justify-center">
             
             <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
-                <div className="block md:hidden w-[95%] h-auto pb-3">
-                    <CustomDropdown name="discount"
-                        placeholder=""
-                        value={accountPage}
-                        onChange={handleInputChange}
-                        bgColor="indigo-700 backdrop-blur-[30px]"
-                        inputBgColor="pink-400"
-                        variant={'figma'}
-                        hoverColor="purple-700"
-                        borderColor=""
-                        textColor="white"
-                        dropdownTextColor="white"
-                        height="h-10"
-                        inputTextSize="text-md"
-                        optionTextSize="text-sm"
-                        openDirection='down'
-                        textAlign="left"
-                        options={[
-                            { value: 'Information', label: 'Information' },
-                            { value: 'Wishlist', label: 'Wishlist' },
-                            { value: 'Watch history', label: 'Watch history' },
-                            { value: 'Lunar points', label: 'Lunar points' },
-                        ]}
-                    />
-                </div>
-                {/* Sidebar - Ẩn trên mobile */}
-                <div className="hidden md:block w-[25%] h-auto">
-                    <SideBar />
-                </div>
                 {/* Main Content */}
-                <div className="relative w-full h-auto md:w-[72%]">
-                <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
-                    <div className="p-6 md:p-8 w-full mx-auto">
+                <div className="relative w-full h-auto">
+
+                    <div className=" w-full mx-auto">
                         {/* Header */}
                         <div className="flex justify-start items-start mb-6">
                             <h1 className="text-white text-2xl md:text-3xl font-bold font-['Libre_Franklin']">

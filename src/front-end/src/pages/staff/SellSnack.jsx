@@ -149,7 +149,7 @@ const SellSnack = () => {
 
     const goToNextStep = () => {
         if (currentStep === MENU_STEPS.SNACK && (!snackTicketData.snackList || snackTicketData.snackList.length === 0)) {
-            alert('Please select at least one snack before proceeding.');
+            showWarning('No Snacks Selected', 'Please select at least one snack before proceeding.', 1000);
             return;
         }
         setCurrentStep(prev => prev + 1);

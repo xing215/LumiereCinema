@@ -18,7 +18,7 @@ const formatDateMMDD = dateStr => {
     const d = new Date(dateStr + 'T00:00:00');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    return `${mm}/${dd}`;
+    return `${dd}/${mm}`;
 };
 
 // =============================================================================
@@ -30,7 +30,8 @@ const Schedule = ({ schedules = [], loading, onScheduleSelect }) => {
     // STATE AND DATA PROCESSING
     // =============================================================================
 
-    const uniqueDates = [...new Set(schedules.map(s => getDateString(s.startTime)))].sort();
+    const uniqueDates = [...new Set(schedules.map(s => getDateString(s.startTime)))]
+        .sort((a, b) => new Date(a) - new Date(b));
     const [selectedDate, setSelectedDate] = useState(uniqueDates[0] || null);
 
     useEffect(() => {
@@ -41,7 +42,7 @@ const Schedule = ({ schedules = [], loading, onScheduleSelect }) => {
 
     const filteredSchedules = selectedDate
         ? schedules
-            .filter(s => getDateString(s.startTime) === selectedDate && s.availableSeatsCount > 0)
+            .filter(s => getDateString(s.startTime) === selectedDate)
             .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
         : [];
 
@@ -78,7 +79,7 @@ const Schedule = ({ schedules = [], loading, onScheduleSelect }) => {
                                     filteredSchedules.map(schedule => (
                                         <button
                                             key={schedule._id}
-                                            className="px-5 py-1 rounded-xl w-[23%] bg-zinc-300/60 text-white mix-blend-color-dodge shadow hover:bg-zinc-300/80 cursor-pointer transition flex flex-col items-center"
+                                            className={`px-5 py-1 rounded-xl w-[23%]  text-white mix-blend-color-dodge shadow ${schedule.availableSeatsCount <= 0 ? 'bg-zinc-300/30' : 'hover:bg-zinc-300/80 bg-zinc-300/60 cursor-pointer'} transition flex flex-col items-center`}
                                             onClick={() => onScheduleSelect(schedule)}
                                             disabled={schedule.availableSeatsCount <= 0}
                                         >

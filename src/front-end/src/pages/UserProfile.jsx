@@ -3,13 +3,33 @@ import ChatBot from '@components/display/ChatBot';
 import { Title } from "@components/UI/label.jsx";
 import Footer from "@layouts/LandingPage/Footer.jsx";
 import Profile from "@/layouts/UserProfile/UserProfile";
-
+import { useLocation } from "react-router-dom";
+import { ROUTES } from '@routes/routeConfig';
 
 const UserProfile = () => {
+    const location = useLocation();
+    
+    // Determine the title based on the current route
+    const getPageTitle = () => {
+        const pathname = location.pathname;
+        switch (pathname) {
+            case ROUTES.PROFILE:
+                return "ACCOUNT";
+            case ROUTES.WISHLIST:
+                return "WISHLIST";
+            case ROUTES.WATCH_HISTORY:
+                return "WATCH HISTORY";
+            case ROUTES.LUNAR_POINT:
+                return "LUNAR POINTS";
+            default:
+                return "ACCOUNT";
+        }
+    };
+
     return (
         <div className="overflow-y-hidden overflow-hidden relative flex flex-col h-auto min-h-screen w-screen overflow-x-hidden bg-slate-950">
             <Header />
-            <Title text="ACCOUNT" />
+            <Title text={getPageTitle()} />
             <Profile />
             <div className="h-10 w-screen lg:h-20" />
             <div className="pointer-events-none absolute top-[60px] -left-[20px] h-20 w-20 rounded-full bg-purple-600/60 mix-blend-lighten blur-[100px] sm:top-[80px] sm:-left-[30px] sm:h-28 sm:w-28 md:top-[100px] md:-left-[50px] md:h-36 md:w-36 lg:top-[135px] lg:-left-[71px] lg:h-44 lg:w-44" />

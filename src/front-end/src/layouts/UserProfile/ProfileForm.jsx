@@ -174,7 +174,7 @@ if (formData.gender.toLowerCase() !== (profile?.gender || '').toLowerCase()) Upd
     }
 
     return (
-        <div className="flex flex-col gap-3 justify-start items-start w-full px-4sm:px-0 max-w-[690px]">
+        <div className="flex flex-col gap-3 justify-start items-start w-[90%] px-4sm:px-0 max-w-[690px]">
             <div className="w-full justify-start text-white text-3xl font-bold font-['Libre_Franklin']">Information</div>
 
             {updateError && (

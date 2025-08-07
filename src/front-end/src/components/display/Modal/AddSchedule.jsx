@@ -305,6 +305,7 @@ const AddScheduleModal = ({
                                     type="time"
                                     name="startTime"
                                     value={formData.startTime}
+                                    onChange={handleInputChange}
                                     className="bg-opacity-70 h-10 disabled:bg-zinc-300/5 disabled:text-white disabled:ring-1 disabled:ring-amber-50 w-full rounded-lg bg-zinc-300 px-3 text-black focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 focus:ring-purple-500 focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg"
                                 />
                             </div>

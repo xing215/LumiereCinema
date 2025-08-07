@@ -24,9 +24,6 @@ import TicketPurchase from '@pages/TicketPurchase';
 import AboutUs from '@pages/AboutUs';
 import SnackPurchase from '@pages/SnackPurchase.jsx';
 import UserProfile from '@pages/UserProfile.jsx';
-import LunarPointsPage from '@pages/LunarPoints.jsx';
-import WatchHistoryPage from '@/pages/WatchHistory';
-import WishlistPage from '@/pages/Wishlist.jsx';
 import SellTicket from '@pages/staff/SellTicket.jsx';
 import SellSnack from '@pages/staff/SellSnack.jsx';
 
@@ -171,7 +168,7 @@ export const routeConfig = [
 
     {
         path: ROUTES.WATCH_HISTORY,
-        component: WatchHistoryPage,
+        component: UserProfile,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']
@@ -179,7 +176,7 @@ export const routeConfig = [
 
     {
         path: ROUTES.LUNAR_POINT,
-        component: LunarPointsPage,
+        component: UserProfile,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']
@@ -187,7 +184,7 @@ export const routeConfig = [
 
     {
         path: ROUTES.WISHLIST,
-        component: WishlistPage,
+        component: UserProfile,
         type: 'customer',
         requiresAuth: true,
         allowedRoles: ['customer']
