@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { prepareScheduleDocument, generateEmbedding } = require('../utils/embeddingService');
 
 const scheduleSchema = new mongoose.Schema({
   // Reference to the movie being screened
@@ -44,7 +45,9 @@ const scheduleSchema = new mongoose.Schema({
       required: true
     }
   ],
-
+  embedding: { type: [Number] },
+  embeddingText: { type: String },
+  embeddingUpdatedAt: { type: Date }
 }, { timestamps: true });
 
 // Middleware to automatically calculate endTime
@@ -54,6 +57,44 @@ scheduleSchema.pre('save', async function(next) {
     const movie = await Movie.findById(this.movie);
     if (movie && movie.duration) {
       this.endTime = new Date(this.startTime.getTime() + movie.duration * 60 * 1000);
+    }
+  }
+  next();
+});
+
+scheduleSchema.pre('save', async function(next) {
+  // Chỉ chạy khi document là mới hoặc startTime thay đổi (vì embedding phụ thuộc vào ngày giờ)
+  if (this.isNew || this.isModified('startTime')) {
+    try {
+      console.log(`📅 Auto-generating embedding for schedule...`);
+
+      // Lấy các model cần thiết để populate dữ liệu thủ công
+      const Movie = mongoose.model('Movie');
+      const Screen = mongoose.model('Screen');
+      
+      // Lấy thông tin chi tiết của movie và screen (bao gồm cả branch)
+      const movie = await Movie.findById(this.movie);
+      const screen = await Screen.findById(this.screen).populate('branch');
+
+      if (!movie || !screen || !screen.branch) {
+        console.warn('Skipping embedding generation due to missing populated data.');
+        return next(); // Bỏ qua nếu thiếu dữ liệu liên quan
+      }
+
+      // Tạo một object schedule tạm thời với dữ liệu đã được populate đầy đủ
+      const populatedSchedule = { ...this.toObject(), movie, screen };
+      
+      const textToEmbed = prepareScheduleDocument(populatedSchedule);
+      const embeddingVector = await generateEmbedding(textToEmbed);
+
+      this.embedding = embeddingVector;
+      this.embeddingText = textToEmbed;
+      this.embeddingUpdatedAt = new Date();
+
+      console.log(`✅ Embedding for schedule of "${movie.title}" at "${screen.branch.name}" updated successfully.`);
+
+    } catch (error) {
+      console.error(`❌ Failed to auto-generate embedding for schedule:`, error);
     }
   }
   next();

@@ -29,7 +29,9 @@ const movieSchema = new mongoose.Schema({
   
   // ratingsAverage: { type: Number, default: 0, min: 0, max: 5 },
   // ratingsQuantity: { type: Number, default: 0 },
-  
+  embedding: { type: [Number] },
+  embeddingText: { type: String },
+  embeddingUpdatedAt: { type: Date }
 }, { timestamps: true });
 
 
@@ -64,6 +66,37 @@ movieSchema.virtual('isUpcoming').get(function() {
 // Ensure virtual fields are serialized
 movieSchema.set('toJSON', { virtuals: true });
 movieSchema.set('toObject', { virtuals: true });
+
+movieSchema.pre('save', async function(next) {
+  // `this` ở đây chính là document phim sắp được lưu
+  
+  // Chỉ chạy khi document là mới, hoặc khi các trường văn bản quan trọng bị thay đổi
+  if (this.isNew || this.isModified('title') || this.isModified('description') || this.isModified('genre') || this.isModified('director') || this.isModified('cast')) {
+    try {
+      console.log(`🎬 Auto-generating embedding for movie: "${this.title}"...`);
+      
+      // 1. Chuẩn bị văn bản từ document hiện tại
+      const textToEmbed = prepareMovieDocument(this);
+      
+      // 2. Tạo embedding
+      const embeddingVector = await generateEmbedding(textToEmbed);
+
+      // 3. Gán embedding và các thông tin liên quan vào document
+      this.embedding = embeddingVector;
+      this.embeddingText = textToEmbed;
+      this.embeddingUpdatedAt = new Date();
+      
+      console.log(`✅ Embedding for "${this.title}" updated successfully.`);
+
+    } catch (error) {
+      console.error(`❌ Failed to auto-generate embedding for "${this.title}":`, error);
+      // Không chặn việc lưu, chỉ ghi lại lỗi
+    }
+  }
+  
+  // Tiếp tục quá trình lưu bình thường
+  next();
+});
 
 movieSchema.index({ isHidden: 1, releaseDate: -1 });
 module.exports = mongoose.model('Movie', movieSchema);
