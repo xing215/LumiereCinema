@@ -404,6 +404,26 @@ const getPromotionBannerList = async (req, res) => {
 const createPromotion = async (req, res) => {
   try {
     const data = req.body;
+    // Chuyển appliedLoyaltyRank về uppercase (nếu có)
+    if (data.appliedLoyaltyRank) {
+      data.appliedLoyaltyRank = data.appliedLoyaltyRank.toUpperCase();
+    }
+    const VALID_PRODUCT_TYPES = ['Movie', 'Snack', 'All'];
+
+    if (data.appliedProduct) {
+      const normalized = data.appliedProduct.trim().toLowerCase();
+
+      // Viết hoa chữ cái đầu
+      const capitalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+      if (!VALID_PRODUCT_TYPES.includes(capitalized)) {
+        return res.status(400).json({
+          message: `Invalid appliedProduct value. Must be one of: ${VALID_PRODUCT_TYPES.join(', ')}.`,
+        });
+      }
+
+      data.appliedProduct = capitalized; // Gán lại dạng hợp lệ
+    }
     const exists = await Promotion.findOne({ promotionCode: data.promotionCode });
     if (exists) {
       return res.status(400).json({ message: 'Promotion code already exists.' });
@@ -431,6 +451,31 @@ const updatePromotion = async (req, res) => {
   try {
     const { promotionCode } = req.params;
     const updateData = req.body;
+    if (updateData.appliedLoyaltyRank !== undefined) {
+      // Nếu gửi lên là chuỗi rỗng hoặc chỉ có khoảng trắng hoặc None → chuyển thành null
+      if (typeof updateData.appliedLoyaltyRank === 'string' && updateData.appliedLoyaltyRank.trim() === '' || updateData.appliedLoyaltyRank === 'None') {
+        updateData.appliedLoyaltyRank = null;
+      } else {
+        updateData.appliedLoyaltyRank = updateData.appliedLoyaltyRank.toUpperCase();
+      }
+    }
+
+    const VALID_PRODUCT_TYPES = ['Movie', 'Snack', 'All'];
+
+    if (updateData.appliedProduct) {
+      
+      const normalized = updateData.appliedProduct.trim().toLowerCase();
+
+      const capitalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+      if (!VALID_PRODUCT_TYPES.includes(capitalized)) {
+        return res.status(400).json({
+          message: `Invalid appliedProduct value. Must be one of: ${VALID_PRODUCT_TYPES.join(', ')}.`,
+        });
+      }
+
+      updateData.appliedProduct = capitalized;
+    }
     const promotion = await Promotion.findOneAndUpdate(
       { promotionCode: promotionCode.toUpperCase() },
       updateData,
