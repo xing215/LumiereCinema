@@ -210,7 +210,8 @@ const login = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                roles: user.roles
+                roles: user.roles,
+                loyaltyRank: user.loyaltyRank || null,
             }
         });
 

@@ -56,7 +56,6 @@ const CustomDropdown = ({
     const [isOpen, setIsOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const dropdownRef = useRef(null);
-    console.log('CustomDropdown rendered with options:', options);
     // Filter options based on search input
     const filteredOptions = options.filter((option) => {
         if (!value || !allowOtherInput) return true;

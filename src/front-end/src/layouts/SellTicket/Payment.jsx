@@ -8,6 +8,9 @@ import CustomDropdown from '@components/UI/CustomDropdown.jsx';
 import { useApplyPromotion } from '@hooks/useTicket';
 import PromotionDropdown from '@components/UI/PromotionDropdown';
 
+// SweetAlert for popup notifications
+import { showError, showWarning } from '@utils/sweetalert.js';
+
 // =============================================================================
 // PAYMENT BUTTON COMPONENT
 // =============================================================================
@@ -78,6 +81,7 @@ const Payment = ({
     const [isExpired, setIsExpired] = useState(false);
     const [customerInfo, setCustomerInfo] = useState('');
     const [discountValue, setDiscountValue] = useState('');
+    const [displayingName, setDisplayingName] = useState(false)
     const customerInputRef = useRef(null);
     const discountInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
@@ -138,7 +142,7 @@ const Payment = ({
     useEffect(() => {
         if (appliedPromotion) {
             console.log('Applying promotion:', appliedPromotion);
-            const { snackDiscount: finalSnackDiscount, movieDiscount: finalMovieDiscount } = appliedPromotion;
+            const { snackDiscount: finalSnackDiscount, movieDiscount: finalMovieDiscount, user } = appliedPromotion;
             
             if (finalSnackDiscount !== 0) {
                 updateSnackTicket({ promotion: appliedPromotion.promotion, discount: finalSnackDiscount });
@@ -152,11 +156,26 @@ const Payment = ({
             if (finalMovieDiscount === 0) {
                 updateMovieTicket({ promotion: null, discount: 0 });
             }
+            console.log(user)
+            if(user?.name) {
+                setDisplayingName(true)
+                setCustomerInfo(user?.name)
+            } else {
+                setDisplayingName(true)
+                setCustomerInfo('No user found')
+            }
         }
         
         if (error) {
             console.error('Promotion application error:', error);
-            alert(`Error applying promotion`, error);
+            if(error?.user?.name) {
+                setDisplayingName(true)
+                setCustomerInfo(error?.user?.name)
+            } else {
+                setDisplayingName(true)
+                setCustomerInfo('No user found')
+            }
+            showError('Promotion Error', `Error applying promotion: ${error?.message}`, 1000);
             setDiscountValue('');
             updateMovieTicket({ promotion: null, discount: 0 });
             updateSnackTicket({ promotion: null, discount: 0 });
@@ -169,7 +188,7 @@ const Payment = ({
 
     const handleSelectPayment = async (method) => {
         if (isExpired) {
-            alert('Session has expired. Please start over.');
+            showWarning('Session Expired', 'Session has expired. Please start over.', 1000);
             return;
         }
         await createTicket({
@@ -179,10 +198,13 @@ const Payment = ({
     };
 
     const handleCustomerInfoChange = (e) => {
+        if (displayingName)
+            setDisplayingName(false)
         setCustomerInfo(e.target.value);
     };
 
     const handleCustomerInfoBlurOrEnter = async (e) => {
+        if(!displayingName){
         if (customerInfo.trim()) {
             updateMovieTicket({ 
                 noLoginCustomerInfo: {
@@ -191,8 +213,7 @@ const Payment = ({
                     email: null
                 }
             });
-        }
-        discountInputRef.current?.blur();
+        }}
     };
 
     const handleDiscountChange = (e) => {

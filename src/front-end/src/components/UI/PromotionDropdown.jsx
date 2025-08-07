@@ -46,9 +46,6 @@ const PromotionDropdown = ({
         setPromotions([...publicPromotions, ...allPromotion]);
     } , [publicPromotions, allPromotion]);
 
-    useEffect(() => {
-        console.log('Promotions updated:', promotions);
-    }, [promotions]);
     // Filter promotions based on product type
     const filteredPromotions = promotions.filter(promo => {
         // If productType is 'All', show all promotions

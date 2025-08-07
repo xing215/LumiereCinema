@@ -102,31 +102,32 @@ const getSeatMapBySchedule = async (req, res) => {
     const totalSeats = rows * columns;    // OPTIMIZATION: Use Redis cache for seat layout generation via CacheManager
     const allSeats = await CacheManager.getSeatLayout(rows, columns);    // NEW: Get seat information with types/categories from the database
     const Seat = require('../models/Seat');
-    const SeatCategory = require('../models/SeatCategory');
+    // const SeatCategory = require('../models/SeatCategory');
     
     // First get all seats for the screen
     const seatsWithTypes = await Seat.find({ screen: schedule.screen._id })
       .select('seatNumber category isHidden location')
       .lean();
 
-    // Get all seat categories separately (since category field is shortname string, not ObjectId reference)
-    const seatCategories = await SeatCategory.find({}).select('shortname name Fee FeeForSpecial').lean();
+    // // Get all seat categories separately (since category field is shortname string, not ObjectId reference)
+    // const seatCategories = await SeatCategory.find({}).select('shortname name Fee FeeForSpecial').lean();
     
-    // Create category lookup map
-    const categoryMap = new Map();
-    seatCategories.forEach(cat => {
-      categoryMap.set(cat.shortname, cat);
-    });
+    // // Create category lookup map
+    // const categoryMap = new Map();
+    // seatCategories.forEach(cat => {
+    //   categoryMap.set(cat.shortname, cat);
+    // });
 
     // Create seat type mapping for fast lookup
     const seatTypeMap = new Map();
     seatsWithTypes.forEach(seat => {
-      const category = categoryMap.get(seat.category) || { shortname: 'STANDARD', name: 'Standard', Fee: 0, FeeForSpecial: 0 };
+      // const category = categoryMap.get(seat.category) || { shortname: 'STANDARD', name: 'Standard', Fee: 0, FeeForSpecial: 0 };
       seatTypeMap.set(seat.seatNumber, {
-        category: category.shortname,
-        categoryName: category.name,
-        price: category.Fee,
-        specialPrice: category.FeeForSpecial,
+        category: seat.category || 'STANDARD', // Read category directly as string
+        // price: category.Fee,
+        // specialPrice: category.FeeForSpecial,
+        price: 0,
+        specialPrice: 0,
         isHidden: seat.isHidden,
         location: seat.location
       });
@@ -686,7 +687,12 @@ const calculateDiscountedTotal = async (req, res) => {
           details: {
             ...(snackError && { snackError }),
             ...(movieError && { movieError })
-          }
+          },
+          user: user ? {
+          id: user._id,
+          name: user.name,
+          loyaltyRank: user.loyaltyRank
+        } : null
         }
       });
     }
@@ -701,7 +707,12 @@ const calculateDiscountedTotal = async (req, res) => {
         snackDiscount: hasSnackSuccess ? snackDiscount : 0,
         movieDiscount: hasMovieSuccess ? movieDiscount : 0,
         promotion: promotionCode,
-        ...(Object.keys(warnings).length > 0 && { warnings })
+        ...(Object.keys(warnings).length > 0 && { warnings }),
+        user: user ? {
+          id: user._id,
+          name: user.name,
+          loyaltyRank: user.loyaltyRank
+        } : null
       }
     });
   } catch (error) {

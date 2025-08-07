@@ -1,14 +1,14 @@
 import { useFetchProfile } from "@hooks/useUser";  
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { ROUTES } from '@routes/routeConfig'; 
 
-const MenuItems = ({name, onclick, hide=false, blur=false}) => {
+const MenuItems = ({name, onclick, hide=false, blur=false, isActive=false}) => {
 return (
             <div className="relative w-full flex flex-col justify-start group">
             {hide ? null : <div className="relative w-full h-1 px-3 mix-blend-color-dodge bg-zinc-300/30" />}
             <button
-                className={`relative cursor-pointer w-full h-auto py-3 text-center text-white md:text-md lg:text-lg font-normal font-['Unbounded'] ${blur ? 'group-hover:bg-gradient-to-t group-hover:from-transparent group-hover:to-amber-50/10' :'group-hover:mix-blend-color-dodge group-hover:bg-amber-50/7' }`}
+                className={`relative cursor-pointer w-full h-auto py-3 text-center text-white md:text-md lg:text-lg font-normal font-['Unbounded'] ${isActive ? 'bg-gradient-to-t from-transparent to-amber-50/20' : ''} ${blur ? 'group-hover:bg-gradient-to-t group-hover:from-transparent group-hover:to-amber-50/10' :'group-hover:mix-blend-color-dodge group-hover:bg-amber-50/7' }`}
                 onClick={onclick}
             >
                 {name}
@@ -17,13 +17,15 @@ return (
     );
 };
 
-const SideBar = ({in_lunar_point=false}) => {
-    const { fetchProfile, profile, loading, error } = useFetchProfile();
+const SideBar = ({in_lunar_point=false, onMenuClick, currentStep, user}) => {
+    const [profile, setProfile] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchProfile();
-    }, []);
+        if (user) {
+            setProfile(user);
+        }
+    }, [user]);
     
     function toTitleCase(str) {
         return str?.replace(/\w\S*/g, (txt) =>
@@ -51,21 +53,26 @@ const SideBar = ({in_lunar_point=false}) => {
     };
 
     const handleMenuClick = (menuName) => {
-        switch (menuName) {
-            case 'Information':
-                navigate(ROUTES.PROFILE);
-                break;
-            case 'Wishlist':
-                navigate(ROUTES.WISHLIST);
-                break;
-            case 'Watch history':
-                navigate(ROUTES.WATCH_HISTORY);
-                break;
-            case 'Lunar points':
-                navigate(ROUTES.LUNAR_POINT);
-                break;
-            default:
-                break;
+        if (onMenuClick) {
+            onMenuClick(menuName);
+        } else {
+            // Fallback to original navigation logic
+            switch (menuName) {
+                case 'Information':
+                    navigate(ROUTES.PROFILE);
+                    break;
+                case 'Wishlist':
+                    navigate(ROUTES.WISHLIST);
+                    break;
+                case 'Watch history':
+                    navigate(ROUTES.WATCH_HISTORY);
+                    break;
+                case 'Lunar points':
+                    navigate(ROUTES.LUNAR_POINT);
+                    break;
+                default:
+                    break;
+            }
         }
     };
 
@@ -73,6 +80,14 @@ const SideBar = ({in_lunar_point=false}) => {
     const currentPoints = profile?.loyaltyRank?.lunarPoints || 0;
     const targetPoints = getNextTierTarget(currentRank);
     const progressPercentage = getProgressPercentage(currentRank, currentPoints);
+
+    // Define which menu items are active based on currentStep
+    const MENU_STEPS = {
+        PROFILE: 0,
+        WATCH_HISTORY: 1,
+        WISHLIST: 2,
+        LUNAR_POINTS: 3
+    };
 
     return (
         <div className="relative w-full h-auto rounded-xl overflow-hidden">
@@ -86,19 +101,36 @@ const SideBar = ({in_lunar_point=false}) => {
                 Welcome
             </div>
             <div className=" relative text-white text-md lg:text-lg leading-snug mr-2 font-bold font-['Libre_Franklin'] line-wrap">
-                {loading ? "• • •" :  toTitleCase(profile?.name)}
+                 {toTitleCase(profile?.name)}
             </div>
             </div>
             </div>
-            {loading ? null : <>
-            <MenuItems name="Information" onclick={() => handleMenuClick("Information")} hide={true} />
-            <MenuItems name="Wishlist" onclick={() => handleMenuClick("Wishlist")} />
-            <MenuItems name="Watch history" onclick={() => handleMenuClick("Watch history")} />
-            <MenuItems name="Lunar points" onclick={() => handleMenuClick("Lunar points")} blur={true} />
+            {<>
+            <MenuItems 
+                name="Information" 
+                onclick={() => handleMenuClick("Information")} 
+                hide={true} 
+                isActive={currentStep === MENU_STEPS.PROFILE}
+            />
+            <MenuItems 
+                name="Wishlist" 
+                onclick={() => handleMenuClick("Wishlist")} 
+                isActive={currentStep === MENU_STEPS.WISHLIST}
+            />
+            <MenuItems 
+                name="Watch history" 
+                onclick={() => handleMenuClick("Watch history")} 
+                isActive={currentStep === MENU_STEPS.WATCH_HISTORY}
+            />
+            <MenuItems 
+                name="Lunar points" 
+                onclick={() => handleMenuClick("Lunar points")} 
+                blur={true} 
+                isActive={currentStep === MENU_STEPS.LUNAR_POINTS}
+            />
             </>}
 
-
-            {loading ? null : in_lunar_point ? null : <>
+            {in_lunar_point ? null : <>
                 <div className="relative w-full h-7"/>
                 {/* Points Counter */}
                 <div className="absolute right-2 bottom-3 text-right text-white text-[8px] font-light font-['Unbounded']">

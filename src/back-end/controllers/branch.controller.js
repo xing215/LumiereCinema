@@ -986,9 +986,7 @@ const getMovieSchedules = async (req, res) => {
       }
       
       // For customers and cashiers with specific movieId, apply the getSchedulesByBranch logic
-      if (accessLevel === 'customer' || accessLevel === 'cashier') {
         return await getSchedulesByBranchLogic(req, res, branchId, movieId, user, accessLevel);
-      }
     } else {
       // If movieId is null, only branch managers can see all movies
       if (accessLevel !== 'branchmanager') {
@@ -1189,7 +1187,8 @@ const getSchedulesByBranchLogic = async (req, res, branchId, movieId, user, acce
   try {
     // Build aggregation pipeline similar to getSchedulesByBranch
     const now = new Date();
-    const timeMatch = accessLevel === 'cashier'
+    console.log('Access Level:', accessLevel);
+    const timeMatch = accessLevel === 'cashier' || accessLevel === 'administrator' || accessLevel === 'branchmanager'
       ? { endTime: { $gt: now } }
       : { startTime: { $gt: now } };
 

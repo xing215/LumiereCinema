@@ -7,6 +7,9 @@ import { useState, useEffect } from 'react';
 import SnackSelect from '../../components/UI/SnackSelect';
 import NextNaviButton from '@components/buttons/NaviButton';
 
+// SweetAlert for popup notifications
+import { showWarning } from '@utils/sweetalert.js';
+
 // =============================================================================
 // MAIN SNACK LIST COMPONENT
 // =============================================================================
@@ -23,7 +26,7 @@ const SnackList = ({ snacks = [], loading, updateSnackTicket, snackTicketData, h
         const stock = snackObj?.stock.total ?? Infinity;
         
         if (newQuantity > stock) {
-            alert(`Only ${stock} of this snack is available in stock.`);
+            showWarning('Stock Limit', `Only ${stock} of this snack is available in stock.`, 1000);
             return;
         }
         
@@ -69,8 +72,8 @@ const SnackList = ({ snacks = [], loading, updateSnackTicket, snackTicketData, h
     // =============================================================================
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
-            <div className="flex items-start justify-center h-[80vh] rounded-xl overflow-hidden w-[90%] relative">
+        <div className="flex flex-col items-center justify-center w-full h-full">
+            <div className="flex items-start justify-center h-[80vh] rounded-xl w-[90%] relative">
                 <div className="absolute pointer-events-none inset-0 w-full h-full bg-zinc-300/30 mix-blend-color-dodge"/>
                 
                 <div className='flex flex-col items-start justify-start h-full w-full'>
