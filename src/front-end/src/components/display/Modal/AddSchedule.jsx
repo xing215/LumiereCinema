@@ -39,6 +39,21 @@ const AddScheduleModal = ({
         return `${year}-${month}-${day}`;
     }, []);
 
+    // Utility function to convert Vietnam time to UTC - Consistent across environments
+    const vietnamTimeToUTC = useCallback((vietnamTimeString) => {
+        // Parse the date string components manually to avoid timezone interpretation issues
+        const [datePart, timePart] = vietnamTimeString.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        
+        // Create a date object explicitly in Vietnam timezone (UTC+7)
+        // We create it as if it's UTC first, then subtract 7 hours to get the actual UTC time
+        const vietnamDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        
+        // Now subtract 7 hours to convert from Vietnam time to UTC
+        return new Date(vietnamDate.getTime() - (7 * 3600000));
+    }, []);
+
     // Calculate end time based on movie duration
     const calculateEndTime = useCallback((startTime, durationMinutes) => {
         if (!startTime || !durationMinutes) return '';
@@ -146,11 +161,16 @@ const AddScheduleModal = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Convert Vietnam time back to UTC for database storage
+        const vietnamTimeString = `${formData.date}T${formData.startTime}`;
+        const utcDateTime = vietnamTimeToUTC(vietnamTimeString);
+        
         // Prepare screening data for API
         const screeningData = {
             movieId: formData.movieId,
             screenId: formData.screenId,
-            startTime: `${formData.date}T${formData.startTime}`,
+            startTime: utcDateTime.toISOString(),
         };
         // Find branchId from screens (assume all screens belong to same branch)
         if (!branchId) {
