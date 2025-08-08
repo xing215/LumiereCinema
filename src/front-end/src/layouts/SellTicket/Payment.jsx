@@ -4,7 +4,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import TicketDetail from '@components/UI/TicketDetail';
-import CustomDropdown from '@components/UI/CustomDropdown.jsx';
 import { useApplyPromotion } from '@hooks/useTicket';
 import PromotionDropdown from '@components/UI/PromotionDropdown';
 
@@ -206,15 +205,23 @@ const Payment = ({
     const handleCustomerInfoBlurOrEnter = async (e) => {
         if(!displayingName){
         if (customerInfo.trim()) {
-            updateMovieTicket({ 
+            if (updateMovieTicket) updateMovieTicket({ 
                 noLoginCustomerInfo: {
                     phone: customerInfo.trim(),
                     name: 'in-store customer',
                     email: null
                 }
             });
-        }}
-    };
+            
+            if(snackTicketData) updateSnackTicket({ 
+                noLoginCustomerInfo: {
+                    phone: customerInfo.trim(),
+                    name: 'in-store customer',
+                    email: null
+                }
+            });
+        }
+    };}
 
     const handleDiscountChange = (e) => {
         const newValue = e.target.value;
