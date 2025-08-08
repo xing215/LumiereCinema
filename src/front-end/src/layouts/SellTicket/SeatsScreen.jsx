@@ -107,10 +107,10 @@ const SeatsScreen = ({
                 // Remove seat and corresponding ticket
                 newSelectedSeats = newSelectedSeats.filter(seat => seat !== name);
                 // Remove one adult ticket first, then discounted if no adult tickets
-                if (newAdultTickets > 0) {
-                    newAdultTickets--;
-                } else if (newDiscountedTickets > 0) {
+                if (newDiscountedTickets > 0) {
                     newDiscountedTickets--;
+                } else if (newAdultTickets > 0) {
+                    newAdultTickets--;
                 }
             } else {
                 // Add seat and automatically add an adult ticket
