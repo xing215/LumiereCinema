@@ -25,6 +25,10 @@ const Profile = () => {
     
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.PROFILE);
     const [accountPage, setAccountPage] = useState('Information');
+        // State cho ticket detail view
+    const [showTicketDetail, setShowTicketDetail] = useState(false);
+    const [selectedTicket, setSelectedTicket] = useState(null);
+    
 
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const [currentPath, setCurrentPath] = useState(location.pathname);
@@ -101,7 +105,12 @@ const Profile = () => {
             case MENU_STEPS.PROFILE:
                 return <ProfileForm />;
             case MENU_STEPS.WATCH_HISTORY:
-                return <WatchHistoryComponent />;
+                return <WatchHistoryComponent 
+                    showTicketDetail={showTicketDetail}
+                    setShowTicketDetail={setShowTicketDetail}
+                    selectedTicket={selectedTicket}
+                    setSelectedTicket={setSelectedTicket}
+                />;
             case MENU_STEPS.WISHLIST:
                 return <WishlistComponent />;
             case MENU_STEPS.LUNAR_POINTS:
@@ -113,7 +122,7 @@ const Profile = () => {
 
     return (
         <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
-            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
+            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]">
                 {/* Mobile Dropdown */}
                 <div className="block md:hidden w-[95%] h-auto pb-3">
                     <CustomDropdown 
@@ -143,7 +152,7 @@ const Profile = () => {
                 </div>
                 
                 {/* Desktop Sidebar */}
-                <div className="hidden md:block w-[25%] h-auto">
+                <div className={`hidden h-auto  ${showTicketDetail ? '' : 'md:block w-[25%] '}`}>
                     <SideBar 
                         onMenuClick={handleSidebarMenuClick} 
                         currentStep={currentStep} 
@@ -152,8 +161,8 @@ const Profile = () => {
                 </div>
                 
                 {/* Main Content Area */}
-                <div className="relative w-full h-auto md:w-[72%]">
-                    <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
+                <div className={`relative w-full h-auto  ${showTicketDetail ? ' ' : 'md:w-[72%]'}`}>
+                    <div className={`pointer-events-none absolute inset-0 z-0 rounded-xl ${showTicketDetail ? '' : 'bg-zinc-300/30 mix-blend-color-dodge'} lg:[transform:translate3d(0,0,0)]`} />
                     <div className="p-10 md:pl-12 mx-auto md:mx-0">
                         {renderCurrentMenu()}
                     </div>

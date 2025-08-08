@@ -8,7 +8,9 @@ import TicketDetail from "@/components/UI/TicketDetail";
 import QRCode from "react-qr-code";
 import { toPng } from "html-to-image";
 
-const WatchHistory = () => {
+const WatchHistory = (
+    { showTicketDetail, setShowTicketDetail, selectedTicket, setSelectedTicket }
+) => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -17,10 +19,6 @@ const WatchHistory = () => {
     // Thêm state cho pagination
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
-
-    // State cho ticket detail view
-    const [showTicketDetail, setShowTicketDetail] = useState(false);
-    const [selectedTicket, setSelectedTicket] = useState(null);
 
     // Refs cho ticket detail
     const qrParentRef = useRef(null);
@@ -321,12 +319,12 @@ const WatchHistory = () => {
         };
         
         return (
-            <div className="relative flex w-screen items-center justify-center pt-3 md:pt-7">
-                <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]"
+            <div className="relative flex w-full items-center justify-center">
+                <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]"
                      ref={captureRef}>
                     
                     {/* Main content */}
-                    <div className="relative flex flex-1 flex-col items-center justify-center px-2 sm:px-4 md:px-8">
+                    <div className="relative flex flex-1 flex-col items-center justify-center">
                         
                         {/* Mobile Action Buttons */}
                         <div className="w-auto inline-flex justify-start items-start gap-3.5 py-5 md:hidden">
@@ -416,7 +414,7 @@ const WatchHistory = () => {
     return (
     <div className="overflow-hidden relative flex w-full items-center justify-center">
             
-            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:min-h-[470px] md:w-screen lg:h-auto lg:w-[calc(75vw)]">
+            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]">
                 {/* Main Content */}
                 <div className="relative w-full h-auto">
 
@@ -502,7 +500,7 @@ const WatchHistory = () => {
                                             <div className="flex justify-center items-start pt-0">
                                                 <button
                                                     onClick={() => handleViewTicket(item.id)}
-                                                    className="w-16 h-5 bg-pink-400 rounded-xl shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-pink-300 transition-colors duration-200"
+                                                    className="w-16 h-5 bg-pink-400 rounded-xl shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] cursor-pointer hover:bg-pink-300 transition-colors duration-200"
                                                 >
                                                     <div className="text-center text-white text-[10px] font-bold font-['Unbounded']">
                                                         VIEW
@@ -533,7 +531,7 @@ const WatchHistory = () => {
                                             </div>
                                             <button
                                                 onClick={() => handleViewTicket(item.id)}
-                                                className="w-16 h-6 bg-pink-400 rounded-lg shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-pink-300 transition-colors duration-200 flex-shrink-0"
+                                                className="w-16 h-6 bg-pink-400 rounded-lg shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-pink-300 transition-colors duration-200 cursor-pointer flex-shrink-0"
                                             >
                                                 <div className="text-center text-white text-[10px] font-bold font-['Unbounded']">
                                                     VIEW
