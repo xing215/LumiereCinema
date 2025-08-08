@@ -297,6 +297,21 @@ const ScheduleManagePage = () => {
         return new Date(utcTime + (7 * 3600000)); // UTC+7
     }, []);
     
+    // Utility function to convert Vietnam time to UTC - Consistent across environments
+    const vietnamTimeToUTC = useCallback((vietnamTimeString) => {
+        // Parse the date string components manually to avoid timezone interpretation issues
+        const [datePart, timePart] = vietnamTimeString.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        
+        // Create a date object explicitly in Vietnam timezone (UTC+7)
+        // We create it as if it's UTC first, then subtract 7 hours to get the actual UTC time
+        const vietnamDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        
+        // Now subtract 7 hours to convert from Vietnam time to UTC
+        return new Date(vietnamDate.getTime() - (7 * 3600000));
+    }, []);
+    
     // Utility function to get date string in Vietnam timezone
     const getVietnamDateString = useCallback((date) => {
         const vietnamTime = toVietnamTime(date);
@@ -345,12 +360,6 @@ const ScheduleManagePage = () => {
             // Convert schedule times to Vietnam timezone for comparison
             const scheduleStartTime = toVietnamTime(new Date(schedule.startTime));
             const scheduleEndTime = toVietnamTime(new Date(schedule.endTime));
-            
-
-            
-            // NEW LOGIC: Check if the schedule's "primary day" matches the selected date
-            // For schedules that span midnight, we determine the primary day based on which day
-            // has more of the schedule's duration
             
             // Calculate the schedule's total duration
             const totalDuration = scheduleEndTime.getTime() - scheduleStartTime.getTime();
@@ -576,12 +585,17 @@ const ScheduleManagePage = () => {
                     throw new Error(`Movie "${schedule.movieName}" not found`);
                 }
 
+                // Convert Vietnam time back to UTC for database storage
+                const vietnamTimeString = `${schedule.date}T${schedule.startTime}`;
+                const utcStartDateTime = vietnamTimeToUTC(vietnamTimeString);
+
                 const scheduleData = {
                     movieId: movie._id,
                     screenId: screen._id,
-                    startTime: `${schedule.date}T${schedule.startTime}`,
-                    endTime: `${schedule.date}T${schedule.endTime}`, // Include endTime
+                    startTime: utcStartDateTime.toISOString(),
                 };
+
+                console.log(`Schedule Data:`, scheduleData);
 
                 return scheduleMovieScreening(userBranch._id, scheduleData);
             });
@@ -601,11 +615,12 @@ const ScheduleManagePage = () => {
             handleCloseUploadModal();
             
         } catch (error) {
+            console.error('Error importing schedules:', error);
             alert('Failed to import schedules. Please check the data and try again.');
         } finally {
             setImportLoading(false);
         }
-    }, [userBranch, movies, scheduleMovieScreening, handleScheduleSuccess, handleCloseUploadModal]);
+    }, [userBranch, movies, scheduleMovieScreening, handleScheduleSuccess, handleCloseUploadModal, vietnamTimeToUTC]);
     
 
 
