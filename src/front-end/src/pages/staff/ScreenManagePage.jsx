@@ -10,30 +10,24 @@ import ConfirmButton from '@components/buttons/Staff/ConfirmButton.jsx';
 import CancelButton from '@components/buttons/Staff/CancelButton.jsx';
 import SearchButton from '@components/buttons/Staff/SearchButton.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
-import { useEffect } from 'react'; 
+import { useEffect } from 'react';
 import { useUser } from '@contexts/UserContext';
 import { useGetBranchById } from '@hooks/useBranch';
-import { useScreenManagement } from '@hooks/useScreenManagement'; 
+import { useScreenManagement } from '@hooks/useScreenManagement';
 
 const AddScreenButtons = ({ onConfirm, onCancel, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
-        <ConfirmButton 
-            onClick={onConfirm}
-            disabled={isLoading}
-        />
-        <CancelButton 
-            onClick={onCancel}
-            disabled={isLoading}
-        />
+        <ConfirmButton onClick={onConfirm} disabled={isLoading} />
+        <CancelButton onClick={onCancel} disabled={isLoading} />
     </div>
-); 
+);
 const ScreenManagePage = () => {
     const [showConfirmDeleteScreen, setShowConfirmDeleteScreen] = useState(false);
     const [editedScreenIndex, setEditedScreenIndex] = useState(null);
 
     const { user } = useUser();
     const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
-    
+
     // Use the screen management hook
     const {
         screenData,
@@ -58,7 +52,7 @@ const ScreenManagePage = () => {
         handleCancelEdit,
         onStatusChange,
         fetchScreens, // Add this for refreshing data
-        getScreenByIndex // Add this to get actual screen object
+        getScreenByIndex, // Add this to get actual screen object
     } = useScreenManagement();
 
     const handleDelete = async () => {
@@ -72,13 +66,7 @@ const ScreenManagePage = () => {
         };
 
         if (isAddingScreen) {
-            return (
-                <AddScreenButtons 
-                    onConfirm={handleConfirmAddScreen}
-                    onCancel={handleCancelAddScreen}
-                    isLoading={isUpdating}
-                />
-            );
+            return <AddScreenButtons onConfirm={handleConfirmAddScreen} onCancel={handleCancelAddScreen} isLoading={isUpdating} />;
         } else if (tickedScreens.size > 0) {
             return (
                 <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
@@ -105,19 +93,13 @@ const ScreenManagePage = () => {
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} />
                 <Button />
-                {showConfirmDeleteScreen && (
-                    <ConfirmationModal 
-                        item={tickedScreens.size} 
-                        handleDelete={handleDelete} 
-                        onClose={() => setShowConfirmDeleteScreen(false)} 
-                    />
-                )}
-                <ManageTable 
-                    data={screenData} 
-                    anyTicked={tickedScreens} 
-                    setTickedRows={setTickedScreens} 
-                    onEditSeat={setEditedScreenIndex} 
-                    header={header} 
+                {showConfirmDeleteScreen && <ConfirmationModal item={tickedScreens.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteScreen(false)} />}
+                <ManageTable
+                    data={screenData}
+                    anyTicked={tickedScreens}
+                    setTickedRows={setTickedScreens}
+                    onEditSeat={setEditedScreenIndex}
+                    header={header}
                     columnConfig={screenColumnConfig}
                     editableFields={editableColumns}
                     editingCell={editingCell}
@@ -130,13 +112,7 @@ const ScreenManagePage = () => {
                     isUpdating={isUpdating}
                     loading={loading}
                 />
-                {editedScreenIndex !== null && (
-                    <EditSeatModal 
-                        screenData={getScreenByIndex(editedScreenIndex)} 
-                        onClose={() => setEditedScreenIndex(null)}
-                        onRefresh={fetchScreens}
-                    />
-                )}
+                {editedScreenIndex !== null && <EditSeatModal screenData={getScreenByIndex(editedScreenIndex)} onClose={() => setEditedScreenIndex(null)} onRefresh={fetchScreens} />}
                 <SelectBranchButton isLoading={branchLoading} branchName={userBranch?.name} />
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Screens</div>
             </MobileNotSupported>
@@ -148,4 +124,4 @@ const ScreenManagePage = () => {
     );
 };
 
-export default ScreenManagePage
+export default ScreenManagePage;

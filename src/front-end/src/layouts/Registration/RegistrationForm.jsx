@@ -140,7 +140,7 @@ const RegistrationForm = () => {
         };
 
         const result = await registerUser(registrationData);
-        
+
         if (result.success) {
             setRegistered(true);
         }
@@ -152,7 +152,7 @@ const RegistrationForm = () => {
             {/* Title */}
             <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">REGISTER</h1>
             {registered ? (
-                <p className="mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl font-[Merriweather Sans]">
+                <p className="font-[Merriweather Sans] mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl">
                     Please <b>check your email</b> for a confirmation link to activate your account.
                 </p>
             ) : (
@@ -160,7 +160,10 @@ const RegistrationForm = () => {
                     {/* Login Link */}
                     <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
                         Already have an account?
-                        <span onClick={() => !loading && navigate(ROUTES.LOGIN)} className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                        <span
+                            onClick={() => !loading && navigate(ROUTES.LOGIN)}
+                            className={`ml-1 font-['Libre_Franklin'] text-purple-400 hover:text-purple-300 ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                        >
                             Login
                         </span>
                     </p>

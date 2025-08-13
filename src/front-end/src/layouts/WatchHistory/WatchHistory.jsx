@@ -1,16 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import CustomDropdown from "@/components/UI/CustomDropdown";
+import React, { useEffect, useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import CustomDropdown from '@/components/UI/CustomDropdown';
 import { ROUTES } from '@routes/routeConfig';
-import { useGetWatchHistory } from "@hooks/useUser";
+import { useGetWatchHistory } from '@hooks/useUser';
 
-import TicketDetail from "@/components/UI/TicketDetail";
-import QRCode from "react-qr-code";
-import { toPng } from "html-to-image";
+import TicketDetail from '@/components/UI/TicketDetail';
+import QRCode from 'react-qr-code';
+import { toPng } from 'html-to-image';
 
-const WatchHistory = (
-    { showTicketDetail, setShowTicketDetail, selectedTicket, setSelectedTicket }
-) => {
+const WatchHistory = ({ showTicketDetail, setShowTicketDetail, selectedTicket, setSelectedTicket }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -31,9 +29,8 @@ const WatchHistory = (
         const { name, value } = e.target;
         setAccountPage(value);
         if (value === 'Information') {
-           navigate(ROUTES.PROFILE);
-        }
-        else if (value === 'Wishlist') {
+            navigate(ROUTES.PROFILE);
+        } else if (value === 'Wishlist') {
             navigate(ROUTES.WISHLIST);
         } else if (value === 'Watch history') {
             navigate(ROUTES.WATCH_HISTORY);
@@ -44,7 +41,7 @@ const WatchHistory = (
 
     // Handle View Ticket
     const handleViewTicket = (ticketId) => {
-        const ticket = userWatchHistoryData.find(item => item.id === ticketId);
+        const ticket = userWatchHistoryData.find((item) => item.id === ticketId);
         if (ticket) {
             setSelectedTicket(ticket);
             setShowTicketDetail(true);
@@ -77,7 +74,7 @@ const WatchHistory = (
                 qrParentRef.current.style.height = 'auto';
                 const qrH = qrParentRef.current.offsetHeight;
                 const ticketH = ticketDetailRef.current.offsetHeight;
-                
+
                 setMaxHeight(Math.max(qrH, ticketH));
                 ticketDetailRef.current.style.height = `${maxHeight}px`;
                 qrParentRef.current.style.height = `${maxHeight}px`;
@@ -86,14 +83,14 @@ const WatchHistory = (
 
         updateSize();
         const handleResize = () => updateSize();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, [maxHeight, showTicketDetail]);
 
     // Download function (từ MenuTicketDisplay)
     const handleDownload = async () => {
         if (!captureRef.current) {
-            console.error("Capture element not found");
+            console.error('Capture element not found');
             return;
         }
 
@@ -107,14 +104,14 @@ const WatchHistory = (
 
             const bgElements = captureRef.current.querySelectorAll('[class*="bg-zinc-300"]');
             const originalStyles = [];
-            
+
             bgElements.forEach((el, index) => {
                 originalStyles[index] = {
                     element: el,
                     className: el.className,
-                    style: el.getAttribute('style') || ''
+                    style: el.getAttribute('style') || '',
                 };
-                
+
                 el.style.backgroundColor = '#070A32';
                 el.style.opacity = '1';
                 el.style.mixBlendMode = 'normal';
@@ -130,8 +127,8 @@ const WatchHistory = (
                 height: rect.height,
                 style: {
                     transform: 'scale(1)',
-                    transformOrigin: 'top left'
-                }
+                    transformOrigin: 'top left',
+                },
             });
 
             // Restore styles
@@ -152,15 +149,14 @@ const WatchHistory = (
                 }
             });
 
-            const link = document.createElement("a");
+            const link = document.createElement('a');
             link.download = `ticket-${selectedTicket?.id || 'download'}.png`;
             link.href = dataUrl;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
         } catch (err) {
-            console.error("Download failed:", err);
+            console.error('Download failed:', err);
         }
     };
 
@@ -197,33 +193,34 @@ const WatchHistory = (
     //     console.log('Error state:', watchHistoryError);
     // }, [watchHistory, watchHistoryLoading, watchHistoryError]);
 
-
     // Hàm format dữ liệu watch history
     const formatWatchHistoryData = (tickets) => {
         if (!tickets || !Array.isArray(tickets)) {
             return [];
         }
 
-        return tickets.map(ticket => {
+        return tickets.map((ticket) => {
             // Backend đã populate, dùng trực tiếp
             const schedule = ticket.schedule;
             const branch = ticket.branch;
             const movie = schedule?.movie;
             const screen = schedule?.screen;
-            
+
             // Format time và date
             const startTime = schedule?.startTime ? new Date(schedule.startTime) : null;
             const endTime = schedule?.endTime ? new Date(schedule.endTime) : null;
             const createAt = ticket.createdAt ? new Date(ticket.createdAt) : null;
-            
+
             const formatTime = (date) => {
-                return date ? date.toLocaleTimeString('vi-VN', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false 
-                }) : 'N/A';
+                return date
+                    ? date.toLocaleTimeString('vi-VN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false,
+                      })
+                    : 'N/A';
             };
-            
+
             const formatDate = (date) => {
                 return date ? date.toLocaleDateString('vi-VN') : 'N/A';
             };
@@ -231,43 +228,39 @@ const WatchHistory = (
             return {
                 // Ticket Code
                 id: ticket.ticketCode,
-                
+
                 // Movie title từ populated movie
                 movie: movie?.title || 'Unknown Movie',
-                
+
                 // Start time formatted
                 time: formatTime(createAt),
-                
+
                 // End time formatted
                 endTime: formatTime(endTime),
-                
+
                 // Date từ startTime
                 date: formatDate(createAt),
-                
+
                 // Branch name
                 location: branch?.name || 'Unknown Location',
-                
+
                 // Screen name từ populated screen
                 screenName: screen?.screenName || 'Unknown Screen',
 
                 total: ticket.total || 0,
-                
+
                 // Seats từ ticket
                 seats: ticket.seats || [],
-                seatsText: ticket.seats && ticket.seats.length > 0 
-                    ? ticket.seats.join(', ') 
-                    : 'N/A',
-                
+                seatsText: ticket.seats && ticket.seats.length > 0 ? ticket.seats.join(', ') : 'N/A',
+
                 // Raw data để debug
                 rawTicket: ticket,
                 scheduleId: schedule?._id,
                 branchId: branch?._id,
-                movieId: movie?._id
+                movieId: movie?._id,
             };
         });
     };
-
-    
 
     // Cập nhật loading state
     const isLoading = watchHistoryLoading;
@@ -302,7 +295,6 @@ const WatchHistory = (
 
     // Ticket Detail View
     if (showTicketDetail && selectedTicket) {
-
         // Transform rawTicket để match với TicketDetail expectation
         const transformedTicketData = {
             ...selectedTicket.rawTicket,
@@ -311,98 +303,75 @@ const WatchHistory = (
                 screen: {
                     ...selectedTicket.rawTicket.schedule?.screen,
                     // Map screenName -> name để TicketDetail có thể đọc được
-                    name: selectedTicket.rawTicket.schedule?.screen?.screenName || 
-                        selectedTicket.rawTicket.schedule?.screen?.name || 
-                        'N/A'
-                }
-            }
+                    name: selectedTicket.rawTicket.schedule?.screen?.screenName || selectedTicket.rawTicket.schedule?.screen?.name || 'N/A',
+                },
+            },
         };
-        
+
         return (
             <div className="relative flex w-full items-center justify-center">
-                <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]"
-                     ref={captureRef}>
-                    
+                <div className="relative flex h-full w-full flex-row justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]" ref={captureRef}>
                     {/* Main content */}
                     <div className="relative flex flex-1 flex-col items-center justify-center">
-                        
                         {/* Mobile Action Buttons */}
-                        <div className="w-auto inline-flex justify-start items-start gap-3.5 py-5 md:hidden">
+                        <div className="inline-flex w-auto items-start justify-start gap-3.5 py-5 md:hidden">
                             <button
-                                className="group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300"
+                                className="group relative flex aspect-auto h-9 w-40 flex-row items-center justify-center transition-all duration-300"
                                 onClick={handleBackToList}
-                                style={{ cursor: "pointer" }}
+                                style={{ cursor: 'pointer' }}
                             >
-                                <div className="absolute h-full w-full rounded-xl mix-blend-screen bg-zinc-300/30 transition-all duration-300 group-hover:bg-zinc-400/30" />
-                                <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']">
-                                    BACK TO LIST
-                                </span>
+                                <div className="absolute h-full w-full rounded-xl bg-zinc-300/30 mix-blend-screen transition-all duration-300 group-hover:bg-zinc-400/30" />
+                                <span className="relative z-10 w-36 text-center font-['Unbounded'] text-sm font-bold text-white">BACK TO LIST</span>
                             </button>
                             <button
-                                className="group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300"
+                                className="group relative flex aspect-auto h-9 w-40 flex-row items-center justify-center transition-all duration-300"
                                 onClick={handleDownload}
-                                style={{ cursor: "pointer" }}
+                                style={{ cursor: 'pointer' }}
                             >
                                 <div className="absolute h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 group-hover:bg-purple-600" />
-                                <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']">
-                                    DOWNLOAD
-                                </span>
+                                <span className="relative z-10 w-36 text-center font-['Unbounded'] text-sm font-bold text-white">DOWNLOAD</span>
                             </button>
                         </div>
 
                         {/* Ticket Content */}
-                        <div className="flex flex-col md:flex-row items-center justify-center w-full gap-4 md:gap-5">
-                            
+                        <div className="flex w-full flex-col items-center justify-center gap-4 md:flex-row md:gap-5">
                             {/* QR Code Section - Chỉ hiển thị TICKET, không có SNACK */}
                             <div
-                                className="flex flex-row md:flex-col h-auto w-[90vw] min-h-[100px] md:w-[21vw] items-center justify-center rounded-xl bg-zinc-300/30 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)] py-3 md:py-0"
+                                className="flex h-auto min-h-[100px] w-[90vw] flex-row items-center justify-center rounded-xl bg-zinc-300/30 py-3 mix-blend-color-dodge md:w-[21vw] md:flex-col md:py-0 lg:[transform:translate3d(0,0,0)]"
                                 ref={qrParentRef}
                                 style={maxHeight ? { height: maxHeight + 'px' } : { height: 'auto' }}
                             >
-                                <div className="w-[90%] flex flex-col justify-center items-center py-2">
-                                    <div className="h-auto text-center justify-start text-white text-base font-black font-['Unbounded']">
-                                        TICKET
-                                    </div>
-                                    <div className="bg-white p-1 rounded-lg border-4 border-white flex items-center justify-center">
+                                <div className="flex w-[90%] flex-col items-center justify-center py-2">
+                                    <div className="h-auto justify-start text-center font-['Unbounded'] text-base font-black text-white">TICKET</div>
+                                    <div className="flex items-center justify-center rounded-lg border-4 border-white bg-white p-1">
                                         <QRCode value={JSON.stringify(selectedTicket.id)} size={qrSize} />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Ticket Detail Section */}
-                            <div
-                                className="h-full w-[90vw] md:w-[48vw] pb-5 md:pb-0"
-                                ref={ticketDetailRef}
-                                style={maxHeight ? { height: maxHeight + 'px' } : { height: 'auto' }}
-                            >
-                                <TicketDetail
-                                    movieTicketData={transformedTicketData}
-                                    snackTicketData={null}
-                                />
+                            <div className="h-full w-[90vw] pb-5 md:w-[48vw] md:pb-0" ref={ticketDetailRef} style={maxHeight ? { height: maxHeight + 'px' } : { height: 'auto' }}>
+                                <TicketDetail movieTicketData={transformedTicketData} snackTicketData={null} />
                             </div>
                         </div>
 
                         {/* Desktop Action Buttons */}
-                        <div className="w-auto hidden md:inline-flex justify-start items-start gap-3.5 py-5">
+                        <div className="hidden w-auto items-start justify-start gap-3.5 py-5 md:inline-flex">
                             <button
-                                className="group relative flex aspect-auto w-40 h-9 flex-row items-center justify-center transition-all duration-300"
+                                className="group relative flex aspect-auto h-9 w-40 flex-row items-center justify-center transition-all duration-300"
                                 onClick={handleBackToList}
-                                style={{ cursor: "pointer" }}
+                                style={{ cursor: 'pointer' }}
                             >
-                                <div className="absolute h-full w-full rounded-xl mix-blend-screen bg-zinc-300/30 transition-all duration-300 group-hover:bg-zinc-400/30" />
-                                <span className="relative z-10 w-36 text-center text-white text-sm font-bold font-['Unbounded']">
-                                    BACK TO LIST
-                                </span>
+                                <div className="absolute h-full w-full rounded-xl bg-zinc-300/30 mix-blend-screen transition-all duration-300 group-hover:bg-zinc-400/30" />
+                                <span className="relative z-10 w-36 text-center font-['Unbounded'] text-sm font-bold text-white">BACK TO LIST</span>
                             </button>
                             <button
-                                className="group relative flex aspect-auto w-72 h-9 flex-row items-center justify-center transition-all duration-300"
+                                className="group relative flex aspect-auto h-9 w-72 flex-row items-center justify-center transition-all duration-300"
                                 onClick={handleDownload}
-                                style={{ cursor: "pointer" }}
+                                style={{ cursor: 'pointer' }}
                             >
                                 <div className="absolute h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 group-hover:bg-purple-600" />
-                                <span className="relative z-10 w-60 text-center text-white text-base font-bold font-['Unbounded']">
-                                    DOWNLOAD
-                                </span>
+                                <span className="relative z-10 w-60 text-center font-['Unbounded'] text-base font-bold text-white">DOWNLOAD</span>
                             </button>
                         </div>
                     </div>
@@ -412,150 +381,113 @@ const WatchHistory = (
     }
 
     return (
-    <div className="overflow-hidden relative flex w-full items-center justify-center">
-            
-            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]">
+        <div className="relative flex w-full items-center justify-center overflow-hidden">
+            <div className="relative flex h-full w-full flex-col items-center justify-center rounded-xl md:w-screen md:flex-row md:items-start md:justify-start md:gap-3 lg:h-auto lg:w-[calc(75vw)]">
                 {/* Main Content */}
-                <div className="relative w-full h-auto">
-
-                    <div className=" w-full mx-auto">
+                <div className="relative h-auto w-full">
+                    <div className="mx-auto w-full">
                         {/* Header */}
-                        <div className="flex justify-start items-start mb-6">
-                            <h1 className="text-white text-2xl md:text-3xl font-bold font-['Libre_Franklin']">
-                                Watch History
-                            </h1>
+                        <div className="mb-6 flex items-start justify-start">
+                            <h1 className="font-['Libre_Franklin'] text-2xl font-bold text-white md:text-3xl">Watch History</h1>
                         </div>
-
 
                         {/* Loading State */}
                         {isLoading && (
-                            <div className="w-full text-center py-8">
-                                <p className="text-white text-sm font-['Unbounded'] opacity-60">
-                                    Loading watch history...
-                                </p>
+                            <div className="w-full py-8 text-center">
+                                <p className="font-['Unbounded'] text-sm text-white opacity-60">Loading watch history...</p>
                             </div>
                         )}
 
                         {/* Error State */}
                         {watchHistoryError && (
-                            <div className="w-full text-center py-8">
-                                <p className="text-red-400 text-sm font-['Unbounded']">
-                                    Error: {watchHistoryError}
-                                </p>
+                            <div className="w-full py-8 text-center">
+                                <p className="font-['Unbounded'] text-sm text-red-400">Error: {watchHistoryError}</p>
                             </div>
                         )}
 
                         {/* Watch History Content */}
-                        <div className="w-full flex flex-col justify-start items-start gap-1">
-                            
+                        <div className="flex w-full flex-col items-start justify-start gap-1">
                             {/* Table Header - Desktop Grid */}
-                            <div className="hidden md:grid w-full grid-cols-[0px_100px_1fr_70px_1fr_80px] gap-2 items-center">
+                            <div className="hidden w-full grid-cols-[0px_100px_1fr_70px_1fr_80px] items-center gap-2 md:grid">
                                 <div /> {/* Spacer */}
-                                <div className="text-white text-[10px] font-medium font-['Unbounded']">
-                                    Ticket ID
-                                </div>
-                                <div className="text-white text-[10px] font-medium font-['Unbounded']">
-                                    Movie
-                                </div>
-                                <div className="text-white text-[10px] font-medium font-['Unbounded'] text-center">
-                                    Time
-                                </div>
-                                <div className="text-white text-[10px] font-medium font-['Unbounded'] text-center">
-                                    Location
-                                </div>
+                                <div className="font-['Unbounded'] text-[10px] font-medium text-white">Ticket ID</div>
+                                <div className="font-['Unbounded'] text-[10px] font-medium text-white">Movie</div>
+                                <div className="text-center font-['Unbounded'] text-[10px] font-medium text-white">Time</div>
+                                <div className="text-center font-['Unbounded'] text-[10px] font-medium text-white">Location</div>
                                 <div /> {/* Button spacer */}
                             </div>
 
                             {/* Header Divider - Ẩn trên mobile */}
-                            <div className="hidden md:block self-stretch h-0.5 mix-blend-color-dodge bg-zinc-300/30" />
+                            <div className="hidden h-0.5 self-stretch bg-zinc-300/30 mix-blend-color-dodge md:block" />
 
                             {/* Table Rows - Desktop Grid */}
-                            <div className="hidden md:block w-full">
+                            <div className="hidden w-full md:block">
                                 {currentPageData.map((item, index) => (
                                     <React.Fragment key={item.id}>
-                                        <div className="w-full grid grid-cols-[0px_100px_1fr_70px_1fr_80px] gap-2 items-start py-2 min-h-[32px]">
+                                        <div className="grid min-h-[32px] w-full grid-cols-[0px_100px_1fr_70px_1fr_80px] items-start gap-2 py-2">
                                             <div /> {/* Spacer */}
-                                            
                                             {/* Ticket ID */}
-                                            <div className="text-white text-[10px] font-medium font-['Unbounded']">
-                                                {item.id}
-                                            </div>
-                                            
+                                            <div className="font-['Unbounded'] text-[10px] font-medium text-white">{item.id}</div>
                                             {/* Movie Title */}
-                                            <div className="text-white text-[10px] font-['Unbounded'] leading-tight break-words pr-2">
-                                                <span >{item.movie}</span>
+                                            <div className="pr-2 font-['Unbounded'] text-[10px] leading-tight break-words text-white">
+                                                <span>{item.movie}</span>
                                             </div>
-                                            
                                             {/* Time & Date */}
-                                            <div className="text-center text-white text-[10px] font-medium font-['Unbounded'] leading-tight whitespace-nowrap">
-                                                {item.time}<br/>{item.date}
+                                            <div className="text-center font-['Unbounded'] text-[10px] leading-tight font-medium whitespace-nowrap text-white">
+                                                {item.time}
+                                                <br />
+                                                {item.date}
                                             </div>
-                                            
                                             {/* Location */}
-                                            <div className="text-center text-white text-[10px] font-medium font-['Unbounded'] leading-tight break-words px-1">
-                                                {item.location}
-                                            </div>
-                                            
+                                            <div className="px-1 text-center font-['Unbounded'] text-[10px] leading-tight font-medium break-words text-white">{item.location}</div>
                                             {/* View Button */}
-                                            <div className="flex justify-center items-start pt-0">
+                                            <div className="flex items-start justify-center pt-0">
                                                 <button
                                                     onClick={() => handleViewTicket(item.id)}
-                                                    className="w-16 h-5 bg-pink-400 rounded-xl shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] cursor-pointer hover:bg-pink-300 transition-colors duration-200"
+                                                    className="h-5 w-16 cursor-pointer rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-colors duration-200 hover:bg-pink-300"
                                                 >
-                                                    <div className="text-center text-white text-[10px] font-bold font-['Unbounded']">
-                                                        VIEW
-                                                    </div>
+                                                    <div className="text-center font-['Unbounded'] text-[10px] font-bold text-white">VIEW</div>
                                                 </button>
                                             </div>
                                         </div>
-                                        
+
                                         {/* Row Divider */}
-                                        <div className="w-full h-0.5 mix-blend-color-dodge bg-zinc-300/30" />
+                                        <div className="h-0.5 w-full bg-zinc-300/30 mix-blend-color-dodge" />
                                     </React.Fragment>
                                 ))}
                             </div>
 
                             {/* Mobile Layout - Card Style*/}
                             {currentPageData.map((item, index) => (
-                                <div key={`mobile-${item.id}`} className="block md:hidden w-full bg-zinc-800/30 rounded-lg p-4 mb-3">
+                                <div key={`mobile-${item.id}`} className="mb-3 block w-full rounded-lg bg-zinc-800/30 p-4 md:hidden">
                                     <div className="flex flex-col gap-3">
                                         {/* Movie Title & Ticket ID */}
-                                        <div className="flex justify-between items-start">
+                                        <div className="flex items-start justify-between">
                                             <div className="flex-1 pr-2">
-                                                <div className="text-white text-sm font-bold font-['Unbounded'] leading-tight mb-1">
+                                                <div className="mb-1 font-['Unbounded'] text-sm leading-tight font-bold text-white">
                                                     <span className="font-bold">{item.movie}</span>
                                                 </div>
-                                                <div className="text-white/70 text-xs font-light font-['Unbounded']">
-                                                    Ticket ID: {item.id}
-                                                </div>
+                                                <div className="font-['Unbounded'] text-xs font-light text-white/70">Ticket ID: {item.id}</div>
                                             </div>
                                             <button
                                                 onClick={() => handleViewTicket(item.id)}
-                                                className="w-16 h-6 bg-pink-400 rounded-lg shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-pink-300 transition-colors duration-200 cursor-pointer flex-shrink-0"
+                                                className="h-6 w-16 flex-shrink-0 cursor-pointer rounded-lg bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-colors duration-200 hover:bg-pink-300"
                                             >
-                                                <div className="text-center text-white text-[10px] font-bold font-['Unbounded']">
-                                                    VIEW
-                                                </div>
+                                                <div className="text-center font-['Unbounded'] text-[10px] font-bold text-white">VIEW</div>
                                             </button>
                                         </div>
 
                                         {/* Time & Location */}
-                                        <div className="flex justify-between items-start gap-4">
+                                        <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">
-                                                <div className="text-white/70 text-xs font-light font-['Unbounded'] mb-1">
-                                                    Time & Date
-                                                </div>
-                                                <div className="text-white text-xs font-medium font-['Unbounded']">
+                                                <div className="mb-1 font-['Unbounded'] text-xs font-light text-white/70">Time & Date</div>
+                                                <div className="font-['Unbounded'] text-xs font-medium text-white">
                                                     {item.time} • {item.date}
                                                 </div>
                                             </div>
                                             <div className="flex-1">
-                                                <div className="text-white/70 text-xs font-light font-['Unbounded'] mb-1">
-                                                    Location
-                                                </div>
-                                                <div className="text-white text-xs font-medium font-['Unbounded'] ">
-                                                    {item.location}
-                                                </div>
+                                                <div className="mb-1 font-['Unbounded'] text-xs font-light text-white/70">Location</div>
+                                                <div className="font-['Unbounded'] text-xs font-medium text-white">{item.location}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -564,35 +496,32 @@ const WatchHistory = (
 
                             {/* Empty State */}
                             {currentPageData.length === 0 && (
-                                <div className="w-full text-center py-8">
-                                    <p className="text-white text-sm font-['Unbounded'] opacity-60">
-                                        No watch history found
-                                    </p>
+                                <div className="w-full py-8 text-center">
+                                    <p className="font-['Unbounded'] text-sm text-white opacity-60">No watch history found</p>
                                 </div>
                             )}
                         </div>
 
                         {/* Pagination Controls */}
-                        <div className="flex justify-between items-center mt-6">
+                        <div className="mt-6 flex items-center justify-between">
                             <button
                                 onClick={handlePrevPage}
                                 disabled={currentPage === 1}
-                                className={`px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-500'}`}
+                                className={`rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : 'hover:bg-indigo-500'}`}
                             >
                                 Previous
                             </button>
-                            <span className="text-white text-sm font-medium">
+                            <span className="text-sm font-medium text-white">
                                 Page {currentPage} of {totalPages}
                             </span>
                             <button
                                 onClick={handleNextPage}
                                 disabled={currentPage === totalPages}
-                                className={`px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-500'}`}
+                                className={`rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : 'hover:bg-indigo-500'}`}
                             >
                                 Next
                             </button>
                         </div>
-
                     </div>
                 </div>
             </div>

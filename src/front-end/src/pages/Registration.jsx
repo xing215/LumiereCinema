@@ -22,8 +22,8 @@ const Registration = () => {
     // Show loading while checking authentication
     if (isLoading) {
         return (
-            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            <div className="flex min-h-screen w-screen items-center justify-center bg-slate-950">
+                <div className="font-['Unbounded'] text-lg text-white">Loading...</div>
             </div>
         );
     }
@@ -32,7 +32,6 @@ const Registration = () => {
     if (isAuthenticated) {
         return null;
     }
-    
 
     return (
         <section className="no-scrollbar relative min-h-screen w-screen overflow-x-hidden bg-slate-950">

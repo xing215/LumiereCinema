@@ -1,6 +1,3 @@
-
-
-
 import { useState, useEffect } from 'react';
 
 const SnackSelect = ({ snack_type, img, onChange, price, description, quantity, stock = 0 }) => {
@@ -13,14 +10,14 @@ const SnackSelect = ({ snack_type, img, onChange, price, description, quantity, 
     }, [quantity]);
 
     const handleDecrease = () => {
-        onChange(prev => {
+        onChange((prev) => {
             const newAmount = prev > 0 ? prev - 1 : 0;
             return newAmount;
         });
     };
 
     const handleIncrease = () => {
-        onChange(prev => {
+        onChange((prev) => {
             if (prev >= stock) {
                 alert(`You cannot select more than ${stock} snacks.`);
                 return prev;
@@ -59,30 +56,34 @@ const SnackSelect = ({ snack_type, img, onChange, price, description, quantity, 
             {/* Tooltip */}
             {snack_type && (
                 <div
-                    className={`
-                        absolute -top-8 left-1/2 z-50 w-max -translate-x-1/2 rounded
-                        bg-indigo-100 backdrop-blur-[10px] font-['Libre_Franklin'] px-3 py-1
-                        text-xs text-black shadow-lg text-center
-                        transition-all duration-200
-                        ${hovered ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}
-                    `}
+                    className={`absolute -top-8 left-1/2 z-50 w-max -translate-x-1/2 rounded bg-indigo-100 px-3 py-1 text-center font-['Libre_Franklin'] text-xs text-black shadow-lg backdrop-blur-[10px] transition-all duration-200 ${hovered ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'} `}
                 >
-                    {snack_type}{description ? <><br />{description}</> : ''}
+                    {snack_type}
+                    {description ? (
+                        <>
+                            <br />
+                            {description}
+                        </>
+                    ) : (
+                        ''
+                    )}
                 </div>
             )}
             {img && <img src={img} alt="Snack Combo" className="absolute z-1 h-1/2 rounded-t-xl object-cover pt-1" />}
-            <div className=''></div>
-            <div className={`relative z-2 w-full justify-start px-3 pt-20 text-center font-['Unbounded'] text-[10px] ${img ? 'line-clamp-1' : 'line-clamp-3'} font-semibold whitespace-normal text-white xl:text-[12px]`}>{snack_type}</div>
+            <div className=""></div>
+            <div
+                className={`relative z-2 w-full justify-start px-3 pt-20 text-center font-['Unbounded'] text-[10px] ${img ? 'line-clamp-1' : 'line-clamp-3'} font-semibold whitespace-normal text-white xl:text-[12px]`}
+            >
+                {snack_type}
+            </div>
             <div className="relative flex h-full w-full flex-row items-center justify-center gap-8 px-3">
-                <button
-                    className="relative justify-start text-center font-['Unbounded'] text-3xl font-black text-zinc-300 xl:text-4xl cursor-pointer"
-                    onClick={handleDecrease}
-                    aria-label="Decrease"
-                >–</button>
+                <button className="relative cursor-pointer justify-start text-center font-['Unbounded'] text-3xl font-black text-zinc-300 xl:text-4xl" onClick={handleDecrease} aria-label="Decrease">
+                    –
+                </button>
                 {editing ? (
                     <input
                         type="text"
-                        className="relative w-12 text-center font-['Unbounded'] text-xl font-black text-zinc-300 xl:text-2xl bg-zinc-800/70 rounded focus:outline-none"
+                        className="relative w-12 rounded bg-zinc-800/70 text-center font-['Unbounded'] text-xl font-black text-zinc-300 focus:outline-none xl:text-2xl"
                         value={inputValue}
                         autoFocus
                         onChange={handleInputChange}
@@ -91,7 +92,7 @@ const SnackSelect = ({ snack_type, img, onChange, price, description, quantity, 
                     />
                 ) : (
                     <div
-                        className="relative justify-start text-center font-['Unbounded'] text-xl font-black text-zinc-300 xl:text-2xl cursor-pointer"
+                        className="relative cursor-pointer justify-start text-center font-['Unbounded'] text-xl font-black text-zinc-300 xl:text-2xl"
                         onClick={handleAmountClick}
                         tabIndex={0}
                         role="button"
@@ -100,14 +101,14 @@ const SnackSelect = ({ snack_type, img, onChange, price, description, quantity, 
                         {quantity?.toString().padStart(2, '0')}
                     </div>
                 )}
-                <button
-                    className="relative justify-start text-center font-['Unbounded'] text-3xl font-black text-zinc-300 xl:text-4xl cursor-pointer"
-                    onClick={handleIncrease}
-                    aria-label="Increase"
-                >+</button>
+                <button className="relative cursor-pointer justify-start text-center font-['Unbounded'] text-3xl font-black text-zinc-300 xl:text-4xl" onClick={handleIncrease} aria-label="Increase">
+                    +
+                </button>
             </div>
-            <div className="relative justify-start pb-1 text-center font-['Unbounded'] text-[10px] font-semibold text-white xl:text-[12px]">{price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} đ</div>
-            <div className="absolute pointer-events-none top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
+            <div className="relative justify-start pb-1 text-center font-['Unbounded'] text-[10px] font-semibold text-white xl:text-[12px]">
+                {price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ
+            </div>
+            <div className="pointer-events-none absolute top-0 left-0 h-full w-full rounded-xl bg-zinc-300/60 mix-blend-color-dodge lg:[transform:translate3d(0,0,0)]" />
         </div>
     );
 };

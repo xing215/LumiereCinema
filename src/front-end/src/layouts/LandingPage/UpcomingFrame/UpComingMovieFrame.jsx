@@ -19,21 +19,23 @@ const UpComingFrame = () => {
         }
     };
     const { fetchComingSoon, movies: upcomingMovies, loading } = useFetchComingSoon();
-    React.useEffect(() => { fetchComingSoon(); }, []);
-    
+    React.useEffect(() => {
+        fetchComingSoon();
+    }, []);
+
     // Sort movies: movies with schedules (branches) first, then movies without schedules
     const sortedUpcomingMovies = React.useMemo(() => {
         if (!upcomingMovies) return [];
         return [...upcomingMovies].sort((a, b) => {
             const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
             const bHasSchedules = Array.isArray(b.branches) && b.branches.length > 0;
-            
+
             if (aHasSchedules && !bHasSchedules) return -1;
             if (!aHasSchedules && bHasSchedules) return 1;
             return 0; // Keep original order for movies with same schedule status
         });
     }, [upcomingMovies]);
-    
+
     const scrollRef = React.useRef(null);
     const scrollByAmount = 350;
     const [showScrollButtons, setShowScrollButtons] = React.useState(false);
@@ -73,46 +75,38 @@ const UpComingFrame = () => {
         return null;
     }
     return (
-        <div className="relative w-screen bg-transparent flex flex-col items-center py-8">
+        <div className="relative flex w-screen flex-col items-center bg-transparent py-8">
             <div className="justify-start text-center font-['Unbounded'] text-sm font-bold text-white md:text-2xl lg:text-4xl xl:text-5xl">UPCOMING MOVIES</div>
             <div className="h-4 w-full" />
-            <div className="relative w-screen flex items-center">
+            <div className="relative flex w-screen items-center">
                 {/* Backward Button (md and up) */}
                 {showScrollButtons && (
-                    <div className="hidden md:block mr-4 z-30">
+                    <div className="z-30 mr-4 hidden md:block">
                         <BackwardButton onClick={handleScrollLeft} position="absolute" />
                     </div>
                 )}
                 {/* Movie Cards Row with overlay logic */}
                 <div
                     ref={scrollRef}
-                    className={`flex gap-4 w-full px-2 md:pl-32 md:pr-32 py-2 ${showScrollButtons ? 'overflow-x-auto no-scrollbar' : 'justify-center'}`}
+                    className={`flex w-full gap-4 px-2 py-2 md:pr-32 md:pl-32 ${showScrollButtons ? 'no-scrollbar overflow-x-auto' : 'justify-center'}`}
                     style={showScrollButtons ? { scrollBehavior: 'smooth' } : {}}
                 >
                     {loading ? (
-                        <div className="flex items-center justify-center w-full py-10">
-                            <div className="text-white font-['Unbounded'] text-lg">Loading movies...</div>
+                        <div className="flex w-full items-center justify-center py-10">
+                            <div className="font-['Unbounded'] text-lg text-white">Loading movies...</div>
                         </div>
                     ) : sortedUpcomingMovies && sortedUpcomingMovies.length > 0 ? (
-                        sortedUpcomingMovies.map((movie, idx) => (
-                            <MovieCardWithOverlay
-                                key={movie._id || idx}
-                                movie={movie}
-                                page="LandingPage"
-                                cardIdx={idx}
-                                scrollRef={scrollRef}
-                            />
-                        ))
+                        sortedUpcomingMovies.map((movie, idx) => <MovieCardWithOverlay key={movie._id || idx} movie={movie} page="LandingPage" cardIdx={idx} scrollRef={scrollRef} />)
                     ) : null}
                 </div>
                 {/* Forward Button (md and up) */}
                 {showScrollButtons && (
-                    <div className="hidden md:block ml-4 z-30">
+                    <div className="z-30 ml-4 hidden md:block">
                         <ForwardButton onClick={handleScrollRight} position="absolute" />
-                </div>
+                    </div>
                 )}
             </div>
-            <div className="flex justify-center items-center mt-4">
+            <div className="mt-4 flex items-center justify-center">
                 <SeeMoreButton statusFilter="up" />
             </div>
         </div>
@@ -155,14 +149,9 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
         };
     }, [scrollRef]);
     return (
-        <div ref={cardRef} className="flex-shrink-0 w-56 md:w-64 lg:w-72 relative">
+        <div ref={cardRef} className="relative w-56 flex-shrink-0 md:w-64 lg:w-72">
             <MovieCard movie={movie} page={page} />
-            {overlayOpacity > 0 && (
-                <div
-                    className="absolute inset-0 z-20 pointer-events-none rounded-xl"
-                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
-                />
-            )}
+            {overlayOpacity > 0 && <div className="pointer-events-none absolute inset-0 z-20 rounded-xl" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />}
         </div>
     );
 };

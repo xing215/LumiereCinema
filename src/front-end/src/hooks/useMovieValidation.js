@@ -11,10 +11,8 @@ export const useMovieValidation = () => {
             errors.push(`Row ${rowIndex + 1}: Movie title is required`);
         } else {
             // Check for duplicate movie title in existing database
-            const duplicateMovie = existingMovies.find(movie => 
-                movie.title?.toLowerCase().trim() === movieData.title.toLowerCase().trim()
-            );
-            
+            const duplicateMovie = existingMovies.find((movie) => movie.title?.toLowerCase().trim() === movieData.title.toLowerCase().trim());
+
             if (duplicateMovie) {
                 errors.push(`Row ${rowIndex + 1}: Movie "${movieData.title}" already exists in database`);
             }
@@ -61,7 +59,7 @@ export const useMovieValidation = () => {
         moviesData.forEach((movieData, index) => {
             // First check for duplicates within the batch being uploaded
             const currentErrors = [];
-            
+
             if (movieData.title?.trim()) {
                 const titleLower = movieData.title.toLowerCase().trim();
                 if (processedTitles.has(titleLower)) {
@@ -70,26 +68,38 @@ export const useMovieValidation = () => {
                     processedTitles.add(titleLower);
                 }
             }
-            
+
             // Then run individual movie validation
             const movieErrors = validateMovie(movieData, movieData.rowIndex || index, existingMovies);
-            
+
             // Combine all errors
             const allMovieErrors = [...currentErrors, ...movieErrors];
-            
+
             if (allMovieErrors.length === 0) {
                 // Process valid movie data
                 const processedMovie = {
                     title: movieData.title?.trim() || '',
                     description: movieData.description?.trim() || '',
                     releaseDate: movieData.releaseDate || '',
-                    genre: Array.isArray(movieData.genre) ? movieData.genre : 
-                           (movieData.genre ? movieData.genre.split(',').map(g => g.trim()).filter(Boolean) : []),
+                    genre: Array.isArray(movieData.genre)
+                        ? movieData.genre
+                        : movieData.genre
+                          ? movieData.genre
+                                .split(',')
+                                .map((g) => g.trim())
+                                .filter(Boolean)
+                          : [],
                     duration: movieData.duration ? parseInt(movieData.duration) : 0,
                     ageRating: movieData.ageRating || 'P',
                     director: movieData.director?.trim() || '',
-                    cast: Array.isArray(movieData.cast) ? movieData.cast :
-                          (movieData.cast ? movieData.cast.split(',').map(c => c.trim()).filter(Boolean) : []),
+                    cast: Array.isArray(movieData.cast)
+                        ? movieData.cast
+                        : movieData.cast
+                          ? movieData.cast
+                                .split(',')
+                                .map((c) => c.trim())
+                                .filter(Boolean)
+                          : [],
                     language: movieData.language?.trim() || '',
                     trailerURL: movieData.trailerURL?.trim() || '',
                     posterURL: movieData.posterURL?.trim() || '',
@@ -97,7 +107,7 @@ export const useMovieValidation = () => {
                     ratingsAverage: 0,
                     ratingsQuantity: 0,
                     // Add temporary ID for frontend tracking
-                    tempId: `temp_${Date.now()}_${index}`
+                    tempId: `temp_${Date.now()}_${index}`,
                 };
                 validMovies.push(processedMovie);
             } else {
@@ -106,11 +116,11 @@ export const useMovieValidation = () => {
         });
 
         setValidationErrors(allErrors);
-        
+
         return {
             validMovies,
             errors: allErrors,
-            hasErrors: allErrors.length > 0
+            hasErrors: allErrors.length > 0,
         };
     };
 
@@ -122,6 +132,6 @@ export const useMovieValidation = () => {
         validateMovie,
         validateMoviesBatch,
         validationErrors,
-        clearValidationErrors
+        clearValidationErrors,
     };
 };

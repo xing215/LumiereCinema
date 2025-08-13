@@ -9,7 +9,7 @@ const ForgotPwdForm = ({ forgotPwdHook }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
-    const hook = forgotPwdHook
+    const hook = forgotPwdHook;
     const { resetPassword, loading, error, success } = hook;
 
     // Validation patterns
@@ -91,7 +91,7 @@ const ForgotPwdForm = ({ forgotPwdHook }) => {
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
                 {/* Success/Error Message */}
                 {message && (
-                    <div className={`p-3 rounded-lg text-center ${isSuccess ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                    <div className={`rounded-lg p-3 text-center ${isSuccess ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                         <p className="font-['Libre_Franklin'] text-sm">{message}</p>
                     </div>
                 )}
@@ -105,7 +105,7 @@ const ForgotPwdForm = ({ forgotPwdHook }) => {
                         value={formData.email}
                         onChange={handleInputChange}
                         disabled={isLoading}
-                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.email ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.email ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                         required
                     />
                     {errors.email && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.email}</p>}
@@ -116,7 +116,7 @@ const ForgotPwdForm = ({ forgotPwdHook }) => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
                         {isLoading ? 'SENDING...' : 'SEND EMAIL'}
                     </button>

@@ -4,18 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import '@styles/datepicker.css';
 import { CalendarIcon } from 'lucide-react';
 
-const DatePickerCell = ({ 
-    value, 
-    isEditing, 
-    onStartEdit, 
-    onSave, 
-    onCancel, 
-    className = '',
-    disabled = false,
-    isUpdating = false,
-    tooltipText = null,
-    shouldTruncate = false
-}) => {
+const DatePickerCell = ({ value, isEditing, onStartEdit, onSave, onCancel, className = '', disabled = false, isUpdating = false, tooltipText = null, shouldTruncate = false }) => {
     const [selectedDate, setSelectedDate] = useState(null);
     const datePickerRef = useRef(null);
 
@@ -145,7 +134,7 @@ const DatePickerCell = ({
                 // YYYY-MM-DD format
                 date = new Date(dateStr);
             }
-            
+
             if (!isNaN(date.getTime())) {
                 return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
             }
@@ -166,7 +155,7 @@ const DatePickerCell = ({
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
                     dateFormat="dd/MM/yyyy"
-                    className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+                    className={`w-full rounded border border-blue-300 px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none ${className}`}
                     calendarClassName="react-datepicker-custom"
                     showPopperArrow={false}
                     autoComplete="off"
@@ -189,38 +178,41 @@ const DatePickerCell = ({
     return (
         <div
             onDoubleClick={handleDoubleClick}
-            className={`w-full h-full min-h-[2rem] flex items-center cursor-pointer hover:bg-blue-50 rounded px-1 py-1 transition-colors border-2 border-blue-400 bg-blue-50 ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${isUpdating ? 'bg-yellow-100 opacity-75' : ''} ${className}`}
-            title={
-                disabled ? '' : 
-                isUpdating ? 'Updating...' : 
-                tooltipText ? tooltipText : 
-                'Double-click to select date (DATE PICKER ACTIVE)'
-            }
+            className={`flex h-full min-h-[2rem] w-full cursor-pointer items-center rounded border-2 border-blue-400 bg-blue-50 px-1 py-1 transition-colors hover:bg-blue-50 ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${isUpdating ? 'bg-yellow-100 opacity-75' : ''} ${className}`}
+            title={disabled ? '' : isUpdating ? 'Updating...' : tooltipText ? tooltipText : 'Double-click to select date (DATE PICKER ACTIVE)'}
         >
             {isUpdating ? (
                 <span className="flex items-center gap-1">
-                    <span className="inline-block w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                    <span 
-                        className={shouldTruncate ? 'truncate block w-full' : 'w-full'}
-                        style={shouldTruncate ? {
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                        } : {}}
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border border-gray-400 border-t-transparent"></span>
+                    <span
+                        className={shouldTruncate ? 'block w-full truncate' : 'w-full'}
+                        style={
+                            shouldTruncate
+                                ? {
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                  }
+                                : {}
+                        }
                     >
                         {formatDisplayDate(value)}
                     </span>
                 </span>
             ) : (
-                <div className="flex items-center gap-1 w-full">
-                    <CalendarIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span 
-                        className={`text-blue-700 font-semibold ${shouldTruncate ? 'truncate block flex-1' : 'flex-1'}`}
-                        style={shouldTruncate ? {
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                        } : {}}
+                <div className="flex w-full items-center gap-1">
+                    <CalendarIcon className="h-5 w-5 flex-shrink-0 text-blue-600" />
+                    <span
+                        className={`font-semibold text-blue-700 ${shouldTruncate ? 'block flex-1 truncate' : 'flex-1'}`}
+                        style={
+                            shouldTruncate
+                                ? {
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                  }
+                                : {}
+                        }
                     >
                         [DATE] {formatDisplayDate(value) || 'Select date...'}
                     </span>

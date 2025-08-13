@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const SearchButton = ({ onSearch, placeholder = "Search here" }) => {
+const SearchButton = ({ onSearch, placeholder = 'Search here' }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleInputChange = (e) => {
@@ -29,7 +29,7 @@ const SearchButton = ({ onSearch, placeholder = "Search here" }) => {
     };
 
     return (
-        <div className="absolute top-[5vh] right-1/15 flex gap-2 items-center">
+        <div className="absolute top-[5vh] right-1/15 flex items-center gap-2">
             <p className="font-unbounded text-base font-normal">Search: </p>
             <div className="relative">
                 <input
@@ -38,14 +38,10 @@ const SearchButton = ({ onSearch, placeholder = "Search here" }) => {
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     placeholder={placeholder}
-                    className="h-6 w-60 px-3 py-1 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400"
+                    className="h-6 w-60 rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm placeholder-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
                 {searchTerm && (
-                    <button
-                        onClick={handleClear}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm font-bold"
-                        title="Clear search"
-                    >
+                    <button onClick={handleClear} className="absolute top-1/2 right-2 -translate-y-1/2 transform text-sm font-bold text-gray-400 hover:text-gray-600" title="Clear search">
                         x
                     </button>
                 )}

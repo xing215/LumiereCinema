@@ -19,7 +19,6 @@ export const validatePassword = (password) => {
     return errors;
 };
 
-
 export const formatPasswordErrors = (errors) => {
     if (errors.length === 0) return '';
     if (errors.length === 1) return errors[0];
@@ -32,20 +31,15 @@ export const ROLES = {
     CASHIER: 'cashier',
     CHECKIN_COUNTER: 'checkincounter',
     BRANCH_MANAGER: 'branchmanager',
-    ADMINISTRATOR: 'administrator'
+    ADMINISTRATOR: 'administrator',
 };
 
-export const STAFF_ROLES = [
-    ROLES.CASHIER,
-    ROLES.CHECKIN_COUNTER,
-    ROLES.BRANCH_MANAGER,   
-    ROLES.ADMINISTRATOR
-];
+export const STAFF_ROLES = [ROLES.CASHIER, ROLES.CHECKIN_COUNTER, ROLES.BRANCH_MANAGER, ROLES.ADMINISTRATOR];
 
 export const hasRole = (userRoles, requiredRoles) => {
     if (!userRoles || !Array.isArray(userRoles)) return false;
     if (!requiredRoles || !Array.isArray(requiredRoles)) return false;
-    return requiredRoles.some(role => userRoles.includes(role));
+    return requiredRoles.some((role) => userRoles.includes(role));
 };
 
 export const isStaff = (userRoles) => {

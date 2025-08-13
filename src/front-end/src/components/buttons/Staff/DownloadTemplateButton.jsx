@@ -1,11 +1,6 @@
 import { Download } from 'lucide-react';
 
-const DownloadTemplateButton = ({ 
-    templatePath, 
-    filename, 
-    buttonText = 'Download template',
-    disabled = false 
-}) => {
+const DownloadTemplateButton = ({ templatePath, filename, buttonText = 'Download template', disabled = false }) => {
     const downloadTemplate = async () => {
         if (!templatePath || !filename) {
             console.error('Template path and filename are required');
@@ -29,15 +24,14 @@ const DownloadTemplateButton = ({
             link.href = url;
             link.download = filename;
             link.style.display = 'none';
-            
+
             // Add to DOM, click, and remove
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             // Clean up the URL object
             window.URL.revokeObjectURL(url);
-            
         } catch (error) {
             console.error('Error downloading template:', error);
             alert('Error downloading template file. Please try again.');
@@ -45,10 +39,10 @@ const DownloadTemplateButton = ({
     };
 
     return (
-        <button 
+        <button
             onClick={downloadTemplate}
             disabled={disabled}
-            className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline hover:cursor-pointer hover:text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative z-20 flex h-8 w-44 items-center justify-center gap-1 text-sm font-medium text-slate-950 underline transition-colors hover:cursor-pointer hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
             {buttonText}
             <Download className="h-4 text-slate-950" />

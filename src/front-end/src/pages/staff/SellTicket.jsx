@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
-import CustomDropdown from "@/components/UI/CustomDropdown";
+import CustomDropdown from '@/components/UI/CustomDropdown';
 import BackwardButton from '@components/buttons/backwardButton2.jsx';
 import TicketDetail from '@components/UI/TicketDetail.jsx';
 
@@ -29,8 +29,6 @@ import { useUser } from '@contexts/UserContext.jsx';
 // SweetAlert for popup notifications
 import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
 
-
-
 // =============================================================================
 // MAIN SELL TICKET COMPONENT
 // =============================================================================
@@ -46,7 +44,7 @@ const SellTicket = () => {
         SEATS: 2,
         SNACK: 3,
         PAYMENT: 4,
-        TICKET_DISPLAY: 5
+        TICKET_DISPLAY: 5,
     };
 
     // =============================================================================
@@ -74,7 +72,7 @@ const SellTicket = () => {
         noLoginCustomerInfo: {
             name: 'in-store customer',
             phone: null,
-            email: null
+            email: null,
         },
         branch: {
             _id: null,
@@ -83,22 +81,22 @@ const SellTicket = () => {
             city: null,
             location: {
                 type: null,
-                coordinates: null
+                coordinates: null,
             },
             isActive: null,
-            showings: null
+            showings: null,
         },
         schedule: {
             _id: null,
             movie: {
                 _id: null,
                 name: null,
-                poster: null
+                poster: null,
             },
             screen: null,
             startTime: null,
             endTime: null,
-            availableSeatsCount: 0
+            availableSeatsCount: 0,
         },
         seats: [],
         promotion: null,
@@ -106,7 +104,7 @@ const SellTicket = () => {
         total: 0,
         adultTickets: 0,
         discountedTickets: 0,
-        discounted: 0
+        discounted: 0,
     });
 
     // Snack ticket data state
@@ -115,7 +113,7 @@ const SellTicket = () => {
         noLoginCustomerInfo: {
             name: 'in-store customer',
             phone: null,
-            email: null
+            email: null,
         },
         branch: {
             _id: null,
@@ -124,16 +122,16 @@ const SellTicket = () => {
             city: null,
             location: {
                 type: null,
-                coordinates: null
+                coordinates: null,
             },
             isActive: null,
-            showings: null
+            showings: null,
         },
         snackList: [],
         promotionCode: '',
         seller: null,
         total: 0,
-        discounted: 0
+        discounted: 0,
     });
 
     // =============================================================================
@@ -156,12 +154,12 @@ const SellTicket = () => {
     // =============================================================================
 
     const updateMovieTicket = (updates) => {
-        setMovieTicketData(prev => ({ ...prev, ...updates }));
+        setMovieTicketData((prev) => ({ ...prev, ...updates }));
         console.log('Updated movie ticket data:', { ...movieTicketData, ...updates });
     };
 
     const updateSnackTicket = (updates) => {
-        setSnackTicketData(prev => ({ ...prev, ...updates }));
+        setSnackTicketData((prev) => ({ ...prev, ...updates }));
         console.log('Updated snack ticket data:', { ...snackTicketData, ...updates });
     };
 
@@ -201,8 +199,8 @@ const SellTicket = () => {
             console.log('Snacks fetched successfully:', snacks);
             if (Array.isArray(snackTicketData?.snackList) && snackTicketData.snackList.length > 0) {
                 let changed = false;
-                const newSnackList = snackTicketData.snackList.map(item => {
-                    const snack = snacks.find(s => s._id === item.snack);
+                const newSnackList = snackTicketData.snackList.map((item) => {
+                    const snack = snacks.find((s) => s._id === item.snack);
                     if (!snack) return item;
                     const stock = snack.stock ?? Infinity;
                     if (item.quantity > stock) {
@@ -212,10 +210,7 @@ const SellTicket = () => {
                     return item;
                 });
                 if (changed) {
-                    showWarning(
-                        'Stock Adjustment',
-                        'Some snacks in your selection exceed available stock and have been adjusted.'
-                    );
+                    showWarning('Stock Adjustment', 'Some snacks in your selection exceed available stock and have been adjusted.');
                     updateSnackTicket({ snackList: newSnackList, promotion: null, discount: 0 });
                 }
             }
@@ -252,28 +247,25 @@ const SellTicket = () => {
                     movie: {
                         _id: movie._id,
                         name: movie.title,
-                        poster: movie.posterURL
+                        poster: movie.posterURL,
                     },
                     screen: null,
                     startTime: null,
                     endTime: null,
-                    availableSeatsCount: 0
+                    availableSeatsCount: 0,
                 },
                 seats: [],
                 adultTickets: 0,
                 discountedTickets: 0,
                 total: 0,
                 discounted: 0,
-                promotion: null
+                promotion: null,
             });
             await fetchSchedules(movie._id, movieTicketData.branch._id);
             goToNextStep();
         } catch (error) {
             console.error('Error fetching schedules:', error);
-            showError(
-                'Loading Failed',
-                'Failed to load schedules. Please try again later.'
-            );
+            showError('Loading Failed', 'Failed to load schedules. Please try again later.');
         }
     };
 
@@ -286,23 +278,20 @@ const SellTicket = () => {
                     screen: schedule.screen || null,
                     startTime: schedule.startTime || null,
                     endTime: schedule.endTime || null,
-                    availableSeatsCount: schedule.availableSeatsCount || 0
+                    availableSeatsCount: schedule.availableSeatsCount || 0,
                 },
                 seats: [],
                 adultTickets: 0,
                 discountedTickets: 0,
                 total: 0,
                 discounted: 0,
-                promotion: null
+                promotion: null,
             });
             await fetchSeats(schedule._id);
             goToNextStep();
         } catch (error) {
             console.error('Error selecting schedule:', error);
-            showError(
-                'Selection Failed',
-                'Failed to select schedule. Please try again later.'
-            );
+            showError('Selection Failed', 'Failed to select schedule. Please try again later.');
         }
     };
 
@@ -310,10 +299,7 @@ const SellTicket = () => {
         console.log('Session expired, clearing session...', holdSeatData);
         setStartedHoldSession(false);
         setSessionExpiresAt(null);
-        showWarning(
-            'Session Expired',
-            'Your session has expired. Please select your seats again.'
-        );
+        showWarning('Session Expired', 'Your session has expired. Please select your seats again.');
         updateMovieTicket({ seats: [] });
         setCurrentStep(MENU_STEPS.SEATS);
         clearHoldSeatData();
@@ -324,11 +310,11 @@ const SellTicket = () => {
     // =============================================================================
 
     const goToNextStep = () => {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep((prev) => prev + 1);
     };
 
     const goToPreviousStep = () => {
-        setCurrentStep(prev => (prev > 0 ? prev - 1 : 0));
+        setCurrentStep((prev) => (prev > 0 ? prev - 1 : 0));
     };
 
     // =============================================================================
@@ -358,28 +344,19 @@ const SellTicket = () => {
         }
         if (holdError) {
             if (holdError.includes('seats')) {
-                showError(
-                    'Seats Unavailable',
-                    'Your seat selection have been occupied by other customers. Please adjust your selection.'
-                );
+                showError('Seats Unavailable', 'Your seat selection have been occupied by other customers. Please adjust your selection.');
                 fetchSeats(movieTicketData.schedule._id);
                 updateMovieTicket({ seats: [] });
                 setStartedHoldSession(false);
                 return;
             } else if (holdError.includes('snack')) {
-                showError(
-                    'Stock Unavailable',
-                    'Your snack selection exceeds available stock. Please adjust your order.'
-                );
+                showError('Stock Unavailable', 'Your snack selection exceeds available stock. Please adjust your order.');
                 getSnacks(snackTicketData?.branch?._id);
                 updateSnackTicket({ snackList: [] });
                 setStartedHoldSession(false);
                 return;
             }
-            showError(
-                'Hold Session Error',
-                'An error occurred while creating your ticket. Please try again.'
-            );
+            showError('Hold Session Error', 'An error occurred while creating your ticket. Please try again.');
             setStartedHoldSession(false);
         }
     }, [holdSeatData, holdError]);
@@ -390,7 +367,7 @@ const SellTicket = () => {
             clearSession();
             updateMovieTicket({
                 promotion: null,
-                discount: 0
+                discount: 0,
             });
         }
     }, [movieTicketData.seats]);
@@ -406,29 +383,20 @@ const SellTicket = () => {
             setCurrentStep(MENU_STEPS.TICKET_DISPLAY);
         } else if (ticketError) {
             console.error('Error creating ticket:', ticketError);
-            if (ticketError.includes('seats')){
-                showError(
-                    'Seats Unavailable',
-                    'Your seat selection have been occupied by other customers. Please adjust your selection.'
-                );
+            if (ticketError.includes('seats')) {
+                showError('Seats Unavailable', 'Your seat selection have been occupied by other customers. Please adjust your selection.');
                 setCurrentStep(MENU_STEPS.SEATS);
                 fetchSeats(movieTicketData.schedule._id);
                 updateMovieTicket({ seats: [] });
                 return;
             } else if (ticketError.includes('snack')) {
-                showError(
-                    'Stock Unavailable',
-                    'Your snack selection exceeds available stock. Please adjust your order.'
-                );
+                showError('Stock Unavailable', 'Your snack selection exceeds available stock. Please adjust your order.');
                 setCurrentStep(MENU_STEPS.SNACK);
                 getSnacks(snackTicketData?.branch?._id);
                 updateSnackTicket({ snackList: [] });
                 return;
             }
-            showError(
-                'Ticket Creation Failed',
-                'An error occurred while creating your ticket. Please try again.'
-            );
+            showError('Ticket Creation Failed', 'An error occurred while creating your ticket. Please try again.');
             setCurrentStep(MENU_STEPS.PAYMENT);
         }
     }, [ticket, ticketError]);
@@ -442,12 +410,12 @@ const SellTicket = () => {
             case MENU_STEPS.MOVIE_LIST:
                 return (
                     <>
-                        <div className="left-[5%] absolute top-[4%] z-50 md:w-[20%]  min-w-[260px]">
+                        <div className="absolute top-[4%] left-[5%] z-50 min-w-[260px] md:w-[20%]">
                             <CustomDropdown
                                 name="discount"
                                 placeholder=""
                                 value={selectedFilter}
-                                onChange={e => handleFilterChange(e?.target ? e.target.value : e)}
+                                onChange={(e) => handleFilterChange(e?.target ? e.target.value : e)}
                                 bgColor="indigo-700 backdrop-blur-[30px]"
                                 inputBgColor="pink-400"
                                 variant={'figma'}
@@ -458,92 +426,75 @@ const SellTicket = () => {
                                 height="h-8"
                                 inputTextSize="text-md"
                                 optionTextSize="text-sm"
-                                openDirection='down'
+                                openDirection="down"
                                 textAlign="center"
                                 options={[
                                     { value: 'ALL MOVIES', label: 'ALL MOVIES' },
                                     { value: 'NOW SHOWING', label: 'NOW SHOWING' },
                                     { value: 'UPCOMING', label: 'UPCOMING' },
-                                    
                                 ]}
                             />
                         </div>
-                        <MovieList
-                            movies={displayedMovies}
-                            loading={nowShowingLoading || comingSoonLoading}
-                            onMovieSelect={onMovieSelect}
-                        />
+                        <MovieList movies={displayedMovies} loading={nowShowingLoading || comingSoonLoading} onMovieSelect={onMovieSelect} />
                     </>
                 );
             case MENU_STEPS.SCHEDULE:
                 return (
                     <>
-                    <div className="absolute top-[4%] scale-90 z-50 md:w-[20%]  min-w-[260px]"><BackwardButton onClick={goToPreviousStep} /></div>
-                    
-                    <Schedule
-                        schedules={schedules}
-                        loading={schedulesLoading}
-                        onScheduleSelect={onScheduleSelect}
-                    />
+                        <div className="absolute top-[4%] z-50 min-w-[260px] scale-90 md:w-[20%]">
+                            <BackwardButton onClick={goToPreviousStep} />
+                        </div>
+
+                        <Schedule schedules={schedules} loading={schedulesLoading} onScheduleSelect={onScheduleSelect} />
                     </>
                 );
             case MENU_STEPS.SEATS:
                 return (
                     <>
-                                        <div className="absolute top-[4%] scale-90 z-50 md:w-[20%]  min-w-[260px]"><BackwardButton onClick={goToPreviousStep} /></div>
+                        <div className="absolute top-[4%] z-50 min-w-[260px] scale-90 md:w-[20%]">
+                            <BackwardButton onClick={goToPreviousStep} />
+                        </div>
 
-                    <SeatsScreen
-                        seats={seats}
-                        loading={seatsLoading}
-                        movieTicketData={movieTicketData}
-                        updateMovieTicket={updateMovieTicket}
-                        onNext={goToNextStep}
-                    />
+                        <SeatsScreen seats={seats} loading={seatsLoading} movieTicketData={movieTicketData} updateMovieTicket={updateMovieTicket} onNext={goToNextStep} />
                     </>
                 );
             case MENU_STEPS.SNACK:
-                return (<>
-                <div className="absolute top-[4%] scale-90 z-50 md:w-[20%]  min-w-[260px]"><BackwardButton onClick={goToPreviousStep} /></div>
-                    <SnackList
-                        snacks={snacks}
-                        loading={snacksLoading}
-                        updateSnackTicket={updateSnackTicket}
-                        snackTicketData={snackTicketData}
-                        handleNext={goToNextStep}
-                    />
-                </>)
+                return (
+                    <>
+                        <div className="absolute top-[4%] z-50 min-w-[260px] scale-90 md:w-[20%]">
+                            <BackwardButton onClick={goToPreviousStep} />
+                        </div>
+                        <SnackList snacks={snacks} loading={snacksLoading} updateSnackTicket={updateSnackTicket} snackTicketData={snackTicketData} handleNext={goToNextStep} />
+                    </>
+                );
 
-case MENU_STEPS.PAYMENT:
-    return (
-        <>
-            <div className="absolute top-[4%] scale-90 z-50 md:w-[20%] min-w-[260px]">
-                <BackwardButton onClick={goToPreviousStep} />
-            </div>
-            <Payment
-                createTicket={createTicket}
-                sessionExpiresAt={sessionExpiresAt}
-                onExpire={handleSessionExpire}
-                movieTicketData={movieTicketData}
-                snackTicketData={snackTicketData}
-                updateMovieTicket={updateMovieTicket}
-                updateSnackTicket={updateSnackTicket}
-            />
-        </>
-    );
+            case MENU_STEPS.PAYMENT:
+                return (
+                    <>
+                        <div className="absolute top-[4%] z-50 min-w-[260px] scale-90 md:w-[20%]">
+                            <BackwardButton onClick={goToPreviousStep} />
+                        </div>
+                        <Payment
+                            createTicket={createTicket}
+                            sessionExpiresAt={sessionExpiresAt}
+                            onExpire={handleSessionExpire}
+                            movieTicketData={movieTicketData}
+                            snackTicketData={snackTicketData}
+                            updateMovieTicket={updateMovieTicket}
+                            updateSnackTicket={updateSnackTicket}
+                        />
+                    </>
+                );
 
             case MENU_STEPS.TICKET_DISPLAY:
                 return (
                     <>
-                    <div className="absolute w-full top-[4%] h-5 text-center justify-start text-white text-xl font-bold font-['Unbounded']">TICKET IS PRINTING...</div>
-                                <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
-            <div className="flex items-start justify-center h-[80vh] rounded-xl overflow-hidden w-[90%] relative">
-                        <TicketDetail
-                            movieTicketData={movieTicketData}
-                            snackTicketData={snackTicketData}
-                            isStaff={true}
-                        />
-                </div>
-                </div>
+                        <div className="absolute top-[4%] h-5 w-full justify-start text-center font-['Unbounded'] text-xl font-bold text-white">TICKET IS PRINTING...</div>
+                        <div className="flex h-full w-full flex-col items-center justify-center overflow-hidden">
+                            <div className="relative flex h-[80vh] w-[90%] items-start justify-center overflow-hidden rounded-xl">
+                                <TicketDetail movieTicketData={movieTicketData} snackTicketData={snackTicketData} isStaff={true} />
+                            </div>
+                        </div>
                     </>
                 );
             default:
@@ -559,23 +510,14 @@ case MENU_STEPS.PAYMENT:
         <StaffLayout>
             <MobileNotSupported>
                 {currentStep !== MENU_STEPS.MOVIE_LIST && currentStep !== MENU_STEPS.TICKET_DISPLAY && (
-                    <div className='flex justify-center items-center absolute top-[2%] w-full'>
-                        <NavigationProgress
-                            movieTicketData={movieTicketData}
-                            snackTicketData={snackTicketData}
-                            setCurrentStep={setCurrentStep}
-                            currentStep={currentStep}
-                            MENU_STEPS={MENU_STEPS}
-                        />
+                    <div className="absolute top-[2%] flex w-full items-center justify-center">
+                        <NavigationProgress movieTicketData={movieTicketData} snackTicketData={snackTicketData} setCurrentStep={setCurrentStep} currentStep={currentStep} MENU_STEPS={MENU_STEPS} />
                     </div>
                 )}
-                                
+
                 {renderCurrentMenu()}
-                
-                <SelectBranchButton 
-                    isLoading={branchLoading} 
-                    branchName={branch?.name} 
-                />
+
+                <SelectBranchButton isLoading={branchLoading} branchName={branch?.name} />
             </MobileNotSupported>
 
             <div className="tranform absolute top-0 left-1/5 h-52 w-52 -translate-y-1/2 rounded-full bg-sky-400/60 mix-blend-lighten blur-[100px]" />
@@ -591,34 +533,30 @@ case MENU_STEPS.PAYMENT:
 // =============================================================================
 
 const NavigationProgress = ({ movieTicketData, snackTicketData, setCurrentStep, currentStep, MENU_STEPS }) => {
-    const Steps = ({active = false, onClick, text, connector=false}) => (
-        <button className='w-10 h-10 flex items-center justify-center relative cursor-pointer' onClick={onClick} disabled={!active}>
+    const Steps = ({ active = false, onClick, text, connector = false }) => (
+        <button className="relative flex h-10 w-10 cursor-pointer items-center justify-center" onClick={onClick} disabled={!active}>
             {connector && (
                 <>
-                <div className={`absolute z-2 -left-5 w-8 h-[20px] bg-white transition-all duration-300`} />
-                {active ? (
-                    <div className="absolute z-2 -left-5 w-8 h-[10px] bg-pink-400 transition-all duration-300" />
-                ) : (
-                    <div className="absolute z-2 -left-5 w-8 h-[10px] bg-white transition-all duration-300" />
-                )}
+                    <div className={`absolute -left-5 z-2 h-[20px] w-8 bg-white transition-all duration-300`} />
+                    {active ? (
+                        <div className="absolute -left-5 z-2 h-[10px] w-8 bg-pink-400 transition-all duration-300" />
+                    ) : (
+                        <div className="absolute -left-5 z-2 h-[10px] w-8 bg-white transition-all duration-300" />
+                    )}
                 </>
             )}
-            <div className="w-full h-full absolute bg-white rounded-full" />
-            {active ? (
-                <div className="absolute z-3 w-7 h-7 bg-pink-400 rounded-full" />
-            ) : (
-                <div className="w-7 h-7 z-3 absolute bg-white rounded-full" />
-            )}
+            <div className="absolute h-full w-full rounded-full bg-white" />
+            {active ? <div className="absolute z-3 h-7 w-7 rounded-full bg-pink-400" /> : <div className="absolute z-3 h-7 w-7 rounded-full bg-white" />}
         </button>
     );
 
     return (
-        <div className="relative inline-flex justify-start items-center gap-2">
+        <div className="relative inline-flex items-center justify-start gap-2">
             <Steps active={movieTicketData?.schedule?.movie?._id || currentStep >= MENU_STEPS.MOVIE_LIST} onClick={() => setCurrentStep(MENU_STEPS.MOVIE_LIST)} text="Movie" />
-            <Steps active={movieTicketData?.schedule?._id || currentStep >= MENU_STEPS.SCHEDULE} onClick={() => setCurrentStep(MENU_STEPS.SCHEDULE)} text="Time" connector={true}/>
-            <Steps active={(movieTicketData?.seats.length > 0) || currentStep >= MENU_STEPS.SEATS} onClick={() => setCurrentStep(MENU_STEPS.SEATS)} text="Seats" connector={true}/>
-            <Steps active={(snackTicketData?.snackList.length > 0) || currentStep >= MENU_STEPS.SNACKS} onClick={() => setCurrentStep(MENU_STEPS.SNACKS)} text="Snack" connector={true}/>
-            <Steps active={(movieTicketData?.seats.length > 0)} onClick={() => setCurrentStep(MENU_STEPS.PAYMENT)} text="Pay" connector={true}/>
+            <Steps active={movieTicketData?.schedule?._id || currentStep >= MENU_STEPS.SCHEDULE} onClick={() => setCurrentStep(MENU_STEPS.SCHEDULE)} text="Time" connector={true} />
+            <Steps active={movieTicketData?.seats.length > 0 || currentStep >= MENU_STEPS.SEATS} onClick={() => setCurrentStep(MENU_STEPS.SEATS)} text="Seats" connector={true} />
+            <Steps active={snackTicketData?.snackList.length > 0 || currentStep >= MENU_STEPS.SNACKS} onClick={() => setCurrentStep(MENU_STEPS.SNACKS)} text="Snack" connector={true} />
+            <Steps active={movieTicketData?.seats.length > 0} onClick={() => setCurrentStep(MENU_STEPS.PAYMENT)} text="Pay" connector={true} />
         </div>
     );
 };

@@ -11,51 +11,29 @@ import ConfirmButton from '@components/buttons/Staff/ConfirmButton';
 import CancelButton from '@components/buttons/Staff/CancelButton';
 import { useMovieManagement } from '@hooks/useMovieManagement';
 
-
 const IntegratedButton = ({ onImportData, onAddMovie, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
         <AddButton text="Add Movie" onClick={onAddMovie} disabled={isLoading} />
         <div className="flex flex-col items-center gap-1">
-            <DownloadTemplateButton 
-                templatePath="/templates/MovieList-Template.xlsx"
-                filename="MovieList-Template.xlsx"
-                buttonText="Download template"
-                disabled={isLoading}
-            />
-            <UploadCSVButton 
-                templateType="movie" 
-                onDataParsed={onImportData}
-                disabled={isLoading}
-            />
+            <DownloadTemplateButton templatePath="/templates/MovieList-Template.xlsx" filename="MovieList-Template.xlsx" buttonText="Download template" disabled={isLoading} />
+            <UploadCSVButton templateType="movie" onDataParsed={onImportData} disabled={isLoading} />
         </div>
     </div>
-)
+);
 
 const AddMovieButtons = ({ onConfirm, onCancel, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
-        <ConfirmButton 
-            onClick={onConfirm}
-            disabled={isLoading}
-        />
-        <CancelButton 
-            onClick={onCancel}
-            disabled={isLoading}
-        />
+        <ConfirmButton onClick={onConfirm} disabled={isLoading} />
+        <CancelButton onClick={onCancel} disabled={isLoading} />
     </div>
-)
+);
 
 const ReviewButtons = ({ onConfirm, onCancel, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[15vh]">
-        <ConfirmButton 
-            onClick={onConfirm}
-            disabled={isLoading}
-        />
-        <CancelButton 
-            onClick={onCancel}
-            disabled={isLoading}
-        />
+        <ConfirmButton onClick={onConfirm} disabled={isLoading} />
+        <CancelButton onClick={onCancel} disabled={isLoading} />
     </div>
-)
+);
 
 const MovieManagePage = () => {
     const {
@@ -65,7 +43,7 @@ const MovieManagePage = () => {
         movieColumnConfig,
         editableColumns,
         fieldTypes,
-        
+
         // State
         loading,
         tickedMovies,
@@ -75,63 +53,48 @@ const MovieManagePage = () => {
         importLoading,
         addLoading,
         removeLoading,
-        
+
         // Inline editing
         editingCell,
         handleStartEdit,
         handleSaveEdit,
         handleCancelEdit,
         isUpdating,
-        
+
         // Movie operations
         handleStartAddMovie,
         handleCancelAddMovie,
         handleConfirmAddMovie,
         handleDeleteClick,
         onStatusChange,
-        
+
         // Batch operations
         handleImportData,
         handleConfirmReview,
         handleCancelReview,
-        
+
         // Search
-        handleSearch
+        handleSearch,
     } = useMovieManagement();
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} placeholder="Search by movie title or genre..." />
-                
+
                 {isAddingMovie ? (
-                    <AddMovieButtons 
-                        onConfirm={handleConfirmAddMovie}
-                        onCancel={handleCancelAddMovie}
-                        isLoading={addLoading}
-                    />
+                    <AddMovieButtons onConfirm={handleConfirmAddMovie} onCancel={handleCancelAddMovie} isLoading={addLoading} />
                 ) : showReviewMode ? (
-                    <ReviewButtons 
-                        onConfirm={handleConfirmReview}
-                        onCancel={handleCancelReview}
-                        isLoading={importLoading}
-                    />
+                    <ReviewButtons onConfirm={handleConfirmReview} onCancel={handleCancelReview} isLoading={importLoading} />
                 ) : tickedMovies.size > 0 ? (
-                    <DeleteButton 
-                        onClicked={handleDeleteClick} 
-                        disabled={removeLoading}
-                    />
+                    <DeleteButton onClicked={handleDeleteClick} disabled={removeLoading} />
                 ) : (
-                    <IntegratedButton 
-                        onImportData={handleImportData}
-                        onAddMovie={handleStartAddMovie}
-                        isLoading={loading || importLoading || addLoading}
-                    />
+                    <IntegratedButton onImportData={handleImportData} onAddMovie={handleStartAddMovie} isLoading={loading || importLoading || addLoading} />
                 )}
-                
+
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-2xl font-['Unbounded'] text-black">Loading movies...</div>
+                        <div className="font-['Unbounded'] text-2xl text-black">Loading movies...</div>
                     </div>
                 ) : (
                     <ManageTable
@@ -150,7 +113,7 @@ const MovieManagePage = () => {
                         onStatusChange={onStatusChange}
                     />
                 )}
-                
+
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Movies</div>
             </MobileNotSupported>
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />

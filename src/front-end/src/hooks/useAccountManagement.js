@@ -13,7 +13,7 @@ import {
     showProcessingItemStatus,
     showItemStatusChanged,
     showOperationError,
-    closeSwal
+    closeSwal,
 } from '@utils/sweetalert';
 
 /**
@@ -23,7 +23,7 @@ import {
 export const useAccountManagement = () => {
     // User context
     const { user } = useUser();
-    
+
     // Account data from database
     const { getAccounts, accounts, setAccounts, loading: accountsLoading, error: accountsError } = useGetAccounts();
     const { addAccount, loading: addLoading } = useAddAccount();
@@ -38,7 +38,7 @@ export const useAccountManagement = () => {
     // UI state
     const [tickedAccounts, setTickedAccounts] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     // Add account state
     const [isAddingAccount, setIsAddingAccount] = useState(false);
     const [newAccountData, setNewAccountData] = useState({
@@ -49,7 +49,7 @@ export const useAccountManagement = () => {
         gender: 'male',
         password: '',
         roles: ['customer'],
-        branch: user?.branch?._id || ''
+        branch: user?.branch?._id || '',
     });
 
     // Edit account state
@@ -62,7 +62,7 @@ export const useAccountManagement = () => {
         birthday: '',
         gender: 'male',
         roles: ['customer'],
-        branch: ''
+        branch: '',
     });
 
     // Refresh branches data
@@ -83,18 +83,18 @@ export const useAccountManagement = () => {
 
     // Column configuration
     const header = ['TickButton', 'Name', 'Email', 'Phone', 'Birthday', 'Gender', 'Branch', 'Roles', 'Loyalty', 'EditButton'];
-    
+
     const accountColumnConfig = [
         { width: 'w-12', truncate: false }, // TickButton
-        { width: 'w-40', truncate: true },  // Name
-        { width: 'w-50', truncate: true },  // Email
+        { width: 'w-40', truncate: true }, // Name
+        { width: 'w-50', truncate: true }, // Email
         { width: 'w-40', truncate: true }, // Phone
         { width: 'w-40', truncate: true }, // Birthday
         { width: 'w-30', truncate: false }, // Gender
-        { width: 'w-50', truncate: true },  // Branch
-        { width: 'w-50', truncate: true },  // Roles
-        { width: 'w-30', truncate: true}, // Loyalty
-        { width: 'w-12', truncate: false }  // EditButton
+        { width: 'w-50', truncate: true }, // Branch
+        { width: 'w-50', truncate: true }, // Roles
+        { width: 'w-30', truncate: true }, // Loyalty
+        { width: 'w-12', truncate: false }, // EditButton
     ];
 
     // Initialize accounts and branches on component mount
@@ -140,7 +140,7 @@ export const useAccountManagement = () => {
             cashier: 'Cashier',
             checkincounter: 'Check-in Counter',
             branchmanager: 'Branch Manager',
-            administrator: 'Administrator'
+            administrator: 'Administrator',
         };
         const getRoleDisplay = (role) => roleDisplayMap[role] || role;
 
@@ -173,20 +173,15 @@ export const useAccountManagement = () => {
             formatBranch(account.branch),
             formatRoles(account.roles),
             formatLoyalty(account.loyaltyRank),
-            'EditButton'
+            'EditButton',
         ];
     });
 
     // Filter accounts based on search term
-    const filteredAccountRows = accountRows.filter(row => {
+    const filteredAccountRows = accountRows.filter((row) => {
         if (!searchTerm) return true;
         const searchLower = searchTerm.toLowerCase();
-        return row.some(cell => 
-            typeof cell === 'string' && 
-            cell !== 'TickButton' && 
-            cell !== 'EditButton' &&
-            cell.toLowerCase().includes(searchLower)
-        );
+        return row.some((cell) => typeof cell === 'string' && cell !== 'TickButton' && cell !== 'EditButton' && cell.toLowerCase().includes(searchLower));
     });
 
     // Handle adding new account
@@ -196,11 +191,11 @@ export const useAccountManagement = () => {
 
             const accountData = {
                 ...newAccountData,
-                branch: newAccountData.branch || user?.branch?._id
+                branch: newAccountData.branch || user?.branch?._id,
             };
 
             const result = await addAccount(accountData);
-            
+
             if (result.success) {
                 showItemsAdded();
                 setNewAccountData({
@@ -211,7 +206,7 @@ export const useAccountManagement = () => {
                     gender: 'male',
                     password: '',
                     roles: ['customer'],
-                    branch: user?.branch?._id || ''
+                    branch: user?.branch?._id || '',
                 });
                 setIsAddingAccount(false);
                 await refreshAccounts();
@@ -234,7 +229,7 @@ export const useAccountManagement = () => {
             gender: 'male',
             password: '',
             roles: ['customer'],
-            branch: user?.branch?._id || ''
+            branch: user?.branch?._id || '',
         });
         setIsAddingAccount(true);
     };
@@ -250,7 +245,7 @@ export const useAccountManagement = () => {
             gender: 'male',
             password: '',
             roles: ['customer'],
-            branch: user?.branch?._id || ''
+            branch: user?.branch?._id || '',
         });
     };
 
@@ -263,27 +258,33 @@ export const useAccountManagement = () => {
                 return;
             }
 
-            const rolesArray = Array.from(roles).map(roleIndex => {
-                switch(roleIndex) {
-                    case 1: return 'customer';
-                    case 2: return 'cashier';
-                    case 3: return 'checkincounter';
-                    case 4: return 'branchmanager';
-                    case 5: return 'administrator';
-                    default: return 'customer';
+            const rolesArray = Array.from(roles).map((roleIndex) => {
+                switch (roleIndex) {
+                    case 1:
+                        return 'customer';
+                    case 2:
+                        return 'cashier';
+                    case 3:
+                        return 'checkincounter';
+                    case 4:
+                        return 'branchmanager';
+                    case 5:
+                        return 'administrator';
+                    default:
+                        return 'customer';
                 }
             });
 
             const accountData = {
                 ...newAccountData,
                 roles: rolesArray,
-                // If customer role only or administrator role, set branch to null; otherwise use selected branch
-                branch: (rolesArray.includes('customer') && rolesArray.length === 1) || rolesArray.includes('administrator') ? null : newAccountData.branch
+                // Only set branch to null if user has ONLY customer role OR ONLY administrator role
+                branch: (rolesArray.includes('customer') && rolesArray.length === 1) || (rolesArray.includes('administrator') && rolesArray.length === 1) ? null : newAccountData.branch,
             };
 
             showAddingItems();
             const result = await addAccount(accountData);
-            
+
             if (result.success) {
                 showItemsAdded();
                 handleCloseAddModal();
@@ -301,14 +302,12 @@ export const useAccountManagement = () => {
     const handleOpenEditModal = (accountIndex) => {
         const filteredAccounts = filterAccountsForRows();
         const account = filteredAccounts[accountIndex];
-        
+
         if (account) {
             setEditingAccountData(account);
             // Format birthday for date input (YYYY-MM-DD)
-            const birthdayFormatted = account.birthday 
-                ? new Date(account.birthday).toISOString().split('T')[0] 
-                : '';
-                
+            const birthdayFormatted = account.birthday ? new Date(account.birthday).toISOString().split('T')[0] : '';
+
             setEditAccountData({
                 name: account.name || '',
                 email: account.email || '',
@@ -316,7 +315,7 @@ export const useAccountManagement = () => {
                 birthday: birthdayFormatted,
                 gender: account.gender || 'male',
                 roles: account.roles || ['customer'],
-                branch: account.branch?._id || account.branch || ''
+                branch: account.branch?._id || account.branch || '',
             });
             setIsEditingAccount(true);
         }
@@ -333,7 +332,7 @@ export const useAccountManagement = () => {
             birthday: '',
             gender: 'male',
             roles: ['customer'],
-            branch: ''
+            branch: '',
         });
     };
 
@@ -348,27 +347,33 @@ export const useAccountManagement = () => {
                 return;
             }
 
-            const rolesArray = Array.from(roles).map(roleIndex => {
-                switch(roleIndex) {
-                    case 1: return 'customer';
-                    case 2: return 'cashier';
-                    case 3: return 'checkincounter';
-                    case 4: return 'branchmanager';
-                    case 5: return 'administrator';
-                    default: return 'customer';
+            const rolesArray = Array.from(roles).map((roleIndex) => {
+                switch (roleIndex) {
+                    case 1:
+                        return 'customer';
+                    case 2:
+                        return 'cashier';
+                    case 3:
+                        return 'checkincounter';
+                    case 4:
+                        return 'branchmanager';
+                    case 5:
+                        return 'administrator';
+                    default:
+                        return 'customer';
                 }
             });
 
             const updateData = {
                 ...editAccountData,
                 roles: rolesArray,
-                // If customer role only or administrator role, set branch to null; otherwise use selected branch
-                branch: (rolesArray.includes('customer') && rolesArray.length === 1) || rolesArray.includes('administrator') ? null : editAccountData.branch
+                // Only set branch to null if user has ONLY customer role OR ONLY administrator role
+                branch: (rolesArray.includes('customer') && rolesArray.length === 1) || (rolesArray.includes('administrator') && rolesArray.length === 1) ? null : editAccountData.branch,
             };
 
             showLoading('Updating account...');
             const result = await updateAccount(editingAccountData._id || editingAccountData.id, updateData);
-            
+
             if (result.success) {
                 showSuccess('Account updated successfully!');
                 handleCloseEditModal();
@@ -384,7 +389,7 @@ export const useAccountManagement = () => {
 
     // Helper function to filter accounts (same logic as accountRows)
     const filterAccountsForRows = () => {
-        return (accounts || []);
+        return accounts || [];
     };
 
     // Handle deleting selected accounts
@@ -397,21 +402,20 @@ export const useAccountManagement = () => {
 
             showDeletingItems();
 
-            const accountsToDelete = Array.from(tickedAccounts).map(index => (accounts || [])[index]).filter(Boolean);
-            const deletePromises = accountsToDelete.map(account => 
-                removeAccount(account._id || account.id)
-            );
+            const accountsToDelete = Array.from(tickedAccounts)
+                .map((index) => (accounts || [])[index])
+                .filter(Boolean);
+            const deletePromises = accountsToDelete.map((account) => removeAccount(account._id || account.id));
 
             const results = await Promise.all(deletePromises);
-            const failedDeletes = results.filter(result => !result.success);
+            const failedDeletes = results.filter((result) => !result.success);
 
             if (failedDeletes.length === 0) {
                 showItemsDeleted();
                 setTickedAccounts(new Set());
                 await refreshAccounts();
             } else {
-                showOperationError('Some accounts could not be deleted', 
-                    `${failedDeletes.length} out of ${accountsToDelete.length} deletions failed`);
+                showOperationError('Some accounts could not be deleted', `${failedDeletes.length} out of ${accountsToDelete.length} deletions failed`);
             }
         } catch (error) {
             console.error('Error deleting accounts:', error);
@@ -427,17 +431,17 @@ export const useAccountManagement = () => {
     // Validation functions
     const validateAccountData = (data) => {
         const errors = [];
-        
+
         if (!data.name?.trim()) {
             errors.push('Name is required');
         }
-        
+
         if (!data.email?.trim()) {
             errors.push('Email is required');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
             errors.push('Invalid email format');
         }
-        
+
         if (!data.phone?.trim()) {
             errors.push('Phone number is required');
         }
@@ -453,7 +457,7 @@ export const useAccountManagement = () => {
         if (data.gender && !['male', 'female', 'other'].includes(data.gender)) {
             errors.push('Invalid gender value');
         }
-        
+
         return errors;
     };
 
@@ -472,31 +476,31 @@ export const useAccountManagement = () => {
         branches,
         branchesLoading,
         branchesError,
-        
+
         // UI state
         tickedAccounts,
         setTickedAccounts,
         searchTerm,
-        
+
         // Add account state
         isAddingAccount,
         setIsAddingAccount,
         newAccountData,
         setNewAccountData,
-        
+
         // Edit account state
         isEditingAccount,
         setIsEditingAccount,
         editingAccountData,
         editAccountData,
         setEditAccountData,
-        
+
         // Actions
         handleAddAccount,
         handleDeleteAccounts,
         handleSearch,
         refreshAccounts,
-        
+
         // Modal actions
         handleOpenAddModal,
         handleCloseAddModal,
@@ -504,16 +508,16 @@ export const useAccountManagement = () => {
         handleOpenEditModal,
         handleCloseEditModal,
         handleConfirmEditAccount,
-        
+
         // Configuration
         header,
         accountColumnConfig,
-        
+
         // Validation
         validateAccountData,
         isNewAccountValid,
-        
+
         // Loading states
-        isLoading: accountsLoading || addLoading || updateLoading || deleteLoading || branchesLoading
+        isLoading: accountsLoading || addLoading || updateLoading || deleteLoading || branchesLoading,
     };
 };

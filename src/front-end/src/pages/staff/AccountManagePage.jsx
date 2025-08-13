@@ -17,26 +17,26 @@ const AccountManagePage = () => {
         branches,
         branchesLoading,
         branchesError,
-        
+
         // UI state
         tickedAccounts,
         setTickedAccounts,
-        
+
         // Add account state
         isAddingAccount,
         newAccountData,
         setNewAccountData,
-        
+
         // Edit account state
         isEditingAccount,
         editingAccountData,
         editAccountData,
         setEditAccountData,
-        
+
         // Actions
         handleDeleteAccounts,
         handleSearch,
-        
+
         // Modal actions
         handleOpenAddModal,
         handleCloseAddModal,
@@ -44,50 +44,46 @@ const AccountManagePage = () => {
         handleOpenEditModal,
         handleCloseEditModal,
         handleConfirmEditAccount,
-        
+
         // Configuration
         header,
         accountColumnConfig,
-        
+
         // Loading state
-        isLoading
+        isLoading,
     } = useAccountManagement();
 
     const handleAddAccountDataChange = (field, value) => {
-        setNewAccountData(prev => ({
+        setNewAccountData((prev) => ({
             ...prev,
-            [field]: value
+            [field]: value,
         }));
     };
 
     const handleEditAccountDataChange = (field, value) => {
-        setEditAccountData(prev => ({
+        setEditAccountData((prev) => ({
             ...prev,
-            [field]: value
+            [field]: value,
         }));
     };
 
     const Button = () => {
         return (
             <div className="font-unbounded absolute top-1/6 right-1/10 z-20 flex h-7 w-52 items-center justify-center rounded-xl hover:cursor-pointer">
-                {tickedAccounts.size > 0 ? (
-                    <DeleteButton onClicked={handleDeleteAccounts} />
-                ) : (
-                    <AddButton text="Add Account" onClick={handleOpenAddModal} />
-                )}
+                {tickedAccounts.size > 0 ? <DeleteButton onClicked={handleDeleteAccounts} /> : <AddButton text="Add Account" onClick={handleOpenAddModal} />}
             </div>
-        )
-    }
+        );
+    };
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} />
-                <Button/>
-                
+                <Button />
+
                 {/* Add Account Modal */}
                 {isAddingAccount && (
-                    <EditAccountInformationModal 
+                    <EditAccountInformationModal
                         onClose={handleCloseAddModal}
                         handleConfirm={handleConfirmAddAccount}
                         isEdit={false}
@@ -97,10 +93,10 @@ const AccountManagePage = () => {
                         branches={branches}
                     />
                 )}
-                
+
                 {/* Edit Account Modal */}
                 {isEditingAccount && (
-                    <EditAccountInformationModal 
+                    <EditAccountInformationModal
                         onClose={handleCloseEditModal}
                         handleConfirm={handleConfirmEditAccount}
                         isEdit={true}
@@ -110,15 +106,8 @@ const AccountManagePage = () => {
                         branches={branches}
                     />
                 )}
-                
-                <ManageTable 
-                    data={accountRows} 
-                    anyTicked={tickedAccounts} 
-                    setTickedRows={setTickedAccounts} 
-                    onEdit={handleOpenEditModal} 
-                    header={header} 
-                    columnConfig={accountColumnConfig}
-                />
+
+                <ManageTable data={accountRows} anyTicked={tickedAccounts} setTickedRows={setTickedAccounts} onEdit={handleOpenEditModal} header={header} columnConfig={accountColumnConfig} />
                 <div className="font-unbounded absolute top-5 left-1/6 z-10 text-5xl font-bold text-black">Accounts</div>
             </MobileNotSupported>
             <div className="absolute bottom-1/3 left-0 z-5 h-44 w-44 -translate-x-1/2 transform rounded-full bg-amber-300 mix-blend-hard-light blur-[100px]" />
@@ -129,4 +118,4 @@ const AccountManagePage = () => {
     );
 };
 
-export default AccountManagePage
+export default AccountManagePage;

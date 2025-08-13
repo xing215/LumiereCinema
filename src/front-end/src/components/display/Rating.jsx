@@ -27,17 +27,16 @@ const Rating = ({ rated = 0, movieId, userCount = 0 }) => {
                 setPreloaded(true);
                 return;
             }
-            const [wh] = await Promise.all([
-                getWatchHistory(),
-                movieId ? getMyRatings(movieId) : getMyRatings()
-            ]);
+            const [wh] = await Promise.all([getWatchHistory(), movieId ? getMyRatings(movieId) : getMyRatings()]);
             if (isMounted) {
                 setWatchHistory(wh?.data?.watchHistory || []);
                 setPreloaded(true);
             }
         };
         preload();
-        return () => { isMounted = false; };
+        return () => {
+            isMounted = false;
+        };
     }, [movieId, user]);
 
     const handleStarClick = async (idx) => {
@@ -47,7 +46,7 @@ const Rating = ({ rated = 0, movieId, userCount = 0 }) => {
             return;
         }
         // Pre-check: require movie in watch history (use preloaded)
-        if (!movieId || !Array.isArray(watchHistory) || !watchHistory.some(m => m?.schedule?.movie?._id === movieId)) {
+        if (!movieId || !Array.isArray(watchHistory) || !watchHistory.some((m) => m?.schedule?.movie?._id === movieId)) {
             await Swal.fire({
                 title: `<span style='color:#fff;font-size:1.5rem;font-weight:500;'>Not Allowed</span>`,
                 html: `<div style='color:#f1f5f9;font-size:1.1rem;font-weight:400;margin-bottom:8px;'>You can only rate movies you have watched.</div>`,
@@ -64,7 +63,8 @@ const Rating = ({ rated = 0, movieId, userCount = 0 }) => {
         if (alreadyRated) {
             const { isConfirmed } = await Swal.fire({
                 title: `<span style='color:#fff;font-size:1.5rem;font-weight:500;'>Already Rated</span>`,
-                html: `<div style='color:#f1f5f9;font-size:1.1rem;font-weight:400;margin-bottom:8px;'>You already rated this movie ${alreadyRated} star${alreadyRated > 1 ? 's' : ''}.</div>` +
+                html:
+                    `<div style='color:#f1f5f9;font-size:1.1rem;font-weight:400;margin-bottom:8px;'>You already rated this movie ${alreadyRated} star${alreadyRated > 1 ? 's' : ''}.</div>` +
                     `<div style='color:#f1f5f9;font-size:1rem;font-weight:400;margin-bottom:8px;'>Would you like to edit your rating?</div>`,
                 background: '#23222a',
                 color: '#fff',
@@ -80,12 +80,14 @@ const Rating = ({ rated = 0, movieId, userCount = 0 }) => {
         let tempSelected = idx + 1;
         setSelected(tempSelected);
         function renderStars(val) {
-            return Array.from({ length: 5 }, (_, i) =>
-                `<span data-star="${i + 1}" style="cursor:pointer;display:inline-block;">
+            return Array.from(
+                { length: 5 },
+                (_, i) =>
+                    `<span data-star="${i + 1}" style="cursor:pointer;display:inline-block;">
                     <svg width='28' height='28' viewBox='0 0 24 24' fill='${i < val ? '#facc15' : 'none'}' stroke='${i < val ? '#facc15' : '#d1d5db'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
                         <polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'></polygon>
                     </svg>
-                </span>`
+                </span>`,
             ).join('');
         }
 
@@ -174,9 +176,9 @@ const Rating = ({ rated = 0, movieId, userCount = 0 }) => {
                 setSelected(null);
             }
         });
-// SweetAlert2 custom styles for Figma-like glassmorphism popup and Tailwind colors
-const swalStyle = document.createElement('style');
-swalStyle.innerHTML = `
+        // SweetAlert2 custom styles for Figma-like glassmorphism popup and Tailwind colors
+        const swalStyle = document.createElement('style');
+        swalStyle.innerHTML = `
 .swal2-popup-rating {
   background: rgba(15, 23, 42, 0.4) !important; /* bg-slate-900/40 */
   color: #f1f5f9 !important; /* slate-100 */
@@ -212,18 +214,16 @@ swalStyle.innerHTML = `
   color: #f43f5e !important; /* rose-500 */
 }
 `;
-if (!document.head.querySelector('style[data-swal2-dark]')) {
-  swalStyle.setAttribute('data-swal2-dark', 'true');
-  document.head.appendChild(swalStyle);
-}
+        if (!document.head.querySelector('style[data-swal2-dark]')) {
+            swalStyle.setAttribute('data-swal2-dark', 'true');
+            document.head.appendChild(swalStyle);
+        }
     };
 
     return (
         <>
-            {showLoginError && (
-                <ErrorModal errorMsg="Please login to rate this movie." onClose={() => setShowLoginError(false)} />
-            )}
-            <div className="flex items-center gap-2 md:gap-3 lg:gap-4 xl:gap-5 md:py-1 xl:py-2 relative">
+            {showLoginError && <ErrorModal errorMsg="Please login to rate this movie." onClose={() => setShowLoginError(false)} />}
+            <div className="relative flex items-center gap-2 md:gap-3 md:py-1 lg:gap-4 xl:gap-5 xl:py-2">
                 <div className="flex items-center gap-0.5 md:gap-1 lg:gap-1.5 xl:gap-2">
                     {Array.from({ length: 5 }, (_, i) => {
                         const halfPercent = (rated - i) * 100;
@@ -232,7 +232,7 @@ if (!document.head.querySelector('style[data-swal2-dark]')) {
                         return (
                             <div
                                 key={i}
-                                className={`relative h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 xl:h-8 xl:w-8 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`relative h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 xl:h-8 xl:w-8 ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                                 onClick={isLoading ? undefined : () => handleStarClick(i)}
                                 aria-disabled={isLoading}
                                 tabIndex={isLoading ? -1 : 0}
@@ -240,11 +240,7 @@ if (!document.head.querySelector('style[data-swal2-dark]')) {
                                 aria-label={`Rate ${i + 1} star${i === 0 ? '' : 's'}`}
                             >
                                 <Star className="h-full w-full text-gray-300" />
-                                <Star
-                                    className={`absolute top-0 left-0 h-full w-full fill-yellow-400 text-yellow-400`}
-                                    style={{ clipPath: `inset(0 ${100 - halfPercent}% 0 0)` }}
-                                    aria-hidden="true"
-                                />
+                                <Star className={`absolute top-0 left-0 h-full w-full fill-yellow-400 text-yellow-400`} style={{ clipPath: `inset(0 ${100 - halfPercent}% 0 0)` }} aria-hidden="true" />
                             </div>
                         );
                     })}

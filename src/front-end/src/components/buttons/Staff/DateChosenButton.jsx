@@ -39,7 +39,7 @@ const DateChosenButton = ({ selectedDate, onDateChange, scheduleDates = [] }) =>
     // Helper function to check if a date has schedules
     const hasSchedule = (date) => {
         const dateString = formatDateForInput(date);
-        return scheduleDates.some(scheduleDate => {
+        return scheduleDates.some((scheduleDate) => {
             if (typeof scheduleDate === 'string') {
                 return scheduleDate.startsWith(dateString);
             }
@@ -55,24 +55,24 @@ const DateChosenButton = ({ selectedDate, onDateChange, scheduleDates = [] }) =>
         const currentDate = new Date(selectedDate);
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        
+
         // First day of the month and last day
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
-        
+
         // Find the start of the calendar (may include previous month days)
         const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - firstDay.getDay());
-        
+
         // Generate 42 days (6 weeks x 7 days)
         const days = [];
         const currentCalendarDate = new Date(startDate);
-        
+
         for (let i = 0; i < 42; i++) {
             days.push(new Date(currentCalendarDate));
             currentCalendarDate.setDate(currentCalendarDate.getDate() + 1);
         }
-        
+
         return days;
     };
 
@@ -107,57 +107,49 @@ const DateChosenButton = ({ selectedDate, onDateChange, scheduleDates = [] }) =>
     return (
         <div ref={datePickerRef} className="relative z-20 flex items-center gap-1">
             {/* Decrease Date Button */}
-            <button 
-                className="font-unbounded h-9 w-9 rounded-xl bg-white text-lg text-slate-950 hover:cursor-pointer hover:bg-gray-100 transition-colors flex items-center justify-center"
+            <button
+                className="font-unbounded flex h-9 w-9 items-center justify-center rounded-xl bg-white text-lg text-slate-950 transition-colors hover:cursor-pointer hover:bg-gray-100"
                 onClick={decreaseDate}
                 title="Previous day"
             >
                 &lt;
             </button>
-            
+
             {/* Date Display Button */}
-            <button 
-                className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950 hover:cursor-pointer hover:bg-gray-100 transition-colors"
+            <button
+                className="font-unbounded h-9 rounded-xl bg-white px-5 text-lg text-slate-950 transition-colors hover:cursor-pointer hover:bg-gray-100"
                 onClick={() => setShowDatePicker(!showDatePicker)}
             >
                 {formatDate(selectedDate)}
             </button>
-            
+
             {/* Increase Date Button */}
-            <button 
-                className="font-unbounded h-9 w-9 rounded-xl bg-white text-lg text-slate-950 hover:cursor-pointer hover:bg-gray-100 transition-colors flex items-center justify-center"
+            <button
+                className="font-unbounded flex h-9 w-9 items-center justify-center rounded-xl bg-white text-lg text-slate-950 transition-colors hover:cursor-pointer hover:bg-gray-100"
                 onClick={increaseDate}
                 title="Next day"
             >
                 &gt;
             </button>
-            
+
             {/* Date Picker Dropdown */}
             {showDatePicker && (
-                <div className="absolute z-100 top-full mt-2 -right-[10%] bg-white rounded-lg shadow-lg border p-4 min-w-[300px]">
+                <div className="absolute top-full -right-[10%] z-100 mt-2 min-w-[300px] rounded-lg border bg-white p-4 shadow-lg">
                     {/* Calendar Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <button
-                            onClick={() => navigateMonth(-1)}
-                            className="p-1 hover:bg-gray-100 rounded"
-                        >
+                    <div className="mb-4 flex items-center justify-between">
+                        <button onClick={() => navigateMonth(-1)} className="rounded p-1 hover:bg-gray-100">
                             &#8249;
                         </button>
-                        <h3 className="font-semibold text-lg">
-                            {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                        </h3>
-                        <button
-                            onClick={() => navigateMonth(1)}
-                            className="p-1 hover:bg-gray-100 rounded"
-                        >
+                        <h3 className="text-lg font-semibold">{selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
+                        <button onClick={() => navigateMonth(1)} className="rounded p-1 hover:bg-gray-100">
                             &#8250;
                         </button>
                     </div>
 
                     {/* Day Labels */}
-                    <div className="grid grid-cols-7 gap-1 mb-2">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                            <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
+                    <div className="mb-2 grid grid-cols-7 gap-1">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                            <div key={day} className="p-2 text-center text-xs font-medium text-gray-500">
                                 {day}
                             </div>
                         ))}
@@ -180,30 +172,12 @@ const DateChosenButton = ({ selectedDate, onDateChange, scheduleDates = [] }) =>
                                         onDateChange(day);
                                         setShowDatePicker(false);
                                     }}
-                                    className={`
-                                        p-2 text-sm rounded transition-colors relative
-                                        ${!isCurrentMonth 
-                                            ? 'text-gray-300 hover:bg-gray-50' 
-                                            : 'text-gray-900 hover:bg-gray-100'
-                                        }
-                                        ${isSelected 
-                                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                                            : ''
-                                        }
-                                        ${isToday && !isSelected 
-                                            ? 'bg-blue-100 font-semibold' 
-                                            : ''
-                                        }
-                                        ${hasScheduleDate && !isSelected 
-                                            ? 'ring-2 ring-green-400 bg-green-50' 
-                                            : ''
-                                        }
-                                    `}
+                                    className={`relative rounded p-2 text-sm transition-colors ${!isCurrentMonth ? 'text-gray-300 hover:bg-gray-50' : 'text-gray-900 hover:bg-gray-100'} ${
+                                        isSelected ? 'bg-blue-500 text-white hover:bg-blue-600' : ''
+                                    } ${isToday && !isSelected ? 'bg-blue-100 font-semibold' : ''} ${hasScheduleDate && !isSelected ? 'bg-green-50 ring-2 ring-green-400' : ''} `}
                                 >
                                     {day.getDate()}
-                                    {hasScheduleDate && (
-                                        <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                    )}
+                                    {hasScheduleDate && <div className="absolute right-0.5 bottom-0.5 h-1.5 w-1.5 rounded-full bg-green-500"></div>}
                                 </button>
                             );
                         })}

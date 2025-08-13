@@ -18,7 +18,7 @@ import React, { useState, useRef, useEffect, use } from 'react';
 import { useGetPublicPromotions } from '@hooks/useTicket';
 import { useGetPromotions } from '@hooks/useAdmin';
 import CustomDropdown from './CustomDropdown';
-import {useUser} from '@contexts/UserContext';
+import { useUser } from '@contexts/UserContext';
 
 const PromotionDropdown = ({
     value,
@@ -27,7 +27,7 @@ const PromotionDropdown = ({
     className = '',
     promotion = null,
     placeholder = 'Enter promotion code',
-    productType = 'All' // 'Movie', 'Snack', or 'All'
+    productType = 'All', // 'Movie', 'Snack', or 'All'
 }) => {
     const { fetchPublicPromotions, promotions: publicPromotions, loading } = useGetPublicPromotions();
     const { getPromotions, promotions: allPromotion, loading: allLoading, error } = useGetPromotions();
@@ -44,10 +44,10 @@ const PromotionDropdown = ({
     }, []);
     useEffect(() => {
         setPromotions([...publicPromotions, ...allPromotion]);
-    } , [publicPromotions, allPromotion]);
+    }, [publicPromotions, allPromotion]);
 
     // Filter promotions based on product type
-    const filteredPromotions = promotions.filter(promo => {
+    const filteredPromotions = promotions.filter((promo) => {
         // If productType is 'All', show all promotions
         if (productType === 'All') {
             return true;
@@ -57,30 +57,30 @@ const PromotionDropdown = ({
     });
 
     // Transform filtered promotions to dropdown options for CustomDropdown
-    const promotionOptions = filteredPromotions.map(promo => {
+    const promotionOptions = filteredPromotions.map((promo) => {
         return {
             value: promo.promotionCode,
-            label: `${promo.name}`
+            label: `${promo.name}`,
         };
     });
 
     // Handle change - need to extract just the promotion code from the selected value
     const handleChange = (e) => {
         let finalValue = e.target.value;
-        
+
         // If the value matches one of our options, extract just the promotion code
-        const matchedOption = promotionOptions.find(option => option.value === finalValue);
+        const matchedOption = promotionOptions.find((option) => option.value === finalValue);
         if (matchedOption) {
             finalValue = matchedOption.value;
         }
-        
+
         // Create a new event with the clean promotion code
         const syntheticEvent = {
             target: {
-                value: finalValue
-            }
+                value: finalValue,
+            },
         };
-        
+
         onChange(syntheticEvent);
     };
 
@@ -90,7 +90,7 @@ const PromotionDropdown = ({
             onBlur(e);
         }
     };
-    
+
     // If no promotions available, render as simple input field
     if (!(loading || allLoading) && filteredPromotions.length === 0) {
         return (
@@ -106,7 +106,7 @@ const PromotionDropdown = ({
                         }
                     }}
                     placeholder={placeholder}
-                    className={`h-10 w-full rounded-lg px-3 pr-4 bg-zinc-300 text-black border ${promotion ? 'border-green-500' : 'border-white'} ring-0 font-['Unbounded'] text-sm text-left transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm`}
+                    className={`h-10 w-full rounded-lg border bg-zinc-300 px-3 pr-4 text-black ${promotion ? 'border-green-500' : 'border-white'} text-left font-['Unbounded'] text-sm shadow-sm ring-0 transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none`}
                 />
             </div>
         );
@@ -119,12 +119,12 @@ const PromotionDropdown = ({
                 onChange={handleChange}
                 onBlur={handleBlurOrEnter}
                 options={promotionOptions}
-                placeholder={(loading || allLoading) ? 'Loading promotions...' : placeholder}
+                placeholder={loading || allLoading ? 'Loading promotions...' : placeholder}
                 name="promotionCode"
                 bgColor="zinc-300"
                 inputBgColor="zinc-300"
                 hoverColor="zinc-200"
-                borderColor={promotion ? "green-500" : "white"}
+                borderColor={promotion ? 'green-500' : 'white'}
                 textColor="black"
                 dropdownTextColor="black"
                 bgOpacity=""

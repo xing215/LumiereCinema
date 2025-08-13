@@ -48,10 +48,10 @@ const createUser = async (req, res) => {
     }
 
     // Validate branch if provided and roles require it
-    // Customer-only and administrator roles don't need branch
+    // Only users with ONLY customer role OR ONLY administrator role don't need branch
     const rolesArray = roles && roles.length > 0 ? roles : ['customer'];
-    const needsBranch = !(rolesArray.includes('customer') && rolesArray.length === 1) && 
-                       !rolesArray.includes('administrator');
+    const needsBranch = !((rolesArray.includes('customer') && rolesArray.length === 1) || 
+                         (rolesArray.includes('administrator') && rolesArray.length === 1));
     
     if (branch && needsBranch) {
       const branchExists = await Branch.findById(branch);
@@ -198,8 +198,9 @@ const updateUserDetails = async (req, res) => {
       // Check current user roles to determine if branch is needed
       const currentUser = await User.findById(userId).select('roles');
       const currentRoles = currentUser ? currentUser.roles : ['customer'];
-      const needsBranch = !(currentRoles.includes('customer') && currentRoles.length === 1) && 
-                         !currentRoles.includes('administrator');
+      // Only users with ONLY customer role OR ONLY administrator role don't need branch
+      const needsBranch = !((currentRoles.includes('customer') && currentRoles.length === 1) || 
+                           (currentRoles.includes('administrator') && currentRoles.length === 1));
       
       if (needsBranch) {
         const branchExists = await Branch.findById(updateData.branch);

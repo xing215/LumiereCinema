@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import LocationTable from "@components/display/LocationTable.jsx";
-import icon from "@assets/img/icon.png";
-import iconShadow from "@assets/img/icon-shadow.png";
-import current from "@assets/img/current.png";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import React, { useEffect, useRef, useState } from 'react';
+import LocationTable from '@components/display/LocationTable.jsx';
+import icon from '@assets/img/icon.png';
+import iconShadow from '@assets/img/icon-shadow.png';
+import current from '@assets/img/current.png';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const DEFAULT_CENTER = [10.76285093853062, 106.6824844998954];
 const DEFAULT_BOUNDS = [
@@ -14,25 +14,15 @@ const DEFAULT_BOUNDS = [
 
 function getDistance(lon1, lat1, lon2, lat2) {
     const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) *
-            Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return Math.round(R * c * 100) / 100;
 }
 
 const getCenter = (cinemas) => {
-    if (
-        Array.isArray(cinemas) &&
-        cinemas.length > 0 &&
-        cinemas[0].location &&
-        cinemas[0].location.coordinates
-    ) {
+    if (Array.isArray(cinemas) && cinemas.length > 0 && cinemas[0].location && cinemas[0].location.coordinates) {
         const [lng, lat] = cinemas[0].location.coordinates;
         return [lat, lng];
     }
@@ -45,10 +35,12 @@ const IntegratedMap = ({
     isOpen = true,
     cinemas = [],
     getAllCinemas = false,
-    getAllCinemasClick = () => {console.log("Get all cinemas clicked");},
+    getAllCinemasClick = () => {
+        console.log('Get all cinemas clicked');
+    },
     requireCtrlToZoom = false,
 }) => {
-    const [maxdistance, setMaxDistance] = useState("");
+    const [maxdistance, setMaxDistance] = useState('');
     const [userLocation, setUserLocation] = useState(null);
     const [filteredCinemas, setFilteredCinemas] = useState(cinemas);
     const [userLocationMarker, setUserLocationMarker] = useState(null);
@@ -64,11 +56,11 @@ const IntegratedMap = ({
     // Function to move map to a specific cinema location
     const moveToLocation = (cinema) => {
         if (!leafletMapRef.current || !cinema.location || !cinema.location.coordinates) return;
-        
+
         const [lng, lat] = cinema.location.coordinates;
         leafletMapRef.current.setView([lat, lng], Math.max(leafletMapRef.current.getZoom(), 16), {
             animate: true,
-            duration: 0.5
+            duration: 0.5,
         });
     };
 
@@ -81,21 +73,16 @@ const IntegratedMap = ({
 
     // Filter cinemas based on distance
     useEffect(() => {
-        if (isOpen && userLocation && maxdistance !== "") {
+        if (isOpen && userLocation && maxdistance !== '') {
             const maxDistNum = Number(maxdistance);
             const newCinemas = cinemas.filter((cinema) => {
                 if (!cinema.location || !cinema.location.coordinates) return false;
                 const [lng, lat] = cinema.location.coordinates;
-                const distance = getDistance(
-                    userLocation.coordinates[0],
-                    userLocation.coordinates[1],
-                    lng,
-                    lat
-                );
+                const distance = getDistance(userLocation.coordinates[0], userLocation.coordinates[1], lng, lat);
                 return distance <= maxDistNum;
             });
             setFilteredCinemas(newCinemas);
-        } else if (isOpen && maxdistance === "") {
+        } else if (isOpen && maxdistance === '') {
             setFilteredCinemas(cinemas);
         }
     }, [maxdistance, userLocation, cinemas, isOpen]);
@@ -112,19 +99,14 @@ const IntegratedMap = ({
                 scrollWheelZoom: !requireCtrlToZoom, // Disable scroll wheel zoom if requireCtrlToZoom is true
             });
 
-            leafletMapRef.current.zoomControl.setPosition(
-                window.innerWidth < 768 ? "bottomright" : "topright"
-            );
+            leafletMapRef.current.zoomControl.setPosition(window.innerWidth < 768 ? 'bottomright' : 'topright');
 
-            L.tileLayer(
-                "https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}",
-                {
-                    maxZoom: 20,
-                    subdomains: ["mt0", "mt1", "mt2", "mt3"],
-                    tileSize: 512,
-                    zoomOffset: -1,
-                }
-            ).addTo(leafletMapRef.current);
+            L.tileLayer('https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                tileSize: 512,
+                zoomOffset: -1,
+            }).addTo(leafletMapRef.current);
         }
 
         // Cleanup when component unmounts or isOpen becomes false
@@ -165,7 +147,8 @@ const IntegratedMap = ({
         };
 
         const handleWheel = (e) => {
-            if (e.ctrlKey || e.metaKey) { // metaKey for Mac Cmd key
+            if (e.ctrlKey || e.metaKey) {
+                // metaKey for Mac Cmd key
                 // Allow zoom when Ctrl/Cmd is held
                 e.preventDefault(); // Prevent page scroll when zooming
                 e.stopPropagation();
@@ -173,7 +156,7 @@ const IntegratedMap = ({
             } else {
                 // Allow page scroll but prevent map zoom when not holding Ctrl/Cmd
                 map.scrollWheelZoom.disable();
-                
+
                 setShowZoomTooltip(true);
                 if (tooltipTimeoutRef.current) {
                     clearTimeout(tooltipTimeoutRef.current);
@@ -181,7 +164,7 @@ const IntegratedMap = ({
                 tooltipTimeoutRef.current = setTimeout(() => {
                     setShowZoomTooltip(false);
                 }, 2000);
-                
+
                 // Don't preventDefault() here - allow page scroll to continue
             }
         };
@@ -219,7 +202,7 @@ const IntegratedMap = ({
         });
 
         // Clear existing cinema markers
-        cinemaMarkersRef.current.forEach(marker => {
+        cinemaMarkersRef.current.forEach((marker) => {
             leafletMapRef.current.removeLayer(marker);
         });
         cinemaMarkersRef.current = [];
@@ -228,23 +211,18 @@ const IntegratedMap = ({
         filteredCinemas.forEach((cinema) => {
             if (cinema.location && cinema.location.coordinates) {
                 const [lng, lat] = cinema.location.coordinates;
-                const marker = L.marker(
-                    [lat, lng],
-                    { icon: new LocationMarker() }
-                ).addTo(leafletMapRef.current);
-                
-                marker.bindPopup(
-                    `<b>${cinema.name}</b><br/>${cinema.address || ""}`
-                );
-                
+                const marker = L.marker([lat, lng], { icon: new LocationMarker() }).addTo(leafletMapRef.current);
+
+                marker.bindPopup(`<b>${cinema.name}</b><br/>${cinema.address || ''}`);
+
                 // Add hover event to move map to cinema location
                 marker.on('click', () => {
                     leafletMapRef.current.setView([lat, lng], Math.max(leafletMapRef.current.getZoom(), 16), {
                         animate: true,
-                        duration: 0.5
+                        duration: 0.5,
                     });
                 });
-                
+
                 cinemaMarkersRef.current.push(marker);
             }
         });
@@ -253,71 +231,64 @@ const IntegratedMap = ({
     // Handle user location functionality (geolocation + marker)
 
     const GetLocation = () => {
-                if (!leafletMapRef.current || !isOpen) return;
-        
+        if (!leafletMapRef.current || !isOpen) return;
+
         const map = leafletMapRef.current;
-            if (navigator.geolocation && filteredCinemas.length > 0) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const newUserLocation = {
-                            type: "Point",
-                            coordinates: [
-                                position.coords.longitude,
-                                position.coords.latitude,
-                            ],
-                        };
-                        
-                        // Remove existing user location marker
-                        if (userLocationMarker) {
-                            map.removeLayer(userLocationMarker);
-                        }
+        if (navigator.geolocation && filteredCinemas.length > 0) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const newUserLocation = {
+                        type: 'Point',
+                        coordinates: [position.coords.longitude, position.coords.latitude],
+                    };
 
-                        // Create user location icon
-                        const UserLocationIcon = L.Icon.extend({
-                            options: {
-                                iconUrl: current,
-                                iconSize: [40, 40],
-                                iconAnchor: [10, 10],
-                                popupAnchor: [0, -10],
-                            },
-                        });
-
-                        // Add new user location marker
-                        const lat = newUserLocation.coordinates[1];
-                        const lng = newUserLocation.coordinates[0];
-                        const newMarker = L.marker(
-                            [lat, lng],
-                            { icon: new UserLocationIcon() }
-                        ).addTo(map);
-
-                        newMarker.bindPopup("Your Location");
-                        setUserLocationMarker(newMarker);
-                        setUserLocation(newUserLocation);
-
-                        // Center map on user location
-                        map.setView([lat, lng], 15);
-                    },
-                    (error) => {
-                        console.error("Geolocation error:", error);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 300000
+                    // Remove existing user location marker
+                    if (userLocationMarker) {
+                        map.removeLayer(userLocationMarker);
                     }
-                );
-            }
-        };
+
+                    // Create user location icon
+                    const UserLocationIcon = L.Icon.extend({
+                        options: {
+                            iconUrl: current,
+                            iconSize: [40, 40],
+                            iconAnchor: [10, 10],
+                            popupAnchor: [0, -10],
+                        },
+                    });
+
+                    // Add new user location marker
+                    const lat = newUserLocation.coordinates[1];
+                    const lng = newUserLocation.coordinates[0];
+                    const newMarker = L.marker([lat, lng], { icon: new UserLocationIcon() }).addTo(map);
+
+                    newMarker.bindPopup('Your Location');
+                    setUserLocationMarker(newMarker);
+                    setUserLocation(newUserLocation);
+
+                    // Center map on user location
+                    map.setView([lat, lng], 15);
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000,
+                },
+            );
+        }
+    };
 
     useEffect(() => {
         if (!leafletMapRef.current || !isOpen) return;
-        
+
         const map = leafletMapRef.current;
 
-
-        map.on("click", () => GetLocation(map));
+        map.on('click', () => GetLocation(map));
         return () => {
-            map.off("click", () => GetLocation(map));
+            map.off('click', () => GetLocation(map));
         };
     }, [isOpen, filteredCinemas, userLocationMarker]);
 
@@ -335,16 +306,16 @@ const IntegratedMap = ({
         }
 
         // Add distance circle if maxdistance is set
-        if (maxdistance !== "" && !isNaN(Number(maxdistance))) {
+        if (maxdistance !== '' && !isNaN(Number(maxdistance))) {
             const radiusInMeters = Number(maxdistance) * 1000; // Convert km to meters
-            
+
             const circle = L.circle([lat, lng], {
                 color: '#3b82f6', // Blue color
                 fillColor: '#3b82f6',
                 fillOpacity: 0.1,
                 weight: 2,
                 opacity: 0.6,
-                radius: radiusInMeters
+                radius: radiusInMeters,
             }).addTo(map);
 
             setDistanceCircle(circle);
@@ -365,21 +336,18 @@ const IntegratedMap = ({
             const isZoomingOut = e.deltaY > 0;
             const isZoomingIn = e.deltaY < 0;
 
-            if (
-                (currentZoom <= minZoom && isZoomingOut) ||
-                (currentZoom >= maxZoom && isZoomingIn)
-            ) {
+            if ((currentZoom <= minZoom && isZoomingOut) || (currentZoom >= maxZoom && isZoomingIn)) {
                 e.preventDefault();
                 return false;
             }
         };
 
         const mapContainer = map.getContainer();
-        mapContainer.addEventListener("wheel", handleWheel, { passive: false });
+        mapContainer.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
             if (mapContainer) {
-                mapContainer.removeEventListener("wheel", handleWheel);
+                mapContainer.removeEventListener('wheel', handleWheel);
             }
         };
     }, [isOpen, requireCtrlToZoom]);
@@ -406,12 +374,12 @@ const IntegratedMap = ({
             }
         };
 
-        document.addEventListener("scroll", handleScroll, { passive: true });
-        document.addEventListener("touchend", handleScrollEnd, { passive: true });
+        document.addEventListener('scroll', handleScroll, { passive: true });
+        document.addEventListener('touchend', handleScrollEnd, { passive: true });
 
         return () => {
-            document.removeEventListener("scroll", handleScroll);
-            document.removeEventListener("touchend", handleScrollEnd);
+            document.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('touchend', handleScrollEnd);
             if (scrollTimeout) clearTimeout(scrollTimeout);
         };
     }, [isOpen, requireCtrlToZoom]);
@@ -421,8 +389,8 @@ const IntegratedMap = ({
     }
 
     return (
-        <div className="relative w-screen lg:w-[70vw] justify-center items-start gap-3 flex md:block lg:gap-0 h-[70vh] md:min-h-[300px]">
-            <div className=" mt-[1%] ml-0 md:ml-3 relative z-10 w-[95%] md:w-[25%] h-[40%] md:h-[98%] pt-2">
+        <div className="relative flex h-[70vh] w-screen items-start justify-center gap-3 md:block md:min-h-[300px] lg:w-[70vw] lg:gap-0">
+            <div className="relative z-10 mt-[1%] ml-0 h-[40%] w-[95%] pt-2 md:ml-3 md:h-[98%] md:w-[25%]">
                 <LocationTable
                     cinemas={filteredCinemas}
                     curlocation={userLocation}
@@ -436,14 +404,11 @@ const IntegratedMap = ({
                     getAllCinemasClick={getAllCinemasClick}
                 />
             </div>
-            <div
-                ref={mapRef}
-                className="absolute top-0 h-full w-full overflow-auto rounded-xl border-gray-200 z-0"
-            />
-            
+            <div ref={mapRef} className="absolute top-0 z-0 h-full w-full overflow-auto rounded-xl border-gray-200" />
+
             {/* Zoom Tooltip */}
             {requireCtrlToZoom && showZoomTooltip && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-950 bg-opacity-80 text-white px-3 py-2 rounded-md text-sm font-medium z-20 pointer-events-none">
+                <div className="bg-opacity-80 pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 transform rounded-md bg-slate-950 px-3 py-2 text-sm font-medium text-white">
                     Hold Ctrl to zoom
                 </div>
             )}

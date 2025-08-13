@@ -16,10 +16,13 @@ const Maps = ({ cinemas }) => {
         <section className="no-scrollbar relative z-19 flex w-screen flex-col items-center justify-center overflow-y-visible">
             <Label />
             <div className="h-3 w-full lg:h-5 xl:h-10" />
-            <div className="h-auto w-auto ">
-                <IntegratedMap cinemas={cinemas} onClick={(cinema) => {
-                    navigate(getMovieListPath(undefined, cinema._id));
-                }}  requireCtrlToZoom={true}
+            <div className="h-auto w-auto">
+                <IntegratedMap
+                    cinemas={cinemas}
+                    onClick={(cinema) => {
+                        navigate(getMovieListPath(undefined, cinema._id));
+                    }}
+                    requireCtrlToZoom={true}
                 />
             </div>
             <div className="h-1 w-full md:h-5 lg:h-10 xl:h-15" />

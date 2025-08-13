@@ -13,7 +13,8 @@ const LandingPage = () => {
     const { fetchBranches, branches, loading, error } = useFetchBranches();
     useEffect(() => {
         fetchBranches();
-    }, []);    return (
+    }, []);
+    return (
         <div className="no-scrollbar flex w-screen flex-col items-center overflow-hidden bg-slate-950">
             <Header />
             <Banner />

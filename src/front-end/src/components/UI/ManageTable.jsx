@@ -1,13 +1,13 @@
 import { useRef, useEffect, useState } from 'react';
 import RowTemplate from '@components/UI/ManageTable/RowTemplate.jsx';
 
-const ManageTable = ({ 
-    data, 
-    anyTicked, 
-    setTickedRows, 
-    onEdit, 
-    onEditSeat, 
-    header, 
+const ManageTable = ({
+    data,
+    anyTicked,
+    setTickedRows,
+    onEdit,
+    onEditSeat,
+    header,
     columnConfig,
     // Inline editing props
     editableFields,
@@ -23,7 +23,7 @@ const ManageTable = ({
     // Status change prop
     onStatusChange,
     // Review mode props
-    reviewMovieIds
+    reviewMovieIds,
 }) => {
     const headerScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -52,7 +52,7 @@ const ManageTable = ({
 
     // Handle row expand/collapse
     const handleRowClick = (rowIndex) => {
-        setExpandedRow(prev => prev === rowIndex ? null : rowIndex);
+        setExpandedRow((prev) => (prev === rowIndex ? null : rowIndex));
     };
 
     // Đồng bộ scroll ngang giữa header và content - chỉ khi có columnConfig
@@ -90,9 +90,7 @@ const ManageTable = ({
             {/* Header cố định - chỉ scroll ngang khi có columnConfig */}
             <div
                 ref={headerScrollRef}
-                className={`no-scrollbar relative z-20 w-full bg-zinc-400 rounded-t-2xl shadow-sm ${
-                    hasColumnConfig ? 'overflow-x-auto' : 'overflow-x-hidden'
-                }`}
+                className={`no-scrollbar relative z-20 w-full rounded-t-2xl bg-zinc-400 shadow-sm ${hasColumnConfig ? 'overflow-x-auto' : 'overflow-x-hidden'}`}
                 style={{ overflowY: 'hidden' }}
             >
                 <div className={hasColumnConfig ? 'min-w-max' : 'w-full'}>
@@ -101,12 +99,7 @@ const ManageTable = ({
             </div>
 
             {/* Content - scroll cả ngang và dọc khi có columnConfig, chỉ dọc khi không có */}
-            <div
-                ref={contentScrollRef}
-                className={`no-scrollbar relative h-[90%] w-full overflow-y-auto ${
-                    hasColumnConfig ? 'overflow-x-auto' : 'overflow-x-hidden'
-                }`}
-            >
+            <div ref={contentScrollRef} className={`no-scrollbar relative h-[90%] w-full overflow-y-auto ${hasColumnConfig ? 'overflow-x-auto' : 'overflow-x-hidden'}`}>
                 <div className={hasColumnConfig ? 'min-w-max' : 'w-full'}>
                     {data.map((row, index) => (
                         <RowTemplate

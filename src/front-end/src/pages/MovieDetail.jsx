@@ -8,8 +8,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 const MainBody = () => {
     // Extract movie ID from URL parameters
     const [searchParams] = useSearchParams();
-    const movieId = searchParams.get("movieId");
-    const branchId = searchParams.get("branchId");
+    const movieId = searchParams.get('movieId');
+    const branchId = searchParams.get('branchId');
     return (
         <div className="relative flex w-[80%] flex-col items-center bg-slate-950">
             <MovieInfo movieId={movieId} branchId={branchId} />

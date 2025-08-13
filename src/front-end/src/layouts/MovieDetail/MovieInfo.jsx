@@ -20,7 +20,7 @@ const Description = ({ scripts }) => {
 const MovieInfo = ({ movieId, branchId }) => {
     const navigate = useNavigate();
     const { getMovieDetail, movieDetail, loading, error } = useGetMovieDetail();
-    
+
     useEffect(() => {
         if (!movieId) {
             navigate(ROUTES.NOT_FOUND, { replace: true });
@@ -38,52 +38,52 @@ const MovieInfo = ({ movieId, branchId }) => {
         setPosterSrc(movieDetail?.posterURL || PosterFallback);
     }, [movieDetail]);
 
-
     // Redirect to 404 if error fetching movie
     useEffect(() => {
         if (error) {
             navigate(ROUTES.NOT_FOUND, { replace: true });
         }
     }, [error, navigate]);
-    
+
     return (
         <>
             <TrailerVideo videoYouTube={movieDetail?.trailerURL} />
             <div className="relative z-20 flex w-full flex-col bg-slate-950">
-                <div className="relative flex w-full flex-row gap-5 md:gap-12 items-center">
+                <div className="relative flex w-full flex-row items-center gap-5 md:gap-12">
                     {/* Poster */}
-                    <div className="flex flex-shrink-0 items-end justify-center h-60 w-40 md:h-90 md:w-56 lg:h-95 lg:w-64 xl:h-105 xl:w-72">
+                    <div className="flex h-60 w-40 flex-shrink-0 items-end justify-center md:h-90 md:w-56 lg:h-95 lg:w-64 xl:h-105 xl:w-72">
                         <BPoster Pics={posterSrc} className="rounded-xl" />
                     </div>
                     {/* Info */}
-                    <div className="font-unbounded flex flex-1 flex-col text-left text-white gap-2">
-                        <p className="text-lg font-black leading-normal [text-shadow:_0px_4px_4px_rgb(0_0_0_/_0.25)] sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl">{movieDetail?.title || ''}</p>
-                        <p className="text-[10px] font-black sm:text-[12px] md:text-sm xl:text-base">{
-                            movieDetail?.releaseDate ? (() => {
-                                const d = new Date(movieDetail.releaseDate);
-                                if (isNaN(d)) return '';
-                                const day = d.getDate().toString().padStart(2, '0');
-                                const month = (d.getMonth() + 1).toString().padStart(2, '0');
-                                return `${day}/${month}`;
-                            })() : ''
-                        }</p>
+                    <div className="font-unbounded flex flex-1 flex-col gap-2 text-left text-white">
+                        <p className="text-lg leading-normal font-black [text-shadow:_0px_4px_4px_rgb(0_0_0_/_0.25)] sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl">{movieDetail?.title || ''}</p>
+                        <p className="text-[10px] font-black sm:text-[12px] md:text-sm xl:text-base">
+                            {movieDetail?.releaseDate
+                                ? (() => {
+                                      const d = new Date(movieDetail.releaseDate);
+                                      if (isNaN(d)) return '';
+                                      const day = d.getDate().toString().padStart(2, '0');
+                                      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                                      return `${day}/${month}`;
+                                  })()
+                                : ''}
+                        </p>
                         <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.genre?.join(', ') || ''}</p>
-                        <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">{movieDetail?.duration ? `${movieDetail.duration}'` : ''}{movieDetail?.ageRating ? ` - ${movieDetail.ageRating}` : ""}</p>
+                        <p className="text-[10px] font-medium sm:text-[12px] md:text-sm xl:text-base">
+                            {movieDetail?.duration ? `${movieDetail.duration}'` : ''}
+                            {movieDetail?.ageRating ? ` - ${movieDetail.ageRating}` : ''}
+                        </p>
                         <div className="w-full md:h-2 xl:h-4" />
                         <Rating rated={movieDetail?.ratingsAverage || 0} userCount={movieDetail?.ratingsQuantity || 0} movieId={movieId} />
                         <div className="h-2 w-full" />
                         <div className="flex gap-2 md:gap-4 lg:gap-6 xl:gap-8">
-                            {Array.isArray(movieDetail?.branches) && movieDetail.branches.length > 0 && (
-                                <BuyATicketButton movieId={movieId} branchId={branchId} />
-                            )}
-                            <WishlistButton movie={movieDetail}/>
+                            {Array.isArray(movieDetail?.branches) && movieDetail.branches.length > 0 && <BuyATicketButton movieId={movieId} branchId={branchId} />}
+                            <WishlistButton movie={movieDetail} />
                         </div>
                     </div>
                 </div>
                 <div className="h-3 w-full md:h-5 lg:h-10" />
-                {movieDetail?.description && movieDetail.description.trim() !== '' && (
-                    <Description scripts={movieDetail.description} />
-                )}
+                {movieDetail?.description && movieDetail.description.trim() !== '' && <Description scripts={movieDetail.description} />}
             </div>
         </>
     );

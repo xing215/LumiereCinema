@@ -1,8 +1,17 @@
 import React, { useEffect } from 'react';
 import IntegratedMap from '@components/display/IntegratedMap';
 
-const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedCinema = null, getAllCinemas = false, getAllCinemasClick = () => {console.log("Get all cinemas clicked");} }) => {
-
+const CinemaPopUp = ({
+    isOpen,
+    onClose,
+    onCinemaSelect,
+    cinemas = [],
+    selectedCinema = null,
+    getAllCinemas = false,
+    getAllCinemasClick = () => {
+        console.log('Get all cinemas clicked');
+    },
+}) => {
     useEffect(() => {
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
@@ -38,24 +47,28 @@ const CinemaPopUp = ({ isOpen, onClose, onCinemaSelect, cinemas = [] , selectedC
     };
 
     return (
-        <div 
-            className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000000000 flex items-center justify-center w-full h-full bg-slate-900/10 backdrop-blur-[20px]`}
-            onClick={handleBackdropClick}
-        >
-            <div className="relative w-auto h-autorounded-xl shadow-xl flex flex-col items-center justify-center">
+        <div className={`fixed ${isOpen ? '' : 'hidden'} inset-0 z-1000000000 flex h-full w-full items-center justify-center bg-slate-900/10 backdrop-blur-[20px]`} onClick={handleBackdropClick}>
+            <div className="h-autorounded-xl relative flex w-auto flex-col items-center justify-center shadow-xl">
                 {/* Close button */}
                 <button
-                    onClick={e => {
+                    onClick={(e) => {
                         e.stopPropagation();
                         onClose();
                     }}
-                    className="absolute -top-12 -right-2 md:-top-15 lg:-right-12 z-100 text-white font-['Unbounded'] text-4xl font-bold hover:bg-white/40 rounded-full h-auto px-4 aspect-square"
+                    className="absolute -top-12 -right-2 z-100 aspect-square h-auto rounded-full px-4 font-['Unbounded'] text-4xl font-bold text-white hover:bg-white/40 md:-top-15 lg:-right-12"
                 >
                     ×
                 </button>
                 {/* Cinema Map */}
-                <div className="w-auto h-auto">
-                    <IntegratedMap onClick={handleBranchSelect} selectedCinema={selectedCinema} isOpen={isOpen} cinemas = {cinemas} getAllCinemas={getAllCinemas} getAllCinemasClick={getAllCinemasClick} />
+                <div className="h-auto w-auto">
+                    <IntegratedMap
+                        onClick={handleBranchSelect}
+                        selectedCinema={selectedCinema}
+                        isOpen={isOpen}
+                        cinemas={cinemas}
+                        getAllCinemas={getAllCinemas}
+                        getAllCinemasClick={getAllCinemasClick}
+                    />
                 </div>
             </div>
         </div>

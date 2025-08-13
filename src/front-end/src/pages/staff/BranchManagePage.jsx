@@ -12,14 +12,8 @@ import { useBranchManagement } from '@hooks/useBranchManagement';
 
 const AddBranchButtons = ({ onConfirm, onCancel, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
-        <ConfirmButton 
-            onClick={onConfirm}
-            disabled={isLoading}
-        />
-        <CancelButton 
-            onClick={onCancel}
-            disabled={isLoading}
-        />
+        <ConfirmButton onClick={onConfirm} disabled={isLoading} />
+        <CancelButton onClick={onCancel} disabled={isLoading} />
     </div>
 );
 
@@ -47,7 +41,7 @@ const BranchManagePage = () => {
         handleStartEdit,
         handleSaveEdit,
         handleCancelEdit,
-        onStatusChange
+        onStatusChange,
     } = useBranchManagement();
 
     const handleDelete = async () => {
@@ -61,13 +55,7 @@ const BranchManagePage = () => {
         };
 
         if (isAddingBranch) {
-            return (
-                <AddBranchButtons 
-                    onConfirm={handleConfirmAddBranch}
-                    onCancel={handleCancelAddBranch}
-                    isLoading={isUpdating}
-                />
-            );
+            return <AddBranchButtons onConfirm={handleConfirmAddBranch} onCancel={handleCancelAddBranch} isLoading={isUpdating} />;
         } else if (tickedBranches.size > 0) {
             return (
                 <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
@@ -88,18 +76,12 @@ const BranchManagePage = () => {
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} />
                 <Button />
-                {showConfirmDeleteBranch && (
-                    <ConfirmationModal 
-                        item={tickedBranches.size} 
-                        handleDelete={handleDelete} 
-                        onClose={() => setShowConfirmDeleteBranch(false)} 
-                    />
-                )}
-                <ManageTable 
-                    data={branchData} 
-                    anyTicked={tickedBranches} 
-                    setTickedRows={setTickedBranches} 
-                    header={header} 
+                {showConfirmDeleteBranch && <ConfirmationModal item={tickedBranches.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeleteBranch(false)} />}
+                <ManageTable
+                    data={branchData}
+                    anyTicked={tickedBranches}
+                    setTickedRows={setTickedBranches}
+                    header={header}
                     columnConfig={branchColumnConfig}
                     editableFields={editableColumns}
                     editingCell={editingCell}
@@ -121,4 +103,4 @@ const BranchManagePage = () => {
     );
 };
 
-export default BranchManagePage
+export default BranchManagePage;

@@ -7,13 +7,7 @@ import AppRoutes from '@routes/AppRoutes.jsx';
 const ErrorModalWrapper = () => {
     const { error, clearError } = useError();
     if (!error) return null;
-    return (
-        <ErrorModal
-            errorCode={error.errorCode}
-            errorMsg={error.errorMsg}
-            onClose={clearError}
-        />
-    );
+    return <ErrorModal errorCode={error.errorCode} errorMsg={error.errorMsg} onClose={clearError} />;
 };
 
 const App = () => {

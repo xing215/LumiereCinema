@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Menu, Film } from 'lucide-react';
 import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
-import sidebarConfig, {filterMenuItems, getUserRoleInfo} from '@config/adminSidebar.config.js';
+import sidebarConfig, { filterMenuItems, getUserRoleInfo } from '@config/adminSidebar.config.js';
 import { showConfirmation, showSuccess } from '@utils/sweetalert';
 
 const StaffSidebar = ({
@@ -66,19 +66,13 @@ const StaffSidebar = ({
         // Handle logout action
         if (item.action === 'logout') {
             try {
-                const confirmResult = await showConfirmation(
-                    'Confirm Logout',
-                    'Are you sure you want to logout?',
-                    'Logout',
-                    'Cancel'
-                );
-                
+                const confirmResult = await showConfirmation('Confirm Logout', 'Are you sure you want to logout?', 'Logout', 'Cancel');
+
                 if (confirmResult.isConfirmed) {
                     // Use the UserContext logout function
                     logout();
                     // Redirect to root path
                     navigate(ROUTES.HOME);
-
                 }
             } catch (error) {
                 console.error('Logout error:', error);

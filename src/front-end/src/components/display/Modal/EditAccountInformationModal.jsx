@@ -25,7 +25,7 @@ const Role = ({ index, role, isChecked, onTick }) => {
     );
 };
 
-const InputTemplate = ({ text, className, value, onChange, type = "text", disabled = false }) => {
+const InputTemplate = ({ text, className, value, onChange, type = 'text', disabled = false }) => {
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
@@ -34,8 +34,8 @@ const InputTemplate = ({ text, className, value, onChange, type = "text", disabl
                 value={value || ''}
                 onChange={(e) => onChange && onChange(e.target.value)}
                 disabled={disabled}
-                className={`h-10 w-full rounded-lg px-3 bg-zinc-300 bg-opacity-70 text-black shadow-sm font-['Unbounded'] text-base transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder:text-gray-500 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                placeholder={disabled ? "Read-only" : `Enter ${text.toLowerCase()}`}
+                className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 font-['Unbounded'] text-base text-black shadow-sm transition-shadow duration-200 placeholder:text-gray-500 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                placeholder={disabled ? 'Read-only' : `Enter ${text.toLowerCase()}`}
             />
         </div>
     );
@@ -79,9 +79,9 @@ const DatePickerTemplate = ({ text, className, value, onChange, disabled = false
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
-            <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+            <div className={disabled ? 'pointer-events-none opacity-50' : ''}>
                 <div className="relative">
-                    <div className="absolute top-1/2 left-3 -translate-y-1/2 transform pointer-events-none z-10">
+                    <div className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 transform">
                         <CalendarIcon className="h-4 w-4 text-gray-500" />
                     </div>
                     <DatePicker
@@ -89,7 +89,7 @@ const DatePickerTemplate = ({ text, className, value, onChange, disabled = false
                         selected={selectedDate}
                         onChange={handleDateChange}
                         dateFormat="dd/MM/yyyy"
-                        className="h-10 w-full rounded-lg pl-10 pr-8 bg-zinc-300 bg-opacity-70 text-black shadow-sm font-['Unbounded'] text-base transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder:text-gray-500"
+                        className="bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 pr-8 pl-10 font-['Unbounded'] text-base text-black shadow-sm transition-shadow duration-200 placeholder:text-gray-500 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none"
                         calendarClassName="react-datepicker-custom"
                         showPopperArrow={false}
                         autoComplete="off"
@@ -113,7 +113,7 @@ const DropdownTemplate = ({ text, className, value, onChange, options, disabled 
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
-            <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+            <div className={disabled ? 'pointer-events-none opacity-50' : ''}>
                 <CustomDropdown
                     value={value || ''}
                     onChange={(e) => onChange && onChange(e.target.value)}
@@ -136,31 +136,33 @@ const DropdownTemplate = ({ text, className, value, onChange, options, disabled 
     );
 };
 
-const EditAccountInformationModal = ({ 
-    onClose, 
-    handleConfirm, 
-    isEdit = false, 
-    accountData = null, 
-    onDataChange = null,
-    isLoading = false,
-    branches = []
-}) => {
+const EditAccountInformationModal = ({ onClose, handleConfirm, isEdit = false, accountData = null, onDataChange = null, isLoading = false, branches = [] }) => {
     const [chosenRole, setChosenRole] = useState(new Set());
-    
+
     // Debug logs
     console.log('Modal props:', { branches, accountData, chosenRole: Array.from(chosenRole) });
-    
+
     // Initialize roles when modal opens
     useEffect(() => {
         if (isEdit && accountData?.roles) {
             const roleIndices = new Set();
-            accountData.roles.forEach(role => {
-                switch(role.toLowerCase()) {
-                    case 'customer': roleIndices.add(1); break;
-                    case 'cashier': roleIndices.add(2); break;
-                    case 'checkincounter': roleIndices.add(3); break;
-                    case 'branchmanager': roleIndices.add(4); break;
-                    case 'administrator': roleIndices.add(5); break;
+            accountData.roles.forEach((role) => {
+                switch (role.toLowerCase()) {
+                    case 'customer':
+                        roleIndices.add(1);
+                        break;
+                    case 'cashier':
+                        roleIndices.add(2);
+                        break;
+                    case 'checkincounter':
+                        roleIndices.add(3);
+                        break;
+                    case 'branchmanager':
+                        roleIndices.add(4);
+                        break;
+                    case 'administrator':
+                        roleIndices.add(5);
+                        break;
                 }
             });
             setChosenRole(roleIndices);
@@ -168,7 +170,6 @@ const EditAccountInformationModal = ({
             setChosenRole(new Set([1])); // Default to customer for new accounts
         }
     }, [isEdit, accountData?.roles]); // Only depend on roles, not entire accountData
-
 
     const handleChosenRole = (roleIndex) => {
         // Nếu đang ở chế độ edit, kiểm tra các ràng buộc
@@ -178,7 +179,7 @@ const EditAccountInformationModal = ({
                 showError('Error', 'Customer role cannot be changed.');
                 return; // Không làm gì cả
             }
-            
+
             // Nếu đang là staff roles, không cho phép click vào customer role
             if (roleIndex === 1) {
                 showError('Error', 'Customer role cannot be assigned.');
@@ -190,21 +191,20 @@ const EditAccountInformationModal = ({
             const newSet = new Set(prev);
 
             const isCustomer = roleIndex === 1;
-            const isAdministrator = roleIndex === 5;
-            
+
             if (newSet.has(roleIndex)) {
                 // Nếu đã có role này, xóa nó
                 newSet.delete(roleIndex);
             } else {
-                if (isCustomer || isAdministrator) {
-                    // Customer hoặc Administrator: clear tất cả và chỉ add role này
+                if (isCustomer) {
+                    // Customer: clear tất cả và chỉ add customer
                     newSet.clear();
                     newSet.add(roleIndex);
                 } else {
-                    // Role khác: xóa customer và administrator, rồi add role này
+                    // Role khác: xóa customer (vì customer không thể kết hợp với role khác)
                     newSet.delete(1); // xóa customer
-                    newSet.delete(5); // xóa administrator  
                     newSet.add(roleIndex);
+                    // Không xóa administrator - cho phép admin có nhiều role
                 }
             }
 
@@ -221,75 +221,45 @@ const EditAccountInformationModal = ({
     const genderOptions = [
         { value: 'male', label: 'Male' },
         { value: 'female', label: 'Female' },
-        { value: 'other', label: 'Other' }    ];
+        { value: 'other', label: 'Other' },
+    ];
 
     return (
         <div className="absolute inset-0 z-50 bg-slate-900/10 backdrop-blur-[20px]">
             <div className="fixed inset-[10%] flex items-center justify-center gap-[5%] rounded-xl shadow-[8px_8px_20px_0px_rgba(0,0,0,0.25)] backdrop-blur-[20px] lg:bg-slate-900/60 xl:bg-slate-900">
                 <div className="relative flex h-full w-[60%] flex-col items-start justify-center gap-4">
                     <div className="relative flex w-full gap-4">
-                        <InputTemplate 
-                            text="Name" 
-                            className="w-[100%]" 
-                            value={accountData?.name || ''} 
-                            onChange={(value) => handleFieldChange('name', value)}
-                        />
+                        <InputTemplate text="Name" className="w-[100%]" value={accountData?.name || ''} onChange={(value) => handleFieldChange('name', value)} />
                     </div>
                     <div className="relative flex w-full gap-4">
-                        <DatePickerTemplate 
-                            text="Birthday" 
-                            className="w-[60%] lg:w-[70%]" 
-                            value={accountData?.birthday || ''} 
-                            onChange={(value) => handleFieldChange('birthday', value)}
-                        />
-                        <DropdownTemplate 
-                            text="Gender" 
-                            className="w-[35%] lg:w-[25%]" 
-                            value={accountData?.gender || 'male'} 
+                        <DatePickerTemplate text="Birthday" className="w-[60%] lg:w-[70%]" value={accountData?.birthday || ''} onChange={(value) => handleFieldChange('birthday', value)} />
+                        <DropdownTemplate
+                            text="Gender"
+                            className="w-[35%] lg:w-[25%]"
+                            value={accountData?.gender || 'male'}
                             onChange={(value) => handleFieldChange('gender', value)}
                             options={genderOptions}
                         />
                     </div>
-                    <InputTemplate 
-                        text="Email" 
-                        className="w-[100%]" 
-                        type="email"
-                        value={accountData?.email || ''} 
-                        onChange={(value) => handleFieldChange('email', value)}
-                    />
-                    <InputTemplate 
-                        text="Phone Number" 
-                        className="w-[100%]" 
-                        type="tel"
-                        value={accountData?.phone || ''} 
-                        onChange={(value) => handleFieldChange('phone', value)}
-                    />
-                    {!isEdit && (
-                        <InputTemplate 
-                            text="Password" 
-                            className="w-[100%]" 
-                            type="password"
-                            value={accountData?.password || ''} 
-                            onChange={(value) => handleFieldChange('password', value)}
-                        />
-                    )}
-                    {[2, 3, 4].some(chosenRole.has, chosenRole) ?(
-                        <DropdownTemplate 
-                            text="Branch" 
-                            className="w-[100%]" 
-                            value={
-                                typeof accountData?.branch === 'object' && accountData?.branch?._id 
-                                    ? accountData.branch._id 
-                                    : accountData?.branch || ''
-                            } 
+                    <InputTemplate text="Email" className="w-[100%]" type="email" value={accountData?.email || ''} onChange={(value) => handleFieldChange('email', value)} />
+                    <InputTemplate text="Phone Number" className="w-[100%]" type="tel" value={accountData?.phone || ''} onChange={(value) => handleFieldChange('phone', value)} />
+                    {!isEdit && <InputTemplate text="Password" className="w-[100%]" type="password" value={accountData?.password || ''} onChange={(value) => handleFieldChange('password', value)} />}
+                    {/* Show branch dropdown if user has staff roles (cashier, checkin, branchmanager) 
+                        OR if admin has additional staff roles */}
+                    {([2, 3, 4].some(chosenRole.has, chosenRole) || 
+                      (chosenRole.has(5) && chosenRole.size > 1 && [2, 3, 4].some(role => chosenRole.has(role)))) ? (
+                        <DropdownTemplate
+                            text="Branch"
+                            className="w-[100%]"
+                            value={typeof accountData?.branch === 'object' && accountData?.branch?._id ? accountData.branch._id : accountData?.branch || ''}
                             onChange={(value) => handleFieldChange('branch', value)}
                             placeholder="Select Branch"
-                            options={branches.map(branch => ({
+                            options={branches.map((branch) => ({
                                 value: branch._id,
-                                label: branch.name
+                                label: branch.name,
                             }))}
                         />
-                    ) : null }
+                    ) : null}
                 </div>
                 <div className="relative flex h-full flex-col items-start justify-center gap-[20%]">
                     <div className="flex flex-col gap-2">
@@ -301,10 +271,7 @@ const EditAccountInformationModal = ({
                     </div>
                     <div className="flex flex-col gap-4">
                         <CancelButton onClick={onClose} disabled={isLoading} />
-                        <ConfirmButton 
-                            onClick={() => handleConfirm(chosenRole)} 
-                            disabled={isLoading || chosenRole.size === 0}
-                        />
+                        <ConfirmButton onClick={() => handleConfirm(chosenRole)} disabled={isLoading || chosenRole.size === 0} />
                     </div>
                 </div>
             </div>

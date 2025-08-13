@@ -12,14 +12,8 @@ import { usePromotionManagement } from '@hooks/usePromotionManagement';
 
 const AddPromotionButtons = ({ onConfirm, onCancel, isLoading = false }) => (
     <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
-        <ConfirmButton 
-            onClick={onConfirm}
-            disabled={isLoading}
-        />
-        <CancelButton 
-            onClick={onCancel}
-            disabled={isLoading}
-        />
+        <ConfirmButton onClick={onConfirm} disabled={isLoading} />
+        <CancelButton onClick={onCancel} disabled={isLoading} />
     </div>
 );
 
@@ -48,7 +42,7 @@ const PromotionManagePage = () => {
         handleStartEdit,
         handleSaveEdit,
         handleCancelEdit,
-        onStatusChange
+        onStatusChange,
     } = usePromotionManagement();
 
     const handleDelete = async () => {
@@ -62,13 +56,7 @@ const PromotionManagePage = () => {
         };
 
         if (isAddingPromotion) {
-            return (
-                <AddPromotionButtons 
-                    onConfirm={handleConfirmAddPromotion}
-                    onCancel={handleCancelAddPromotion}
-                    isLoading={isUpdating}
-                />
-            );
+            return <AddPromotionButtons onConfirm={handleConfirmAddPromotion} onCancel={handleCancelAddPromotion} isLoading={isUpdating} />;
         } else if (tickedPromotions.size > 0) {
             return (
                 <div className="absolute right-1/12 z-10 flex items-end gap-4 lg:top-1/7 xl:top-[10vh]">
@@ -89,18 +77,12 @@ const PromotionManagePage = () => {
             <MobileNotSupported>
                 <SearchButton onSearch={handleSearch} />
                 <Button />
-                {showConfirmDeletePromotion && (
-                    <ConfirmationModal 
-                        item={tickedPromotions.size} 
-                        handleDelete={handleDelete} 
-                        onClose={() => setShowConfirmDeletePromotion(false)} 
-                    />
-                )}
-                <ManageTable 
-                    data={promotionData} 
-                    anyTicked={tickedPromotions} 
-                    setTickedRows={setTickedPromotions} 
-                    header={header} 
+                {showConfirmDeletePromotion && <ConfirmationModal item={tickedPromotions.size} handleDelete={handleDelete} onClose={() => setShowConfirmDeletePromotion(false)} />}
+                <ManageTable
+                    data={promotionData}
+                    anyTicked={tickedPromotions}
+                    setTickedRows={setTickedPromotions}
+                    header={header}
                     columnConfig={promotionColumnConfig}
                     editableFields={editableColumns}
                     editingCell={editingCell}
@@ -123,4 +105,4 @@ const PromotionManagePage = () => {
     );
 };
 
-export default PromotionManagePage
+export default PromotionManagePage;

@@ -9,7 +9,7 @@
  * @returns {boolean} True if authentication error
  */
 export const isAuthError = (error) => {
-  return error.response && (error.response.status === 401 || error.response.status === 403);
+    return error.response && (error.response.status === 401 || error.response.status === 403);
 };
 
 /**
@@ -18,7 +18,7 @@ export const isAuthError = (error) => {
  * @returns {boolean} True if session expired
  */
 export const isSessionExpiredError = (error) => {
-  return error.response && error.response.status === 401;
+    return error.response && error.response.status === 401;
 };
 
 /**
@@ -27,7 +27,7 @@ export const isSessionExpiredError = (error) => {
  * @returns {boolean} True if access denied
  */
 export const isAccessDeniedError = (error) => {
-  return error.response && error.response.status === 403;
+    return error.response && error.response.status === 403;
 };
 
 /**
@@ -36,19 +36,19 @@ export const isAccessDeniedError = (error) => {
  * @returns {string} User-friendly error message
  */
 export const getAuthErrorMessage = (error) => {
-  if (!isAuthError(error)) {
-    return error.response?.data?.message || error.message || 'An error occurred';
-  }
-  
-  if (isSessionExpiredError(error)) {
-    return 'Session expired. Please login again to continue.';
-  }
-  
-  if (isAccessDeniedError(error)) {
-    return 'Access denied. You do not have permission to access this resource.';
-  }
-  
-  return error.response?.data?.message || 'Authentication error occurred';
+    if (!isAuthError(error)) {
+        return error.response?.data?.message || error.message || 'An error occurred';
+    }
+
+    if (isSessionExpiredError(error)) {
+        return 'Session expired. Please login again to continue.';
+    }
+
+    if (isAccessDeniedError(error)) {
+        return 'Access denied. You do not have permission to access this resource.';
+    }
+
+    return error.response?.data?.message || 'Authentication error occurred';
 };
 
 /**
@@ -57,16 +57,16 @@ export const getAuthErrorMessage = (error) => {
  * @returns {Object} { errorCode, errorMsg }
  */
 export const extractErrorInfo = (error) => {
-  return {
-    errorCode: error.response?.status || null,
-    errorMsg: getAuthErrorMessage(error)
-  };
+    return {
+        errorCode: error.response?.status || null,
+        errorMsg: getAuthErrorMessage(error),
+    };
 };
 
 export default {
-  isAuthError,
-  isSessionExpiredError, 
-  isAccessDeniedError,
-  getAuthErrorMessage,
-  extractErrorInfo
+    isAuthError,
+    isSessionExpiredError,
+    isAccessDeniedError,
+    getAuthErrorMessage,
+    extractErrorInfo,
 };

@@ -118,7 +118,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                 response = await resetPassword({
                     token: ResetToken,
                     newPassword: formData.newPassword,
-                    retypeNewPassword: formData.retypeNewPassword
+                    retypeNewPassword: formData.retypeNewPassword,
                 });
             } else {
                 // Regular password change
@@ -128,7 +128,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             console.log('Password change/reset response:', response);
             setMessage(response.data?.message || response.error || 'Password changed successfully.');
             setIsSuccess(response.success);
-            
+
             // Redirect to login page after successful password change/reset
             setTimeout(() => {
                 navigate(ROUTES.LOGIN);
@@ -145,13 +145,15 @@ const ChangePwdForm = ({ ResetToken = null }) => {
     return (
         <div className="w-full max-w-sm px-4 sm:max-w-md sm:px-0 md:max-w-lg lg:max-w-xl xl:max-w-2xl">
             {/* Title */}
-            <h1 className="mb-4 text-center font-['Unbounded'] text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">{ResetToken ? 'RESET PASSWORD' : 'CHANGE PASSWORD'}</h1>
+            <h1 className="mb-4 text-center font-['Unbounded'] text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">
+                {ResetToken ? 'RESET PASSWORD' : 'CHANGE PASSWORD'}
+            </h1>
 
             {/* Change Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
                 {/* Success/Error Message */}
                 {message && (
-                    <div className={`p-3 rounded-lg text-center ${isSuccess ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                    <div className={`rounded-lg p-3 text-center ${isSuccess ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                         <p className="font-['Libre_Franklin'] text-sm">{message}</p>
                     </div>
                 )}
@@ -167,7 +169,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                                 value={formData.currentPassword}
                                 onChange={handleInputChange}
                                 disabled={isLoading}
-                                className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.currentPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.currentPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                                 required
                             />
                             <button
@@ -193,7 +195,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                             value={formData.newPassword}
                             onChange={handleInputChange}
                             disabled={isLoading}
-                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.newPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.newPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                             required
                         />
                         <button
@@ -218,7 +220,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                             value={formData.retypeNewPassword}
                             onChange={handleInputChange}
                             disabled={isLoading}
-                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypeNewPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypeNewPassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                             required
                         />
                         <button
@@ -238,7 +240,7 @@ const ChangePwdForm = ({ ResetToken = null }) => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex h-10 w-full max-w-xs items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-sm font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-all duration-300 hover:cursor-pointer hover:shadow-[inset_0px_0px_60px_5px_rgba(155,47,255,1.00)] sm:h-11 sm:max-w-sm sm:rounded-lg sm:text-base md:h-12 md:max-w-md md:rounded-xl md:text-lg lg:h-13 lg:text-xl ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
                         {isLoading ? 'PROCESSING...' : 'CONFIRM'}
                     </button>

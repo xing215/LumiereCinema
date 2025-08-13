@@ -24,25 +24,19 @@ const WishlistButton = ({ movie, className = '' }) => {
             const inWishlist = isInWishlist(movie._id);
             setIsInWishlistState(inWishlist);
         }
-    }, [wishlist, movie?._id]); 
+    }, [wishlist, movie?._id]);
     const isInWishlist = (movieId) => {
-        return (
-            wishlist &&
-            Array.isArray(wishlist) &&
-            wishlist.some(item => String(item._id) === String(movieId))
-        );
+        return wishlist && Array.isArray(wishlist) && wishlist.some((item) => String(item._id) === String(movieId));
     };
-
 
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
-        if ((wishlistError && (!wishlist.wishlist || wishlist.wishlist.length === 0)) ||
-            (wishlistError && (wishlistError.toString().includes('401') || wishlistError.toString().includes('403')))) {
+        if ((wishlistError && (!wishlist.wishlist || wishlist.wishlist.length === 0)) || (wishlistError && (wishlistError.toString().includes('401') || wishlistError.toString().includes('403')))) {
             setShowAuthError(true);
             return;
         }
         if (!movie?._id) return;
-        
+
         if (isInWishlistState) {
             const result = await removeFromWishlist(movie._id);
             if (result && result.error && (result.error.toString().includes('401') || result.error.toString().includes('403'))) {
@@ -70,15 +64,13 @@ const WishlistButton = ({ movie, className = '' }) => {
 
     return (
         <>
-            {showAuthError && (
-                <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />
-            )}
-            <div className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className}`} onClick={handleWishlistClick} title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}>
-                <Heart
-                    className="absolute h-full w-full"
-                    strokeWidth={1.5}
-                    fill={isInWishlistState ? 'white' : 'none'}
-                />
+            {showAuthError && <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />}
+            <div
+                className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className}`}
+                onClick={handleWishlistClick}
+                title={isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+                <Heart className="absolute h-full w-full" strokeWidth={1.5} fill={isInWishlistState ? 'white' : 'none'} />
             </div>
         </>
     );

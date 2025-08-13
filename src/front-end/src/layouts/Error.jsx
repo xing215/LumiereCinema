@@ -4,61 +4,49 @@ import errorCircle from '@assets/img/backAndForwardButton.png';
 import { X, LogOut } from 'lucide-react';
 import { useEffect } from 'react';
 
-const ErrorModal = ({ errorCode = null, errorMsg = "An error occurs", onClose }) => {
-  const [visible, setVisible] = useState(true);
+const ErrorModal = ({ errorCode = null, errorMsg = 'An error occurs', onClose }) => {
+    const [visible, setVisible] = useState(true);
 
-  useEffect(() => {
-    if (!visible && onClose) {
-      onClose();
-    }
-  }, [visible, onClose]);
-  
-  if (!visible) return null;
+    useEffect(() => {
+        if (!visible && onClose) {
+            onClose();
+        }
+    }, [visible, onClose]);
 
-  const fullMsg = errorCode ? `${errorCode}: ${errorMsg}` : errorMsg;
-  const isAuthError = errorCode === 401 || errorCode === 403;
-  const isSessionExpired = errorCode === 401;
-  
-  return createPortal(
-    <div className="max-w-full w-[calc(100vw-3rem)] px-6 py-4 h-16 fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center rounded-xl overflow-hidden">
-      <div className={`w-full h-16 absolute left-0 top-0 rounded-xl backdrop-blur-[20px] ${
-        isAuthError ? 'bg-red-300/70' : 'bg-zinc-300/70'
-      }`} />
-      <div className="flex items-center h-12 relative z-10">
-        <div className="w-12 h-12 relative flex items-center justify-center">
-          <img className="w-12 h-12" src={errorCircle} />
-          {isSessionExpired ? (
-            <LogOut className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-red-800 pointer-events-none" strokeWidth={3} />
-          ) : (
-            <X className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-red-800 pointer-events-none" strokeWidth={4} />
-          )}
-        </div>
-        <div
-          className="max-w-[60vw] ml-4 text-slate-900 text-base font-medium font-['Unbounded'] cursor-pointer overflow-hidden line-clamp-2"
-          style={{display: 'block'}}
-          title={fullMsg}
-        >
-          {isSessionExpired && (
-            <span className="text-red-700 font-semibold">Session Expired: </span>
-          )}
-          {isAuthError && !isSessionExpired && (
-            <span className="text-red-700 font-semibold">Access Denied: </span>
-          )}
-          {errorMsg}
-        </div>
-      </div>
-      <div className="w-44 flex justify-end items-center gap-3.5" style={{position: 'absolute', right: '1.5rem', top: '1rem'}}>
-        <div className="w-7 h-7 relative cursor-pointer" onClick={() => setVisible(false)}>
-          <div className={`w-9 h-9 left-[-3px] top-[-3px] absolute rounded-lg shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] ${
-            isAuthError ? 'bg-red-500' : 'bg-sky-400'
-          }`} />
-          <div className="w-1 h-4 left-[19.08px] top-[7px] absolute origin-top-left rotate-45 bg-white" />
-          <div className="w-1 h-4 left-[6.99px] top-[10.27px] absolute origin-top-left -rotate-45 bg-white" />
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
-}
+    if (!visible) return null;
+
+    const fullMsg = errorCode ? `${errorCode}: ${errorMsg}` : errorMsg;
+    const isAuthError = errorCode === 401 || errorCode === 403;
+    const isSessionExpired = errorCode === 401;
+
+    return createPortal(
+        <div className="fixed top-5 left-1/2 z-[99999] flex h-16 w-[calc(100vw-3rem)] max-w-full -translate-x-1/2 items-center overflow-hidden rounded-xl px-6 py-4">
+            <div className={`absolute top-0 left-0 h-16 w-full rounded-xl backdrop-blur-[20px] ${isAuthError ? 'bg-red-300/70' : 'bg-zinc-300/70'}`} />
+            <div className="relative z-10 flex h-12 items-center">
+                <div className="relative flex h-12 w-12 items-center justify-center">
+                    <img className="h-12 w-12" src={errorCircle} />
+                    {isSessionExpired ? (
+                        <LogOut className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-red-800" strokeWidth={3} />
+                    ) : (
+                        <X className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-red-800" strokeWidth={4} />
+                    )}
+                </div>
+                <div className="ml-4 line-clamp-2 max-w-[60vw] cursor-pointer overflow-hidden font-['Unbounded'] text-base font-medium text-slate-900" style={{ display: 'block' }} title={fullMsg}>
+                    {isSessionExpired && <span className="font-semibold text-red-700">Session Expired: </span>}
+                    {isAuthError && !isSessionExpired && <span className="font-semibold text-red-700">Access Denied: </span>}
+                    {errorMsg}
+                </div>
+            </div>
+            <div className="flex w-44 items-center justify-end gap-3.5" style={{ position: 'absolute', right: '1.5rem', top: '1rem' }}>
+                <div className="relative h-7 w-7 cursor-pointer" onClick={() => setVisible(false)}>
+                    <div className={`absolute top-[-3px] left-[-3px] h-9 w-9 rounded-lg shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] ${isAuthError ? 'bg-red-500' : 'bg-sky-400'}`} />
+                    <div className="absolute top-[7px] left-[19.08px] h-4 w-1 origin-top-left rotate-45 bg-white" />
+                    <div className="absolute top-[10.27px] left-[6.99px] h-4 w-1 origin-top-left -rotate-45 bg-white" />
+                </div>
+            </div>
+        </div>,
+        document.body,
+    );
+};
 
 export default ErrorModal;

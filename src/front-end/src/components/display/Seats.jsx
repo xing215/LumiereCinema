@@ -4,13 +4,7 @@ import CoupleSeat from '@components/UI/CoupleSeat.jsx';
 
 const SeatLayout = (props) => {
     // Extract props for edit mode
-    const { 
-        data, 
-        isEditable = false, 
-        onSeatClick, 
-        selectedSeatType, 
-        highlightedSeats = [] 
-    } = props;
+    const { data, isEditable = false, onSeatClick, selectedSeatType, highlightedSeats = [] } = props;
 
     // For edit mode, handle seats data differently
     const seatData = isEditable ? prepareSeatDataForEdit(data) : data;
@@ -18,19 +12,17 @@ const SeatLayout = (props) => {
     return (
         <div className="relative flex h-full flex-col items-center justify-center gap-5 lg:gap-5">
             {isEditable ? (
-                <div className="bg-gray-300 h-4 w-48 rounded-t-lg flex items-center justify-center">
-                    <span className="text-black text-sm font-bold">SCREEN</span>
+                <div className="flex h-4 w-48 items-center justify-center rounded-t-lg bg-gray-300">
+                    <span className="text-sm font-bold text-black">SCREEN</span>
                 </div>
             ) : (
                 <img src={ScreenIcon} alt="Screen" className="relative object-contain" />
             )}
-            
+
             <div className="relative flex flex-col items-start gap-1.5 lg:gap-2 xl:gap-3">
                 {seatData.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex items-center gap-2 lg:gap-2 xl:gap-3">
-                        <p className="font-unbounded w-9 justify-start self-stretch text-center text-sm font-bold text-white md:text-[18px] xl:text-xl">
-                            {row[0]?.row}
-                        </p>
+                        <p className="font-unbounded w-9 justify-start self-stretch text-center text-sm font-bold text-white md:text-[18px] xl:text-xl">{row[0]?.row}</p>
                         {(() => {
                             const seats = [];
                             for (let i = 0; i < row.length; i++) {
@@ -45,25 +37,22 @@ const SeatLayout = (props) => {
                                 if (currentType === 'couple' && nextType === 'couple' && !current.isHidden && !next.isHidden) {
                                     // Gộp thành CoupleSeat
                                     if (isEditable) {
-                                        const isHighlighted = highlightedSeats.includes(current.seatNumber) || 
-                                                            highlightedSeats.includes(next.seatNumber);
-                                        
+                                        const isHighlighted = highlightedSeats.includes(current.seatNumber) || highlightedSeats.includes(next.seatNumber);
+
                                         seats.push(
                                             <div
                                                 key={`${rowIndex}-${i}`}
-                                                className={`cursor-pointer transition-all duration-200 ${
-                                                    isHighlighted ? 'scale-110 ring-2 ring-blue-400' : ''
-                                                } hover:scale-105`}
+                                                className={`cursor-pointer transition-all duration-200 ${isHighlighted ? 'scale-110 ring-2 ring-blue-400' : ''} hover:scale-105`}
                                                 onClick={() => {
                                                     console.log('🎭 [COUPLE_EDIT_CLICK]', {
                                                         seats: [current.seatNumber, next.seatNumber],
-                                                        selectedType: selectedSeatType
+                                                        selectedType: selectedSeatType,
                                                     });
                                                     onSeatClick?.([current, next]);
                                                 }}
                                             >
                                                 <CoupleSeat />
-                                            </div>
+                                            </div>,
                                         );
                                     } else {
                                         seats.push(<CoupleSeat key={`${rowIndex}-${i}`} />);
@@ -75,16 +64,12 @@ const SeatLayout = (props) => {
                                         const isHighlighted = highlightedSeats.includes(current.seatNumber);
                                         // Fix: Always check isHidden first, then normalize type for proper color display
                                         const normalizedType = (current.category || current.type || 'standard').toLowerCase();
-                                        const seatType = current.isHidden ? 'Hidden' : 
-                                                        normalizedType === 'couple' ? 'Couple' :
-                                                        normalizedType === 'hidden' ? 'Hidden' : 'Standard';
-                                        
+                                        const seatType = current.isHidden ? 'Hidden' : normalizedType === 'couple' ? 'Couple' : normalizedType === 'hidden' ? 'Hidden' : 'Standard';
+
                                         seats.push(
                                             <div
                                                 key={`${rowIndex}-${i}`}
-                                                className={`cursor-pointer transition-all duration-200 ${
-                                                    isHighlighted ? 'scale-110 ring-2 ring-blue-400' : ''
-                                                } hover:scale-105`}
+                                                className={`cursor-pointer transition-all duration-200 ${isHighlighted ? 'scale-110 ring-2 ring-blue-400' : ''} hover:scale-105`}
                                                 onClick={() => {
                                                     console.log('🎭 [SINGLE_EDIT_CLICK]', {
                                                         seat: current.seatNumber,
@@ -92,20 +77,18 @@ const SeatLayout = (props) => {
                                                         selectedType: selectedSeatType,
                                                         seatData: current,
                                                         isHidden: current.isHidden,
-                                                        normalizedType
+                                                        normalizedType,
                                                     });
                                                     onSeatClick?.(current);
                                                 }}
                                             >
                                                 <Seat type={seatType} />
-                                            </div>
+                                            </div>,
                                         );
                                     } else {
                                         // Fix: Also apply the same logic for non-editable mode
                                         const normalizedType = (current.category || current.type || 'standard').toLowerCase();
-                                        const seatType = current.isHidden ? 'Hidden' : 
-                                                        normalizedType === 'couple' ? 'Couple' :
-                                                        normalizedType === 'hidden' ? 'Hidden' : 'Standard';
+                                        const seatType = current.isHidden ? 'Hidden' : normalizedType === 'couple' ? 'Couple' : normalizedType === 'hidden' ? 'Hidden' : 'Standard';
                                         seats.push(<Seat key={`${rowIndex}-${i}`} type={seatType} />);
                                     }
                                 }
@@ -122,7 +105,7 @@ const SeatLayout = (props) => {
 // Helper function to prepare seat data for edit mode
 function prepareSeatDataForEdit(seats) {
     if (!seats || seats.length === 0) return [];
-    
+
     // Group seats by row
     const seatsByRow = seats.reduce((acc, seat) => {
         const row = seat.location?.row || seat.row;
@@ -133,14 +116,12 @@ function prepareSeatDataForEdit(seats) {
 
     // Sort rows alphabetically and convert to array format
     const sortedRows = Object.keys(seatsByRow).sort();
-    
-    return sortedRows.map(rowLetter => {
-        const rowSeats = seatsByRow[rowLetter].sort((a, b) => 
-            (a.location?.column || a.column) - (b.location?.column || b.column)
-        );
-        return rowSeats.map(seat => ({
+
+    return sortedRows.map((rowLetter) => {
+        const rowSeats = seatsByRow[rowLetter].sort((a, b) => (a.location?.column || a.column) - (b.location?.column || b.column));
+        return rowSeats.map((seat) => ({
             ...seat,
-            row: rowLetter
+            row: rowLetter,
         }));
     });
 }

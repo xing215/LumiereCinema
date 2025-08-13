@@ -37,7 +37,8 @@ export const ROUTES = {
     REGISTER: '/register',
     ACTIVATION: '/activate',
     LOGIN: '/login',
-    RESET_PASSWORD: '/reset-password',    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
+    RESET_PASSWORD: '/reset-password',
+    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
     MOVIES: '/movies',
     MOVIE_DETAILS: '/movie', // ?id=...
     NOT_FOUND: '/404',
@@ -51,7 +52,7 @@ export const ROUTES = {
     WISHLIST: '/wishlist',
     WATCH_HISTORY: '/watch-history',
     LUNAR_POINT: '/lunar-points',
-    
+
     // Staff routes
     STAFF_ROOT: '/staff',
     STAFF_LOGIN: '/staff/login',
@@ -72,7 +73,7 @@ export const ROUTES = {
 
     // Other pages
     DEVELOPING: '/developing',
-    NOT_FOUND: '/404'
+    NOT_FOUND: '/404',
 };
 
 // Route configuration
@@ -82,72 +83,73 @@ export const routeConfig = [
         path: ROUTES.HOME,
         component: LandingPage,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.REGISTER,
         component: Registration,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.ACTIVATION,
         component: ActivateAccount,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.LOGIN,
         component: Login,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.RESET_PASSWORD,
         component: ForgotPassword,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.RESET_PASSWORD_CONFIRM,
         component: ResetPwdEmail,
         type: 'public',
-        requiresAuth: false
-    },    {
+        requiresAuth: false,
+    },
+    {
         path: ROUTES.MOVIES,
         component: MovieListPage,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.MOVIE_DETAILS,
         component: MovieDetail,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.BUY_TICKET,
         component: TicketPurchase,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.BUY_SNACK,
         component: SnackPurchase,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.DEVELOPING,
         component: Developing,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.NOT_FOUND,
         component: NotFound,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
 
     // Customer protected routes - require authentication but not staff roles
@@ -156,14 +158,14 @@ export const routeConfig = [
         component: ChangePwd,
         type: 'customer',
         requiresAuth: true,
-        allowedRoles: ['customer'] // Only customers can access this
+        allowedRoles: ['customer'], // Only customers can access this
     },
     {
         path: ROUTES.PROFILE,
         component: UserProfile,
         type: 'customer',
         requiresAuth: true,
-        allowedRoles: ['customer']
+        allowedRoles: ['customer'],
     },
 
     {
@@ -171,7 +173,7 @@ export const routeConfig = [
         component: UserProfile,
         type: 'customer',
         requiresAuth: true,
-        allowedRoles: ['customer']
+        allowedRoles: ['customer'],
     },
 
     {
@@ -179,7 +181,7 @@ export const routeConfig = [
         component: UserProfile,
         type: 'customer',
         requiresAuth: true,
-        allowedRoles: ['customer']
+        allowedRoles: ['customer'],
     },
 
     {
@@ -187,7 +189,7 @@ export const routeConfig = [
         component: UserProfile,
         type: 'customer',
         requiresAuth: true,
-        allowedRoles: ['customer']
+        allowedRoles: ['customer'],
     },
 
     // Staff public routes - accessible to all staff without authentication
@@ -195,141 +197,141 @@ export const routeConfig = [
         path: ROUTES.STAFF_LOGIN,
         component: StaffLogin,
         type: 'staff-public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.STAFF_RESET_PASSWORD,
         component: StaffForgotPwd,
         type: 'staff-public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.STAFF_RESET_PASSWORD_CONFIRM,
         component: ResetPwdEmail,
         type: 'staff-public',
-        requiresAuth: false
+        requiresAuth: false,
     },
-    
+
     // Staff dashboard root
     {
         path: ROUTES.STAFF_ROOT,
         component: StaffRoot,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['cashier', 'checkincounter', 'branchmanager', 'administrator']
+        allowedRoles: ['cashier', 'checkincounter', 'branchmanager', 'administrator'],
     },
-    
+
     // Staff protected routes - require staff roles
     {
         path: ROUTES.STAFF_CHANGE_PASSWORD,
         component: StaffChangePwd,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['cashier', 'checkincounter', 'branchmanager', 'administrator']
+        allowedRoles: ['cashier', 'checkincounter', 'branchmanager', 'administrator'],
     },
     {
         path: ROUTES.STAFF_CHECKIN,
         component: CheckInCounterPage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['checkincounter']
+        allowedRoles: ['checkincounter'],
     },
     {
         path: ROUTES.STAFF_SCHEDULE,
         component: ScheduleManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['branchmanager']
+        allowedRoles: ['branchmanager'],
     },
     {
         path: ROUTES.STAFF_PROMOTION,
         component: PromotionManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['administrator']
+        allowedRoles: ['administrator'],
     },
     {
         path: ROUTES.STAFF_REPORT,
         component: ReportPage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['branchmanager', 'administrator']
+        allowedRoles: ['branchmanager', 'administrator'],
     },
     {
         path: ROUTES.STAFF_SCREEN,
         component: ScreenManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['branchmanager']
+        allowedRoles: ['branchmanager'],
     },
     {
         path: ROUTES.STAFF_BRANCH,
         component: BranchManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['administrator']
+        allowedRoles: ['administrator'],
     },
     {
         path: ROUTES.STAFF_ACCOUNT,
         component: AccountManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['administrator']
+        allowedRoles: ['administrator'],
     },
     {
         path: ROUTES.STAFF_MOVIE,
         component: MovieManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['administrator']
+        allowedRoles: ['administrator'],
     },
     {
         path: ROUTES.STAFF_SNACK,
         component: SnackManagePage,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['branchmanager']
+        allowedRoles: ['branchmanager'],
     },
     {
         path: ROUTES.ABOUT_US,
         component: AboutUs,
         type: 'public',
-        requiresAuth: false
+        requiresAuth: false,
     },
     {
         path: ROUTES.STAFF_SELL_TICKET,
         component: SellTicket,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['cashier']
+        allowedRoles: ['cashier'],
     },
     {
         path: ROUTES.STAFF_SELL_SNACK,
         component: SellSnack,
         type: 'staff',
         requiresAuth: true,
-        allowedRoles: ['cashier']
-    }
+        allowedRoles: ['cashier'],
+    },
 ];
 
 // Helper function to check if user has required roles
 export const hasRequiredRole = (userRoles, allowedRoles) => {
     if (!allowedRoles || allowedRoles.length === 0) return true;
     if (!userRoles || userRoles.length === 0) return false;
-    return allowedRoles.some(role => userRoles.includes(role));
+    return allowedRoles.some((role) => userRoles.includes(role));
 };
 
 // Helper function to check if user is staff
 export const isStaff = (userRoles) => {
     if (!userRoles || userRoles.length === 0) return false;
     const staffRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
-    return userRoles.some(role => staffRoles.includes(role));
+    return userRoles.some((role) => staffRoles.includes(role));
 };
 
 // Helper function to check if user is customer
 export const isCustomer = (userRoles) => {
     if (!userRoles || userRoles.length === 0) return false;
-    return userRoles.includes('customer') || (!isStaff(userRoles));
+    return userRoles.includes('customer') || !isStaff(userRoles);
 };
 
 // Routing logic functions
@@ -352,22 +354,22 @@ export const getRedirectPath = (isAuthenticated, userRoles, route) => {
     if (shouldRedirectStaff(isAuthenticated, userRoles, route.type)) {
         return ROUTES.STAFF_ROOT;
     }
-    
+
     // Customer accessing staff routes
     if (shouldRedirectCustomer(isAuthenticated, userRoles, route.type)) {
         return ROUTES.HOME;
     }
-    
+
     // Unauthenticated users trying to access staff routes
     if (shouldRedirectUnauthenticatedFromStaff(isAuthenticated, route.type, route.path)) {
         return ROUTES.STAFF_LOGIN;
     }
-    
+
     // Protected routes without required roles
     if (route.requiresAuth && !hasRequiredRole(userRoles, route.allowedRoles)) {
         return isStaff(userRoles) ? ROUTES.STAFF_ROOT : ROUTES.HOME;
     }
-    
+
     return null; // No redirect needed
 };
 
@@ -382,7 +384,7 @@ export const getMovieListPath = (status = undefined, branchId = undefined) => {
         path += `?branchId=${branchId}`;
     }
     return path;
-}
+};
 
 export const getBuyTicketPath = (movieId, branchId = undefined) => {
     let path = `${ROUTES.BUY_TICKET}?movieId=${movieId}`;

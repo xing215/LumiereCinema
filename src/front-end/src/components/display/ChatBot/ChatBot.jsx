@@ -6,7 +6,7 @@ import botIcon from '@assets/img/ChatbotPurple.svg';
 
 /**
  * ChatBot Component - Main chatbot display component
- * 
+ *
  * Features:
  * - Toggle chat window visibility
  * - Floating action button in bottom-right corner
@@ -17,7 +17,7 @@ const ChatBot = () => {
 
     // Hàm để bật/tắt cửa sổ chat
     const toggleChatWindow = () => {
-        setIsChatOpen(prevState => !prevState);
+        setIsChatOpen((prevState) => !prevState);
     };
 
     return (
@@ -27,11 +27,7 @@ const ChatBot = () => {
 
             {/* Nếu chat đang đóng, hiển thị icon chatbot */}
             {!isChatOpen && (
-                <button
-                    onClick={toggleChatWindow}
-                    className="p-2 bg-purple-600 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none"
-                    aria-label="Mở Chat"
-                >
+                <button onClick={toggleChatWindow} className="rounded-full bg-purple-600 p-2 shadow-lg hover:bg-purple-700 focus:outline-none" aria-label="Mở Chat">
                     <img src={botIcon} alt="Chatbot" className="h-12 w-12" />
                 </button>
             )}

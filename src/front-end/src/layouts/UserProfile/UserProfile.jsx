@@ -1,34 +1,33 @@
-import SideBar from "./SideBar";
-import React, { useEffect, useState } from "react";
-import ProfileForm from "./ProfileForm";
-import { useLocation, useNavigate } from "react-router-dom";
-import CustomDropdown from "@/components/UI/CustomDropdown";
+import SideBar from './SideBar';
+import React, { useEffect, useState } from 'react';
+import ProfileForm from './ProfileForm';
+import { useLocation, useNavigate } from 'react-router-dom';
+import CustomDropdown from '@/components/UI/CustomDropdown';
 import { ROUTES } from '@routes/routeConfig';
 import { useUser } from '@contexts/UserContext';
 
 // Import the individual layout components
-import WatchHistoryComponent from "@/layouts/WatchHistory/WatchHistory";
-import WishlistComponent from "@/layouts/Wishlist/Wishlist";
-import LunarPointsComponent from "@/layouts/LunarPoints/LunarPoints";
+import WatchHistoryComponent from '@/layouts/WatchHistory/WatchHistory';
+import WishlistComponent from '@/layouts/Wishlist/Wishlist';
+import LunarPointsComponent from '@/layouts/LunarPoints/LunarPoints';
 
 const MENU_STEPS = {
     PROFILE: 0,
     WATCH_HISTORY: 1,
     WISHLIST: 2,
-    LUNAR_POINTS: 3
+    LUNAR_POINTS: 3,
 };
 
 const Profile = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useUser();
-    
+
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.PROFILE);
     const [accountPage, setAccountPage] = useState('Information');
-        // State cho ticket detail view
+    // State cho ticket detail view
     const [showTicketDetail, setShowTicketDetail] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
-    
 
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const [currentPath, setCurrentPath] = useState(location.pathname);
@@ -57,7 +56,7 @@ const Profile = () => {
     const handleInputChange = (e) => {
         const { value } = e.target;
         setAccountPage(value);
-        
+
         if (value === 'Information') {
             setCurrentStep(MENU_STEPS.PROFILE);
             navigate(ROUTES.PROFILE);
@@ -105,12 +104,7 @@ const Profile = () => {
             case MENU_STEPS.PROFILE:
                 return <ProfileForm />;
             case MENU_STEPS.WATCH_HISTORY:
-                return <WatchHistoryComponent 
-                    showTicketDetail={showTicketDetail}
-                    setShowTicketDetail={setShowTicketDetail}
-                    selectedTicket={selectedTicket}
-                    setSelectedTicket={setSelectedTicket}
-                />;
+                return <WatchHistoryComponent showTicketDetail={showTicketDetail} setShowTicketDetail={setShowTicketDetail} selectedTicket={selectedTicket} setSelectedTicket={setSelectedTicket} />;
             case MENU_STEPS.WISHLIST:
                 return <WishlistComponent />;
             case MENU_STEPS.LUNAR_POINTS:
@@ -121,11 +115,11 @@ const Profile = () => {
     };
 
     return (
-        <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
-            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:w-screen lg:h-auto lg:w-[calc(75vw)]">
+        <div className="relative flex w-screen items-center justify-center overflow-hidden pt-3 md:pt-7">
+            <div className="relative flex h-full w-full flex-col items-center justify-center rounded-xl md:w-screen md:flex-row md:items-start md:justify-start md:gap-3 lg:h-auto lg:w-[calc(75vw)]">
                 {/* Mobile Dropdown */}
-                <div className="block md:hidden w-[95%] h-auto pb-3">
-                    <CustomDropdown 
+                <div className="block h-auto w-[95%] pb-3 md:hidden">
+                    <CustomDropdown
                         name="accountPage"
                         placeholder=""
                         value={accountPage}
@@ -140,7 +134,7 @@ const Profile = () => {
                         height="h-10"
                         inputTextSize="text-md"
                         optionTextSize="text-sm"
-                        openDirection='down'
+                        openDirection="down"
                         textAlign="left"
                         options={[
                             { value: 'Information', label: 'Information' },
@@ -150,22 +144,16 @@ const Profile = () => {
                         ]}
                     />
                 </div>
-                
+
                 {/* Desktop Sidebar */}
-                <div className={`hidden h-auto  ${showTicketDetail ? '' : 'md:block w-[25%] '}`}>
-                    <SideBar 
-                        onMenuClick={handleSidebarMenuClick} 
-                        currentStep={currentStep} 
-                        user={user}
-                    />
+                <div className={`hidden h-auto ${showTicketDetail ? '' : 'w-[25%] md:block'}`}>
+                    <SideBar onMenuClick={handleSidebarMenuClick} currentStep={currentStep} user={user} />
                 </div>
-                
+
                 {/* Main Content Area */}
-                <div className={`relative w-full h-auto  ${showTicketDetail ? ' ' : 'md:w-[72%]'}`}>
+                <div className={`relative h-auto w-full ${showTicketDetail ? ' ' : 'md:w-[72%]'}`}>
                     <div className={`pointer-events-none absolute inset-0 z-0 rounded-xl ${showTicketDetail ? '' : 'bg-zinc-300/30 mix-blend-color-dodge'} lg:[transform:translate3d(0,0,0)]`} />
-                    <div className="p-10 md:pl-12 mx-auto md:mx-0">
-                        {renderCurrentMenu()}
-                    </div>
+                    <div className="mx-auto p-10 md:mx-0 md:pl-12">{renderCurrentMenu()}</div>
                 </div>
             </div>
         </div>
