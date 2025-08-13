@@ -3,9 +3,9 @@ import StaffLayout from '@layouts/StaffLayout.jsx';
 import MobileNotSupported from '@components/display/MobileNotSupported.jsx';
 import SelectBranchButton from '@components/buttons/Staff/SelectBranch.jsx';
 import DownloadTemplateButton from '@components/buttons/Staff/DownloadTemplateButton.jsx';
-import DateChosenButton from "@components/buttons/Staff/DateChosenButton.jsx";
-import AddButton from "@components/buttons/Staff/AddButton.jsx";
-import { useEffect, useRef, useCallback, useMemo, useState } from 'react'; 
+import DateChosenButton from '@components/buttons/Staff/DateChosenButton.jsx';
+import AddButton from '@components/buttons/Staff/AddButton.jsx';
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useUser } from '@contexts/UserContext';
 import { useGetBranchById, useGetSchedules, useUpdateSchedule, useRemoveSchedule } from '@hooks/useBranch';
 import { useScheduleMovieScreening } from '@hooks/useBranch';
@@ -14,70 +14,71 @@ import AddScheduleModal from '@/components/display/Modal/AddSchedule';
 import EditScheduleModal from '@/components/display/Modal/EditSchedule';
 import ScheduleUploadModal from '@/components/display/Modal/ScheduleUploadModal';
 
-const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEditSchedule, screens = [], toVietnamTime}) => {
+const Schedule = ({ screen = 1, schedules = [], selectedDate, onAddSchedule, onEditSchedule, screens = [], toVietnamTime }) => {
     const scheduleGridRef = useRef(null);
 
     // Helper function to convert time to position on timeline (allows negative values)
-    const getTimePosition = useCallback((timeString, selectedDate) => {
-        // Parse the schedule time string and convert to Vietnam timezone
-        const scheduleTime = new Date(timeString);
-        const vietnamScheduleTime = toVietnamTime(scheduleTime);
-        
-        
-        // Timeline starts at 23:30 the previous day in Vietnam timezone
-        const timelineStart = new Date(selectedDate);
-        timelineStart.setDate(timelineStart.getDate() - 1);
-        timelineStart.setHours(23, 30, 0, 0);
-        
-        // Convert timeline start to Vietnam timezone for proper comparison
-        const vietnamTimelineStart = toVietnamTime(timelineStart);
-        
+    const getTimePosition = useCallback(
+        (timeString, selectedDate) => {
+            // Parse the schedule time string and convert to Vietnam timezone
+            const scheduleTime = new Date(timeString);
+            const vietnamScheduleTime = toVietnamTime(scheduleTime);
 
-        // Calculate minutes from timeline start using Vietnam timezone
-        const timeDiff = vietnamScheduleTime - vietnamTimelineStart;
-        const minutes = timeDiff / (1000 * 60);
-        
-        // Timeline covers 24 hours = 1440 minutes
-        const timelineMinutes = 24 * 60;
-        
-        // Return percentage (can be negative for continuous effect)
-        return (minutes / timelineMinutes) * 100;
-    }, [toVietnamTime]);
-    
+            // Timeline starts at 23:30 the previous day in Vietnam timezone
+            const timelineStart = new Date(selectedDate);
+            timelineStart.setDate(timelineStart.getDate() - 1);
+            timelineStart.setHours(23, 30, 0, 0);
+
+            // Convert timeline start to Vietnam timezone for proper comparison
+            const vietnamTimelineStart = toVietnamTime(timelineStart);
+
+            // Calculate minutes from timeline start using Vietnam timezone
+            const timeDiff = vietnamScheduleTime - vietnamTimelineStart;
+            const minutes = timeDiff / (1000 * 60);
+
+            // Timeline covers 24 hours = 1440 minutes
+            const timelineMinutes = 24 * 60;
+
+            // Return percentage (can be negative for continuous effect)
+            return (minutes / timelineMinutes) * 100;
+        },
+        [toVietnamTime],
+    );
+
     // Helper function to get schedule duration in percentage
-    const getScheduleDuration = useCallback((startTime, endTime) => {
-        // Convert both times to Vietnam timezone
-        const start = toVietnamTime(new Date(startTime));
-        const end = toVietnamTime(new Date(endTime));
-        
-        const durationMs = end - start;
-        const durationMinutes = durationMs / (1000 * 60);
-        
-        // Timeline covers 24 hours = 1440 minutes
-        const timelineMinutes = 24 * 60;
-        
-        // Return percentage width
-        return (durationMinutes / timelineMinutes) * 100;
-    }, [toVietnamTime]);
-    
+    const getScheduleDuration = useCallback(
+        (startTime, endTime) => {
+            // Convert both times to Vietnam timezone
+            const start = toVietnamTime(new Date(startTime));
+            const end = toVietnamTime(new Date(endTime));
+
+            const durationMs = end - start;
+            const durationMinutes = durationMs / (1000 * 60);
+
+            // Timeline covers 24 hours = 1440 minutes
+            const timelineMinutes = 24 * 60;
+
+            // Return percentage width
+            return (durationMinutes / timelineMinutes) * 100;
+        },
+        [toVietnamTime],
+    );
+
     // Group schedules by screen index
     const schedulesByScreen = useMemo(() => {
         const grouped = {};
-        
-        schedules.forEach(schedule => {
+
+        schedules.forEach((schedule) => {
             // Find the screen index based on screen ID or screen name
             let screenIndex = 0;
             if (schedule.screen) {
                 // Try to find screen index by matching screen ID or name
-                const foundScreenIndex = screens.findIndex(s => 
-                    s._id === schedule.screen._id || 
-                    s._id === schedule.screen.id ||
-                    s.screenName === schedule.screen.screenName ||
-                    s.screenName === schedule.screen.name
+                const foundScreenIndex = screens.findIndex(
+                    (s) => s._id === schedule.screen._id || s._id === schedule.screen.id || s.screenName === schedule.screen.screenName || s.screenName === schedule.screen.name,
                 );
                 screenIndex = foundScreenIndex !== -1 ? foundScreenIndex : 0;
             }
-            
+
             if (!grouped[screenIndex]) {
                 grouped[screenIndex] = [];
             }
@@ -85,66 +86,69 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
         });
         return grouped;
     }, [schedules, screens]);
-    
-    const handleScheduleClick = useCallback((event) => {
-        if (!scheduleGridRef.current) return;
-        
-        const rect = scheduleGridRef.current.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        // Calculate which time was clicked (24 hours across the width, starting from 23:30 the night before)
-        const timelineMinutes = 24 * 60; // 1440 minutes in a day
-        const minuteWidth = rect.width / timelineMinutes;
-        
-        // Minutes since the start of the timeline (23:30 previous day)
-        const clickedMinute = Math.floor(x / minuteWidth);
-        
-        // Create the timeline start time in Vietnam timezone
-        const timelineStart = new Date(selectedDate);
-        timelineStart.setDate(timelineStart.getDate() - 1);
-        timelineStart.setHours(23, 30, 0, 0);
-        
-        // Add clicked minutes to timeline start to get the actual clicked time
-        const clickedTime = new Date(timelineStart.getTime() + (clickedMinute * 60 * 1000));
-        
-        // Snap to nearest 15-minute interval
-        const minutes = clickedTime.getMinutes();
-        const snappedMinutes = Math.round(minutes / 15) * 15;
-        clickedTime.setMinutes(snappedMinutes, 0, 0);
-        
-        // Handle minute overflow
-        if (clickedTime.getMinutes() >= 60) {
-            clickedTime.setMinutes(0);
-            clickedTime.setHours(clickedTime.getHours() + 1);
-        }
-        
-        // Format time string
-        const clickedHour = clickedTime.getHours();
-        const clickedMinuteInHour = clickedTime.getMinutes();
-        const timeString = `${clickedHour < 10 ? `0${clickedHour}` : clickedHour}:${clickedMinuteInHour < 10 ? `0${clickedMinuteInHour}` : clickedMinuteInHour}`;
-        
-        // Calculate which screen was clicked
-        const screenHeight = 40; // Each screen is 40px height
-        const clickedScreen = Math.floor(y / screenHeight);
-        
-        // Validate the clicked position
-        if (clickedScreen >= 0 && clickedScreen < screen) {
-            // Call the onAddSchedule callback to show the modal
-            if (onAddSchedule) {
-                // Pass screen name instead of index + 1
-                const screenName = screens[clickedScreen]?.screenName || (clickedScreen + 1).toString();
-                onAddSchedule(timeString, screenName);
+
+    const handleScheduleClick = useCallback(
+        (event) => {
+            if (!scheduleGridRef.current) return;
+
+            const rect = scheduleGridRef.current.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            // Calculate which time was clicked (24 hours across the width, starting from 23:30 the night before)
+            const timelineMinutes = 24 * 60; // 1440 minutes in a day
+            const minuteWidth = rect.width / timelineMinutes;
+
+            // Minutes since the start of the timeline (23:30 previous day)
+            const clickedMinute = Math.floor(x / minuteWidth);
+
+            // Create the timeline start time in Vietnam timezone
+            const timelineStart = new Date(selectedDate);
+            timelineStart.setDate(timelineStart.getDate() - 1);
+            timelineStart.setHours(23, 30, 0, 0);
+
+            // Add clicked minutes to timeline start to get the actual clicked time
+            const clickedTime = new Date(timelineStart.getTime() + clickedMinute * 60 * 1000);
+
+            // Snap to nearest 15-minute interval
+            const minutes = clickedTime.getMinutes();
+            const snappedMinutes = Math.round(minutes / 15) * 15;
+            clickedTime.setMinutes(snappedMinutes, 0, 0);
+
+            // Handle minute overflow
+            if (clickedTime.getMinutes() >= 60) {
+                clickedTime.setMinutes(0);
+                clickedTime.setHours(clickedTime.getHours() + 1);
             }
-        }
-    }, [screen, screens, onAddSchedule, selectedDate]);
-    
+
+            // Format time string
+            const clickedHour = clickedTime.getHours();
+            const clickedMinuteInHour = clickedTime.getMinutes();
+            const timeString = `${clickedHour < 10 ? `0${clickedHour}` : clickedHour}:${clickedMinuteInHour < 10 ? `0${clickedMinuteInHour}` : clickedMinuteInHour}`;
+
+            // Calculate which screen was clicked
+            const screenHeight = 40; // Each screen is 40px height
+            const clickedScreen = Math.floor(y / screenHeight);
+
+            // Validate the clicked position
+            if (clickedScreen >= 0 && clickedScreen < screen) {
+                // Call the onAddSchedule callback to show the modal
+                if (onAddSchedule) {
+                    // Pass screen name instead of index + 1
+                    const screenName = screens[clickedScreen]?.screenName || (clickedScreen + 1).toString();
+                    onAddSchedule(timeString, screenName);
+                }
+            }
+        },
+        [screen, screens, onAddSchedule, selectedDate],
+    );
+
     return (
-        <div className='absolute bottom-1/10 h-[67%] flex w-full items-start justify-center'>
+        <div className="absolute bottom-1/10 flex h-[67%] w-full items-start justify-center">
             {/* Background grid and time markers - behind scrollable content */}
-            <div className='absolute h-full pointer-events-none w-[87%] right-[4%]'>
-                 <div className="absolute z-20 top-1.5 h-[3px] w-full bg-slate-950" />
-                <div className="absolute z-20 w-[97%] h-auto right-[1.4%] -top-4.5">
+            <div className="pointer-events-none absolute right-[4%] h-full w-[87%]">
+                <div className="absolute top-1.5 z-20 h-[3px] w-full bg-slate-950" />
+                <div className="absolute -top-4.5 right-[1.4%] z-20 h-auto w-[97%]">
                     <div className="flex justify-between px-[1px] py-1">
                         {Array.from({ length: 24 }, (_, hour) => {
                             return (
@@ -155,7 +159,7 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                         })}
                     </div>
                 </div>
-                <div className='absolute z-20 w-full h-auto top-2'>
+                <div className="absolute top-2 z-20 h-auto w-full">
                     <div className="relative flex h-full w-full justify-between px-[2.2%]">
                         {Array.from({ length: 12 }, (_, index) => {
                             return (
@@ -167,42 +171,38 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                         })}
                     </div>
                 </div>
-                <div className="absolute z-0 top-2 h-[97.5%] w-full right-0">
-                <div className="relative flex h-full w-full justify-between px-[2.2%]">
-                    {Array.from({ length: 12 }, (_, index) => {
-                        return (
-                            <div key={index} className="relative h-full w-[4.4%] bg-slate-900/30"></div>
-                        );
-                    })}
+                <div className="absolute top-2 right-0 z-0 h-[97.5%] w-full">
+                    <div className="relative flex h-full w-full justify-between px-[2.2%]">
+                        {Array.from({ length: 12 }, (_, index) => {
+                            return <div key={index} className="relative h-full w-[4.4%] bg-slate-900/30"></div>;
+                        })}
+                    </div>
                 </div>
-            </div>
             </div>
 
             {/* Scrollable content - above background grid */}
-            <div className="relative z-10 flex flex-row mt-[0.5%]  h-[97%] w-[92%] items-start overflow-y-auto no-scrollbar">
+            <div className="no-scrollbar relative z-10 mt-[0.5%] flex h-[97%] w-[92%] flex-row items-start overflow-y-auto">
                 {/*Calendar*/}
-                
-                <div className="relative flex min-h-full items-start justify-start w-[4%] flex-col bg-black/20">
+
+                <div className="relative flex min-h-full w-[4%] flex-col items-start justify-start bg-black/20">
                     {Array.from({ length: screen }, (_, index) => {
                         // Get screen name from screens array or fallback to index + 1
                         const screenName = screens[index]?.screenName || (index + 1).toString();
                         return (
-                            <div key={index} className="relative flex items-center justify-center h-[40px] w-full flex-shrink-0">
+                            <div key={index} className="relative flex h-[40px] w-full flex-shrink-0 items-center justify-center">
                                 <span className="text-bold font-unbounded text-2xl font-black">{screenName}</span>
                                 {/* Separator line between screens (not after the last one) */}
-                                {index < screen - 1 && (
-                                    <div className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-gray-600/60" />
-                                )}
+                                {index < screen - 1 && <div className="absolute right-0 bottom-[-2px] left-0 h-[1px] bg-gray-600/60" />}
                             </div>
                         );
                     })}
                 </div>
 
                 {/* Clickable schedule area - OVERFLOW HIDDEN for clipping effect */}
-                <div 
+                <div
                     ref={scheduleGridRef}
                     onClick={handleScheduleClick}
-                    className="relative flex-1 cursor-crosshair bg-transparent overflow-hidden ml-[1.4%] hover:bg-blue-50/20 transition-colors" // overflow-hidden is key for clipping
+                    className="relative ml-[1.4%] flex-1 cursor-crosshair overflow-hidden bg-transparent transition-colors hover:bg-blue-50/20" // overflow-hidden is key for clipping
                     style={{ minHeight: `${screen * 40}px` }} // 40px height, no gap
                     title="Click to select time and screen"
                 >
@@ -214,27 +214,25 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                                 // Convert schedule times to Vietnam timezone
                                 const startTime = toVietnamTime(new Date(schedule.startTime));
                                 const endTime = toVietnamTime(new Date(schedule.endTime));
-                                
+
                                 // Check if this is a continuous movie (started before the timeline)
                                 // Timeline starts at 23:30 the previous day in Vietnam timezone
                                 const timelineStart = new Date(selectedDate);
                                 timelineStart.setDate(timelineStart.getDate() - 1);
                                 timelineStart.setHours(23, 30, 0, 0);
                                 const vietnamTimelineStart = toVietnamTime(timelineStart);
-                                
+
                                 const isContinuous = startTime < vietnamTimelineStart && endTime > vietnamTimelineStart;
 
-
-                                
                                 // Calculate position and duration (allowing negative values for continuous effect)
                                 const startPos = getTimePosition(schedule.startTime, selectedDate);
                                 const duration = getScheduleDuration(schedule.startTime, schedule.endTime);
-                                
+
                                 // Determine styling based on whether it's continuous
                                 let scheduleClasses = '';
                                 let movieTitle = schedule.movie.title;
                                 let movieIcon = '';
-                                
+
                                 if (isContinuous) {
                                     // Orange/red styling for continuous movies with special effects
                                     scheduleClasses = 'bg-pink-400 hover:bg-purple-700 shadow-[inset_0px_0px_30px_3px_rgba(155,47,255,1.00)]';
@@ -244,15 +242,15 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                                     // Regular styling for normal schedules
                                     scheduleClasses = 'bg-pink-400 hover:bg-purple-700 shadow-[inset_0px_0px_30px_3px_rgba(155,47,255,1.00)]';
                                 }
-                                
+
                                 return (
                                     <div
                                         key={schedule._id}
-                                        className={`absolute top-1.5 -space-y-1 h-[30px] ${scheduleClasses} rounded-xl cursor-pointer`}
+                                        className={`absolute top-1.5 h-[30px] -space-y-1 ${scheduleClasses} cursor-pointer rounded-xl`}
                                         style={{
                                             left: `${startPos}%`, // Can be negative - will be clipped by overflow-hidden
                                             width: `${Math.max(duration, 2)}%`, // Minimum 2% width for visibility
-                                            zIndex: isContinuous ? 2 : 1 // Continuous movies on top
+                                            zIndex: isContinuous ? 2 : 1, // Continuous movies on top
                                         }}
                                         title={`${schedule.movie.title}\n${startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}\nTickets sold: ${schedule.ticketsSold}${isContinuous ? '\n(Continuing from previous period)' : ''}`}
                                         onClick={(e) => {
@@ -263,25 +261,20 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
                                             }
                                         }}
                                     >
-                                        <div className="relative pt-0.5 px-2 text-[10px] font-libre-franklin text-white font-medium truncate">
-                                            {movieTitle}
+                                        <div className="font-libre-franklin relative truncate px-2 pt-0.5 text-[10px] font-medium text-white">{movieTitle}</div>
+                                        <div className="font-libre-franklin relative truncate px-2 text-[10px] text-white">
+                                            {startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} -{' '}
+                                            {endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         </div>
-                                        <div className="relative px-2 text-[10px] font-libre-franklin text-white truncate">
-                                            {startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} - {endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                        </div>
-                                        
+
                                         {/* Visual indicator for continuous movies - a glowing left edge */}
-                                        {isContinuous && (
-                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-300 via-orange-300 to-red-300 shadow-lg animate-pulse" />
-                                        )}
+                                        {isContinuous && <div className="absolute top-0 bottom-0 left-0 w-1 animate-pulse bg-gradient-to-b from-yellow-300 via-orange-300 to-red-300 shadow-lg" />}
                                     </div>
                                 );
                             })}
-                            
+
                             {/* Separator line between screens (not after the last one) */}
-                            {screenIndex < screen - 1 && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gray-400/50" />
-                            )}
+                            {screenIndex < screen - 1 && <div className="absolute right-0 bottom-0 left-0 h-[1px] bg-gray-400/50" />}
                         </div>
                     ))}
                 </div>
@@ -293,34 +286,37 @@ const Schedule = ({screen = 1, schedules = [], selectedDate, onAddSchedule, onEd
 const ScheduleManagePage = () => {
     // Utility function to convert any date to Vietnam timezone (UTC+7)
     const toVietnamTime = useCallback((date) => {
-        const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-        return new Date(utcTime + (7 * 3600000)); // UTC+7
+        const utcTime = date.getTime() + date.getTimezoneOffset() * 60000;
+        return new Date(utcTime + 7 * 3600000); // UTC+7
     }, []);
-    
+
     // Utility function to convert Vietnam time to UTC - Consistent across environments
     const vietnamTimeToUTC = useCallback((vietnamTimeString) => {
         // Parse the date string components manually to avoid timezone interpretation issues
         const [datePart, timePart] = vietnamTimeString.split('T');
         const [year, month, day] = datePart.split('-').map(Number);
         const [hours, minutes] = timePart.split(':').map(Number);
-        
+
         // Create a date object explicitly in Vietnam timezone (UTC+7)
         // We create it as if it's UTC first, then subtract 7 hours to get the actual UTC time
         const vietnamDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
-        
+
         // Now subtract 7 hours to convert from Vietnam time to UTC
-        return new Date(vietnamDate.getTime() - (7 * 3600000));
+        return new Date(vietnamDate.getTime() - 7 * 3600000);
     }, []);
-    
+
     // Utility function to get date string in Vietnam timezone
-    const getVietnamDateString = useCallback((date) => {
-        const vietnamTime = toVietnamTime(date);
-        // Format manually to avoid UTC conversion
-        const year = vietnamTime.getFullYear();
-        const month = String(vietnamTime.getMonth() + 1).padStart(2, '0');
-        const day = String(vietnamTime.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }, [toVietnamTime]);
+    const getVietnamDateString = useCallback(
+        (date) => {
+            const vietnamTime = toVietnamTime(date);
+            // Format manually to avoid UTC conversion
+            const year = vietnamTime.getFullYear();
+            const month = String(vietnamTime.getMonth() + 1).padStart(2, '0');
+            const day = String(vietnamTime.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        [toVietnamTime],
+    );
 
     const { scheduleMovieScreening, loading: postingScreening, error: postScreeningError } = useScheduleMovieScreening();
     const { updateSchedule, loading: updatingSchedule, error: updateScheduleError } = useUpdateSchedule();
@@ -328,97 +324,92 @@ const ScheduleManagePage = () => {
     const { getMovies, movies } = useGetMovies();
     const { user } = useUser();
     const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
-    const {token} = useUser();
+    const { token } = useUser();
     const [selectedDate, setSelectedDate] = useState(() => {
         // Set today's date in Vietnam timezone (UTC+7)
         const now = new Date();
-        const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const vietnamTime = new Date(utcTime + (7 * 3600000));
+        const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+        const vietnamTime = new Date(utcTime + 7 * 3600000);
         vietnamTime.setHours(0, 0, 0, 0);
         return vietnamTime;
     });
     const [isInitialDateSet, setIsInitialDateSet] = useState(false); // Track if initial date was set
     const [isInitialLoad, setIsInitialLoad] = useState(true); // Track if this is the initial load
     const { schedules, loading, error, fetchSchedules } = useGetSchedules();
-    
+
     // Fixed filtering logic for schedules
     const filteredSchedules = useMemo(() => {
         const selectedDateStr = getVietnamDateString(selectedDate);
-        
-        
+
         // Timeline boundaries in Vietnam timezone
         const timelineStart = new Date(selectedDate);
         timelineStart.setDate(timelineStart.getDate() - 1);
         timelineStart.setHours(23, 30, 0, 0);
         const vietnamTimelineStart = toVietnamTime(timelineStart);
-        
+
         const vietnamTimelineEnd = new Date(vietnamTimelineStart);
         vietnamTimelineEnd.setHours(vietnamTimelineEnd.getHours() + 24); // 24 hours later
-        
-        
-        const filtered = schedules.filter(schedule => {
+
+        const filtered = schedules.filter((schedule) => {
             // Convert schedule times to Vietnam timezone for comparison
             const scheduleStartTime = toVietnamTime(new Date(schedule.startTime));
             const scheduleEndTime = toVietnamTime(new Date(schedule.endTime));
-            
+
             // Calculate the schedule's total duration
             const totalDuration = scheduleEndTime.getTime() - scheduleStartTime.getTime();
-            
+
             // Calculate how much of the schedule falls on each day
             let primaryDay = new Date(scheduleStartTime);
             primaryDay.setHours(0, 0, 0, 0);
-            
+
             // If the schedule spans midnight, we need to determine which day it "belongs to"
             if (scheduleStartTime.getDate() !== scheduleEndTime.getDate()) {
                 // Schedule spans midnight - calculate which day gets more duration
                 const midnightBoundary = new Date(scheduleStartTime);
                 midnightBoundary.setDate(midnightBoundary.getDate() + 1);
                 midnightBoundary.setHours(0, 0, 0, 0);
-                
+
                 const durationOnStartDay = midnightBoundary.getTime() - scheduleStartTime.getTime();
                 const durationOnEndDay = scheduleEndTime.getTime() - midnightBoundary.getTime();
-                
+
                 // If more duration is on the end day, that's the primary day
                 if (durationOnEndDay > durationOnStartDay) {
                     primaryDay = new Date(scheduleEndTime);
                     primaryDay.setHours(0, 0, 0, 0);
                 }
             }
-            
+
             // Convert primary day to Vietnam timezone for comparison
             const vietnamPrimaryDay = toVietnamTime(primaryDay);
             const vietnamSelectedDay = toVietnamTime(new Date(selectedDate));
             vietnamSelectedDay.setHours(0, 0, 0, 0);
-            
+
             // Check if the primary day matches the selected date
             const isPrimaryDayMatch = vietnamPrimaryDay.getTime() === vietnamSelectedDay.getTime();
-            
 
             // Also check if schedule overlaps with the timeline window (for continuous display)
             const startsWithinTimeline = scheduleStartTime >= vietnamTimelineStart && scheduleStartTime < vietnamTimelineEnd;
             const isOngoingDuringTimeline = scheduleStartTime < vietnamTimelineStart && scheduleEndTime > vietnamTimelineStart;
             const overlapsTimeline = startsWithinTimeline || isOngoingDuringTimeline;
-            
+
             // Show schedule if either:
             // 1. Its primary day matches the selected date, OR
             // 2. It overlaps with the timeline (for edge cases and continuous display)
             const shouldShow = isPrimaryDayMatch || overlapsTimeline;
-            
+
             if (shouldShow) {
                 return true;
             }
-            
+
             return false;
         });
-        
-        
+
         return filtered;
     }, [selectedDate, schedules, getVietnamDateString, toVietnamTime]);
-    
+
     // Debug: Log when schedules change
-    useEffect(() => {
-    }, [schedules]);
-    
+    useEffect(() => {}, [schedules]);
+
     // Modal state management
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalData, setModalData] = useState({
@@ -460,65 +451,69 @@ const ScheduleManagePage = () => {
             // Get today's date in Vietnam timezone
             const today = toVietnamTime(new Date());
             today.setHours(0, 0, 0, 0);
-            
+
             const futureSchedules = schedules
-                .map(s => {
+                .map((s) => {
                     const scheduleTime = new Date(s.startTime);
                     const vietnamScheduleTime = toVietnamTime(scheduleTime);
                     vietnamScheduleTime.setHours(0, 0, 0, 0); // Set to start of day for comparison
                     return vietnamScheduleTime;
                 })
-                .filter(d => d >= today) // Use >= to include today's schedules
+                .filter((d) => d >= today) // Use >= to include today's schedules
                 .sort((a, b) => a - b);
-                
+
             if (futureSchedules.length > 0) {
                 setSelectedDate(futureSchedules[0]);
             }
             setIsInitialDateSet(true); // Mark that initial date has been set
         }
     }, [schedules, loading, error, isInitialDateSet, toVietnamTime]);
-    
+
     const handleDateChange = useCallback((newDate) => {
         setSelectedDate(newDate);
     }, []);
-    
-    // Handle opening the add schedule modal
-    const handleAddSchedule = useCallback((selectedTime, selectedScreen) => {
-        // Parse the clicked time and determine the correct date
-        const [hours, minutes] = selectedTime.split(':').map(Number);
-        
-        // Create a date object for the clicked time
-        let scheduleDate = new Date(selectedDate);
 
-        if (hours === 23 && minutes >= 30) {
-            scheduleDate.setDate(scheduleDate.getDate() - 1);}
-        
-        setModalData({
-            selectedTime,
-            selectedScreen,
-            calculatedDate: scheduleDate // Pass the calculated date
-        });
-        setIsModalOpen(true);
-    }, [selectedDate, getVietnamDateString]);
-    
+    // Handle opening the add schedule modal
+    const handleAddSchedule = useCallback(
+        (selectedTime, selectedScreen) => {
+            // Parse the clicked time and determine the correct date
+            const [hours, minutes] = selectedTime.split(':').map(Number);
+
+            // Create a date object for the clicked time
+            let scheduleDate = new Date(selectedDate);
+
+            if (hours === 23 && minutes >= 30) {
+                scheduleDate.setDate(scheduleDate.getDate() - 1);
+            }
+
+            setModalData({
+                selectedTime,
+                selectedScreen,
+                calculatedDate: scheduleDate, // Pass the calculated date
+            });
+            setIsModalOpen(true);
+        },
+        [selectedDate, getVietnamDateString],
+    );
+
     // Handle opening the add schedule modal from the Add button
     const handleAddButtonClick = useCallback(() => {
         const defaultDate = new Date(selectedDate);
         setModalData({
             selectedTime: '09:00', // Default time
             selectedScreen: userBranch?.screens?.[0]?.screenName || '1', // Default to first screen
-            calculatedDate: defaultDate
+            calculatedDate: defaultDate,
         });
         setIsModalOpen(true);
     }, [userBranch, selectedDate]);
-    
+
     // Handle closing the modal (no need to refresh schedules since success handler already does it)
     const handleCloseModal = useCallback(() => {
         setIsModalOpen(false);
         setModalData({
             selectedTime: '',
             selectedScreen: '',
-            calculatedDate: null
+            calculatedDate: null,
         });
         // Note: No need to refresh schedules here since handleScheduleSuccess already does it
     }, []);
@@ -526,14 +521,13 @@ const ScheduleManagePage = () => {
     // Handle successful schedule addition/update
     const handleScheduleSuccess = useCallback(async () => {
         // Add a small delay to ensure database operation is complete
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
         // Refresh schedules immediately after successful operation while preserving selected date
         if (userBranch?._id) {
             try {
                 await fetchSchedules(null, userBranch._id);
-            } catch (error) {
-            }
+            } catch (error) {}
         }
         // Note: selectedDate is preserved since isInitialDateSet prevents automatic date changes
     }, [userBranch]); // Remove fetchSchedules from dependency array
@@ -564,113 +558,95 @@ const ScheduleManagePage = () => {
     }, []);
 
     // Handle confirming upload
-    const handleConfirmUpload = useCallback(async (selectedData) => {
-        setImportLoading(true);
-        try {
-            
-            // Process each schedule
-            const promises = selectedData.map(async (schedule) => {
-                // Find the screen ID by name
-                const screen = userBranch?.screens?.find(s => 
-                    s.screenName.toString() === schedule.screenName.toString()
-                );
-                if (!screen) {
-                    throw new Error(`Screen "${schedule.screenName}" not found`);
+    const handleConfirmUpload = useCallback(
+        async (selectedData) => {
+            setImportLoading(true);
+            try {
+                // Process each schedule
+                const promises = selectedData.map(async (schedule) => {
+                    // Find the screen ID by name
+                    const screen = userBranch?.screens?.find((s) => s.screenName.toString() === schedule.screenName.toString());
+                    if (!screen) {
+                        throw new Error(`Screen "${schedule.screenName}" not found`);
+                    }
+                    // Find the movie ID by title
+                    const movie = movies.find((m) => m.title.toLowerCase() === schedule.movieName.toLowerCase());
+                    if (!movie) {
+                        throw new Error(`Movie "${schedule.movieName}" not found`);
+                    }
+
+                    // Convert Vietnam time back to UTC for database storage
+                    const vietnamTimeString = `${schedule.date}T${schedule.startTime}`;
+                    const utcStartDateTime = vietnamTimeToUTC(vietnamTimeString);
+
+                    const scheduleData = {
+                        movieId: movie._id,
+                        screenId: screen._id,
+                        startTime: utcStartDateTime.toISOString(),
+                    };
+
+                    console.log(`Schedule Data:`, scheduleData);
+
+                    return scheduleMovieScreening(userBranch._id, scheduleData);
+                });
+
+                const results = await Promise.all(promises);
+
+                // Check if all succeeded
+                const failures = results.filter((result) => !result.success);
+                if (failures.length > 0) {
+                    alert(`${failures.length} out of ${selectedData.length} schedules failed to import. Check console for details.`);
+                } else {
+                    alert(`Successfully imported ${selectedData.length} schedules!`);
                 }
-                // Find the movie ID by title
-                const movie = movies.find(m => 
-                    m.title.toLowerCase() === schedule.movieName.toLowerCase()
-                );
-                if (!movie) {
-                    throw new Error(`Movie "${schedule.movieName}" not found`);
-                }
 
-                // Convert Vietnam time back to UTC for database storage
-                const vietnamTimeString = `${schedule.date}T${schedule.startTime}`;
-                const utcStartDateTime = vietnamTimeToUTC(vietnamTimeString);
-
-                const scheduleData = {
-                    movieId: movie._id,
-                    screenId: screen._id,
-                    startTime: utcStartDateTime.toISOString(),
-                };
-
-                console.log(`Schedule Data:`, scheduleData);
-
-                return scheduleMovieScreening(userBranch._id, scheduleData);
-            });
-
-            const results = await Promise.all(promises);
-            
-            // Check if all succeeded
-            const failures = results.filter(result => !result.success);
-            if (failures.length > 0) {
-                alert(`${failures.length} out of ${selectedData.length} schedules failed to import. Check console for details.`);
-            } else {
-                alert(`Successfully imported ${selectedData.length} schedules!`);
+                // Refresh schedules and close modal
+                await handleScheduleSuccess();
+                handleCloseUploadModal();
+            } catch (error) {
+                console.error('Error importing schedules:', error);
+                alert('Failed to import schedules. Please check the data and try again.');
+            } finally {
+                setImportLoading(false);
             }
-
-            // Refresh schedules and close modal
-            await handleScheduleSuccess();
-            handleCloseUploadModal();
-            
-        } catch (error) {
-            console.error('Error importing schedules:', error);
-            alert('Failed to import schedules. Please check the data and try again.');
-        } finally {
-            setImportLoading(false);
-        }
-    }, [userBranch, movies, scheduleMovieScreening, handleScheduleSuccess, handleCloseUploadModal, vietnamTimeToUTC]);
-    
-
+        },
+        [userBranch, movies, scheduleMovieScreening, handleScheduleSuccess, handleCloseUploadModal, vietnamTimeToUTC],
+    );
 
     return (
         <StaffLayout backgroundClass="bg-zinc-300/70">
             <MobileNotSupported>
-                <div className="font-unbounded absolute lg:top-1/10 xl:top-1/20 left-1/12 z-10 justify-start text-5xl font-bold text-black">Schedule</div>
+                <div className="font-unbounded absolute left-1/12 z-10 justify-start text-5xl font-bold text-black lg:top-1/10 xl:top-1/20">Schedule</div>
 
                 <div className="absolute right-1/12 z-60 flex items-end gap-4 lg:top-1/14 xl:top-1/24">
-                    <AddButton text="Add Schedule" onClick={handleAddButtonClick}/>
+                    <AddButton text="Add Schedule" onClick={handleAddButtonClick} />
                     <div className="flex flex-col items-center">
-                        <DownloadTemplateButton 
+                        <DownloadTemplateButton
                             templatePath="/templates/ScheduleList-Template.xlsx"
                             filename="ScheduleList-Template.xlsx"
                             buttonText="Download template"
                             disabled={loading || importLoading}
                         />
-                        <UploadCSVButton 
-                            templateType="schedule"
-                            onDataParsed={handleScheduleUpload}
-                            disabled={loading || importLoading}
-                        />
+                        <UploadCSVButton templateType="schedule" onDataParsed={handleScheduleUpload} disabled={loading || importLoading} />
                     </div>
-                    <DateChosenButton 
-                        selectedDate={selectedDate}
-                        onDateChange={handleDateChange}
-                        scheduleDates={schedules.map(schedule => new Date(schedule.startTime))}
-                    />
-                    
+                    <DateChosenButton selectedDate={selectedDate} onDateChange={handleDateChange} scheduleDates={schedules.map((schedule) => new Date(schedule.startTime))} />
                 </div>
 
                 <div className="absolute left-1/2 z-4 w-[95%] -translate-x-1/2 transform rounded-xl bg-black/10 lg:bottom-1/10 lg:h-[70%] xl:bottom-1/10 xl:rounded-3xl"></div>
-                
+
                 {error ? (
-                    <div className="flex items-center justify-center h-full">
-                        <div className="text-red-500 text-xl p-5 font-bold font-['Unbounded'] bg-white/90 rounded-lg shadow-lg">
-                            Error loading schedules: {error}
-                        </div>
+                    <div className="flex h-full items-center justify-center">
+                        <div className="rounded-lg bg-white/90 p-5 font-['Unbounded'] text-xl font-bold text-red-500 shadow-lg">Error loading schedules: {error}</div>
                     </div>
-                ) : (loading && isInitialLoad) ? (
-                    <div className="flex items-center justify-center h-full">
-                        <div className="text-white text-2xl p-5 font-bold font-['Unbounded'] animate-pulse">
-                            • • •
-                        </div>
+                ) : loading && isInitialLoad ? (
+                    <div className="flex h-full items-center justify-center">
+                        <div className="animate-pulse p-5 font-['Unbounded'] text-2xl font-bold text-white">• • •</div>
                     </div>
                 ) : (
-                    <Schedule 
-                        schedules={filteredSchedules} 
-                        selectedDate={selectedDate} 
-                        screen={userBranch?.screens?.length} 
+                    <Schedule
+                        schedules={filteredSchedules}
+                        selectedDate={selectedDate}
+                        screen={userBranch?.screens?.length}
                         screens={userBranch?.screens || []}
                         onAddSchedule={handleAddSchedule}
                         onEditSchedule={handleEditSchedule}

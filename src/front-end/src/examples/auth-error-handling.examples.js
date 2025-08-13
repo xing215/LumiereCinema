@@ -1,6 +1,6 @@
 /**
  * Example Usage of Enhanced Authentication Error Handling
- * 
+ *
  * This file demonstrates how the new authentication error handling works
  * in practice with the Lumiere Cinema front-end services.
  */
@@ -16,18 +16,18 @@ import { userService, movieService } from '@services';
 
 // This will automatically trigger logout and error modal if 401/403
 const getUserProfile = async (token) => {
-  try {
-    const profile = await userService.getProfile(token);
-    return profile;
-  } catch (error) {
-    // Only non-auth errors reach here now
-    // 401/403 errors are handled automatically by interceptor
-    console.error('Profile fetch error:', error);
-    throw error;
-  }
+    try {
+        const profile = await userService.getProfile(token);
+        return profile;
+    } catch (error) {
+        // Only non-auth errors reach here now
+        // 401/403 errors are handled automatically by interceptor
+        console.error('Profile fetch error:', error);
+        throw error;
+    }
 };
 
-// ================================  
+// ================================
 // ERROR MODAL EXAMPLES
 // ================================
 
@@ -39,13 +39,13 @@ const getUserProfile = async (token) => {
 // Action: Auto logout and redirect to appropriate login page
 
 // 403 - Access Denied (authenticated user)
-// Modal: Red background, X icon  
+// Modal: Red background, X icon
 // Text: "Access Denied: Access denied. You do not have permission to access this resource."
 // Action: Show error only, no logout
 
 // 403 - Access Denied (unauthenticated user)
 // Modal: Red background, logout icon
-// Text: "Session Expired: Session expired. Please login again to continue."  
+// Text: "Session Expired: Session expired. Please login again to continue."
 // Action: Auto logout and redirect
 
 // ================================
@@ -57,23 +57,23 @@ import { extractErrorInfo } from '@utils/auth-error.utils';
 
 // Manual logout trigger (for testing or special cases)
 const triggerManualSessionExpired = async () => {
-  await apiInterceptor.triggerManualLogout(401, 'Your session has been terminated');
+    await apiInterceptor.triggerManualLogout(401, 'Your session has been terminated');
 };
 
 // Service-level error handling with utilities
 const fetchMovieWithErrorHandling = async (movieId, token) => {
-  try {
-    const movie = await movieService.getMovieDetails(movieId);
-    return movie;
-  } catch (error) {
-    // Extract error info for custom handling
-    const { errorCode, errorMsg } = extractErrorInfo(error);
-    
-    // Auth errors are already handled by interceptor, 
-    // but you can still access the info if needed
-    console.log(`Error ${errorCode}: ${errorMsg}`);
-    throw error;
-  }
+    try {
+        const movie = await movieService.getMovieDetails(movieId);
+        return movie;
+    } catch (error) {
+        // Extract error info for custom handling
+        const { errorCode, errorMsg } = extractErrorInfo(error);
+
+        // Auth errors are already handled by interceptor,
+        // but you can still access the info if needed
+        console.log(`Error ${errorCode}: ${errorMsg}`);
+        throw error;
+    }
 };
 
 // ================================
@@ -117,14 +117,9 @@ const fetchUserProfile = async (token) => {
 
 // NEW WAY (automatic):
 const fetchUserProfile = async (token) => {
-  // Just make the call - errors handled automatically!
-  const profile = await userService.getProfile(token);
-  return profile;
+    // Just make the call - errors handled automatically!
+    const profile = await userService.getProfile(token);
+    return profile;
 };
 
-export {
-  getUserProfile,
-  triggerManualSessionExpired,
-  fetchMovieWithErrorHandling,
-  fetchUserProfile
-};
+export { getUserProfile, triggerManualSessionExpired, fetchMovieWithErrorHandling, fetchUserProfile };

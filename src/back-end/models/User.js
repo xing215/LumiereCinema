@@ -91,9 +91,10 @@ userSchema.index({ email: 1 });
 userSchema.pre('save', function(next) {
   // Check if roles field is modified or this is a new document
   if (this.isModified('roles') || this.isNew) {
-    // If user has only customer role or has administrator role, set branch to null
+    // Only set branch to null if user has ONLY customer role OR ONLY administrator role
+    // If admin has other staff roles, they can have a branch
     if ((this.roles.includes('customer') && this.roles.length === 1) || 
-        this.roles.includes('administrator')) {
+        (this.roles.includes('administrator') && this.roles.length === 1)) {
       this.branch = undefined;
     }
   }

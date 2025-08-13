@@ -56,10 +56,7 @@ const SmartRoute = ({ route, children }) => {
 
         // Wrap in ProtectedRoute for authentication check
         return (
-            <ProtectedRoute 
-                requiredRoles={route.allowedRoles} 
-                redirectTo={route.type === 'staff' ? '/staff/login' : '/login'}
-            >
+            <ProtectedRoute requiredRoles={route.allowedRoles} redirectTo={route.type === 'staff' ? '/staff/login' : '/login'}>
                 {children}
             </ProtectedRoute>
         );

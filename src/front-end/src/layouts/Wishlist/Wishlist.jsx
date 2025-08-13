@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import CustomDropdown from "@/components/UI/CustomDropdown";
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import CustomDropdown from '@/components/UI/CustomDropdown';
 import { ROUTES, getBuyTicketPath, getMovieDetailsPath } from '@routes/routeConfig';
-import { useGetWishlist, useRemoveFromWishlist } from "@/hooks/useUser";
-import MovieCard from "@/components/UI/MovieCard";
-import { AlignJustify, Grid3X3, Trash2 } from "lucide-react";
-import TickButton from "@/components/buttons/Staff/TickButton";
+import { useGetWishlist, useRemoveFromWishlist } from '@/hooks/useUser';
+import MovieCard from '@/components/UI/MovieCard';
+import { AlignJustify, Grid3X3, Trash2 } from 'lucide-react';
+import TickButton from '@/components/buttons/Staff/TickButton';
 
 const Wishlist = () => {
     const location = useLocation();
@@ -31,9 +31,8 @@ const Wishlist = () => {
         const { name, value } = e.target;
         setAccountPage(value);
         if (value === 'Information') {
-           navigate(ROUTES.PROFILE);
-        }
-        else if (value === 'Wishlist') {
+            navigate(ROUTES.PROFILE);
+        } else if (value === 'Wishlist') {
             navigate(ROUTES.WISHLIST);
         } else if (value === 'Watch history') {
             navigate(ROUTES.WATCH_HISTORY);
@@ -51,9 +50,9 @@ const Wishlist = () => {
 
     // Handle checkbox selection
     const handleMovieSelect = (movieId) => {
-        setSelectedMovies(prev => {
+        setSelectedMovies((prev) => {
             if (prev.includes(movieId)) {
-                return prev.filter(id => id !== movieId);
+                return prev.filter((id) => id !== movieId);
             } else {
                 return [...prev, movieId];
             }
@@ -87,7 +86,7 @@ const Wishlist = () => {
             for (const movieId of selectedMovies) {
                 await removeFromWishlist(movieId);
             }
-            
+
             // Refresh wishlist and clear selections
             await getWishlist();
             setSelectedMovies([]);
@@ -104,7 +103,7 @@ const Wishlist = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const [accountPage, setAccountPage] = useState('');
     const [lastSegment, setLastSegment] = useState('/' + pathSegments[pathSegments.length - 1]);
-    
+
     useEffect(() => {
         const getLastSegment = '/' + pathSegments[pathSegments.length - 1];
         setLastSegment(getLastSegment);
@@ -126,10 +125,10 @@ const Wishlist = () => {
     // Filter logic - determine movie status based on release date
     const getMovieStatus = (movie) => {
         if (!movie.releaseDate) return 'Unknown';
-        
+
         const now = new Date();
         const releaseDate = new Date(movie.releaseDate);
-        
+
         if (releaseDate > now) {
             return 'Up Coming';
         } else {
@@ -138,12 +137,14 @@ const Wishlist = () => {
     };
 
     // Filter wishlist based on selected filter
-    const filteredWishlist = wishlist ? wishlist.filter(movie => {
-        if (filterStatus === 'All') return true;
-        
-        const movieStatus = getMovieStatus(movie);
-        return movieStatus === filterStatus;
-    }) : [];
+    const filteredWishlist = wishlist
+        ? wishlist.filter((movie) => {
+              if (filterStatus === 'All') return true;
+
+              const movieStatus = getMovieStatus(movie);
+              return movieStatus === filterStatus;
+          })
+        : [];
 
     // Tính toán pagination với filtered data
     const totalItems = filteredWishlist.length;
@@ -187,9 +188,9 @@ const Wishlist = () => {
     // Error handling
     if (error) {
         return (
-            <div className="overflow-hidden relative flex w-screen items-center justify-center pt-3 md:pt-7">
-                <div className="text-red-400 text-center">
-                    <p className="text-lg font-semibold mb-2">Error</p>
+            <div className="relative flex w-screen items-center justify-center overflow-hidden pt-3 md:pt-7">
+                <div className="text-center text-red-400">
+                    <p className="mb-2 text-lg font-semibold">Error</p>
                     <p className="text-sm">{error}</p>
                 </div>
             </div>
@@ -197,45 +198,33 @@ const Wishlist = () => {
     }
 
     return (
-        <div className="overflow-hidden relative flex w-full items-center justify-center">
-            
+        <div className="relative flex w-full items-center justify-center overflow-hidden">
             {/* Alert Popup */}
             {showDeleteAlert && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-zinc-800 rounded-lg p-6 max-w-sm w-[90%] mx-4">
-                        <h3 className="text-white text-lg font-bold font-['Libre_Franklin'] mb-4">
-                            No Selection
-                        </h3>
-                        <p className="text-white text-sm font-['Unbounded'] mb-6 opacity-75">
-                            Please select at least one movie to delete from your wishlist.
-                        </p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="mx-4 w-[90%] max-w-sm rounded-lg bg-zinc-800 p-6">
+                        <h3 className="mb-4 font-['Libre_Franklin'] text-lg font-bold text-white">No Selection</h3>
+                        <p className="mb-6 font-['Unbounded'] text-sm text-white opacity-75">Please select at least one movie to delete from your wishlist.</p>
                         <div className="flex justify-center">
-                            <button
-                                onClick={handleCloseAlert}
-                                className="px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors duration-200"
-                            >
+                            <button onClick={handleCloseAlert} className="rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-500">
                                 OK
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-            
-            <div className="relative flex h-full w-full md:gap-3 flex-col md:flex-row justify-center items-center md:items-start md:justify-start rounded-xl md:min-h-[470px] lg:h-auto">
 
+            <div className="relative flex h-full w-full flex-col items-center justify-center rounded-xl md:min-h-[470px] md:flex-row md:items-start md:justify-start md:gap-3 lg:h-auto">
                 {/* Main Content */}
-                <div className="relative w-full h-auto">
-                    
-                    <div className="w-full mx-auto">
+                <div className="relative h-auto w-full">
+                    <div className="mx-auto w-full">
                         {/* Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-white text-2xl md:text-3xl font-bold font-['Libre_Franklin']">
-                                Wishlist
-                            </h1>
+                        <div className="mb-6 flex items-center justify-between">
+                            <h1 className="font-['Libre_Franklin'] text-2xl font-bold text-white md:text-3xl">Wishlist</h1>
                             <div className="flex items-center gap-4">
                                 {/* Filter Dropdown */}
                                 <div className="w-40">
-                                    <CustomDropdown 
+                                    <CustomDropdown
                                         name="filterStatus"
                                         placeholder="Filter"
                                         value={filterStatus}
@@ -250,7 +239,7 @@ const Wishlist = () => {
                                         height="h-8"
                                         inputTextSize="text-xs"
                                         optionTextSize="text-xs"
-                                        openDirection='down'
+                                        openDirection="down"
                                         textAlign="center"
                                         width="w-full"
                                         options={[
@@ -260,41 +249,38 @@ const Wishlist = () => {
                                         ]}
                                     />
                                 </div>
-                                
+
                                 {/* View Toggle Button */}
                                 <button
                                     onClick={toggleViewMode}
-                                    className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors duration-200"
+                                    className="rounded-lg bg-indigo-600 p-2 text-white transition-colors duration-200 hover:bg-indigo-500"
                                     title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}
                                 >
                                     {viewMode === 'grid' ? <AlignJustify size={16} /> : <Grid3X3 size={16} />}
                                 </button>
-                                
-                                
                             </div>
                         </div>
 
-
                         {/* Loading State */}
                         {loading && (
-                            <div className="text-white text-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                            <div className="py-8 text-center text-white">
+                                <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
                                 <p>Loading your wishlist...</p>
                             </div>
                         )}
 
                         {/* Empty Wishlist */}
                         {!loading && wishlist && wishlist.length === 0 && (
-                            <div className="text-white text-center py-8">
-                                <p className="text-lg font-semibold mb-2">Your wishlist is empty</p>
+                            <div className="py-8 text-center text-white">
+                                <p className="mb-2 text-lg font-semibold">Your wishlist is empty</p>
                                 <p className="text-sm opacity-75">Start adding movies to your wishlist to see them here!</p>
                             </div>
                         )}
 
                         {/* No results after filtering */}
                         {!loading && wishlist && wishlist.length > 0 && filteredWishlist.length === 0 && (
-                            <div className="text-white text-center py-8">
-                                <p className="text-lg font-semibold mb-2">No movies found</p>
+                            <div className="py-8 text-center text-white">
+                                <p className="mb-2 text-lg font-semibold">No movies found</p>
                                 <p className="text-sm opacity-75">No movies match the selected filter: {filterStatus}</p>
                             </div>
                         )}
@@ -304,116 +290,91 @@ const Wishlist = () => {
                             <>
                                 {viewMode === 'grid' ? (
                                     /* Grid View */
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 min-h-[400px]">
+                                    <div className="grid min-h-[400px] grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-3">
                                         {currentPageData.map((movie, index) => (
-                                            <div key={movie._id || index} className="aspect-[300/470] scale-80 w-[123%] md:-my-15 -m-5 lg:-my-10 ">
-                                                <MovieCard 
-                                                    movie={movie} 
-                                                    page="Wishlist"
-                                                />
+                                            <div key={movie._id || index} className="-m-5 aspect-[300/470] w-[123%] scale-80 md:-my-15 lg:-my-10">
+                                                <MovieCard movie={movie} page="Wishlist" />
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
                                     /* List View - Based on WatchHistory.jsx */
-                                    <div className="w-full flex flex-col justify-start items-start gap-1">
-                                        
+                                    <div className="flex w-full flex-col items-start justify-start gap-1">
                                         {/* Table Header - Desktop Grid */}
-                                        <div className="hidden md:grid w-full grid-cols-[0px_1fr_60px_85px_75px_120px] gap-2 items-center">
+                                        <div className="hidden w-full grid-cols-[0px_1fr_60px_85px_75px_120px] items-center gap-2 md:grid">
                                             <div /> {/* Spacer */}
-
-                                            <div className="text-white text-[10px] font-medium font-['Unbounded']">
-                                                Movie
-                                            </div>
+                                            <div className="font-['Unbounded'] text-[10px] font-medium text-white">Movie</div>
                                             {/* Age Rating */}
-                                            <div className="text-white text-[10px] font-medium font-['Unbounded'] text-center">
-                                                Age
-                                            </div>
-
-                                            <div className="text-white text-[10px] font-medium font-['Unbounded'] text-center">
-                                                Release Date
-                                            </div>
-                                            <div className="text-white text-[10px] font-medium font-['Unbounded'] text-center">
-                                                Duration
-                                            </div>
+                                            <div className="text-center font-['Unbounded'] text-[10px] font-medium text-white">Age</div>
+                                            <div className="text-center font-['Unbounded'] text-[10px] font-medium text-white">Release Date</div>
+                                            <div className="text-center font-['Unbounded'] text-[10px] font-medium text-white">Duration</div>
                                             <div /> {/* Button spacer */}
                                         </div>
 
                                         {/* Header Divider - Ẩn trên mobile */}
-                                        <div className="hidden md:block self-stretch h-0.5 mix-blend-color-dodge bg-zinc-300/30" />
+                                        <div className="hidden h-0.5 self-stretch bg-zinc-300/30 mix-blend-color-dodge md:block" />
 
                                         {/* Table Rows - Desktop Grid */}
-                                        <div className="hidden md:block w-full">
+                                        <div className="hidden w-full md:block">
                                             {currentPageData.map((movie, index) => (
                                                 <React.Fragment key={movie._id || index}>
-                                                    <div className="w-full grid grid-cols-[0px_20px_1fr_60px_85px_75px_120px] gap-2 items-start py-2 min-h-[40px]">
+                                                    <div className="grid min-h-[40px] w-full grid-cols-[0px_20px_1fr_60px_85px_75px_120px] items-start gap-2 py-2">
                                                         <div /> {/* Spacer */}
-
                                                         {/* TickButton for selection 1 */}
-                                                        <div className="flex justify-center items-center text-white">
-                                                            <TickButton
-                                                                check={selectedMovies.includes(movie._id)}
-                                                                onTick={() => handleMovieSelect(movie._id)}
-                                                            />
+                                                        <div className="flex items-center justify-center text-white">
+                                                            <TickButton check={selectedMovies.includes(movie._id)} onTick={() => handleMovieSelect(movie._id)} />
                                                         </div>
-                                                        
                                                         {/* Movie Title */}
-                                                        <div className="text-white text-[11px] font-['Unbounded'] leading-tight break-words pr-2">
-                                                            <span 
-                                                                className="font-bold cursor-pointer hover:text-purple-500 transition-colors duration-200"
+                                                        <div className="pr-2 font-['Unbounded'] text-[11px] leading-tight break-words text-white">
+                                                            <span
+                                                                className="cursor-pointer font-bold transition-colors duration-200 hover:text-purple-500"
                                                                 onClick={() => navigate(getMovieDetailsPath(movie._id))}
                                                             >
                                                                 {movie.title || 'Unknown Movie'}
                                                             </span>
                                                         </div>
-
                                                         {/* Age Rating */}
-                                                        <div className="text-center text-white text-[11px] font-medium font-['Unbounded']">
-                                                            {movie.ageRating || 'N/A'}
-                                                        </div>
-                                                        
+                                                        <div className="text-center font-['Unbounded'] text-[11px] font-medium text-white">{movie.ageRating || 'N/A'}</div>
                                                         {/* Release Date */}
-                                                        <div className="text-center text-white text-[11px] font-medium font-['Unbounded'] leading-tight break-words px-1">
-                                                            {movie.releaseDate ? (() => {
-                                                                const d = new Date(movie.releaseDate);
-                                                                return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-                                                            })() : 'N/A'}
+                                                        <div className="px-1 text-center font-['Unbounded'] text-[11px] leading-tight font-medium break-words text-white">
+                                                            {movie.releaseDate
+                                                                ? (() => {
+                                                                      const d = new Date(movie.releaseDate);
+                                                                      return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+                                                                  })()
+                                                                : 'N/A'}
                                                         </div>
-                                                        
                                                         {/* Duration */}
-                                                        <div className="text-center text-white text-[11px] font-medium font-['Unbounded'] leading-tight whitespace-nowrap">
+                                                        <div className="text-center font-['Unbounded'] text-[11px] leading-tight font-medium whitespace-nowrap text-white">
                                                             {movie.duration ? `${movie.duration} min` : 'N/A'}
                                                         </div>
-                                                        
                                                         {/* Buy Ticket Button */}
-                                                        <div className="flex justify-center items-start pt-0">
+                                                        <div className="flex items-start justify-center pt-0">
                                                             <button
                                                                 onClick={() => handleBookTicket(movie._id)}
-                                                                className="w-24 h-5 bg-pink-400 rounded-xl shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-pink-500 transition-colors duration-200"
+                                                                className="h-5 w-24 rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-colors duration-200 hover:bg-pink-500"
                                                             >
-                                                                <div className="text-center text-white text-[10px] font-bold font-['Unbounded']">
-                                                                    BUY TICKET
-                                                                </div>
+                                                                <div className="text-center font-['Unbounded'] text-[10px] font-bold text-white">BUY TICKET</div>
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     {/* Row Divider */}
-                                                    <div className="w-full h-0.5 mix-blend-color-dodge bg-zinc-300/30" />
+                                                    <div className="h-0.5 w-full bg-zinc-300/30 mix-blend-color-dodge" />
                                                 </React.Fragment>
                                             ))}
                                         </div>
 
                                         {/* Mobile Layout - Card Style */}
                                         {currentPageData.map((movie, index) => (
-                                            <div key={`mobile-${movie._id || index}`} className="block md:hidden w-full bg-zinc-800/30 rounded-lg p-4 mb-3">
+                                            <div key={`mobile-${movie._id || index}`} className="mb-3 block w-full rounded-lg bg-zinc-800/30 p-4 md:hidden">
                                                 <div className="flex flex-col gap-3">
                                                     {/* Movie Title & Checkbox */}
-                                                    <div className="flex justify-between items-start">
+                                                    <div className="flex items-start justify-between">
                                                         <div className="flex-1 pr-2">
-                                                            <div className="text-white text-sm font-bold font-['Unbounded'] leading-tight mb-1">
-                                                                <span 
-                                                                    className="font-bold cursor-pointer hover:text-purple-500 transition-colors duration-200"
+                                                            <div className="mb-1 font-['Unbounded'] text-sm leading-tight font-bold text-white">
+                                                                <span
+                                                                    className="cursor-pointer font-bold transition-colors duration-200 hover:text-purple-500"
                                                                     onClick={() => navigate(getMovieDetailsPath(movie._id))}
                                                                 >
                                                                     {movie.title || 'Unknown Movie'}
@@ -422,55 +383,42 @@ const Wishlist = () => {
                                                         </div>
                                                         {/* TickButton for selection 2 */}
                                                         <div className="flex items-center gap-2 text-white">
-                                                            <TickButton
-                                                                check={selectedMovies.includes(movie._id)}
-                                                                onTick={() => handleMovieSelect(movie._id)}
-                                                            />
+                                                            <TickButton check={selectedMovies.includes(movie._id)} onTick={() => handleMovieSelect(movie._id)} />
                                                         </div>
                                                     </div>
                                                     {/* Release Date & Duration */}
-                                                    <div className="flex justify-between items-start gap-4">
+                                                    <div className="flex items-start justify-between gap-4">
                                                         {/* Age Rating */}
                                                         <div className="flex-1">
-                                                            <div className="text-white/70 text-xs font-light font-['Unbounded'] mb-1">
-                                                                Age
-                                                            </div>
-                                                            <div className="text-white text-xs font-medium font-['Unbounded']">
-                                                                {movie.ageRating || 'N/A'}
-                                                            </div>
+                                                            <div className="mb-1 font-['Unbounded'] text-xs font-light text-white/70">Age</div>
+                                                            <div className="font-['Unbounded'] text-xs font-medium text-white">{movie.ageRating || 'N/A'}</div>
                                                         </div>
                                                         {/* Release Date */}
                                                         <div className="flex-1">
-                                                            <div className="text-white/70 text-xs font-light font-['Unbounded'] mb-1">
-                                                                Release Date
-                                                            </div>
-                                                            <div className="text-white text-xs font-medium font-['Unbounded']">
-                                                                {movie.releaseDate ? (() => {
-                                                                    const d = new Date(movie.releaseDate);
-                                                                    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-                                                                })() : 'N/A'}
+                                                            <div className="mb-1 font-['Unbounded'] text-xs font-light text-white/70">Release Date</div>
+                                                            <div className="font-['Unbounded'] text-xs font-medium text-white">
+                                                                {movie.releaseDate
+                                                                    ? (() => {
+                                                                          const d = new Date(movie.releaseDate);
+                                                                          return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+                                                                      })()
+                                                                    : 'N/A'}
                                                             </div>
                                                         </div>
                                                         {/* Duration */}
                                                         <div className="flex-1">
-                                                            <div className="text-white/70 text-xs font-light font-['Unbounded'] mb-1">
-                                                                Duration
-                                                            </div>
-                                                            <div className="text-white text-xs font-medium font-['Unbounded']">
-                                                                {movie.duration ? `${movie.duration} min` : 'N/A'}
-                                                            </div>
+                                                            <div className="mb-1 font-['Unbounded'] text-xs font-light text-white/70">Duration</div>
+                                                            <div className="font-['Unbounded'] text-xs font-medium text-white">{movie.duration ? `${movie.duration} min` : 'N/A'}</div>
                                                         </div>
                                                     </div>
 
                                                     {/* Buy Ticket Button */}
-                                                    <div className="flex mt-2 items-start justify-start">
+                                                    <div className="mt-2 flex items-start justify-start">
                                                         <button
                                                             onClick={() => handleBookTicket(movie._id)}
-                                                            className="w-28 h-6 bg-pink-400 rounded-lg shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-pink-500 transition-colors duration-200"
+                                                            className="h-6 w-28 rounded-lg bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-colors duration-200 hover:bg-pink-500"
                                                         >
-                                                            <div className="text-center text-white text-[10px] font-bold font-['Unbounded']">
-                                                                BUY TICKET
-                                                            </div>
+                                                            <div className="text-center font-['Unbounded'] text-[10px] font-bold text-white">BUY TICKET</div>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -479,10 +427,8 @@ const Wishlist = () => {
 
                                         {/* Empty State */}
                                         {currentPageData.length === 0 && !loading && (
-                                            <div className="w-full text-center py-8">
-                                                <p className="text-white text-sm font-['Unbounded'] opacity-60">
-                                                    No movies in wishlist
-                                                </p>
+                                            <div className="w-full py-8 text-center">
+                                                <p className="font-['Unbounded'] text-sm text-white opacity-60">No movies in wishlist</p>
                                             </div>
                                         )}
                                     </div>
@@ -498,44 +444,38 @@ const Wishlist = () => {
                                     <div className="flex justify-end">
                                         <button
                                             onClick={handleDeleteSelected}
-                                            className="flex items-center gap-2 px-4 py-2 bg-pink-400 rounded-xl shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] text-white font-bold hover:bg-purple-700 transition-colors duration-200"
+                                            className="flex items-center gap-2 rounded-xl bg-pink-400 px-4 py-2 font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] transition-colors duration-200 hover:bg-purple-700"
                                         >
                                             <Trash2 size={16} />
-                                            <span className="text-[12px] font-['Unbounded'] tracking-wider">
-                                                REMOVE ALL
-                                            </span>
+                                            <span className="font-['Unbounded'] text-[12px] tracking-wider">REMOVE ALL</span>
                                         </button>
                                     </div>
                                 )}
 
                                 {/* Pagination Controls */}
                                 {totalPages > 1 && (
-                                    <div className="flex justify-between items-center pt-4">
+                                    <div className="flex items-center justify-between pt-4">
                                         <button
                                             onClick={handlePrevPage}
                                             disabled={currentPage === 1}
-                                            className={`px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium transition-colors duration-200 ${
-                                                currentPage === 1 
-                                                    ? 'opacity-50 cursor-not-allowed' 
-                                                    : 'hover:bg-indigo-500'
+                                            className={`rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ${
+                                                currentPage === 1 ? 'cursor-not-allowed opacity-50' : 'hover:bg-indigo-500'
                                             }`}
                                         >
                                             Previous
                                         </button>
-                                        
+
                                         <div className="flex items-center gap-2">
-                                            <span className="text-white text-sm font-medium">
+                                            <span className="text-sm font-medium text-white">
                                                 Page {currentPage} of {totalPages}
                                             </span>
                                         </div>
-                                        
+
                                         <button
                                             onClick={handleNextPage}
                                             disabled={currentPage === totalPages}
-                                            className={`px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium transition-colors duration-200 ${
-                                                currentPage === totalPages 
-                                                    ? 'opacity-50 cursor-not-allowed' 
-                                                    : 'hover:bg-indigo-500'
+                                            className={`rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ${
+                                                currentPage === totalPages ? 'cursor-not-allowed opacity-50' : 'hover:bg-indigo-500'
                                             }`}
                                         >
                                             Next

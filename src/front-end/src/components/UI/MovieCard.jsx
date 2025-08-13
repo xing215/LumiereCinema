@@ -1,27 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react';
 import ticketImg from '@assets/img/cineticket.png';
 import { useNavigate } from 'react-router-dom';
 import { getMovieDetailsPath, getBuyTicketPath } from '@routes/routeConfig';
 import fallbackImg from '@assets/img/PosterNotFound.png';
 import WishlistButton from '@components/buttons/wishlistButton.jsx';
-function BuyTicketButton({ movieId, branchId= undefined }) {
+function BuyTicketButton({ movieId, branchId = undefined }) {
     const navigate = useNavigate();
     return (
         <button
-            className="absolute left-1/2 bottom-12 lg:bottom-20 -translate-x-1/2
-                z-30 pointer-events-auto
-                w-[calc(100%-1rem)] h-9
-                sm:w-[calc(100%-1rem)] sm:h-10
-                md:w-[calc(100%-1.5rem)] md:h-11
-                lg:w-[calc(100%-2rem)] lg:h-12
-                xl:w-[calc(100%-2.5rem)] xl:h-14
-                bg-zinc-300/30 rounded-xl flex items-center justify-center transition-all duration-200 overflow-visible relative
-                hover:cursor-pointer hover:bg-zinc-300/50"
+            className="pointer-events-auto absolute relative bottom-12 left-1/2 z-30 flex h-9 w-[calc(100%-1rem)] -translate-x-1/2 items-center justify-center overflow-visible rounded-xl bg-zinc-300/30 transition-all duration-200 hover:cursor-pointer hover:bg-zinc-300/50 sm:h-10 sm:w-[calc(100%-1rem)] md:h-11 md:w-[calc(100%-1.5rem)] lg:bottom-20 lg:h-12 lg:w-[calc(100%-2rem)] xl:h-14 xl:w-[calc(100%-2.5rem)]"
             onClick={() => navigate(getBuyTicketPath(movieId, branchId))}
         >
-            <span className="text-white font-unbounded font-bold text-[11px] sm:text-xs md:text-sm lg:text-base xl:text-lg tracking-widest">BUY<br/>TICKET</span>
+            <span className="font-unbounded text-[11px] font-bold tracking-widest text-white sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                BUY
+                <br />
+                TICKET
+            </span>
             <img
-                className="pointer-events-none absolute right-0 -ml-25 top-1/2 -translate-y-[60%] opacity-100 mix-blend-normal w-1/3 h-auto origin-center rotate-[-56.11deg] z-10 scale-100 hover:scale-110 transition-transform duration-200"
+                className="pointer-events-none absolute top-1/2 right-0 z-10 -ml-25 h-auto w-1/3 origin-center -translate-y-[60%] scale-100 rotate-[-56.11deg] opacity-100 mix-blend-normal transition-transform duration-200 hover:scale-110"
                 src={ticketImg}
                 alt="Cinema Ticket"
             />
@@ -29,11 +25,10 @@ function BuyTicketButton({ movieId, branchId= undefined }) {
     );
 }
 
-
 const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
     if (!movie || !movie._id) {
         return (
-            <div className="flex items-center justify-center h-full w-full">
+            <div className="flex h-full w-full items-center justify-center">
                 <span className="text-white">Movie data not available</span>
             </div>
         );
@@ -62,7 +57,9 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
         const maxH = cardHeight - titleHeight - metaHeight - buttonHeight - fudge;
         setDescMaxHeight(maxH > 40 ? maxH : 40);
         if (!movie?.description) return;
-        let min = 20, max = movie.description.length, best = 20;
+        let min = 20,
+            max = movie.description.length,
+            best = 20;
         const descDiv = descRef.current;
         const original = descDiv.innerText;
         const test = (len) => {
@@ -89,62 +86,69 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
             // If touch is outside the card, close overlay immediately
             if (cardRef.current && !cardRef.current.contains(e.target)) {
                 setShowOverlay(false);
-                forceUpdate(n => n + 1);
+                forceUpdate((n) => n + 1);
             }
         };
         document.addEventListener('touchstart', handleTouch, { passive: true });
         return () => document.removeEventListener('touchstart', handleTouch);
     }, [showOverlay]);
-    
+
     const linkImg = movie?.posterURL || fallbackImg;
     return (
         <>
             <div
                 ref={cardRef}
-                className={`relative group h-full aspect-[300/470] justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'}`}
+                className={`group relative aspect-[300/470] h-full justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'}`}
                 onMouseEnter={() => setShowOverlay(true)}
                 onMouseLeave={() => setShowOverlay(false)}
                 onTouchStart={() => setShowOverlay(true)}
             >
-                <div className="relative h-full w-full overflow-hidden rounded-sm md:rounded-lg lg:rounded-xl xl:rounded-2xl flex flex-col">
+                <div className="relative flex h-full w-full flex-col overflow-hidden rounded-sm md:rounded-lg lg:rounded-xl xl:rounded-2xl">
                     <img
                         src={linkImg}
                         alt={movie?.title || 'Movie'}
-                        className={
-                            [
-                                'h-full w-full rounded-sm object-cover md:rounded-lg lg:rounded-xl xl:rounded-2xl text-white transition-all duration-200',
-                                (showOverlay ? 'blur-sm' : ''),
-                                (!showOverlay ? 'group-hover:blur-sm' : '')
-                            ].join(' ')
-                        }
-                        onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
+                        className={[
+                            'h-full w-full rounded-sm object-cover text-white transition-all duration-200 md:rounded-lg lg:rounded-xl xl:rounded-2xl',
+                            showOverlay ? 'blur-sm' : '',
+                            !showOverlay ? 'group-hover:blur-sm' : '',
+                        ].join(' ')}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = fallbackImg;
+                        }}
                     />
                     {(showOverlay || undefined) && (
                         <div
-                            className={[ 
+                            className={[
                                 'absolute inset-0 z-10 opacity-100',
-                                'transition-opacity duration-200 pointer-events-none',
-                                'rounded-sm', 'md:rounded-lg', 'lg:rounded-xl', 'xl:rounded-2xl',
-                                'bg-black/60'
+                                'pointer-events-none transition-opacity duration-200',
+                                'rounded-sm',
+                                'md:rounded-lg',
+                                'lg:rounded-xl',
+                                'xl:rounded-2xl',
+                                'bg-black/60',
                             ].join(' ')}
                         ></div>
                     )}
                     {!showOverlay && (
                         <div
-                            className={[ 
+                            className={[
                                 'absolute inset-0 z-10 opacity-0 group-hover:opacity-100',
-                                'transition-opacity duration-200 pointer-events-none',
-                                'rounded-sm', 'md:rounded-lg', 'lg:rounded-xl', 'xl:rounded-2xl',
-                                'bg-black/60'
+                                'pointer-events-none transition-opacity duration-200',
+                                'rounded-sm',
+                                'md:rounded-lg',
+                                'lg:rounded-xl',
+                                'xl:rounded-2xl',
+                                'bg-black/60',
                             ].join(' ')}
                         ></div>
                     )}
                     <div
-                        className={`w-[calc(100%-1rem)] left-2 top-5 absolute justify-start text-white text-[11px] sm:text-xs md:text-sm lg:text-base xl:text-lg font-black font-unbounded [text-shadow:_0px_4px_4px_rgb(0_0_0_/_0.25)] p-2 z-20 ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`}
+                        className={`font-unbounded absolute top-5 left-2 z-20 w-[calc(100%-1rem)] justify-start p-2 text-[11px] font-black text-white [text-shadow:_0px_4px_4px_rgb(0_0_0_/_0.25)] sm:text-xs md:text-sm lg:text-base xl:text-lg ${showOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`}
                     >
                         <span
                             ref={titleRef}
-                            className="cursor-pointer hover:underline hover:text-yellow-300 transition-colors duration-150"
+                            className="cursor-pointer transition-colors duration-150 hover:text-yellow-300 hover:underline"
                             onClick={() => {
                                 if (movie?._id) {
                                     const url = getMovieDetailsPath(movie._id, selectedBranch?._id);
@@ -154,15 +158,17 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                         >
                             {movie?.title || 'An error occured'}
                         </span>
-                        <div ref={metaRef} className="mt-1 flex flex-row items-center justify-between w-full">
-                            <span className="text-white text-[10px] sm:text-xs md:text-sm lg:text-base xl:text-lg font-black font-unbounded">
-                                {movie?.releaseDate ? (() => {
-                                    const d = new Date(movie.releaseDate);
-                                    if (isNaN(d)) return '';
-                                    const day = d.getDate().toString().padStart(2, '0');
-                                    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-                                    return `${day}/${month}`;
-                                })() : ''}
+                        <div ref={metaRef} className="mt-1 flex w-full flex-row items-center justify-between">
+                            <span className="font-unbounded text-[10px] font-black text-white sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                                {movie?.releaseDate
+                                    ? (() => {
+                                          const d = new Date(movie.releaseDate);
+                                          if (isNaN(d)) return '';
+                                          const day = d.getDate().toString().padStart(2, '0');
+                                          const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                                          return `${day}/${month}`;
+                                      })()
+                                    : ''}
                             </span>
                             <WishlistButton movie={movie} />
                         </div>
@@ -170,24 +176,22 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                         {movie?.description && (
                             <div
                                 ref={descRef}
-                                className="mt-2 overflow-auto text-white text-xs sm:text-sm md:text-base font-normal font-sans leading-snug pr-1"
+                                className="mt-2 overflow-auto pr-1 font-sans text-xs leading-snug font-normal text-white sm:text-sm md:text-base"
                                 style={{
                                     minHeight: '2.5rem',
-                                    maxHeight: descMaxHeight ? descMaxHeight + 'px' : undefined
+                                    maxHeight: descMaxHeight ? descMaxHeight + 'px' : undefined,
                                 }}
                             >
-                                {movie.description.length > descLimit
-                                    ? movie.description.slice(0, descLimit).replace(/\s+\S*$/, '') + '...'
-                                    : movie.description}
+                                {movie.description.length > descLimit ? movie.description.slice(0, descLimit).replace(/\s+\S*$/, '') + '...' : movie.description}
                             </div>
                         )}
                     </div>
                 </div>
-                { showOverlay && Array.isArray(movie.branches) && movie.branches.length > 0 && (
+                {showOverlay && Array.isArray(movie.branches) && movie.branches.length > 0 && (
                     <div ref={buttonRef}>
                         <BuyTicketButton movieId={movie?._id} branchId={selectedBranch?._id} />
                     </div>
-                ) }
+                )}
             </div>
         </>
     );

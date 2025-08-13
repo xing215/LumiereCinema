@@ -33,7 +33,7 @@
             /* sky-400/60 */ rgba(244, 114, 182, 0.6) /* pink-400/60 */
         );
     }
-    
+
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
         width: 6px;
@@ -71,7 +71,6 @@ body,
 
 /* Change leaflet CSS */
 
-
 .leaflet-control-zoom {
     font-size: 1.5rem;
     border: none !important;
@@ -85,15 +84,14 @@ body,
     line-height: 48px !important;
     border-radius: 12px !important;
     margin-bottom: 8px !important;
-    background-color: #03051C !important;
-    color: #FFFFFF !important;
+    background-color: #03051c !important;
+    color: #ffffff !important;
     font-family: 'Unbounded', sans-serif !important;
-
 }
 
 #qr-code-reader-container video {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
-  background: black;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    background: black;
 }

@@ -15,7 +15,7 @@ import {
     showProcessingItemStatus,
     showItemStatusChanged,
     showOperationError,
-    closeSwal
+    closeSwal,
 } from '@utils/sweetalert';
 
 /**
@@ -28,7 +28,7 @@ export const useSnackManagement = () => {
     // const { currentBranch, setCurrentBranch } = useSetCurrentBranch();
     console.log('🔄 useSnackManagement initialized', user);
     const { getBranchById, branch: userBranch, loading: branchLoading } = useGetBranchById();
-    
+
     // Snacks data from database
     const { getSnacks, snacks, setSnacks, loading: snacksLoading, error: snacksError } = useGetSnacks();
     const { updateSnack, loading: updateLoading } = useUpdateSnack();
@@ -42,13 +42,13 @@ export const useSnackManagement = () => {
     const [tickedSnacks, setTickedSnacks] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => { 
-        console.log('🔄 useSnackManagement initialized')
+    useEffect(() => {
+        console.log('🔄 useSnackManagement initialized');
         // Initialize branch if user is branch manager
         // This will only run once when the hook is first used
-        console.log(snacks)
+        console.log(snacks);
     }, [snacks]);
-    
+
     // Add snack state
     const [isAddingSnack, setIsAddingSnack] = useState(false);
     const [newSnackData, setNewSnackData] = useState({
@@ -59,12 +59,12 @@ export const useSnackManagement = () => {
         description: '',
         imageURL: '',
         stock: '',
-        isAvailable: true
+        isAvailable: true,
     });
 
     // Refresh snacks data
     const refreshSnacks = useCallback(async () => {
-        const branchId =  user?.branch?._id;
+        const branchId = user?.branch?._id;
         if (branchId) {
             setSnacksFetched(false);
             await getSnacks(branchId);
@@ -73,59 +73,56 @@ export const useSnackManagement = () => {
     }, [user, getSnacks]);
 
     // Inline editing hook - create wrapper function for updateSnack
-    const updateSnackWrapper = useCallback(async (snackId, updateData) => {
-        const branchId = user?.branch?._id;
-        if (!branchId) {
-            throw new Error('No branch selected');
-        }
-        return await updateSnack(branchId, snackId, updateData);
-    }, [updateSnack, user?.branch?._id]);
+    const updateSnackWrapper = useCallback(
+        async (snackId, updateData) => {
+            const branchId = user?.branch?._id;
+            if (!branchId) {
+                throw new Error('No branch selected');
+            }
+            return await updateSnack(branchId, snackId, updateData);
+        },
+        [updateSnack, user?.branch?._id],
+    );
 
-    const {
-        editingCell,
-        startEdit,
-        saveEdit,
-        cancelEdit,
-        isUpdating
-    } = useInlineEdit(updateSnackWrapper, refreshSnacks, snacks, setSnacks);
+    const { editingCell, startEdit, saveEdit, cancelEdit, isUpdating } = useInlineEdit(updateSnackWrapper, refreshSnacks, snacks, setSnacks);
 
     // Column configuration
     const editableColumns = [1, 2, 3, 4, 5, 6, 7]; // Shortname, Name, Price, DPrice, Description, Image, Stock
     const columnFieldMapping = {
-        1: 'shortname',   // Shortname column
-        2: 'name',        // Name column
-        3: 'price',       // Price column 
+        1: 'shortname', // Shortname column
+        2: 'name', // Name column
+        3: 'price', // Price column
         4: 'discountedPrice', // DPrice column
         5: 'description', // Description column
-        6: 'imageURL',    // Image column
-        7: 'stock'        // Stock column
+        6: 'imageURL', // Image column
+        7: 'stock', // Stock column
     };
 
     const header = ['TickButton', 'ID', 'Name', 'Price', 'DPrice', 'Description', 'Image', 'Stock', 'ActiveButton'];
-    
+
     const snackColumnConfig = [
         { width: 'w-15', truncate: false }, // TickButton
-        { width: 'w-20', truncate: true }, // ID (shortname) 
-        { width: 'w-40', truncate: true },  // Name
+        { width: 'w-20', truncate: true }, // ID (shortname)
+        { width: 'w-40', truncate: true }, // Name
         { width: 'w-40', truncate: false }, // Price (text input, not date picker)
         { width: 'w-40', truncate: false }, // DPrice (text input, not date picker)
-        { width: 'w-60', truncate: true },  // Description
-        { width: 'w-50', truncate: true },  // Image
+        { width: 'w-60', truncate: true }, // Description
+        { width: 'w-50', truncate: true }, // Image
         { width: 'w-15', truncate: false }, // Stock
-        { width: 'w-15', truncate: false }  // ActiveButton
+        { width: 'w-15', truncate: false }, // ActiveButton
     ];
 
     // Field types configuration for EditableCell
     const fieldTypes = {
-        0: 'text',   // TickButton (not editable)
-        1: 'text',   // ID (shortname) - text
-        2: 'text',   // Name - text
+        0: 'text', // TickButton (not editable)
+        1: 'text', // ID (shortname) - text
+        2: 'text', // Name - text
         3: 'number', // Price - number input (NOT date)
         4: 'number', // DPrice - number input (NOT date)
-        5: 'text',   // Description - text
-        6: 'text',   // Image - text
+        5: 'text', // Description - text
+        6: 'text', // Image - text
         7: 'number', // Stock - number input
-        8: 'text'    // ActiveButton (not editable)
+        8: 'text', // ActiveButton (not editable)
     };
 
     // SweetAlert functions (using generic utilities)
@@ -142,7 +139,7 @@ export const useSnackManagement = () => {
             confirmButtonColor: '#EF4444',
             cancelButtonColor: '#6B7280',
             confirmButtonText: 'Yes, delete!',
-            cancelButtonText: 'Cancel'
+            cancelButtonText: 'Cancel',
         });
     };
 
@@ -159,10 +156,8 @@ export const useSnackManagement = () => {
             errors.push('Shortname is required');
         } else {
             // Check for duplicate shortname in existing database
-            const duplicateSnack = existingSnacks.find(snack => 
-                snack.shortname?.toLowerCase().trim() === snackData.shortname.toLowerCase().trim()
-            );
-            
+            const duplicateSnack = existingSnacks.find((snack) => snack.shortname?.toLowerCase().trim() === snackData.shortname.toLowerCase().trim());
+
             if (duplicateSnack) {
                 errors.push(`Snack with shortname "${snackData.shortname}" already exists`);
             }
@@ -220,148 +215,158 @@ export const useSnackManagement = () => {
         setSearchTerm(term);
     }, []);
 
-    const filterSnacks = useCallback((snacksList) => {
-        if (!searchTerm.trim()) {
-            return snacksList;
-        }
-        
-        const searchLower = searchTerm.toLowerCase();
-        return snacksList.filter(snack => 
-            snack.name?.toLowerCase().includes(searchLower) ||
-            snack.shortname?.toLowerCase().includes(searchLower) ||
-            snack.description?.toLowerCase().includes(searchLower)
-        );
-    }, [searchTerm]);
+    const filterSnacks = useCallback(
+        (snacksList) => {
+            if (!searchTerm.trim()) {
+                return snacksList;
+            }
+
+            const searchLower = searchTerm.toLowerCase();
+            return snacksList.filter(
+                (snack) => snack.name?.toLowerCase().includes(searchLower) || snack.shortname?.toLowerCase().includes(searchLower) || snack.description?.toLowerCase().includes(searchLower),
+            );
+        },
+        [searchTerm],
+    );
 
     // Inline editing handlers
-    const handleStartEdit = useCallback((rowIndex, columnIndex, currentValue) => {
-        if (editableColumns.includes(columnIndex) && !isUpdating) {
-            let editValue = currentValue;
-            
-            // For price fields (columns 3 and 4), get the raw numeric value instead of formatted display value
-            if ((columnIndex === 3 || columnIndex === 4) && !isAddingSnack) {
-                const filteredSnacks = filterSnacks(snacks || []);
-                const snack = filteredSnacks[rowIndex];
-                if (snack) {
-                    if (columnIndex === 3) {
-                        // Price column - get raw price value
-                        editValue = snack.price ? snack.price.toString() : '';
-                    } else if (columnIndex === 4) {
-                        // DPrice column - get raw discountedPrice value
-                        editValue = snack.discountedPrice ? snack.discountedPrice.toString() : '';
+    const handleStartEdit = useCallback(
+        (rowIndex, columnIndex, currentValue) => {
+            if (editableColumns.includes(columnIndex) && !isUpdating) {
+                let editValue = currentValue;
+
+                // For price fields (columns 3 and 4), get the raw numeric value instead of formatted display value
+                if ((columnIndex === 3 || columnIndex === 4) && !isAddingSnack) {
+                    const filteredSnacks = filterSnacks(snacks || []);
+                    const snack = filteredSnacks[rowIndex];
+                    if (snack) {
+                        if (columnIndex === 3) {
+                            // Price column - get raw price value
+                            editValue = snack.price ? snack.price.toString() : '';
+                        } else if (columnIndex === 4) {
+                            // DPrice column - get raw discountedPrice value
+                            editValue = snack.discountedPrice ? snack.discountedPrice.toString() : '';
+                        }
                     }
                 }
-            }
-            
-            // Allow editing for new snack row (row 0) when adding
-            if (isAddingSnack && rowIndex === 0) {
-                startEdit(rowIndex, columnIndex, editValue);
-                return;
-            }
-            
-            // Allow editing for existing snacks (double-click to edit)
-            if (!isAddingSnack) {
-                startEdit(rowIndex, columnIndex, editValue);
-                return;
-            }
-        }
-    }, [editableColumns, isUpdating, isAddingSnack, startEdit, filterSnacks, snacks]);
 
-    const handleNewSnackFieldChange = useCallback((columnIndex, value) => {
-        const fieldName = columnFieldMapping[columnIndex];
-        if (fieldName) {
-            setNewSnackData(prev => ({
-                ...prev,
-                [fieldName]: value
-            }));
-        }
-    }, [columnFieldMapping]);
+                // Allow editing for new snack row (row 0) when adding
+                if (isAddingSnack && rowIndex === 0) {
+                    startEdit(rowIndex, columnIndex, editValue);
+                    return;
+                }
 
-    const handleSaveEdit = useCallback(async (rowIndex, columnIndex, newValue) => {
-        // Handle new snack field changes when adding
-        if (isAddingSnack && rowIndex === 0) {
-            handleNewSnackFieldChange(columnIndex, newValue);
-            cancelEdit();
-            return;
-        }
-        
-        // Handle existing snack editing
-        if (!isAddingSnack) {
-            const filteredSnacks = filterSnacks(snacks || []);
-            const snack = filteredSnacks[rowIndex];
+                // Allow editing for existing snacks (double-click to edit)
+                if (!isAddingSnack) {
+                    startEdit(rowIndex, columnIndex, editValue);
+                    return;
+                }
+            }
+        },
+        [editableColumns, isUpdating, isAddingSnack, startEdit, filterSnacks, snacks],
+    );
+
+    const handleNewSnackFieldChange = useCallback(
+        (columnIndex, value) => {
             const fieldName = columnFieldMapping[columnIndex];
-            
-            if (snack && fieldName) {
-                const snackId = snack._id || snack.id;
-                
-                let processedValue = newValue;
-                
-                // Process value based on field type
-                if (fieldName === 'price' || fieldName === 'discountedPrice') {
-                    // Strip dollar sign and any whitespace from price inputs
-                    const cleanedValue = newValue ? newValue.toString().replace(/[$\s]/g, '') : '';
-                    
-                    if (fieldName === 'discountedPrice') {
-                        // Handle discounted price specially - allow empty/null values
-                        if (!cleanedValue || cleanedValue.trim() === '' || cleanedValue === '0') {
-                            // User wants to remove discounted price (empty, or set to 0)
-                            processedValue = null;
-                        } else {
-                            processedValue = parseInt(cleanedValue);
-                            if (isNaN(processedValue) || processedValue < 0) {
-                                showError('Invalid Price', 'Discounted price must be a valid positive number');
-                                cancelEdit();
-                                return;
+            if (fieldName) {
+                setNewSnackData((prev) => ({
+                    ...prev,
+                    [fieldName]: value,
+                }));
+            }
+        },
+        [columnFieldMapping],
+    );
+
+    const handleSaveEdit = useCallback(
+        async (rowIndex, columnIndex, newValue) => {
+            // Handle new snack field changes when adding
+            if (isAddingSnack && rowIndex === 0) {
+                handleNewSnackFieldChange(columnIndex, newValue);
+                cancelEdit();
+                return;
+            }
+
+            // Handle existing snack editing
+            if (!isAddingSnack) {
+                const filteredSnacks = filterSnacks(snacks || []);
+                const snack = filteredSnacks[rowIndex];
+                const fieldName = columnFieldMapping[columnIndex];
+
+                if (snack && fieldName) {
+                    const snackId = snack._id || snack.id;
+
+                    let processedValue = newValue;
+
+                    // Process value based on field type
+                    if (fieldName === 'price' || fieldName === 'discountedPrice') {
+                        // Strip dollar sign and any whitespace from price inputs
+                        const cleanedValue = newValue ? newValue.toString().replace(/[$\s]/g, '') : '';
+
+                        if (fieldName === 'discountedPrice') {
+                            // Handle discounted price specially - allow empty/null values
+                            if (!cleanedValue || cleanedValue.trim() === '' || cleanedValue === '0') {
+                                // User wants to remove discounted price (empty, or set to 0)
+                                processedValue = null;
+                            } else {
+                                processedValue = parseInt(cleanedValue);
+                                if (isNaN(processedValue) || processedValue < 0) {
+                                    showError('Invalid Price', 'Discounted price must be a valid positive number');
+                                    cancelEdit();
+                                    return;
+                                }
+                                // Validate discounted price against regular price
+                                if (processedValue > snack.price) {
+                                    showError('Invalid Price', 'Discounted price cannot be higher than regular price');
+                                    cancelEdit();
+                                    return;
+                                }
                             }
-                            // Validate discounted price against regular price
-                            if (processedValue > snack.price) {
-                                showError('Invalid Price', 'Discounted price cannot be higher than regular price');
+                        } else {
+                            // Regular price processing
+                            processedValue = parseInt(cleanedValue) || 0;
+                            if (processedValue <= 0) {
+                                showError('Invalid Price', 'Price must be a positive number');
                                 cancelEdit();
                                 return;
                             }
                         }
+                    } else if (fieldName === 'stock') {
+                        processedValue = parseInt(newValue) || 0;
+                        if (processedValue < 0) {
+                            showError('Invalid Stock', 'Stock cannot be negative');
+                            cancelEdit();
+                            return;
+                        }
+                    } else if (fieldName === 'shortname') {
+                        processedValue = newValue.trim().toUpperCase();
+                        if (!processedValue) {
+                            showError('Required Field', 'Shortname is required');
+                            cancelEdit();
+                            return;
+                        }
                     } else {
-                        // Regular price processing
-                        processedValue = parseInt(cleanedValue) || 0;
-                        if (processedValue <= 0) {
-                            showError('Invalid Price', 'Price must be a positive number');
+                        processedValue = newValue.trim();
+                        if (fieldName === 'name' && !processedValue) {
+                            showError('Required Field', 'Name is required');
                             cancelEdit();
                             return;
                         }
                     }
-                } else if (fieldName === 'stock') {
-                    processedValue = parseInt(newValue) || 0;
-                    if (processedValue < 0) {
-                        showError('Invalid Stock', 'Stock cannot be negative');
-                        cancelEdit();
-                        return;
+                    // Use the saveEdit from useInlineEdit hook
+                    try {
+                        await saveEdit(snackId, fieldName, processedValue);
+                        // Note: saveEdit handles optimistic UI updates automatically
+                    } catch (error) {
+                        console.error('Failed to save edit:', error);
+                        showError('Failed to save changes');
                     }
-                } else if (fieldName === 'shortname') {
-                    processedValue = newValue.trim().toUpperCase();
-                    if (!processedValue) {
-                        showError('Required Field', 'Shortname is required');
-                        cancelEdit();
-                        return;
-                    }
-                } else {
-                    processedValue = newValue.trim();
-                    if (fieldName === 'name' && !processedValue) {
-                        showError('Required Field', 'Name is required');
-                        cancelEdit();
-                        return;
-                    }
-                }
-                  // Use the saveEdit from useInlineEdit hook
-                try {
-                    await saveEdit(snackId, fieldName, processedValue);
-                    // Note: saveEdit handles optimistic UI updates automatically
-                } catch (error) {
-                    console.error('Failed to save edit:', error);
-                    showError('Failed to save changes');
                 }
             }
-        }
-    }, [isAddingSnack, handleNewSnackFieldChange, cancelEdit, filterSnacks, snacks, columnFieldMapping, saveEdit]);
+        },
+        [isAddingSnack, handleNewSnackFieldChange, cancelEdit, filterSnacks, snacks, columnFieldMapping, saveEdit],
+    );
 
     const handleCancelEdit = useCallback(() => {
         cancelEdit();
@@ -379,7 +384,7 @@ export const useSnackManagement = () => {
             description: '',
             imageURL: '',
             stock: '',
-            isAvailable: true
+            isAvailable: true,
         });
     }, [cancelEdit]);
 
@@ -394,7 +399,7 @@ export const useSnackManagement = () => {
             description: '',
             imageURL: '',
             stock: '',
-            isAvailable: true
+            isAvailable: true,
         });
     }, [cancelEdit]);
 
@@ -422,7 +427,7 @@ export const useSnackManagement = () => {
                 description: newSnackData.description.trim(),
                 imageURL: newSnackData.imageURL.trim(),
                 stock: parseInt(newSnackData.stock) || 0,
-                isHidden: !newSnackData.isAvailable
+                isHidden: !newSnackData.isAvailable,
             };
 
             // Add discounted price if provided
@@ -464,10 +469,10 @@ export const useSnackManagement = () => {
 
         try {
             showDeletingItems('snacks', snacksToDelete.length);
-            
+
             let successCount = 0;
             let errorCount = 0;
-            
+
             for (const snackIndex of snacksToDelete) {
                 const filteredSnacks = filterSnacks(snacks || []);
                 const snack = filteredSnacks[snackIndex];
@@ -487,25 +492,21 @@ export const useSnackManagement = () => {
                 // Update local state by removing deleted snacks instead of refreshing
                 if (snacks && setSnacks) {
                     const deletedSnackIds = [];
-                    snacksToDelete.forEach(snackIndex => {
+                    snacksToDelete.forEach((snackIndex) => {
                         const filteredSnacks = filterSnacks(snacks);
                         const snack = filteredSnacks[snackIndex];
                         if (snack) {
                             deletedSnackIds.push(snack._id || snack.id);
                         }
                     });
-                    
-                    setSnacks(prevSnacks => 
-                        prevSnacks.filter(snack => 
-                            !deletedSnackIds.includes(snack._id || snack.id)
-                        )
-                    );
+
+                    setSnacks((prevSnacks) => prevSnacks.filter((snack) => !deletedSnackIds.includes(snack._id || snack.id)));
                 } else {
                     // Fallback to refresh
                     await refreshSnacks();
                 }
                 setTickedSnacks(new Set());
-                
+
                 if (errorCount === 0) {
                     showItemsDeleted('snacks', successCount);
                 } else {
@@ -524,66 +525,69 @@ export const useSnackManagement = () => {
 
     const handleDeleteClick = useCallback(async () => {
         const confirmResult = await showDeleteItemsConfirmation('snacks', tickedSnacks.size);
-        
+
         if (confirmResult.isConfirmed) {
             await handleDeleteConfirm();
         }
     }, [tickedSnacks, handleDeleteConfirm]);
 
     // Status change handler (activate/deactivate)
-    const onStatusChange = useCallback(async (rowIndex, newIsHidden) => {
-        const branchId = user?.branch?._id;
-        if (!branchId) {
-            showError('No Branch Selected', 'No branch selected');
-            return;
-        }
-
-        // Adjust index for new snack row if adding
-        const adjustedIndex = isAddingSnack ? rowIndex - 1 : rowIndex;
-        
-        const filteredSnacks = filterSnacks(snacks || []);
-        const snack = filteredSnacks[adjustedIndex];
-        if (!snack) return;
-
-        try {
-            showProcessingItemStatus(`${newIsHidden ? 'deactivating' : 'activating'}`, 'snacks');
-
-            const snackToUpdate = {
-                isHidden: newIsHidden
-            };
-
-            const snackId = snack._id || snack.id;
-            const result = await updateSnack(branchId, snackId, snackToUpdate);
-            
-            if (result.success) {
-                // Update local state optimistically instead of refreshing
-                if (snacks && setSnacks) {
-                    setSnacks(prevSnacks => {
-                        return prevSnacks.map(s => {
-                            const currentSnackId = s._id || s.id;
-                            if (currentSnackId === snackId) {
-                                return { ...s, isHidden: newIsHidden };
-                            }
-                            return s;
-                        });
-                    });
-                }
-                showItemStatusChanged('snacks', snack.name, newIsHidden ? 'hidden from customers' : 'visible to customers');
-            } else {
-                closeSwal();
-                showError('Status Update Failed', result.error || 'Failed to update snack status');
+    const onStatusChange = useCallback(
+        async (rowIndex, newIsHidden) => {
+            const branchId = user?.branch?._id;
+            if (!branchId) {
+                showError('No Branch Selected', 'No branch selected');
+                return;
             }
-        } catch (error) {
-            console.error('Failed to toggle snack activation:', error);
-            closeSwal();
-            showError('Status Update Error', 'Failed to update snack status');
-        }
-    }, [user?.branch?._id, filterSnacks, snacks, updateSnack, refreshSnacks, isAddingSnack]);
+
+            // Adjust index for new snack row if adding
+            const adjustedIndex = isAddingSnack ? rowIndex - 1 : rowIndex;
+
+            const filteredSnacks = filterSnacks(snacks || []);
+            const snack = filteredSnacks[adjustedIndex];
+            if (!snack) return;
+
+            try {
+                showProcessingItemStatus(`${newIsHidden ? 'deactivating' : 'activating'}`, 'snacks');
+
+                const snackToUpdate = {
+                    isHidden: newIsHidden,
+                };
+
+                const snackId = snack._id || snack.id;
+                const result = await updateSnack(branchId, snackId, snackToUpdate);
+
+                if (result.success) {
+                    // Update local state optimistically instead of refreshing
+                    if (snacks && setSnacks) {
+                        setSnacks((prevSnacks) => {
+                            return prevSnacks.map((s) => {
+                                const currentSnackId = s._id || s.id;
+                                if (currentSnackId === snackId) {
+                                    return { ...s, isHidden: newIsHidden };
+                                }
+                                return s;
+                            });
+                        });
+                    }
+                    showItemStatusChanged('snacks', snack.name, newIsHidden ? 'hidden from customers' : 'visible to customers');
+                } else {
+                    closeSwal();
+                    showError('Status Update Failed', result.error || 'Failed to update snack status');
+                }
+            } catch (error) {
+                console.error('Failed to toggle snack activation:', error);
+                closeSwal();
+                showError('Status Update Error', 'Failed to update snack status');
+            }
+        },
+        [user?.branch?._id, filterSnacks, snacks, updateSnack, refreshSnacks, isAddingSnack],
+    );
 
     // Data processing
     const getProcessedSnackData = useCallback(() => {
         const filteredSnacks = filterSnacks(snacks || []);
-        
+
         // Create rows for existing snacks
         const existingSnackRows = filteredSnacks.map((snack, index) => [
             'TickButton',
@@ -594,16 +598,16 @@ export const useSnackManagement = () => {
             snack.description || '', // Description
             snack.imageURL || '', // Image
             snack.stock !== undefined ? snack.stock.toString() : '0', // Stock
-            { 
-                type: 'ActiveButton', 
+            {
+                type: 'ActiveButton',
                 isHidden: snack.isHidden || false,
                 rowIndex: index + (isAddingSnack ? 1 : 0),
-                isUpdating: false
-            }
+                isUpdating: false,
+            },
         ]);
 
         let allSnackRows = [...existingSnackRows];
-        
+
         // Add new snack row at the top if adding
         if (isAddingSnack) {
             const newSnackRow = [
@@ -615,15 +619,15 @@ export const useSnackManagement = () => {
                 newSnackData.description,
                 newSnackData.imageURL,
                 newSnackData.stock || '0',
-                { 
-                    type: 'ActiveButton', 
+                {
+                    type: 'ActiveButton',
                     isHidden: !newSnackData.isAvailable,
                     rowIndex: 0,
                     isUpdating: false,
-                    disabled: true // Disable for new snack until saved
-                }
+                    disabled: true, // Disable for new snack until saved
+                },
             ];
-            
+
             allSnackRows = [newSnackRow, ...existingSnackRows];
         }
 
@@ -637,7 +641,7 @@ export const useSnackManagement = () => {
         snackColumnConfig,
         editableColumns,
         fieldTypes,
-        
+
         // State
         loading: snacksLoading,
         error: snacksError,
@@ -646,32 +650,32 @@ export const useSnackManagement = () => {
         isAddingSnack,
         updateLoading,
         deleteLoading,
-        
+
         // Branch info
         currentBranch: user?.branch?._id,
         userBranch,
         branchLoading,
-        
+
         // Inline editing
         editingCell,
         handleStartEdit,
         handleSaveEdit,
         handleCancelEdit,
         isUpdating,
-        
+
         // Snack operations
         handleStartAddSnack,
         handleCancelAddSnack,
         handleConfirmAddSnack,
         handleDeleteClick,
         onStatusChange,
-        
+
         // Search
         handleSearch,
-        
+
         // Utilities
         refreshSnacks,
-        validateSnack
+        validateSnack,
     };
 };
 

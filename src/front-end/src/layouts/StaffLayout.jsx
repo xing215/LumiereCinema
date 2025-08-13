@@ -23,7 +23,15 @@ import React, { useState, useEffect } from 'react';
 import StaffSidebar from '@components/display/staffSidebar.jsx';
 import { useUser } from '@contexts/UserContext.jsx';
 
-const StaffLayout = ({ children, theme = 'dark', showQuickActions = true, onItemClick = (item) => console.log('Clicked:', item.label), className = '', backgroundClass = 'bg-slate-950', forCheckin = false }) => {
+const StaffLayout = ({
+    children,
+    theme = 'dark',
+    showQuickActions = true,
+    onItemClick = (item) => console.log('Clicked:', item.label),
+    className = '',
+    backgroundClass = 'bg-slate-950',
+    forCheckin = false,
+}) => {
     // Initialize sidebar state from localStorage or default to true (collapsed)
     const [isCollapsed, setIsCollapsed] = useState(() => {
         const savedState = localStorage.getItem('staffSidebarCollapsed');
@@ -38,7 +46,7 @@ const StaffLayout = ({ children, theme = 'dark', showQuickActions = true, onItem
     }, [isCollapsed]);
 
     return (
-        <div className={`flex ${forCheckin ? 'h-auto min-h-screen md:h-screen' : 'h-screen '} w-screen ${backgroundClass}`}>
+        <div className={`flex ${forCheckin ? 'h-auto min-h-screen md:h-screen' : 'h-screen'} w-screen ${backgroundClass}`}>
             {/* Sidebar */}
             <StaffSidebar
                 isCollapsed={isCollapsed}

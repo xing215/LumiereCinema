@@ -19,13 +19,7 @@ import MenuTicketDisplay from '@layouts/TicketPurchase/MenuTicketDisplay.jsx';
 import { useGetBranchById } from '@hooks/useBranch';
 import { useGetMovieDetail } from '@hooks/useMovie';
 import { useUser } from '@contexts/UserContext';
-import { 
-    useStartHoldSession, 
-    useClearSession, 
-    useCreateTicket, 
-    useGetSnacksByBranch, 
-    useGetSeatsBySchedule 
-} from '@hooks/useTicket';
+import { useStartHoldSession, useClearSession, useCreateTicket, useGetSnacksByBranch, useGetSeatsBySchedule } from '@hooks/useTicket';
 import { ROUTES } from '@routes/routeConfig';
 
 // SweetAlert for popup notifications
@@ -38,7 +32,7 @@ const MENU_STEPS = {
     SNACK: 2,
     INFO: 3,
     PAYMENT: 4,
-    TICKET_DISPLAY: 5
+    TICKET_DISPLAY: 5,
 };
 
 // ================================ MAIN COMPONENT ================================
@@ -49,7 +43,7 @@ const TicketPurchase = () => {
     const navigate = useNavigate();
     const movieId = urlParams.get('movieId');
     const branchId = urlParams.get('branchId');
-    
+
     // ================================ HOOKS ================================
     const { getBranchById, branch, loading: branchLoading, error: branchError } = useGetBranchById();
     const { getMovieDetail, movieDetail, loading: movieLoading, error: movieError } = useGetMovieDetail();
@@ -59,7 +53,7 @@ const TicketPurchase = () => {
     const { clearSession, loading: clearSessionLoading } = useClearSession();
     const { createTicket, ticket, loading: ticketLoading, error: ticketError } = useCreateTicket();
     const { isAuthenticated } = useUser();
-    
+
     // ================================ STATE MANAGEMENT ================================
     const [currentStep, setCurrentStep] = useState(MENU_STEPS.SCREEN);
     const [startedHoldSession, setStartedHoldSession] = useState(false);
@@ -67,7 +61,7 @@ const TicketPurchase = () => {
     const passedNoLoginCustomerInfo = location.state?.noLoginCustomerInfo || {
         name: null,
         phone: null,
-        email: null
+        email: null,
     };
 
     const [movieTicketData, setMovieTicketData] = useState({
@@ -80,22 +74,22 @@ const TicketPurchase = () => {
             city: null,
             location: {
                 type: null,
-                coordinates: null
+                coordinates: null,
             },
             isActive: null,
-            showings: null
+            showings: null,
         },
-        schedule: { 
+        schedule: {
             _id: null,
             movie: {
                 _id: null,
                 name: null,
-                poster: null
+                poster: null,
             },
             screen: null,
             startTime: null,
             endTime: null,
-            availableSeatsCount: 0
+            availableSeatsCount: 0,
         },
         seats: [],
         promotion: null,
@@ -103,7 +97,7 @@ const TicketPurchase = () => {
         total: 0,
         adultTickets: 0,
         discountedTickets: 0,
-        discounted: 0
+        discounted: 0,
     });
 
     const [snackTicketData, setSnackTicketData] = useState({
@@ -116,43 +110,40 @@ const TicketPurchase = () => {
             city: null,
             location: {
                 type: null,
-                coordinates: null
+                coordinates: null,
             },
             isActive: null,
-            showings: null
+            showings: null,
         },
         snackList: [],
         promotionCode: '',
         seller: null,
         total: 0,
-        discounted: 0
+        discounted: 0,
     });
 
     // ================================ UTILITY FUNCTIONS ================================
     const updateMovieTicket = (updates) => {
-        setMovieTicketData(prev => ({ ...prev, ...updates }));
+        setMovieTicketData((prev) => ({ ...prev, ...updates }));
         console.log('Updated movie ticket data:', { ...movieTicketData, ...updates });
     };
 
     const updateSnackTicket = (updates) => {
-        setSnackTicketData(prev => ({ ...prev, ...updates }));
+        setSnackTicketData((prev) => ({ ...prev, ...updates }));
         console.log('Updated snack ticket data:', { ...snackTicketData, ...updates });
     };
 
     const handleExpire = () => {
         console.log('Session expired, clearing session...', holdSeatData);
         setStartedHoldSession(false);
-        showWarning(
-            'Session Expired',
-            'Your session has expired. Please select your seats again.'
-        );
+        showWarning('Session Expired', 'Your session has expired. Please select your seats again.');
         updateMovieTicket({ seats: [] });
         setCurrentStep(MENU_STEPS.SEATS);
         clearHoldSeatData();
     };
 
     const handlePaymentComplete = async () => {
-        await createTicket({ movieTicketData, snackTicketData });        
+        await createTicket({ movieTicketData, snackTicketData });
     };
 
     // ================================ NAVIGATION FUNCTIONS ================================
@@ -171,8 +162,8 @@ const TicketPurchase = () => {
 
     const goToPreviousStep = () => {
         if (currentStep === MENU_STEPS.SCREEN) {
-            navigate(-1); 
-            return; 
+            navigate(-1);
+            return;
         }
         if (currentStep > MENU_STEPS.SCREEN) {
             if (currentStep === MENU_STEPS.PAYMENT && !isAuthenticated) {
@@ -194,7 +185,7 @@ const TicketPurchase = () => {
         } else {
             navigate(ROUTES.MOVIES);
         }
-        
+
         if (branchId && branchId !== 'null') {
             getBranchById(branchId);
         }
@@ -209,11 +200,11 @@ const TicketPurchase = () => {
                     movie: {
                         _id: movieDetail._id,
                         name: movieDetail.title,
-                        poster: movieDetail.posterURL
-                    }
-                }
+                        poster: movieDetail.posterURL,
+                    },
+                },
             });
-        } 
+        }
     }, [movieDetail]);
 
     useEffect(() => {
@@ -225,9 +216,9 @@ const TicketPurchase = () => {
                 city: branch.city,
                 location: branch.location,
                 isActive: branch.isActive,
-                showings: branch.showings
+                showings: branch.showings,
             };
-            
+
             updateMovieTicket({ branch: branchData });
             updateSnackTicket({ branch: branchData });
         }
@@ -236,11 +227,9 @@ const TicketPurchase = () => {
     // ================================ URL UPDATE EFFECT ================================
     useEffect(() => {
         if (movieTicketData.branch && movieTicketData.branch._id) {
-            const stateObj = movieTicketData.noLoginCustomerInfo?.id
-                ? { state: { noLoginCustomerInfo: movieTicketData.noLoginCustomerInfo.id } }
-                : {};
+            const stateObj = movieTicketData.noLoginCustomerInfo?.id ? { state: { noLoginCustomerInfo: movieTicketData.noLoginCustomerInfo.id } } : {};
 
-            setMovieTicketData(prev => ({
+            setMovieTicketData((prev) => ({
                 ...prev,
                 branch: { ...movieTicketData.branch },
                 schedule: {
@@ -249,7 +238,7 @@ const TicketPurchase = () => {
                     screen: null,
                     startTime: null,
                     endTime: null,
-                    availableSeatsCount: 0
+                    availableSeatsCount: 0,
                 },
                 adultTickets: 0,
                 discountedTickets: 0,
@@ -257,37 +246,32 @@ const TicketPurchase = () => {
                 promotion: null,
                 seller: null,
                 total: 0,
-                discounted: 0
+                discounted: 0,
             }));
 
-            setSnackTicketData(prev => ({
+            setSnackTicketData((prev) => ({
                 ...prev,
                 branch: { ...movieTicketData.branch },
                 snackList: [],
                 promotionCode: '',
                 seller: null,
                 total: 0,
-                discounted: 0
+                discounted: 0,
             }));
 
-            navigate(
-                `?movieId=${movieId || 'null'}&branchId=${movieTicketData.branch._id || 'null'}`,
-                { replace: true, ...stateObj }
-            );
+            navigate(`?movieId=${movieId || 'null'}&branchId=${movieTicketData.branch._id || 'null'}`, { replace: true, ...stateObj });
         }
     }, [movieTicketData.branch?._id]);
 
     // ================================ AUTHENTICATION & VALIDATION EFFECTS ================================
     useEffect(() => {
-        if (!isAuthenticated && currentStep > MENU_STEPS.INFO && 
-            (!movieTicketData.noLoginCustomerInfo.name || 
-             !movieTicketData.noLoginCustomerInfo.phone || 
-             !movieTicketData.noLoginCustomerInfo.email)) {
+        if (
+            !isAuthenticated &&
+            currentStep > MENU_STEPS.INFO &&
+            (!movieTicketData.noLoginCustomerInfo.name || !movieTicketData.noLoginCustomerInfo.phone || !movieTicketData.noLoginCustomerInfo.email)
+        ) {
             setCurrentStep(MENU_STEPS.INFO);
-            showInfo(
-                'Information Required',
-                'Please fill in your information before proceeding.'
-            );
+            showInfo('Information Required', 'Please fill in your information before proceeding.');
             return;
         }
     }, [isAuthenticated]);
@@ -304,7 +288,7 @@ const TicketPurchase = () => {
             clearSession();
             updateMovieTicket({
                 promotion: null,
-                discount: 0
+                discount: 0,
             });
         }
     }, [movieTicketData.seats]);
@@ -313,9 +297,9 @@ const TicketPurchase = () => {
         async function holdSessionIfNeeded() {
             if (currentStep === MENU_STEPS.PAYMENT && !startedHoldSession) {
                 console.log('Starting hold session for seats:', movieTicketData.seats);
-                await startHoldSession({ 
-                    scheduleId: movieTicketData.schedule._id, 
-                    seatNumbers: movieTicketData.seats 
+                await startHoldSession({
+                    scheduleId: movieTicketData.schedule._id,
+                    seatNumbers: movieTicketData.seats,
                 });
                 await getSnacks(snackTicketData?.branch?._id);
             }
@@ -326,24 +310,18 @@ const TicketPurchase = () => {
     useEffect(() => {
         console.log('Hold seat data updated:', holdSeatData);
         console.log('Error:', holdSessionError);
-        
+
         if (holdSeatData || holdSessionError) {
             if (holdSessionError) {
                 console.log(holdSessionError);
                 if (holdSessionError.includes('seats')) {
-                    showError(
-                        'Seats Unavailable',
-                        'Your seat selection has been occupied by other customers. Please adjust your selection.'
-                    );
+                    showError('Seats Unavailable', 'Your seat selection has been occupied by other customers. Please adjust your selection.');
                     setCurrentStep(MENU_STEPS.SEATS);
                     fetchSeats(movieTicketData.schedule._id);
                     updateMovieTicket({ seats: [] });
                     return;
                 }
-                showError(
-                    'Hold Session Error',
-                    'An error occurred while holding your seats. Please try again.'
-                );
+                showError('Hold Session Error', 'An error occurred while holding your seats. Please try again.');
                 setCurrentStep(MENU_STEPS.PAYMENT);
             } else {
                 setStartedHoldSession(true);
@@ -356,11 +334,11 @@ const TicketPurchase = () => {
     useEffect(() => {
         if (snackTicketData?.branch?._id && snacks && snacks.length > 0) {
             console.log('Snacks fetched successfully:', snacks);
-            
+
             if (Array.isArray(snackTicketData?.snackList) && snackTicketData.snackList.length > 0) {
                 let changed = false;
-                const newSnackList = snackTicketData.snackList.map(item => {
-                    const snack = snacks.find(s => s._id === item.snack);
+                const newSnackList = snackTicketData.snackList.map((item) => {
+                    const snack = snacks.find((s) => s._id === item.snack);
                     if (!snack) return item;
                     const stock = snack.stock ?? Infinity;
                     if (item.quantity > stock) {
@@ -369,12 +347,9 @@ const TicketPurchase = () => {
                     }
                     return item;
                 });
-                
+
                 if (changed) {
-                    showWarning(
-                        'Stock Adjustment',
-                        'Some snacks in your selection exceed available stock and have been adjusted.'
-                    );
+                    showWarning('Stock Adjustment', 'Some snacks in your selection exceed available stock and have been adjusted.');
                     updateSnackTicket({ snackList: newSnackList, promotion: null, discount: 0 });
                 }
             }
@@ -388,31 +363,22 @@ const TicketPurchase = () => {
             setCurrentStep(MENU_STEPS.TICKET_DISPLAY);
         } else if (ticketError) {
             console.error('Error creating ticket:', ticketError);
-            
+
             if (ticketError.includes('seats')) {
-                showError(
-                    'Seats Unavailable',
-                    'Your seat selection has been occupied by other customers. Please adjust your selection.'
-                );
+                showError('Seats Unavailable', 'Your seat selection has been occupied by other customers. Please adjust your selection.');
                 setCurrentStep(MENU_STEPS.SEATS);
                 fetchSeats(movieTicketData.schedule._id);
                 updateMovieTicket({ seats: [] });
                 return;
             } else if (ticketError.includes('snack')) {
-                showError(
-                    'Stock Unavailable',
-                    'Your snack selection exceeds available stock. Please adjust your order.'
-                );
+                showError('Stock Unavailable', 'Your snack selection exceeds available stock. Please adjust your order.');
                 setCurrentStep(MENU_STEPS.SNACK);
                 getSnacks(snackTicketData?.branch?._id);
                 updateSnackTicket({ snackList: [] });
                 return;
             }
-            
-            showError(
-                'Ticket Creation Failed',
-                'An error occurred while creating your ticket. Please try again.'
-            );
+
+            showError('Ticket Creation Failed', 'An error occurred while creating your ticket. Please try again.');
             setCurrentStep(MENU_STEPS.PAYMENT);
         }
     }, [ticket, ticketError]);
@@ -422,8 +388,8 @@ const TicketPurchase = () => {
         switch (currentStep) {
             case MENU_STEPS.SCREEN:
                 return (
-                    <MenuSelectScreen 
-                        onNext={goToNextStep} 
+                    <MenuSelectScreen
+                        onNext={goToNextStep}
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         updateMovieTicket={updateMovieTicket}
@@ -433,8 +399,8 @@ const TicketPurchase = () => {
                 );
             case MENU_STEPS.SEATS:
                 return (
-                    <MenuSelectSeats 
-                        onNext={goToNextStep} 
+                    <MenuSelectSeats
+                        onNext={goToNextStep}
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         updateMovieTicket={updateMovieTicket}
@@ -446,8 +412,8 @@ const TicketPurchase = () => {
                 );
             case MENU_STEPS.SNACK:
                 return (
-                    <MenuSelectSnack 
-                        onNext={goToNextStep} 
+                    <MenuSelectSnack
+                        onNext={goToNextStep}
                         onBack={goToPreviousStep}
                         snackTicketData={snackTicketData}
                         updateSnackTicket={updateSnackTicket}
@@ -458,8 +424,8 @@ const TicketPurchase = () => {
                 );
             case MENU_STEPS.INFO:
                 return (
-                    <MenuInfo 
-                        onNext={goToNextStep} 
+                    <MenuInfo
+                        onNext={goToNextStep}
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         snackTicketData={snackTicketData}
@@ -469,8 +435,8 @@ const TicketPurchase = () => {
                 );
             case MENU_STEPS.PAYMENT:
                 return (
-                    <MenuPayment 
-                        onNext={handlePaymentComplete} 
+                    <MenuPayment
+                        onNext={handlePaymentComplete}
                         onBack={goToPreviousStep}
                         movieTicketData={movieTicketData}
                         snackTicketData={snackTicketData}
@@ -484,40 +450,26 @@ const TicketPurchase = () => {
                     />
                 );
             case MENU_STEPS.TICKET_DISPLAY:
-                return (
-                    <MenuTicketDisplay
-                        movieTicketData={movieTicketData}
-                        snackTicketData={snackTicketData}
-                        ticket={ticket}
-                        loading={ticketLoading}
-                    />
-                );
+                return <MenuTicketDisplay movieTicketData={movieTicketData} snackTicketData={snackTicketData} ticket={ticket} loading={ticketLoading} />;
             default:
-                return (
-                    <MenuSelectScreen 
-                        onNext={goToNextStep} 
-                        onBack={goToPreviousStep}
-                        movieTicketData={movieTicketData}
-                        updateMovieTicket={updateMovieTicket}
-                    />
-                );
+                return <MenuSelectScreen onNext={goToNextStep} onBack={goToPreviousStep} movieTicketData={movieTicketData} updateMovieTicket={updateMovieTicket} />;
         }
     };
 
     // ================================ RENDER ================================
     return (
-        <div className="overflow-y-hidden overflow-hidden relative flex flex-col h-auto min-h-screen w-screen overflow-x-hidden bg-slate-950">
+        <div className="relative flex h-auto min-h-screen w-screen flex-col overflow-hidden overflow-x-hidden overflow-y-hidden bg-slate-950">
             <Header />
             <Title text="BUY TICKET" />
             {renderCurrentMenu()}
             <div className="h-10 w-screen lg:h-20" />
-            
+
             {/* Background Effects */}
             <div className="pointer-events-none absolute top-[60px] -left-[20px] h-20 w-20 rounded-full bg-purple-600/60 mix-blend-lighten blur-[100px] sm:top-[80px] sm:-left-[30px] sm:h-28 sm:w-28 md:top-[100px] md:-left-[50px] md:h-36 md:w-36 lg:top-[135px] lg:-left-[71px] lg:h-44 lg:w-44" />
             <div className="pointer-events-none absolute top-[140px] left-[50px] h-20 w-20 rounded-full bg-pink-400/60 mix-blend-lighten blur-[100px] sm:top-[180px] sm:left-[80px] sm:h-28 sm:w-28 md:top-[220px] md:left-[120px] md:h-36 md:w-36 lg:top-[275px] lg:left-[168px] lg:h-44 lg:w-44" />
             <div className="pointer-events-none absolute -right-[40px] -bottom-0 h-[250px] w-[200px] rotate-[150deg] bg-sky-400/60 mix-blend-lighten blur-[100px] sm:-right-[60px] sm:-bottom-0 sm:h-[350px] sm:w-[300px] md:-right-[80px] md:-bottom-0 md:h-[450px] md:w-[400px] lg:-right-100 lg:-bottom-0 lg:h-[580.90px] lg:w-[517.76px]" />
             <div className="pointer-events-none absolute right-[40px] bottom-0 h-20 w-20 rounded-full bg-amber-300/60 mix-blend-lighten blur-[100px] sm:right-[60px] sm:bottom-0 sm:h-28 sm:w-28 md:right-[80px] md:bottom-0 md:h-36 md:w-36 lg:right-100 lg:bottom-0 lg:h-44 lg:w-44" />
-            
+
             <Footer />
         </div>
     );

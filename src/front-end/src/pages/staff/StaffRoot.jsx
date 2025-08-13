@@ -20,7 +20,7 @@ const StaffRoot = () => {
 
         // Check user roles and redirect accordingly
         const userRoles = user.roles || [];
-        
+
         // Check roles in order of priority
         if (userRoles.includes('administrator')) {
             navigate(ROUTES.STAFF_REPORT);
@@ -41,8 +41,8 @@ const StaffRoot = () => {
     // Show loading while checking authentication and roles
     if (isLoading) {
         return (
-            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            <div className="flex min-h-screen w-screen items-center justify-center bg-slate-950">
+                <div className="font-['Unbounded'] text-lg text-white">Loading...</div>
             </div>
         );
     }

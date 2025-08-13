@@ -1,15 +1,14 @@
-import React, { useState } from "react";
-import CustomDropdown from "@components/UI/CustomDropdown";
+import React, { useState } from 'react';
+import CustomDropdown from '@components/UI/CustomDropdown';
 
 const statusOptions = [
-    { value: "all", label: "ALL MOVIES" },
-    { value: "now", label: "NOW SHOWING" },
-    { value: "up", label: "UPCOMING" },
+    { value: 'all', label: 'ALL MOVIES' },
+    { value: 'now', label: 'NOW SHOWING' },
+    { value: 'up', label: 'UPCOMING' },
 ];
 
-
 const MovieStatusFilterButton = ({ value, onChange }) => {
-    const [movieStatusFilter, setMovieStatusFilter] = useState(value || "all");
+    const [movieStatusFilter, setMovieStatusFilter] = useState(value || 'all');
 
     const handleStatusChange = (e) => {
         setMovieStatusFilter(e.target.value);
@@ -32,7 +31,7 @@ const MovieStatusFilterButton = ({ value, onChange }) => {
             height="h-11"
             inputTextSize="text-md"
             optionTextSize="text-sm"
-            openDirection='down'
+            openDirection="down"
             textAlign="center"
             width="w-full md:w-[calc(100vw*0.28)] lg:w-[calc(70vw*0.28)]"
             options={statusOptions}

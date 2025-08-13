@@ -12,24 +12,17 @@ import { useFetchNowShowing, useFetchComingSoon } from '@hooks/useMovie';
 const MovieCardContainer = ({ movies, loading, selectedBranch }) => {
     if (loading) {
         return (
-            <div className="z-20 flex items-center justify-center w-full pb-10">
-                <div className="text-white font-['Unbounded'] text-lg">Loading movies...</div>
+            <div className="z-20 flex w-full items-center justify-center pb-10">
+                <div className="font-['Unbounded'] text-lg text-white">Loading movies...</div>
             </div>
         );
     }
 
     return (
         <div className="z-20 grid w-full grid-cols-2 grid-rows-4 gap-3 pb-10 md:grid-cols-3 md:grid-rows-4 md:gap-4 lg:grid-cols-4 lg:grid-rows-3 lg:gap-6 xl:gap-8">
-            {movies && movies.length > 0 ? (
-                movies.map((movie, index) => (
-                    <MovieCard 
-                        key={`${movie._id || index}-${selectedBranch?._id || 'all'}`}
-                        movie={movie}
-                        page="MovieList"
-                        selectedBranch={selectedBranch}
-                    />
-                ))
-            ) : null}
+            {movies && movies.length > 0
+                ? movies.map((movie, index) => <MovieCard key={`${movie._id || index}-${selectedBranch?._id || 'all'}`} movie={movie} page="MovieList" selectedBranch={selectedBranch} />)
+                : null}
         </div>
     );
 };
@@ -65,7 +58,7 @@ const MainBody = () => {
     useEffect(() => {
         const branchId = searchParams.get('branchId');
         if (branchId && branches && branches.length > 0) {
-            const found = branches.find(b => String(b._id) === String(branchId));
+            const found = branches.find((b) => String(b._id) === String(branchId));
             if (found) setSelectedBranch(found);
         }
     }, [branches, searchParams]);
@@ -75,43 +68,36 @@ const MainBody = () => {
         fetchComingSoon();
     }, []);
 
-
     // Combine and filter movies based on status filter and selected branch
     let allMovies = [...nowShowingMovies, ...upcomingMovies];
     let filteredMovies = allMovies;
-    if (movieStatusFilter === "now") {
-        filteredMovies = filteredMovies.filter(m => m.status === "Now Showing");
-    } else if (movieStatusFilter === "up") {
-        filteredMovies = filteredMovies.filter(m => m.status === "Upcoming");
+    if (movieStatusFilter === 'now') {
+        filteredMovies = filteredMovies.filter((m) => m.status === 'Now Showing');
+    } else if (movieStatusFilter === 'up') {
+        filteredMovies = filteredMovies.filter((m) => m.status === 'Upcoming');
     }
     if (selectedBranch && selectedBranch._id) {
-        filteredMovies = filteredMovies.filter(m => Array.isArray(m.branches) && m.branches.includes(String(selectedBranch._id)));
+        filteredMovies = filteredMovies.filter((m) => Array.isArray(m.branches) && m.branches.includes(String(selectedBranch._id)));
     }
     // Sort movies: movies with schedules (branches) first, then movies without schedules
     filteredMovies = filteredMovies.sort((a, b) => {
         const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
         const bHasSchedules = Array.isArray(b.branches) && b.branches.length > 0;
-        
+
         if (aHasSchedules && !bHasSchedules) return -1;
         if (!aHasSchedules && bHasSchedules) return 1;
         return 0; // Keep original order for movies with same schedule status
     });
     let allLoading = loadingNowShowing || loadingUpcoming;
-    
+
     return (
-        <div className="relative w-full max-w-7xl mx-auto flex flex-col min-h-[60vh] pt-20">
-            <div className="font-unbounded justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl mt-8 mb-4">MOVIES</div>
-            <div className="flex flex-col w-full gap-y-2 py-3 sm:flex-row sm:gap-x-2 sm:gap-y-0 md:py-6 lg:gap-x-3 lg:py-8 xl:gap-x-4 xl:py-10">
-                <ChooseCinemaButton
-                    onClick={() => setIsCinemaPopupOpen(true)}
-                    label={selectedBranch?.name || 'All Cinemas'}
-                    loading={branchLoading}
-                    branches={branches}
-                    error={branchError}
-                />
+        <div className="relative mx-auto flex min-h-[60vh] w-full max-w-7xl flex-col pt-20">
+            <div className="font-unbounded mt-8 mb-4 justify-center text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">MOVIES</div>
+            <div className="flex w-full flex-col gap-y-2 py-3 sm:flex-row sm:gap-x-2 sm:gap-y-0 md:py-6 lg:gap-x-3 lg:py-8 xl:gap-x-4 xl:py-10">
+                <ChooseCinemaButton onClick={() => setIsCinemaPopupOpen(true)} label={selectedBranch?.name || 'All Cinemas'} loading={branchLoading} branches={branches} error={branchError} />
                 <MovieStatusFilterButton
                     value={movieStatusFilter}
-                    onChange={val => {
+                    onChange={(val) => {
                         setMovieStatusFilter(val);
                         // Update URL with status param
                         const params = new URLSearchParams(window.location.search);
@@ -123,7 +109,7 @@ const MainBody = () => {
             <CinemaPopUp
                 isOpen={isCinemaPopupOpen}
                 onClose={() => setIsCinemaPopupOpen(false)}
-                onCinemaSelect={branch => {
+                onCinemaSelect={(branch) => {
                     setSelectedBranch(branch);
                     // Update URL with branchId
                     const params = new URLSearchParams(window.location.search);
@@ -144,9 +130,7 @@ const MainBody = () => {
                 }}
             />
             {filteredMovies.length === 0 && !allLoading ? (
-                <p className="mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl font-[Merriweather Sans]">
-                    No movies found for the selected filter.
-                </p>
+                <p className="font-[Merriweather Sans] mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl">No movies found for the selected filter.</p>
             ) : (
                 <MovieCardContainer movies={filteredMovies} loading={allLoading} selectedBranch={selectedBranch} />
             )}
@@ -173,12 +157,12 @@ export default MovieListPage;
 
 export const ChooseCinemaButton = ({ onClick, label, loading, branches, error }) => (
     <button
-        className="group relative flex h-11 w-full items-center justify-center py-3 md:w-80 lg:w-[calc(100vw*0.28)] max-w-[500px] cursor-pointer hover:cursor-pointer"
+        className="group relative flex h-11 w-full max-w-[500px] cursor-pointer items-center justify-center py-3 hover:cursor-pointer md:w-80 lg:w-[calc(100vw*0.28)]"
         onClick={loading || branches.length === 0 || error ? () => {} : onClick}
     >
-        <div className="absolute top-0 left-0 h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] group-hover:bg-zinc-300/70 z-0" />
-        <div className="relative flex w-full items-center justify-center md:text-md h-auto text-white text-base font-bold font-['Unbounded'] z-10">
-            {((loading || branches.length === 0 || error) ? '• • •' : (label ? label.toUpperCase() : 'CHOOSE CINEMA'))}
+        <div className="absolute top-0 left-0 z-0 h-full w-full rounded-xl bg-pink-400 shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] group-hover:bg-zinc-300/70" />
+        <div className="md:text-md relative z-10 flex h-auto w-full items-center justify-center font-['Unbounded'] text-base font-bold text-white">
+            {loading || branches.length === 0 || error ? '• • •' : label ? label.toUpperCase() : 'CHOOSE CINEMA'}
         </div>
     </button>
 );

@@ -1,4 +1,4 @@
-import {React, useEffect} from 'react';
+import { React, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '@contexts/UserContext.jsx';
 import ProtectedRoute from '@components/ProtectedRoute.jsx';
@@ -6,11 +6,11 @@ import ApiInterceptorProvider from '@components/ApiInterceptorProvider.jsx';
 import { ROUTES, routeConfig, getRedirectPath } from '@routes/routeConfig.js';
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
+    const { pathname } = useLocation();
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
+    return null;
 };
 
 // Loading component
@@ -39,10 +39,7 @@ const RouteHandler = ({ route }) => {
     // Handle protected routes that require authentication
     if (route.requiresAuth) {
         return (
-            <ProtectedRoute 
-                requiredRoles={route.allowedRoles} 
-                redirectTo={route.type === 'staff' ? '/staff/login' : '/login'}
-            >
+            <ProtectedRoute requiredRoles={route.allowedRoles} redirectTo={route.type === 'staff' ? '/staff/login' : '/login'}>
                 <route.component />
             </ProtectedRoute>
         );
@@ -59,11 +56,7 @@ const AppRoutes = () => {
                 <ScrollToTop />
                 <Routes>
                     {routeConfig.map((route, index) => (
-                        <Route
-                            key={index}
-                            path={route.path}
-                            element={<RouteHandler route={route} />}
-                        />
+                        <Route key={index} path={route.path} element={<RouteHandler route={route} />} />
                     ))}
                     {/* Fallback route for 404 Not Found */}
                     <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />

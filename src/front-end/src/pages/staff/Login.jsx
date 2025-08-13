@@ -12,10 +12,8 @@ const StaffLogin = () => {
     useEffect(() => {
         if (!isLoading && isAuthenticated && user) {
             const userRoles = user.roles || [];
-            const hasStaffRole = userRoles.some(role => 
-                ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role)
-            );
-            
+            const hasStaffRole = userRoles.some((role) => ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role));
+
             if (hasStaffRole) {
                 navigate(ROUTES.STAFF_ROOT);
             } else {
@@ -27,8 +25,8 @@ const StaffLogin = () => {
     // Show loading while checking authentication
     if (isLoading) {
         return (
-            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            <div className="flex min-h-screen w-screen items-center justify-center bg-slate-950">
+                <div className="font-['Unbounded'] text-lg text-white">Loading...</div>
             </div>
         );
     }

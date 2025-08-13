@@ -23,8 +23,8 @@ const ForgotPassword = () => {
     // Show loading while checking authentication
     if (authLoading) {
         return (
-            <div className="min-h-screen w-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-white font-['Unbounded'] text-lg">Loading...</div>
+            <div className="flex min-h-screen w-screen items-center justify-center bg-slate-950">
+                <div className="font-['Unbounded'] text-lg text-white">Loading...</div>
             </div>
         );
     }
@@ -48,11 +48,10 @@ const ForgotPassword = () => {
             <div className="absolute top-10 left-5 flex items-center sm:top-15 sm:left-8 md:top-20 md:left-10 lg:top-25 lg:left-20">
                 <BackwardButton onClick={() => navigate(-1)} position="relative" />
             </div>
-            
+
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
                 <ForgotPwdForm forgotPwdHook={forgotPwdHook} />
             </div>
-
 
             <div className="w-screen lg:h-15" />
             <Footer />

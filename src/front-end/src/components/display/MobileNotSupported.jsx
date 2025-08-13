@@ -61,7 +61,7 @@ const MobileNotSupported = ({
 
     return (
         <div className="flex h-full w-full items-center justify-center">
-            <div className="max-w-md rounded-xl bg-white/90 px-8 py-6 text-center shadow-lg z-50">
+            <div className="z-50 max-w-md rounded-xl bg-white/90 px-8 py-6 text-center shadow-lg">
                 <div className="mb-4">
                     <svg className="mx-auto h-16 w-16 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path

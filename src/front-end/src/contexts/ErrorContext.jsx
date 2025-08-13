@@ -21,11 +21,7 @@ export const ErrorProvider = ({ children }) => {
         setError(null);
     };
 
-    return (
-        <ErrorContext.Provider value={{ error, showError, clearError }}>
-            {children}
-        </ErrorContext.Provider>
-    );
+    return <ErrorContext.Provider value={{ error, showError, clearError }}>{children}</ErrorContext.Provider>;
 };
 
 export default ErrorContext;

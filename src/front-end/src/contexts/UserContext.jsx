@@ -23,7 +23,7 @@ export const UserProvider = ({ children }) => {
     useEffect(() => {
         const savedToken = localStorage.getItem('token');
         const savedUser = localStorage.getItem('user');
-        
+
         if (savedToken && savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
@@ -42,7 +42,7 @@ export const UserProvider = ({ children }) => {
         setUser(userData);
         setToken(userToken);
         setIsAuthenticated(true);
-        
+
         // Save to localStorage
         localStorage.setItem('token', userToken);
         localStorage.setItem('user', JSON.stringify(userData));
@@ -52,7 +52,7 @@ export const UserProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setIsAuthenticated(false);
-        
+
         // Clear localStorage
         localStorage.removeItem('token');
         localStorage.removeItem('user');

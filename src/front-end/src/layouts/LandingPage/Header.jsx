@@ -23,7 +23,7 @@ const Header = () => {
             confirmButtonText: '<span style="font-weight:700;letter-spacing:0.5px;">Logout</span>',
             cancelButtonText: '<span style="font-weight:700;letter-spacing:0.5px;">Cancel</span>',
             customClass: { popup: 'swal2-popup-rating', confirmButton: 'swal2-btn-gradient', cacelButton: 'swal2-btn-gradient' },
-            reverseButtons: true
+            reverseButtons: true,
         });
         if (result.isConfirmed) {
             try {
@@ -38,7 +38,7 @@ const Header = () => {
                     background: '#23222a',
                     color: '#fff',
                     confirmButtonText: '<span style="font-weight:700;letter-spacing:0.5px;">OK</span>',
-                    customClass: { popup: 'swal2-popup-rating', confirmButton: 'swal2-btn-gradient' }
+                    customClass: { popup: 'swal2-popup-rating', confirmButton: 'swal2-btn-gradient' },
                 });
             }
         }
@@ -56,11 +56,7 @@ const Header = () => {
     const LogoutButton = () => (
         <div className="z-50 flex h-[36px] w-auto -translate-y-1 items-center">
             <div className="h-full w-[5px] md:w-[10px] lg:w-[15px]" />
-            <button 
-                className="h-[25px] w-[12px] hover:cursor-pointer md:h-[30px] md:w-[15px] lg:h-[40px] lg:w-[25px] xl:h-[45px] xl:w-[30px]" 
-                aria-label="Logout"
-                onClick={handleLogout}
-            >
+            <button className="h-[25px] w-[12px] hover:cursor-pointer md:h-[30px] md:w-[15px] lg:h-[40px] lg:w-[25px] xl:h-[45px] xl:w-[30px]" aria-label="Logout" onClick={handleLogout}>
                 <LogOut className="h-full w-full text-white" strokeWidth={4} />
             </button>
         </div>
@@ -74,10 +70,7 @@ const Header = () => {
                 <Logo onClick={() => navigate(ROUTES.HOME)} />
                 <NavButton name="Buy Tickets" onClick={() => navigate(ROUTES.MOVIES)} />
                 <NavButton name="Buy Snacks" onClick={() => navigate(ROUTES.BUY_SNACK)} />
-                <NavButton 
-                    name={isAuthenticated ? 'Account' : 'Login/Register'} 
-                    onClick={handleAccountClick}
-                />
+                <NavButton name={isAuthenticated ? 'Account' : 'Login/Register'} onClick={handleAccountClick} />
                 <SearchButton />
                 {isAuthenticated && <LogoutButton />}
             </div>

@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { getApiUrl } from '@config/api.config';
 import React from 'react';
@@ -39,7 +38,6 @@ const Label = () => {
     );
 };
 
-
 const Banner = () => {
     const [banners, setBanners] = React.useState([]);
     const [current, setCurrent] = React.useState(0);
@@ -56,15 +54,16 @@ const Banner = () => {
                 const res = await axios.get(getApiUrl('promotionBanner'));
                 let arr = Array.isArray(res.data) ? res.data : [];
                 // Preload images and filter out those that fail to load
-                const preload = (url) => new Promise(resolve => {
-                    if (!url) return resolve(false);
-                    const img = new window.Image();
-                    img.onload = () => resolve(true);
-                    img.onerror = () => resolve(false);
-                    img.src = url;
-                });
+                const preload = (url) =>
+                    new Promise((resolve) => {
+                        if (!url) return resolve(false);
+                        const img = new window.Image();
+                        img.onload = () => resolve(true);
+                        img.onerror = () => resolve(false);
+                        img.src = url;
+                    });
                 // Map to URLs
-                const urlArr = arr.map(b => b?.image || b);
+                const urlArr = arr.map((b) => b?.image || b);
                 const results = await Promise.all(urlArr.map(preload));
                 const validArr = arr.filter((b, i) => results[i]);
                 setBanners(validArr);
@@ -76,7 +75,6 @@ const Banner = () => {
         };
         fetchBanners();
     }, []);
-
 
     const handlePrev = () => {
         if (!banners.length) return;
@@ -116,10 +114,10 @@ const Banner = () => {
     const handleDragEnd = () => {
         if (!isDragging || !banners.length) return;
         setIsDragging(false);
-        
+
         const slideWidth = 100 / banners.length;
         const movedBy = currentTranslate - prevTranslate;
-        
+
         if (Math.abs(movedBy) > slideWidth / 3) {
             if (movedBy > 0 && current > 0) {
                 // Dragged right, go to previous
@@ -164,27 +162,23 @@ const Banner = () => {
 
     // Poster container with sliding animation
     const renderPoster = () => {
-        if (loading) return <div className="flex items-center justify-center w-full h-60 text-white">Loading...</div>;
+        if (loading) return <div className="flex h-60 w-full items-center justify-center text-white">Loading...</div>;
         if (!banners.length) {
             return (
-                <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '180px' }}>
-                    <img
-                        src={defaultBanner}
-                        alt="Default Banner"
-                        className="w-full h-full block object-cover rounded-xl shadow-lg"
-                    />
+                <div className="flex h-full w-full items-center justify-center" style={{ minHeight: '180px' }}>
+                    <img src={defaultBanner} alt="Default Banner" className="block h-full w-full rounded-xl object-cover shadow-lg" />
                 </div>
             );
         }
-        
+
         return (
-            <div className="relative w-full h-full overflow-hidden rounded-xl shadow-lg" style={{ minHeight: '180px' }}>
-                <div 
+            <div className="relative h-full w-full overflow-hidden rounded-xl shadow-lg" style={{ minHeight: '180px' }}>
+                <div
                     className={`flex h-full ${isDragging ? '' : 'transition-transform duration-500 ease-in-out'}`}
-                    style={{ 
+                    style={{
                         transform: `translateX(${isDragging ? currentTranslate : -current * (100 / banners.length)}%)`,
                         width: `${banners.length * 100}%`,
-                        cursor: isDragging ? 'grabbing' : 'grab'
+                        cursor: isDragging ? 'grabbing' : 'grab',
                     }}
                     onMouseDown={handleDragStart}
                     onMouseMove={handleDragMove}
@@ -199,19 +193,14 @@ const Banner = () => {
                         return (
                             <div
                                 key={index}
-                                className="w-full h-full flex-shrink-0"
-                                style={{ 
+                                className="h-full w-full flex-shrink-0"
+                                style={{
                                     width: `${100 / banners.length}%`,
                                     userSelect: 'none',
-                                    pointerEvents: isDragging ? 'none' : 'auto'
+                                    pointerEvents: isDragging ? 'none' : 'auto',
                                 }}
                             >
-                                <img
-                                    src={img}
-                                    alt={`Banner ${index + 1}`}
-                                    className="w-full h-full block object-cover"
-                                    draggable={false}
-                                />
+                                <img src={img} alt={`Banner ${index + 1}`} className="block h-full w-full object-cover" draggable={false} />
                             </div>
                         );
                     })}
@@ -220,28 +209,27 @@ const Banner = () => {
         );
     };
 
-return (
-    <section className="relative z-10 w-screen min-w-0 max-w-none gap-8 bg-slate-950 lg:pt-3 overflow-hidden">
-        <div className="relative w-screen flex items-center justify-center min-w-0 max-w-none">
-            {/*Left*/}
-            <div className="absolute top-0 left-0 z-15 h-full w-8 bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
-            {/*Right*/}
-            <div className="absolute top-0 right-0 z-15 h-full w-8 bg-gradient-to-l from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
-            {/* Slideable Poster */}
-            {/* Only show navigation if there are banners to slide */}
-            {banners.length > 0 && <BackwardButton onClick={handlePrev} position="absolute" />}
-            <div className="flex-1 flex items-center justify-center min-h-[180px]">
-                {renderPoster()}
+    return (
+        <section className="relative z-10 w-screen max-w-none min-w-0 gap-8 overflow-hidden bg-slate-950 lg:pt-3">
+            <div className="relative flex w-screen max-w-none min-w-0 items-center justify-center">
+                {/*Left*/}
+                <div className="absolute top-0 left-0 z-15 h-full w-8 bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
+                {/*Right*/}
+                <div className="absolute top-0 right-0 z-15 h-full w-8 bg-gradient-to-l from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
+                {/* Slideable Poster */}
+                {/* Only show navigation if there are banners to slide */}
+                {banners.length > 0 && <BackwardButton onClick={handlePrev} position="absolute" />}
+                <div className="flex min-h-[180px] flex-1 items-center justify-center">{renderPoster()}</div>
+                {banners.length > 0 && <ForwardButton onClick={handleNext} position="absolute" />}
+                {/*Bottom*/}
+                <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-15 xl:blur-md" />
+                <Decoration1 />
+                <Decoration2 />
             </div>
-            {banners.length > 0 && <ForwardButton onClick={handleNext} position="absolute" />}
-            {/*Bottom*/}
-            <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-15 xl:blur-md" />
-            <Decoration1 />
-            <Decoration2 />
-        </div>
-        <Label />
-        <AiSearch />
-    </section>
-)};
+            <Label />
+            <AiSearch />
+        </section>
+    );
+};
 
 export default Banner;

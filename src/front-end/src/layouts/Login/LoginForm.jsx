@@ -10,11 +10,11 @@ const LoginForm = ({ isCustomer = true }) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { login } = useUser();
-    
+
     // Use different hooks based on user type
     const { loginUser: customerLogin, loading: customerLoading, error: customerError } = useLogin();
     const { staffLogin, loading: staffLoading, error: staffError } = useStaffLogin();
-    
+
     // Use the appropriate hook values
     const loading = isCustomer ? customerLoading : staffLoading;
     const error = isCustomer ? customerError : staffError;
@@ -84,28 +84,24 @@ const LoginForm = ({ isCustomer = true }) => {
         }
 
         // Use the appropriate login method
-        const result = isCustomer 
-            ? await customerLogin(formData)
-            : await staffLogin(formData);
-        
+        const result = isCustomer ? await customerLogin(formData) : await staffLogin(formData);
+
         if (result.success) {
             // If returnTo param exists and is a valid string, go there
             let returnTo = searchParams.get('returnTo');
             if (returnTo && typeof returnTo === 'string') {
                 returnTo = decodeURIComponent(returnTo);
                 if (returnTo.startsWith('/')) {
-                console.log('Redirecting to:', returnTo);
-                setTimeout(() => {
-                    navigate(returnTo, { replace: true });
-                }, 0);
-                return;
+                    console.log('Redirecting to:', returnTo);
+                    setTimeout(() => {
+                        navigate(returnTo, { replace: true });
+                    }, 0);
+                    return;
                 }
             }
             // Navigate based on user role
             const userRoles = result.data.user.roles || [];
-            const hasStaffRole = userRoles.some(role => 
-                ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role)
-            );
+            const hasStaffRole = userRoles.some((role) => ['cashier', 'checkincounter', 'branchmanager', 'administrator'].includes(role));
             if (hasStaffRole) {
                 navigate(ROUTES.STAFF_ROOT);
             } else {
@@ -118,9 +114,7 @@ const LoginForm = ({ isCustomer = true }) => {
     return (
         <div className="w-full max-w-xs px-4 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-lg xl:max-w-xl">
             {/* Title */}
-            <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
-                {isCustomer ? 'LOGIN' : 'STAFF LOGIN'}
-            </h1>
+            <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">{isCustomer ? 'LOGIN' : 'STAFF LOGIN'}</h1>
             {/* Register Link */}
             {isCustomer && (
                 <p className="mb-6 text-center font-['Libre_Franklin'] text-sm text-white sm:mb-8 sm:text-base md:text-lg lg:text-xl">
@@ -172,7 +166,7 @@ const LoginForm = ({ isCustomer = true }) => {
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             disabled={loading}
-                            className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 sm:right-3 sm:h-6 sm:w-6 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:right-3 sm:h-6 sm:w-6"
                         >
                             <img src={showPassword ? HideIcon : ShowIcon} alt={showPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
                         </button>

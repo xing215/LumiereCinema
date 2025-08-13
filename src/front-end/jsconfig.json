@@ -1,42 +1,36 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "jsx": "react-jsx",
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"],
-      "@hooks/*": ["hooks/*"],
-      "@hooks": ["hooks/index.js"],
-      "@components/*": ["components/*"],
-      "@components": ["components/index.js"],
-      "@layouts/*": ["layouts/*"],
-      "@layouts": ["layouts/index.js"],
-      "@pages/*": ["pages/*"],
-      "@pages": ["pages/index.js"],
-      "@routes/*": ["routes/*"],
-      "@routes": ["routes/index.js"],
-      "@services/*": ["services/*"],
-      "@services": ["services/index.js"],
-      "@utils/*": ["utils/*"],
-      "@utils": ["utils/index.js"],
-      "@config/*": ["config/*"],
-      "@config": ["config/index.js"],
-      "@contexts/*": ["contexts/*"],
-      "@contexts": ["contexts/index.js"],
-      "@assets/*": ["assets/*"],
-      "@assets": ["assets/index.js"]
-    }
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build"
-  ]
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "jsx": "react-jsx",
+        "baseUrl": "./src",
+        "paths": {
+            "@/*": ["*"],
+            "@hooks/*": ["hooks/*"],
+            "@hooks": ["hooks/index.js"],
+            "@components/*": ["components/*"],
+            "@components": ["components/index.js"],
+            "@layouts/*": ["layouts/*"],
+            "@layouts": ["layouts/index.js"],
+            "@pages/*": ["pages/*"],
+            "@pages": ["pages/index.js"],
+            "@routes/*": ["routes/*"],
+            "@routes": ["routes/index.js"],
+            "@services/*": ["services/*"],
+            "@services": ["services/index.js"],
+            "@utils/*": ["utils/*"],
+            "@utils": ["utils/index.js"],
+            "@config/*": ["config/*"],
+            "@config": ["config/index.js"],
+            "@contexts/*": ["contexts/*"],
+            "@contexts": ["contexts/index.js"],
+            "@assets/*": ["assets/*"],
+            "@assets": ["assets/index.js"]
+        }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist", "build"]
 }

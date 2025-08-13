@@ -1,7 +1,6 @@
 import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 import UpComingFrame from '@layouts/LandingPage/UpcomingFrame/UpComingMovieFrame.jsx';
 
-
 const UpComing = () => {
     return (
         <section className="no-scrollbar relative z-18 h-auto w-screen flex-col overflow-y-visible bg-slate-950">

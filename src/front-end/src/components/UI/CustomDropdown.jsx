@@ -51,7 +51,7 @@ const CustomDropdown = ({
     allowOtherInput = false, // Allow custom text input
     forceFillLabel = false, // Force fill label even if value is empty
     width = 'w-full', // New: custom width
-    hideNoOptionMessage = false
+    hideNoOptionMessage = false,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
@@ -154,7 +154,7 @@ const CustomDropdown = ({
                         onKeyDown={handleInputKeyDown}
                         onFocus={() => setIsOpen(true)}
                         placeholder={placeholder}
-                        className={` ${height} w-full rounded-lg px-3 pr-10 sm:px-4 ${inputBackgroundClass} text-${textColor} ${ borderColor !== '' ? `border border-${borderColor}` : ''} ring-0 font-['Unbounded'] ${inputTextSize} ${getTextAlignClass(textAlign)} transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
+                        className={` ${height} w-full rounded-lg px-3 pr-10 sm:px-4 ${inputBackgroundClass} text-${textColor} ${borderColor !== '' ? `border border-${borderColor}` : ''} font-['Unbounded'] ring-0 ${inputTextSize} ${getTextAlignClass(textAlign)} transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
                     />
                     <button type="button" onClick={() => setIsOpen(!isOpen)} className="absolute top-1/2 right-3 -translate-y-1/2 transform">
                         <svg
@@ -171,11 +171,11 @@ const CustomDropdown = ({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${inputBackgroundClass} text-${textColor} ${ borderColor !== '' ? `border border-${borderColor}` : ''} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
+                    className={` ${height} w-full rounded-lg px-3 sm:px-4 ${inputBackgroundClass} text-${textColor} ${borderColor !== '' ? `border border-${borderColor}` : ''} flex items-center ${getJustifyClass(textAlign)} font-['Unbounded'] transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
                 >
-                    <span className={`${inputTextSize} ${getSpanClass(textAlign)}`}>{forceFillLabel
-                        ? (options.find(opt => opt.value === value)?.label || value || placeholder)
-                        : (value || placeholder)}</span>
+                    <span className={`${inputTextSize} ${getSpanClass(textAlign)}`}>
+                        {forceFillLabel ? options.find((opt) => opt.value === value)?.label || value || placeholder : value || placeholder}
+                    </span>
                     {textAlign !== 'right' && (
                         <svg
                             className={`h-4 w-4 transition-transform ${openDirection === 'up' ? (isOpen ? '' : 'rotate-180') : isOpen ? 'rotate-180' : ''}`}
@@ -190,28 +190,28 @@ const CustomDropdown = ({
             )}
 
             {isOpen && (
-                <div className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 overflow-y-scroll max-h-[30vh] rounded-lg border shadow-xl ${ borderColor !== '' ? `border border-${borderColor}` : ''}`}>
-                    {filteredOptions.length > 0 ? (
-                        filteredOptions.map((option, index) => (
-                            <button
-                                key={option.value}
-                                type="button"
-                                onClick={() => handleSelect(option.value)}
-                                className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} hover:bg-${hoverColor} transition-colors ${index !== filteredOptions.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
-                            >
-                                {option.label}
-                            </button>
-                        ))
-                    ) : (
-                        !hideNoOptionMessage && (
-                            <div className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} opacity-60`}>
-                                No options found
-                            </div>
-                        )
-                    )}
+                <div
+                    className={`absolute ${openDirection === 'up' ? 'bottom-full' : 'top-full'} right-0 left-0 mt-1 ${dropdownBackgroundClass} z-30 max-h-[30vh] overflow-y-scroll rounded-lg border shadow-xl ${borderColor !== '' ? `border border-${borderColor}` : ''}`}
+                >
+                    {filteredOptions.length > 0
+                        ? filteredOptions.map((option, index) => (
+                              <button
+                                  key={option.value}
+                                  type="button"
+                                  onClick={() => handleSelect(option.value)}
+                                  className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} hover:bg-${hoverColor} transition-colors ${index !== filteredOptions.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
+                              >
+                                  {option.label}
+                              </button>
+                          ))
+                        : !hideNoOptionMessage && (
+                              <div className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} opacity-60`}>
+                                  No options found
+                              </div>
+                          )}
                 </div>
             )}
-        </div> 
+        </div>
     );
 };
 

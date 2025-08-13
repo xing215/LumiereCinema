@@ -4,19 +4,19 @@ import 'react-datepicker/dist/react-datepicker.css';
 import '@styles/datepicker.css';
 import { CalendarIcon } from 'lucide-react';
 
-const EditableCell = ({ 
-    value, 
-    isEditing, 
-    onStartEdit, 
-    onSave, 
-    onCancel, 
+const EditableCell = ({
+    value,
+    isEditing,
+    onStartEdit,
+    onSave,
+    onCancel,
     fieldType = 'text',
     selectOptions = null, // Add selectOptions prop for select fieldType
     className = '',
     disabled = false,
     isUpdating = false,
     tooltipText = null, // Add tooltipText prop for truncated content
-    shouldTruncate = false // Add shouldTruncate prop
+    shouldTruncate = false, // Add shouldTruncate prop
 }) => {
     const [editValue, setEditValue] = useState(value || '');
     const [selectedDate, setSelectedDate] = useState(null);
@@ -173,7 +173,7 @@ const EditableCell = ({
                         onChange={handleDateChange}
                         onKeyDown={handleKeyDown}
                         dateFormat="dd/MM/yyyy"
-                        className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+                        className={`w-full rounded border border-blue-300 px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none ${className}`}
                         calendarClassName="react-datepicker-custom"
                         showPopperArrow={false}
                         autoComplete="off"
@@ -201,7 +201,7 @@ const EditableCell = ({
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
-                    className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+                    className={`w-full rounded border border-blue-300 px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none ${className}`}
                     autoFocus
                 >
                     {selectOptions.map((option, index) => (
@@ -219,11 +219,11 @@ const EditableCell = ({
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
-                    className={`w-full px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${className}`}
-                    style={{ 
+                    className={`w-full resize-none overflow-hidden rounded border border-blue-300 px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none ${className}`}
+                    style={{
                         minWidth: '60px',
                         minHeight: '40px',
-                        lineHeight: '1.4'
+                        lineHeight: '1.4',
                     }}
                     rows={1}
                 />
@@ -234,58 +234,70 @@ const EditableCell = ({
     return (
         <div
             onDoubleClick={handleDoubleClick}
-            className={`w-full h-full min-h-[2rem] flex items-center rounded px-1 py-1 transition-colors ${
-                disabled || fieldType === 'readonly' ? 'cursor-not-allowed opacity-50 bg-gray-50' : 
-                'cursor-pointer hover:bg-gray-100'
+            className={`flex h-full min-h-[2rem] w-full items-center rounded px-1 py-1 transition-colors ${
+                disabled || fieldType === 'readonly' ? 'cursor-not-allowed bg-gray-50 opacity-50' : 'cursor-pointer hover:bg-gray-100'
             } ${isUpdating ? 'bg-yellow-100 opacity-75' : ''} ${className}`}
             title={
-                disabled || fieldType === 'readonly' ? 'This field cannot be edited' : 
-                isUpdating ? 'Updating...' : 
-                tooltipText ? tooltipText : 
-                'Double-click to edit (Ctrl+Enter to save, Esc to cancel)'
+                disabled || fieldType === 'readonly'
+                    ? 'This field cannot be edited'
+                    : isUpdating
+                      ? 'Updating...'
+                      : tooltipText
+                        ? tooltipText
+                        : 'Double-click to edit (Ctrl+Enter to save, Esc to cancel)'
             }
         >
             {isUpdating ? (
                 <span className="flex items-center gap-1">
-                    <span className="inline-block w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                    <span 
-                        className={shouldTruncate ? 'truncate block w-full' : 'w-full'}
-                        style={shouldTruncate ? {
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                        } : {}}
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border border-gray-400 border-t-transparent"></span>
+                    <span
+                        className={shouldTruncate ? 'block w-full truncate' : 'w-full'}
+                        style={
+                            shouldTruncate
+                                ? {
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                  }
+                                : {}
+                        }
                     >
-                        {fieldType === 'date' ? formatDisplayDate(value) : (value || '')}
+                        {fieldType === 'date' ? formatDisplayDate(value) : value || ''}
                     </span>
                 </span>
-            ) : (
-                fieldType === 'date' ? (
-                    <div className="flex items-center gap-1 w-full">
-                        <CalendarIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                        <span 
-                            className={shouldTruncate ? 'truncate block flex-1' : 'flex-1'}
-                            style={shouldTruncate ? {
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                            } : {}}
-                        >
-                            {formatDisplayDate(value) || 'Select date...'}
-                        </span>
-                    </div>
-                ) : (
-                    <span 
-                        className={shouldTruncate ? 'truncate block w-full' : 'w-full'}
-                        style={shouldTruncate ? {
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                        } : {}}
+            ) : fieldType === 'date' ? (
+                <div className="flex w-full items-center gap-1">
+                    <CalendarIcon className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                    <span
+                        className={shouldTruncate ? 'block flex-1 truncate' : 'flex-1'}
+                        style={
+                            shouldTruncate
+                                ? {
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                  }
+                                : {}
+                        }
                     >
-                        {value || ''}
+                        {formatDisplayDate(value) || 'Select date...'}
                     </span>
-                )
+                </div>
+            ) : (
+                <span
+                    className={shouldTruncate ? 'block w-full truncate' : 'w-full'}
+                    style={
+                        shouldTruncate
+                            ? {
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                              }
+                            : {}
+                    }
+                >
+                    {value || ''}
+                </span>
             )}
         </div>
     );

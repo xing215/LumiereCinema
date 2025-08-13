@@ -13,7 +13,7 @@ export const handleLogout = async (userContext, navigate) => {
     } finally {
         // Clear user context
         userContext.logout();
-        
+
         // Navigate to appropriate login page based on current user role
         const userRoles = userContext.user?.roles || [];
         if (isStaff(userRoles)) {
@@ -33,10 +33,10 @@ export const handleSessionExpiredLogout = async (userContext, navigate, showErro
     } finally {
         // Clear user context
         userContext.logout();
-        
+
         // Show session expired error
         showError(401, 'Session expired. Please login again to continue.');
-        
+
         // Navigate to appropriate login page based on current user role
         const userRoles = userContext.user?.roles || [];
         if (isStaff(userRoles)) {

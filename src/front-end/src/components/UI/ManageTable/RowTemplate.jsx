@@ -2,7 +2,7 @@ import React from 'react';
 import TickButton from '@components/buttons/Staff/TickButton.jsx';
 import ActiveButton from '@components/buttons/Staff/ActiveButton.jsx';
 import EditButton from '@components/buttons/Staff/EditButton.jsx';
-import PreviewButton from "@components/buttons/Staff/PreviewButton.jsx";
+import PreviewButton from '@components/buttons/Staff/PreviewButton.jsx';
 import EditableCell from '@components/UI/EditableCell.jsx';
 
 const RowTemplate = (props) => {
@@ -24,7 +24,7 @@ const RowTemplate = (props) => {
     const shouldTruncate = (index) => {
         if (hasColumnConfig && props.columnConfig[index]) {
             // Nếu row đang expanded, không truncate
-            return props.isExpanded ? false : (props.columnConfig[index].truncate || false);
+            return props.isExpanded ? false : props.columnConfig[index].truncate || false;
         }
         return false; // default không truncate
     };
@@ -42,13 +42,15 @@ const RowTemplate = (props) => {
     // Handle click - use timeout to detect single vs double click
     const handleRowClick = (e) => {
         // Don't expand when clicking on buttons, checkboxes, or editable cells
-        if (e.target.tagName === 'BUTTON' ||
+        if (
+            e.target.tagName === 'BUTTON' ||
             e.target.type === 'checkbox' ||
             e.target.closest('button') ||
             e.target.closest('[role="button"]') ||
             e.target.closest('.tick-button') ||
             e.target.closest('.action-button') ||
-            e.target.closest('input')) {
+            e.target.closest('input')
+        ) {
             return;
         }
 
@@ -63,7 +65,7 @@ const RowTemplate = (props) => {
                 clearTimeout(expandTimeout);
                 setExpandTimeout(null);
             }
-            
+
             // Set a timeout to execute single-click action only if no double-click occurs
             const timeout = setTimeout(() => {
                 // Check again if it's still not a double-click before executing
@@ -72,7 +74,7 @@ const RowTemplate = (props) => {
                 }
                 setExpandTimeout(null);
             }, 300);
-            
+
             setExpandTimeout(timeout);
         }
     };
@@ -81,18 +83,18 @@ const RowTemplate = (props) => {
     const handleDoubleClick = (e) => {
         // Set the double-click flag immediately
         setIsDoubleClick(true);
-        
+
         // Cancel the pending single-click action
         if (expandTimeout) {
             clearTimeout(expandTimeout);
             setExpandTimeout(null);
         }
-        
+
         // Reset the double-click flag after a short delay
         setTimeout(() => {
             setIsDoubleClick(false);
         }, 100);
-        
+
         // Don't call onRowClick for double-click - this allows EditableCell to handle editing
     };
 
@@ -107,25 +109,18 @@ const RowTemplate = (props) => {
 
     // Check if this is a review row
     const isReviewRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'ReviewIndicator';
-    
+
     // Check if this is an add movie row
     const isAddRow = props.data && props.data[0] && typeof props.data[0] === 'object' && props.data[0].type === 'AddIndicator';
 
     return (
         <div className="z-10 flex flex-col">
             <div
-                className={`relative flex items-center gap-5 pl-[3%] pr-[3%] lg:py-3 xl:gap-2 xl:py-5 transition-all duration-300 
-                    ${props.checked ? 'bg-zinc-400' : ''} 
-                    ${props.isExpanded ? 'bg-zinc-300 shadow-md' : ''} 
-                    ${isReviewRow ? 'bg-orange-50 border-l-4 border-orange-500 shadow-lg' : ''} 
-                    ${isAddRow ? 'bg-green-50 border-l-4 border-green-500 shadow-lg' : ''} 
-                    ${!props.isHeader ? 'hover:bg-gray-50 cursor-pointer' : ''}
-                    ${!hasColumnConfig ? 'justify-between' : ''}
-                    ${hasColumnConfig ? 'min-w-max' : 'w-full'}`}
+                className={`relative flex items-center gap-5 pr-[3%] pl-[3%] transition-all duration-300 lg:py-3 xl:gap-2 xl:py-5 ${props.checked ? 'bg-zinc-400' : ''} ${props.isExpanded ? 'bg-zinc-300 shadow-md' : ''} ${isReviewRow ? 'border-l-4 border-orange-500 bg-orange-50 shadow-lg' : ''} ${isAddRow ? 'border-l-4 border-green-500 bg-green-50 shadow-lg' : ''} ${!props.isHeader ? 'cursor-pointer hover:bg-gray-50' : ''} ${!hasColumnConfig ? 'justify-between' : ''} ${hasColumnConfig ? 'min-w-max' : 'w-full'}`}
                 onClick={handleRowClick}
                 onDoubleClick={handleDoubleClick}
                 style={{
-                    minHeight: props.isExpanded ? 'auto' : 'inherit'
+                    minHeight: props.isExpanded ? 'auto' : 'inherit',
                 }}
             >
                 {Array.from({ length: props.data?.length }, (_, index) => {
@@ -139,21 +134,23 @@ const RowTemplate = (props) => {
                             key={index}
                             className={`${columnWidth} ${hasColumnConfig ? 'flex-shrink-0' : ''} flex ${props.isExpanded ? 'items-start' : 'items-center'} ${index === 1 ? 'justify-start' : 'justify-center'}`}
                         >
-                            <div 
-                                className={`font-libre-franklin w-full lg:text-lg xl:text-xl text-center justify-center
-                                    ${props.isHeader ? 'font-bold' : 'font-medium'} 
-                                    ${props.isExpanded && !props.isHeader ? 'whitespace-normal break-words py-2' : ''}`}
-                                style={shouldTruncateText ? {
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap'
-                                } : {}}
+                            <div
+                                className={`font-libre-franklin w-full justify-center text-center lg:text-lg xl:text-xl ${props.isHeader ? 'font-bold' : 'font-medium'} ${props.isExpanded && !props.isHeader ? 'py-2 break-words whitespace-normal' : ''}`}
+                                style={
+                                    shouldTruncateText
+                                        ? {
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap',
+                                          }
+                                        : {}
+                                }
                             >
                                 {value === 'TickButton' ? (
                                     props.isHeader ? (
                                         <span></span>
                                     ) : (
-                                        <div className="tick-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                        <div className="tick-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
                                             <TickButton check={props.checked} onTick={props.onTicked} />
                                         </div>
                                     )
@@ -161,27 +158,23 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span></span>
                                     ) : (
-                                        <div className="flex justify-center w-full">
-                                            <span className="px-2 py-1 text-xs font-bold text-white bg-blue-500 rounded-full animate-pulse">
-                                                REVIEW
-                                            </span>
+                                        <div className="flex w-full justify-center">
+                                            <span className="animate-pulse rounded-full bg-blue-500 px-2 py-1 text-xs font-bold text-white">REVIEW</span>
                                         </div>
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'AddIndicator' ? (
                                     props.isHeader ? (
                                         <span></span>
                                     ) : (
-                                        <div className="flex justify-center w-full">
-                                            <span className="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full animate-pulse">
-                                                NEW
-                                            </span>
+                                        <div className="flex w-full justify-center">
+                                            <span className="animate-pulse rounded-full bg-green-500 px-2 py-1 text-xs font-bold text-white">NEW</span>
                                         </div>
                                     )
                                 ) : value === 'ActiveButton' ? (
                                     props.isHeader ? (
                                         <span>Active</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                        <div className="action-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
                                             <ActiveButton />
                                         </div>
                                     )
@@ -189,8 +182,8 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Active</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <ActiveButton 
+                                        <div className="action-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
+                                            <ActiveButton
                                                 isHidden={value.isHidden}
                                                 onToggle={(newIsHidden) => props.onStatusChange?.(value.rowIndex, newIsHidden)}
                                                 disabled={value.disabled}
@@ -205,7 +198,7 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Edit</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                        <div className="action-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
                                             <EditButton onClick={() => props.onEdit?.(props.rowIndex)} />
                                         </div>
                                     )
@@ -213,7 +206,7 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Seat</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                                        <div className="action-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
                                             <EditButton onClick={() => props.onEditSeat?.(props.rowIndex)} />
                                         </div>
                                     )
@@ -221,44 +214,41 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Preview</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <PreviewButton 
-                                                onClick={() => props.onPreview?.(props.rowIndex)} 
-                                                disabled={isReviewRow}
-                                            />
+                                        <div className="action-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
+                                            <PreviewButton onClick={() => props.onPreview?.(props.rowIndex)} disabled={isReviewRow} />
                                         </div>
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'ReviewLabel' ? (
                                     props.isHeader ? (
                                         <span>Preview</span>
                                     ) : (
-                                        <div className="action-button flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                                            <PreviewButton/>
+                                        <div className="action-button flex w-full justify-center" onClick={(e) => e.stopPropagation()}>
+                                            <PreviewButton />
                                         </div>
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'AddLabel' ? (
                                     props.isHeader ? (
                                         <span>Actions</span>
                                     ) : (
-                                        <div className="action-button flex justify-center gap-3 w-full" onClick={(e) => e.stopPropagation()}>
-                                            <button 
+                                        <div className="action-button flex w-full justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+                                            <button
                                                 onClick={() => value.onConfirm?.()}
-                                                className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-yellow-600 rounded-lg hover:from-amber-700 hover:to-yellow-700 shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-amber-800"
+                                                className="transform rounded-lg border-2 border-amber-800 bg-gradient-to-r from-amber-600 to-yellow-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-amber-700 hover:to-yellow-700"
                                                 title="Confirm Add"
                                                 style={{
                                                     fontFamily: 'serif',
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
                                                 }}
                                             >
                                                 ✓ OK
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => value.onCancel?.()}
-                                                className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-red-700 to-red-800 rounded-lg hover:from-red-800 hover:to-red-900 shadow-lg transform hover:scale-105 transition-all duration-200 border-2 border-red-900"
+                                                className="transform rounded-lg border-2 border-red-900 bg-gradient-to-r from-red-700 to-red-800 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-red-800 hover:to-red-900"
                                                 title="Cancel Add"
                                                 style={{
                                                     fontFamily: 'serif',
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
                                                 }}
                                             >
                                                 ✗ Cancel
@@ -269,56 +259,47 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Status</span>
                                     ) : (
-                                        <div className="flex flex-col gap-1 w-full items-center">
-                                            <div className={`flex items-center justify-center w-6 h-6 rounded-full text-sm font-bold ${
-                                                value.isValid 
-                                                    ? 'bg-green-100 text-green-600' 
-                                                    : 'bg-red-100 text-red-600'
-                                            }`}>
+                                        <div className="flex w-full flex-col items-center gap-1">
+                                            <div
+                                                className={`flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold ${
+                                                    value.isValid ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                                                }`}
+                                            >
                                                 {value.isValid ? '✓' : '✗'}
                                             </div>
-                                            {value.errors && (
-                                                <span className="text-red-600 text-xs text-center max-w-full break-words">
-                                                    {value.errors}
-                                                </span>
-                                            )}
+                                            {value.errors && <span className="max-w-full text-center text-xs break-words text-red-600">{value.errors}</span>}
                                         </div>
                                     )
+                                ) : // Check if this cell should be editable
+                                props.editableFields && props.editableFields.includes(index) && !props.isHeader ? (
+                                    <EditableCell
+                                        value={value}
+                                        isEditing={props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
+                                        onStartEdit={() => props.onStartEdit?.(props.rowIndex, index, value)}
+                                        onSave={(newValue) => props.onSaveEdit?.(props.rowIndex, index, newValue)}
+                                        onCancel={props.onCancelEdit}
+                                        disabled={false}
+                                        isUpdating={props.isUpdating && props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
+                                        className={props.isExpanded ? 'leading-relaxed whitespace-normal' : ''}
+                                        tooltipText={tooltipText}
+                                        shouldTruncate={shouldTruncateText && !props.isExpanded}
+                                        fieldType={props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : 'text'}
+                                        selectOptions={props.selectOptions && props.selectOptions[index] ? props.selectOptions[index] : null}
+                                    />
                                 ) : (
-                                    // Check if this cell should be editable
-                                    props.editableFields && props.editableFields.includes(index) && !props.isHeader ? (
-                                        <EditableCell
-                                            value={value}
-                                            isEditing={props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
-                                            onStartEdit={() => props.onStartEdit?.(props.rowIndex, index, value)}
-                                            onSave={(newValue) => props.onSaveEdit?.(props.rowIndex, index, newValue)}
-                                            onCancel={props.onCancelEdit}
-                                            disabled={false}
-                                            isUpdating={props.isUpdating && props.editingCell?.rowIndex === props.rowIndex && props.editingCell?.columnIndex === index}
-                                            className={props.isExpanded ? 'whitespace-normal leading-relaxed' : ''}
-                                            tooltipText={tooltipText}
-                                            shouldTruncate={shouldTruncateText && !props.isExpanded}
-                                            fieldType={(props.fieldTypes && props.fieldTypes[index] ? props.fieldTypes[index] : 'text') }
-                                            selectOptions={props.selectOptions && props.selectOptions[index] ? props.selectOptions[index] : null}
-                                        />
-                                    ) : (
-                                        <span
-                                            title={tooltipText}
-                                            className={`
-                                                ${props.isExpanded ? 'whitespace-normal leading-relaxed' : ''} 
-                                                ${shouldTruncateText && !props.isExpanded ? 'truncate block' : ''}
-                                            `}
-                                        >
-                                           {value}
-                                        </span>
-                                    )
+                                    <span
+                                        title={tooltipText}
+                                        className={` ${props.isExpanded ? 'leading-relaxed whitespace-normal' : ''} ${shouldTruncateText && !props.isExpanded ? 'block truncate' : ''} `}
+                                    >
+                                        {value}
+                                    </span>
                                 )}
                             </div>
                         </div>
                     );
                 })}
                 {/* Separator line as absolute positioned element within the row */}
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-950" />
+                <div className="absolute right-0 bottom-0 left-0 h-[3px] bg-slate-950" />
             </div>
         </div>
     );

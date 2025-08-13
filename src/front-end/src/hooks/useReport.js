@@ -7,151 +7,151 @@ import { useUser } from '@contexts/UserContext';
  */
 
 export const useGetRevenueReport = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [reportData, setReportData] = useState(null);
-  const { token } = useUser();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [reportData, setReportData] = useState(null);
+    const { token } = useUser();
 
-  const getRevenueReport = async (filters = {}) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const data = await reportService.getRevenueSummary(filters, token);
-      setReportData(data);
-      return { success: true, data };
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to fetch revenue report';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
+    const getRevenueReport = async (filters = {}) => {
+        setLoading(true);
+        setError(null);
 
-  return { getRevenueReport, reportData, loading, error };
+        try {
+            const data = await reportService.getRevenueSummary(filters, token);
+            setReportData(data);
+            return { success: true, data };
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to fetch revenue report';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { getRevenueReport, reportData, loading, error };
 };
 
 export const useGetAvailableBranches = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [branches, setBranches] = useState([]);
-  const { token, user } = useUser();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [branches, setBranches] = useState([]);
+    const { token, user } = useUser();
 
-  const getAvailableBranches = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Simple role check: admin > branchmanager
-      const roles = user?.roles || (user?.role ? [user.role] : []);
-      let data;
-      
-      if (roles.includes('administrator')) {
-        data = await reportService.getBranches(token);
-      } else if (roles.includes('branchmanager')) {
-        data = await reportService.getBranch(token);
-      }
-      
-      setBranches(Array.isArray(data) ? data : []);
-      return { success: true, data };
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
+    const getAvailableBranches = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Simple role check: admin > branchmanager
+            const roles = user?.roles || (user?.role ? [user.role] : []);
+            let data;
 
-  return { getAvailableBranches, branches, loading, error };
+            if (roles.includes('administrator')) {
+                data = await reportService.getBranches(token);
+            } else if (roles.includes('branchmanager')) {
+                data = await reportService.getBranch(token);
+            }
+
+            setBranches(Array.isArray(data) ? data : []);
+            return { success: true, data };
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to fetch branches';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { getAvailableBranches, branches, loading, error };
 };
 
 export const useSetBranch = () => {
-  const [selectedBranch, setSelectedBranch] = useState(null);
+    const [selectedBranch, setSelectedBranch] = useState(null);
 
-  const setBranch = (branchId) => {
-    setSelectedBranch(branchId);
-    localStorage.setItem('reportBranch', branchId);
-  };
+    const setBranch = (branchId) => {
+        setSelectedBranch(branchId);
+        localStorage.setItem('reportBranch', branchId);
+    };
 
-  const getBranch = () => {
-    if (!selectedBranch) {
-      const savedBranch = localStorage.getItem('reportBranch');
-      if (savedBranch) {
-        setSelectedBranch(savedBranch);
-        return savedBranch;
-      }
-    }
-    return selectedBranch;
-  };
+    const getBranch = () => {
+        if (!selectedBranch) {
+            const savedBranch = localStorage.getItem('reportBranch');
+            if (savedBranch) {
+                setSelectedBranch(savedBranch);
+                return savedBranch;
+            }
+        }
+        return selectedBranch;
+    };
 
-  const clearBranch = () => {
-    setSelectedBranch(null);
-    localStorage.removeItem('reportBranch');
-  };
+    const clearBranch = () => {
+        setSelectedBranch(null);
+        localStorage.removeItem('reportBranch');
+    };
 
-  return { setBranch, getBranch, selectedBranch, clearBranch };
+    return { setBranch, getBranch, selectedBranch, clearBranch };
 };
 
 export const useSetDateRange = () => {
-  const [dateRange, setDateRangeState] = useState({
-    startDate: null,
-    endDate: null
-  });
+    const [dateRange, setDateRangeState] = useState({
+        startDate: null,
+        endDate: null,
+    });
 
-  const setDateRange = (startDate, endDate) => {
-    const range = { startDate, endDate };
-    setDateRangeState(range);
-    localStorage.setItem('reportDateRange', JSON.stringify(range));
-  };
+    const setDateRange = (startDate, endDate) => {
+        const range = { startDate, endDate };
+        setDateRangeState(range);
+        localStorage.setItem('reportDateRange', JSON.stringify(range));
+    };
 
-  const getDateRange = () => {
-    if (!dateRange.startDate && !dateRange.endDate) {
-      const savedRange = localStorage.getItem('reportDateRange');
-      if (savedRange) {
-        try {
-          const parsed = JSON.parse(savedRange);
-          setDateRangeState(parsed);
-          return parsed;
-        } catch (error) {
-          console.error('Error parsing saved date range:', error);
+    const getDateRange = () => {
+        if (!dateRange.startDate && !dateRange.endDate) {
+            const savedRange = localStorage.getItem('reportDateRange');
+            if (savedRange) {
+                try {
+                    const parsed = JSON.parse(savedRange);
+                    setDateRangeState(parsed);
+                    return parsed;
+                } catch (error) {
+                    console.error('Error parsing saved date range:', error);
+                }
+            }
         }
-      }
-    }
-    return dateRange;
-  };
+        return dateRange;
+    };
 
-  const clearDateRange = () => {
-    setDateRangeState({ startDate: null, endDate: null });
-    localStorage.removeItem('reportDateRange');
-  };
+    const clearDateRange = () => {
+        setDateRangeState({ startDate: null, endDate: null });
+        localStorage.removeItem('reportDateRange');
+    };
 
-  return { setDateRange, getDateRange, dateRange, clearDateRange };
+    return { setDateRange, getDateRange, dateRange, clearDateRange };
 };
 
 export const useSetMovie = () => {
-  const [selectedMovie, setSelectedMovie] = useState(null);
+    const [selectedMovie, setSelectedMovie] = useState(null);
 
-  const setMovie = (movieId) => {
-    setSelectedMovie(movieId);
-    localStorage.setItem('reportMovie', movieId);
-  };
+    const setMovie = (movieId) => {
+        setSelectedMovie(movieId);
+        localStorage.setItem('reportMovie', movieId);
+    };
 
-  const getMovie = () => {
-    if (!selectedMovie) {
-      const savedMovie = localStorage.getItem('reportMovie');
-      if (savedMovie) {
-        setSelectedMovie(savedMovie);
-        return savedMovie;
-      }
-    }
-    return selectedMovie;
-  };
+    const getMovie = () => {
+        if (!selectedMovie) {
+            const savedMovie = localStorage.getItem('reportMovie');
+            if (savedMovie) {
+                setSelectedMovie(savedMovie);
+                return savedMovie;
+            }
+        }
+        return selectedMovie;
+    };
 
-  const clearMovie = () => {
-    setSelectedMovie(null);
-    localStorage.removeItem('reportMovie');
-  };
+    const clearMovie = () => {
+        setSelectedMovie(null);
+        localStorage.removeItem('reportMovie');
+    };
 
-  return { setMovie, getMovie, selectedMovie, clearMovie };
+    return { setMovie, getMovie, selectedMovie, clearMovie };
 };

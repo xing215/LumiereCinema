@@ -19,12 +19,17 @@ const Developing = () => {
 
             {/* Main component */}
             <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 pt-15 sm:px-4 sm:pt-14 md:px-6 md:pt-16 lg:px-8 lg:pt-30">
-                <div className='w-full max-w-xs px-4 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-lg xl:max-w-xl'>
+                <div className="w-full max-w-xs px-4 sm:max-w-sm sm:px-0 md:max-w-md lg:max-w-lg xl:max-w-xl">
                     <h1 className="mb-4 text-center font-['Unbounded'] text-2xl font-bold text-white sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">Not found</h1>
-                    <p className="mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl font-[Merriweather Sans]">
-                        The page you are looking for does not exist.<br/>Please check the URL or return to the home page.   
+                    <p className="font-[Merriweather Sans] mb-6 text-center text-sm text-gray-300 sm:mb-8 sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+                        The page you are looking for does not exist.
+                        <br />
+                        Please check the URL or return to the home page.
                     </p>
-                    <button className="relative left-1/2 z-20 flex h-4 w-25 -translate-x-1/2 transform items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-[8px] font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer sm:h-7 sm:w-46 sm:rounded-lg md:text-sm lg:h-9 lg:w-64 lg:rounded-xl lg:text-lg" onClick={() => navigate(ROUTES.HOME)}>
+                    <button
+                        className="relative left-1/2 z-20 flex h-4 w-25 -translate-x-1/2 transform items-center justify-center rounded-md bg-pink-400 font-['Unbounded'] text-[8px] font-bold text-white shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:cursor-pointer sm:h-7 sm:w-46 sm:rounded-lg md:text-sm lg:h-9 lg:w-64 lg:rounded-xl lg:text-lg"
+                        onClick={() => navigate(ROUTES.HOME)}
+                    >
                         RETURN TO HOME
                     </button>
                 </div>

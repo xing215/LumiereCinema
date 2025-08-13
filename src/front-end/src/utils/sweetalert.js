@@ -9,18 +9,18 @@ const customSwalOptions = {
         content: 'swal-custom-content',
         confirmButton: 'swal-custom-confirm',
         cancelButton: 'swal-custom-cancel',
-        actions: 'swal-custom-actions'
+        actions: 'swal-custom-actions',
     },
     // Include didOpen and didClose for functionality in showLoading
     backdrop: true,
     allowOutsideClick: true,
-    allowEscapeKey: true
+    allowEscapeKey: true,
 };
 
 // Function to hide other modals
 const hideOtherModals = () => {
     const modals = document.querySelectorAll('[role="dialog"], .modal, [data-modal]');
-    modals.forEach(modal => {
+    modals.forEach((modal) => {
         if (!modal.classList.contains('swal2-container')) {
             modal.style.display = 'none';
             modal.setAttribute('data-swal-hidden', 'true');
@@ -31,7 +31,7 @@ const hideOtherModals = () => {
 // Function to show other modals back
 const showOtherModals = () => {
     const hiddenModals = document.querySelectorAll('[data-swal-hidden="true"]');
-    hiddenModals.forEach(modal => {
+    hiddenModals.forEach((modal) => {
         modal.style.display = '';
         modal.removeAttribute('data-swal-hidden');
     });
@@ -40,7 +40,7 @@ const showOtherModals = () => {
 // Inject custom CSS for SweetAlert2
 const injectCustomCSS = () => {
     if (document.getElementById('swal-custom-styles')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'swal-custom-styles';
     style.textContent = `
@@ -248,7 +248,7 @@ export const showLoading = (title = 'Processing...', text = '') => {
         showConfirmButton: false,
         didOpen: () => {
             Swal.showLoading();
-        }
+        },
     });
 };
 
@@ -262,7 +262,7 @@ export const showSuccess = (title = 'Success!', text = '', timer = 3000) => {
         timer,
         showConfirmButton: timer ? false : true,
         timerProgressBar: timer ? true : false,
-        iconColor: '#10b981'
+        iconColor: '#10b981',
     });
 };
 
@@ -274,7 +274,7 @@ export const showError = (title = 'Error!', text = '') => {
         title,
         text,
         confirmButtonText: 'OK',
-        iconColor: '#ef4444'
+        iconColor: '#ef4444',
     });
 };
 
@@ -286,7 +286,7 @@ export const showWarning = (title = 'Warning!', text = '') => {
         title,
         text,
         confirmButtonText: 'OK',
-        iconColor: '#f59e0b'
+        iconColor: '#f59e0b',
     });
 };
 
@@ -298,7 +298,7 @@ export const showInfo = (title = 'Information', text = '') => {
         title,
         text,
         confirmButtonText: 'OK',
-        iconColor: '#3b82f6'
+        iconColor: '#3b82f6',
     });
 };
 
@@ -312,7 +312,7 @@ export const showConfirmation = (title = 'Are you sure?', text = '', confirmText
         showCancelButton: true,
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,
-        iconColor: '#8b5cf6'
+        iconColor: '#8b5cf6',
     });
 };
 
@@ -320,20 +320,16 @@ export const showConfirmation = (title = 'Are you sure?', text = '', confirmText
 
 // Adding/Creating items
 export const showAddingItems = (itemType = 'items', count = 1) => {
-    const text = count === 1 
-        ? `Please wait while we add the ${itemType.slice(0, -1)} to the database` 
-        : `Please wait while we add ${count} ${itemType} to the database`;
-        
+    const text = count === 1 ? `Please wait while we add the ${itemType.slice(0, -1)} to the database` : `Please wait while we add ${count} ${itemType} to the database`;
+
     return showLoading(`Adding ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}...`, text);
 };
 
 export const showItemsAdded = (itemType = 'items', count = 1) => {
     const singularType = itemType.slice(0, -1); // Remove 's' for singular
     const title = count === 1 ? `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} Added Successfully!` : `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} Added Successfully!`;
-    const text = count === 1 
-        ? `The ${singularType} has been added to the database successfully` 
-        : `${count} ${itemType} have been added to the database successfully`;
-        
+    const text = count === 1 ? `The ${singularType} has been added to the database successfully` : `${count} ${itemType} have been added to the database successfully`;
+
     return Swal.fire({
         ...customSwalOptions,
         icon: 'success',
@@ -343,7 +339,7 @@ export const showItemsAdded = (itemType = 'items', count = 1) => {
         iconColor: '#10b981',
         timer: 4000,
         timerProgressBar: true,
-        showConfirmButton: true
+        showConfirmButton: true,
     });
 };
 
@@ -352,40 +348,27 @@ export const showItemsAdded = (itemType = 'items', count = 1) => {
 export const showDeleteItemsConfirmation = (itemType = 'items', count = 1) => {
     // Ensure itemType is a string and has a fallback
     const safeItemType = typeof itemType === 'string' && itemType.length > 0 ? itemType : 'items';
-    
+
     const singularType = safeItemType.slice(0, -1);
-    const title = count === 1 
-        ? `Delete ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}?` 
-        : `Delete ${safeItemType.charAt(0).toUpperCase() + safeItemType.slice(1)}?`;
-    
-    const text = count === 1 
-        ? 'This action cannot be undone!' 
-        : `This will delete ${count} ${safeItemType}. This action cannot be undone!`;
-        
-    return showConfirmation(
-        title,
-        text,
-        'Delete',
-        'Cancel'
-    );
+    const title = count === 1 ? `Delete ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}?` : `Delete ${safeItemType.charAt(0).toUpperCase() + safeItemType.slice(1)}?`;
+
+    const text = count === 1 ? 'This action cannot be undone!' : `This will delete ${count} ${safeItemType}. This action cannot be undone!`;
+
+    return showConfirmation(title, text, 'Delete', 'Cancel');
 };
 
 export const showDeletingItems = (itemType = 'items', count = 1) => {
     const singularType = itemType.slice(0, -1);
-    const text = count === 1 
-        ? `Please wait while we delete the ${singularType}` 
-        : `Please wait while we delete ${count} ${itemType}`;
-        
+    const text = count === 1 ? `Please wait while we delete the ${singularType}` : `Please wait while we delete ${count} ${itemType}`;
+
     return showLoading(`Deleting ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}...`, text);
 };
 
 export const showItemsDeleted = (itemType = 'items', count = 1) => {
     const singularType = itemType.slice(0, -1);
     const title = `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} Deleted!`;
-    const text = count === 1 
-        ? `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} has been deleted successfully` 
-        : `${count} ${itemType} have been deleted successfully`;
-        
+    const text = count === 1 ? `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} has been deleted successfully` : `${count} ${itemType} have been deleted successfully`;
+
     return showSuccess(title, text);
 };
 
@@ -410,7 +393,7 @@ export const showOperationError = (operation = 'operation', error = 'Unknown err
         title: `${operation.charAt(0).toUpperCase() + operation.slice(1)} Failed`,
         text: `❌ ${error}\n\nPlease check your data and try again.`,
         confirmButtonText: 'OK',
-        iconColor: '#ef4444'
+        iconColor: '#ef4444',
     });
 };
 
@@ -424,30 +407,33 @@ export const showUploadLoading = () => {
 export const showUploadResults = (successCount = 0, errorCount = 0, errors = []) => {
     // Ensure any previous loading state is cleared
     Swal.close();
-    
+
     const hasErrors = errorCount > 0;
     const hasValidMovies = successCount > 0;
-    
+
     if (hasErrors && !hasValidMovies) {
         // Only errors, no valid movies - show error dialog with OK button
         const title = 'Validation Failed';
         let text = `❌ Failed validation: ${errorCount} movies\n\n`;
-        
+
         if (errors.length > 0) {
             text += 'Common errors found:\n';
-            text += errors.slice(0, 3).map(error => `• ${error}`).join('\n');
+            text += errors
+                .slice(0, 3)
+                .map((error) => `• ${error}`)
+                .join('\n');
             if (errors.length > 3) {
                 text += `\n• ... and ${errors.length - 3} more errors`;
             }
         }
-        
+
         return Swal.fire({
             ...customSwalOptions,
             title,
             text,
             icon: 'error',
             confirmButtonText: 'OK',
-            iconColor: '#ef4444'
+            iconColor: '#ef4444',
         });
     } else if (hasErrors && hasValidMovies) {
         // Mixed results - some valid, some invalid - show warning with option to proceed
@@ -455,15 +441,18 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
         let text = `✅ Successfully validated: ${successCount} movies\n`;
         text += `❌ Failed validation: ${errorCount} movies\n\n`;
         text += 'Do you want to proceed with the valid movies only?\n\n';
-        
+
         if (errors.length > 0) {
             text += 'Common errors found:\n';
-            text += errors.slice(0, 3).map(error => `• ${error}`).join('\n');
+            text += errors
+                .slice(0, 3)
+                .map((error) => `• ${error}`)
+                .join('\n');
             if (errors.length > 3) {
                 text += `\n• ... and ${errors.length - 3} more errors`;
             }
         }
-        
+
         return Swal.fire({
             ...customSwalOptions,
             title,
@@ -472,7 +461,7 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
             showCancelButton: true,
             confirmButtonText: 'Proceed with Valid Movies',
             cancelButtonText: 'Cancel Upload',
-            iconColor: '#f59e0b'
+            iconColor: '#f59e0b',
         });
     } else {
         // All valid - show success confirmation
@@ -484,7 +473,7 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
             showCancelButton: true,
             confirmButtonText: 'OK',
             cancelButtonText: 'Cancel',
-            iconColor: '#10b981'
+            iconColor: '#10b981',
         });
     }
 };
@@ -492,12 +481,13 @@ export const showUploadResults = (successCount = 0, errorCount = 0, errors = [])
 export const showUploadConfirmation = (movieCount = 0) => {
     // Ensure any previous loading state is cleared
     Swal.close();
-    
+
     const title = 'Validation Successful!';
-    const text = movieCount === 1 
-        ? '1 movie is ready for review.\n\nClick OK to proceed to review mode where you can make final edits before adding to the database.'
-        : `${movieCount} movies are ready for review.\n\nClick OK to proceed to review mode where you can make final edits before adding to the database.`;
-    
+    const text =
+        movieCount === 1
+            ? '1 movie is ready for review.\n\nClick OK to proceed to review mode where you can make final edits before adding to the database.'
+            : `${movieCount} movies are ready for review.\n\nClick OK to proceed to review mode where you can make final edits before adding to the database.`;
+
     return Swal.fire({
         ...customSwalOptions,
         title,
@@ -508,7 +498,7 @@ export const showUploadConfirmation = (movieCount = 0) => {
         cancelButtonText: 'Cancel',
         iconColor: '#10b981',
         showLoaderOnConfirm: false,
-        showLoaderOnDeny: false
+        showLoaderOnDeny: false,
     });
 };
 
@@ -529,7 +519,7 @@ export const showUploadCancelled = () => {
         iconColor: '#3b82f6',
         timer: 3000,
         timerProgressBar: true,
-        showConfirmButton: false
+        showConfirmButton: false,
     });
 };
 
@@ -585,7 +575,7 @@ export const forceCloseSwal = () => {
         Swal.close();
         // Remove any stuck swal containers
         const swalContainers = document.querySelectorAll('.swal2-container');
-        swalContainers.forEach(container => {
+        swalContainers.forEach((container) => {
             container.remove();
         });
         showOtherModals();
@@ -631,5 +621,5 @@ export default {
     showUploadError,
     closeSwal,
     forceCloseSwal,
-    isSwalOpen
+    isSwalOpen,
 };

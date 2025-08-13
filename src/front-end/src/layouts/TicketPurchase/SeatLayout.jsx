@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true, isHidden = false }) => {
     const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
-    
+
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -14,33 +14,39 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
     };
 
     return (
-        <div 
-            className={`${seatSize} min-w-[30px] ${isHidden ? 'opacity-0' : 'opacity-100'} group aspect-square relative flex flex-col gap-[10%] ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
+        <div
+            className={`${seatSize} min-w-[30px] ${isHidden ? 'opacity-0' : 'opacity-100'} group relative flex aspect-square flex-col gap-[10%] ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
             onClick={isHidden ? undefined : handleClick}
         >
-            <div className={`h-full z-1 md:h-[70%] w-full relative cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`} />
-            <div className={`h-[20%] z-1 w-full relative hidden md:block cursor-pointer transition-colors duration-200 ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`} />
+            <div
+                className={`relative z-1 h-full w-full cursor-pointer transition-colors duration-200 md:h-[70%] ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}
+            />
+            <div
+                className={`relative z-1 hidden h-[20%] w-full cursor-pointer transition-colors duration-200 md:block ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}
+            />
         </div>
     );
 };
 
-export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden=false }) => {
-    const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow) * 2).toString() + '%]';
-    
+export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden = false }) => {
+    const seatSize = 'w-[' + Math.round((100 / (seatCol > seatRow ? seatCol : seatRow)) * 2).toString() + '%]';
+
     const handleClick = () => {
         if (onClick) {
             onClick();
         }
-    }; 
+    };
 
     return (
-        <div 
+        <div
             className={`${seatSize} min-w-[68px] ${isHidden ? 'opacity-0' : 'opacity-100'} group relative flex flex-row gap-2 ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
             onClick={isHidden ? undefined : handleClick}
         >
             <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
             <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
-            <div className={`absolute inset-0 flex z-0 r-[50%] md:h-[55%] w-5 h-[75%] top-1 mx-auto items-center transition-colors justify-center ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`} />
+            <div
+                className={`r-[50%] absolute inset-0 top-1 z-0 mx-auto flex h-[75%] w-5 items-center justify-center transition-colors md:h-[55%] ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`}
+            />
         </div>
     );
 };
@@ -63,7 +69,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
 
             const containerRect = containerRef.current.getBoundingClientRect();
             const contentRect = contentRef.current.getBoundingClientRect();
-            
+
             // Calculate mini-map dimensions (max 150px wide, maintain aspect ratio)
             const maxWidth = 150;
             const aspectRatio = contentRect.width / contentRect.height;
@@ -83,7 +89,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                 x: viewportX,
                 y: viewportY,
                 width: viewportWidth,
-                height: viewportHeight
+                height: viewportHeight,
             });
 
             // Hide minimap if viewport covers most of the content
@@ -94,11 +100,11 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
 
         updateMiniMap();
         const interval = setInterval(updateMiniMap, 16);
-        
+
         // Listen to scroll events
         const container = containerRef.current;
         container.addEventListener('scroll', updateMiniMap);
-        
+
         return () => {
             clearInterval(interval);
             container.removeEventListener('scroll', updateMiniMap);
@@ -148,7 +154,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
     const handleMiniMapTouchMove = (e) => {
         if (!isDragging || !containerRef.current || !miniMapRef.current) return;
         e.preventDefault();
-        
+
         const touch = e.touches[0];
         const miniMapRect = miniMapRef.current.getBoundingClientRect();
         const touchX = touch.clientX - miniMapRect.left;
@@ -171,14 +177,14 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
         // Convert minimap coordinates to scroll position
         const scaleX = containerRef.current.scrollWidth / miniMapDimensions.width;
         const scaleY = containerRef.current.scrollHeight / miniMapDimensions.height;
-        
+
         const newScrollLeft = clampedX * scaleX - containerRef.current.clientWidth / 2;
         const newScrollTop = clampedY * scaleY - containerRef.current.clientHeight / 2;
 
         containerRef.current.scrollTo({
             left: Math.max(0, Math.min(newScrollLeft, containerRef.current.scrollWidth - containerRef.current.clientWidth)),
             top: Math.max(0, Math.min(newScrollTop, containerRef.current.scrollHeight - containerRef.current.clientHeight)),
-            behavior: 'auto' // Changed from 'smooth' for better dragging experience
+            behavior: 'auto', // Changed from 'smooth' for better dragging experience
         });
     };
 
@@ -189,7 +195,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
             document.addEventListener('mouseup', handleMiniMapMouseUp);
             document.addEventListener('touchmove', handleMiniMapTouchMove, { passive: false });
             document.addEventListener('touchend', handleMiniMapTouchEnd);
-            
+
             return () => {
                 document.removeEventListener('mousemove', handleMiniMapMouseMove);
                 document.removeEventListener('mouseup', handleMiniMapMouseUp);
@@ -202,25 +208,25 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
     if (!needsScrolling || hideMiniMap) return null;
 
     return (
-        <div className="absolute top-[10%] right-0 bg-black/80 p-2 rounded-lg z-40 border border-gray-600 backdrop-blur-lg">
-            <div 
+        <div className="absolute top-[10%] right-0 z-40 rounded-lg border border-gray-600 bg-black/80 p-2 backdrop-blur-lg">
+            <div
                 ref={miniMapRef}
-                className={`relative bg-gray-800 rounded overflow-hidden select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-                style={{ 
-                    width: miniMapDimensions.width, 
-                    height: miniMapDimensions.height 
+                className={`relative overflow-hidden rounded bg-gray-800 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                style={{
+                    width: miniMapDimensions.width,
+                    height: miniMapDimensions.height,
                 }}
                 onMouseDown={handleMiniMapMouseDown}
                 onTouchStart={handleMiniMapTouchStart}
             >
                 {/* Mini seat layout */}
-                <div className="absolute inset-0 flex flex-col justify-center items-center">                    
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
                     {/* Mini seats */}
                     <div className="flex flex-row gap-0.5 text-[6px]">
                         {/* Row letters */}
                         <div className="flex flex-col gap-0.5">
                             {rowKeys.map((rowKey) => (
-                                <div key={rowKey} className="w-2 h-1.5 flex items-center justify-center text-white text-[4px]">
+                                <div key={rowKey} className="flex h-1.5 w-2 items-center justify-center text-[4px] text-white">
                                     {rowKey}
                                 </div>
                             ))}
@@ -228,7 +234,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                         {/* Seats grid */}
                         <div className="flex flex-col gap-0.5">
                             {rowKeys.map((rowKey) => (
-                                <div key={rowKey} className="flex flex-row gap-0.5 h-1.5">
+                                <div key={rowKey} className="flex h-1.5 flex-row gap-0.5">
                                     {(() => {
                                         const seats = seatMap[rowKey];
                                         const seatElements = [];
@@ -236,28 +242,24 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                                         while (i < seats.length) {
                                             const current = seats[i];
                                             const next = seats[i + 1];
-                                            const isTaken = (current.status === 'occupied' || current.status === 'holding');
+                                            const isTaken = current.status === 'occupied' || current.status === 'holding';
                                             const isHidden = current.isHidden;
                                             const nextIsHidden = next && next.isHidden;
                                             const nextIsTaken = next && (next.status === 'occupied' || next.status === 'holding');
-                                            if (
-                                                current.category.toLowerCase() === 'couple' &&
-                                                next &&
-                                                next.category.toLowerCase() === 'couple'
-                                            ) {
+                                            if (current.category.toLowerCase() === 'couple' && next && next.category.toLowerCase() === 'couple') {
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber + '-' + next.seatNumber}
-                                                        className={`w-[14px] h-1.5 rounded-[1px] ${isHidden && nextIsHidden ? 'opacity-0' : 'opacity-100'} ${isTaken || nextIsTaken ? 'bg-gray-400' : 'bg-yellow-400'}`}
-                                                    />
+                                                        className={`h-1.5 w-[14px] rounded-[1px] ${isHidden && nextIsHidden ? 'opacity-0' : 'opacity-100'} ${isTaken || nextIsTaken ? 'bg-gray-400' : 'bg-yellow-400'}`}
+                                                    />,
                                                 );
                                                 i += 2;
                                             } else {
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber}
-                                                        className={`w-1.5 h-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${isTaken ? 'bg-gray-400' : (current.category.toLowerCase() === 'couple' ? 'bg-yellow-400' : 'bg-blue-400')}`}
-                                                    />
+                                                        className={`h-1.5 w-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${isTaken ? 'bg-gray-400' : current.category.toLowerCase() === 'couple' ? 'bg-yellow-400' : 'bg-blue-400'}`}
+                                                    />,
                                                 );
                                                 i += 1;
                                             }
@@ -271,7 +273,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                 </div>
                 {/* Viewport indicator */}
                 <div
-                    className="absolute border-2 border-pink-400 bg-pink-400/20 pointer-events-none"
+                    className="pointer-events-none absolute border-2 border-pink-400 bg-pink-400/20"
                     style={{
                         left: viewportRect.x,
                         top: viewportRect.y,
@@ -286,13 +288,15 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
 
 // ================================ MAIN SEAT LAYOUT COMPONENT ================================
 
-const SeatLayout = ({ 
-    schedule, 
-    selectedSeats, 
-    seatMap = {}, 
-    onClick = () => { console.log('Seat clicked'); }, 
-    loading, 
-    clearSessionLoading 
+const SeatLayout = ({
+    schedule,
+    selectedSeats,
+    seatMap = {},
+    onClick = () => {
+        console.log('Seat clicked');
+    },
+    loading,
+    clearSessionLoading,
 }) => {
     console.log('SeatLayout rendered with schedule:', seatMap);
     const containerRef = useRef();
@@ -313,38 +317,38 @@ const SeatLayout = ({
         const checkSize = () => {
             if (containerRef.current && contentRef.current) {
                 const containerRect = containerRef.current.getBoundingClientRect();
-                
+
                 // Get original content dimensions (before any transform)
                 let effectiveContentWidth;
                 let effectiveContentHeight;
-                
+
                 if (originalSize.width === 0 || originalSize.height === 0) {
                     // First time - store original dimensions
                     const contentRect = contentRef.current.getBoundingClientRect();
                     const contentStyle = window.getComputedStyle(contentRef.current);
-                    
+
                     const paddingLeft = parseFloat(contentStyle.paddingLeft) || 0;
                     const paddingRight = parseFloat(contentStyle.paddingRight) || 0;
                     const paddingTop = parseFloat(contentStyle.paddingTop) || 0;
                     const paddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
-                    
+
                     effectiveContentWidth = contentRect.width - (paddingLeft + paddingRight);
                     effectiveContentHeight = contentRect.height - (paddingTop + paddingBottom);
-                    
+
                     // Store original dimensions
                     setOriginalSize({
                         width: effectiveContentWidth,
-                        height: effectiveContentHeight
+                        height: effectiveContentHeight,
                     });
                 } else {
                     // Use stored original dimensions
                     effectiveContentWidth = originalSize.width;
                     effectiveContentHeight = originalSize.height;
                 }
-                
+
                 const exceedsWidth = effectiveContentWidth > containerRect.width;
                 const exceedsHeight = effectiveContentHeight > containerRect.height;
-                
+
                 setNeedsScrolling(exceedsWidth || exceedsHeight);
 
                 // Calculate scale for non-scrolling mode
@@ -377,63 +381,50 @@ const SeatLayout = ({
     }, [JSON.stringify(seatMap)]);
 
     return (
-        <div className="relative flex flex-col items-center w-full h-full">
+        <div className="relative flex h-full w-full flex-col items-center">
             {/* Screen Image */}
-            <img 
-                src={screen}
-                alt="Seat Layout"
-                className="w-[80%] h-auto object-contain py-3 relative z-20"
-            />
-            
+            <img src={screen} alt="Seat Layout" className="relative z-20 h-auto w-[80%] object-contain py-3" />
+
             {/* Seat Layout Container */}
-            <div 
-                ref={containerRef}
-                className={`w-full h-full rounded-xl relative ${needsScrolling ? 'overflow-auto ring-1 ring-white' : 'overflow-hidden flex justify-center items-center'}`}
-            >
+            <div ref={containerRef} className={`relative h-full w-full rounded-xl ${needsScrolling ? 'overflow-auto ring-1 ring-white' : 'flex items-center justify-center overflow-hidden'}`}>
                 {loading && !clearSessionLoading ? (
-                    <div className="md:text-md h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white mx-2">
-                        • • •
-                    </div>
+                    <div className="md:text-md mx-2 h-auto items-center justify-center font-['Unbounded'] text-base font-black text-white">• • •</div>
                 ) : (
-                    <div 
+                    <div
                         ref={contentRef}
-                        className={`flex flex-row rounded-sm gap-2 z-10 min-w-max ${needsScrolling ? 'p-8' : ''}`}
+                        className={`z-10 flex min-w-max flex-row gap-2 rounded-sm ${needsScrolling ? 'p-8' : ''}`}
                         style={{
                             transform: needsScrolling ? 'none' : `scale(${scale})`,
-                            transformOrigin: 'center center'
+                            transformOrigin: 'center center',
                         }}
                     >
                         {/* Row Labels Column */}
-                        <div className="flex flex-col gap-2 min-w-[40px] h-full">
+                        <div className="flex h-full min-w-[40px] flex-col gap-2">
                             {rowKeys.map((rowKey) => (
                                 <span
                                     key={rowKey}
-                                    className={`font-['Unbounded'] h-[${(seatMap[rowKey].length > rowKeys.length ? 100/seatMap[rowKey].length : 100/rowKeys.length)}%] min-h-[30px] text-xl font-bold w-full flex items-center justify-center text-white`}
+                                    className={`font-['Unbounded'] h-[${seatMap[rowKey].length > rowKeys.length ? 100 / seatMap[rowKey].length : 100 / rowKeys.length}%] flex min-h-[30px] w-full items-center justify-center text-xl font-bold text-white`}
                                 >
                                     {rowKey}
                                 </span>
                             ))}
                         </div>
-                        
+
                         {/* Seats Grid */}
-                        <div className="flex flex-col gap-2 h-full">
+                        <div className="flex h-full flex-col gap-2">
                             {rowKeys.map((rowKey, rowIndex) => (
                                 <div key={rowKey} className="flex flex-row items-center gap-2">
                                     {(() => {
                                         const seats = seatMap[rowKey];
                                         const seatElements = [];
                                         let i = 0;
-                                        
+
                                         while (i < seats.length) {
                                             const current = seats[i];
                                             const next = seats[i + 1];
 
                                             // Check for couple seat: both VIP
-                                            if (
-                                                current.category.toLowerCase() === 'couple' &&
-                                                next &&
-                                                next.category.toLowerCase() === 'couple'
-                                            ) {
+                                            if (current.category.toLowerCase() === 'couple' && next && next.category.toLowerCase() === 'couple') {
                                                 seatElements.push(
                                                     <CoupleSeat
                                                         key={current.seatNumber + '-' + next.seatNumber}
@@ -444,7 +435,7 @@ const SeatLayout = ({
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
                                                         isHidden={current.isHidden || next.isHidden}
-                                                    />
+                                                    />,
                                                 );
                                                 i += 2;
                                             } else {
@@ -458,7 +449,7 @@ const SeatLayout = ({
                                                         onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
-                                                    />
+                                                    />,
                                                 );
                                                 i += 1;
                                             }
@@ -473,15 +464,9 @@ const SeatLayout = ({
             </div>
 
             {/* Mini-map */}
-            <MiniMap
-                seatMap={seatMap}
-                containerRef={containerRef}
-                contentRef={contentRef}
-                needsScrolling={needsScrolling}
-                schedule={schedule}
-            />
+            <MiniMap seatMap={seatMap} containerRef={containerRef} contentRef={contentRef} needsScrolling={needsScrolling} schedule={schedule} />
         </div>
     );
-}
+};
 
 export default SeatLayout;
