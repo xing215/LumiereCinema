@@ -29,12 +29,12 @@ export const useFetchNowShowing = () => {
     const [error, setError] = useState(null);
     const [movies, setMovies] = useState([]);
 
-    const fetchNowShowing = async () => {
+    const fetchNowShowing = async (branchId = null) => {
         setLoading(true);
         setError(null);
 
         try {
-            const data = await movieService.getNowShowingMovies();
+            const data = await movieService.getNowShowingMovies(branchId);
             setMovies(data);
             return { success: true, data };
         } catch (err) {
@@ -54,12 +54,12 @@ export const useFetchComingSoon = () => {
     const [error, setError] = useState(null);
     const [movies, setMovies] = useState([]);
 
-    const fetchComingSoon = async () => {
+    const fetchComingSoon = async (branchId = null) => {
         setLoading(true);
         setError(null);
 
         try {
-            const data = await movieService.getUpcomingMovies();
+            const data = await movieService.getUpcomingMovies(branchId);
             setMovies(data);
             return { success: true, data };
         } catch (err) {
