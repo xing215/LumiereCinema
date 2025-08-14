@@ -2,11 +2,39 @@ import { useState, useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
 import { Camera, User } from 'lucide-react';
 import StaffLayout from '@layouts/StaffLayout.jsx';
-import { useGetTicketDetailsByCode } from '@hooks/useTicket';
+import { useGetTicketDetailsByCode, useUpdateTicketStatus } from '@hooks/useTicket';
 import QrScannerView from '@components/display/QRScanView';
+import CustomDropdown from '@components/UI/CustomDropdown';
+import { showSuccess, showError } from '@utils/sweetalert.js';
 
-const TicketDetails = ({ ticket, loading, error, isScannerVisible }) => {
-    if (loading) {
+const TicketDetails = ({ ticket, loading, error, isScannerVisible, onStatusChange }) => {
+    const statusOptions = [
+        { value: 'Confirmed', label: 'CONFIRMED' },
+        { value: 'CheckedIn', label: 'CHECKED IN' },
+        { value: 'Cancelled', label: 'CANCELLED' }
+    ];
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'Confirmed':
+                return 'blue-400';
+            case 'CheckedIn':
+                return 'green-400';
+            case 'Cancelled':
+                return 'red-400';
+            default:
+                return 'white';
+        }
+    };
+
+    const handleDropdownChange = (e) => {
+        if (onStatusChange) {
+            onStatusChange(e.target.value);
+        }
+    };
+
+    // Show loading only when no ticket is available (initial search)
+    if (loading && !ticket) {
         return (
             <div className="flex flex-col items-center">
                 <div className="mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
@@ -24,9 +52,33 @@ const TicketDetails = ({ ticket, loading, error, isScannerVisible }) => {
         return (
             <div className="flex h-auto max-h-[350px] w-full flex-col items-center md:h-auto md:max-h-[500px] md:overflow-y-auto">
                 <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">TICKET DETAILS</p>
-                <p className={`font-unbounded py-1 text-base font-bold md:text-xl lg:text-2xl ${ticket.status === 'Confirmed' ? 'text-green-400' : 'text-red-400'}`}>
-                    VALIDITY: {ticket.status.toUpperCase()}
-                </p>
+                <div className="py-1 w-[200px] relative">
+                    {loading && ticket && (
+                        <div className="absolute inset-0 bg-black/20 rounded flex items-center justify-center z-10">
+                            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                        </div>
+                    )}
+                    <CustomDropdown
+                        value={ticket.status}
+                        onChange={handleDropdownChange}
+                        name="ticketStatus"
+                        placeholder="Select Status"
+                        bgColor="white"
+                        inputBgColor="transparent"
+                        hoverColor="purple-600"
+                        borderColor=""
+                        textColor={getStatusColor(ticket.status)}
+                        dropdownTextColor="black"
+                        height="h-8"
+                        inputTextSize="text-xl"
+                        optionTextSize="text-md"
+                        openDirection="down"
+                        textAlign="center"
+                        forceFillLabel={true}
+                        options={statusOptions}
+                        disabled={loading && ticket}
+                    />
+                </div>
                 <p className="font-unbounded w-[90%] py-1 text-base font-bold text-white md:w-auto md:text-lg lg:text-xl">
                     <span className="block md:inline">LAST SCAN:</span>
                     <span className="block md:inline">{ticket.lastScanAt ? dayjs(ticket.lastScanAt).format('DD/MM/YYYY - HH:mm') : 'NONE'}</span>
@@ -57,9 +109,33 @@ const TicketDetails = ({ ticket, loading, error, isScannerVisible }) => {
         return (
             <div className="flex h-auto max-h-[350px] w-full flex-col items-center md:h-auto md:max-h-[500px] md:overflow-y-auto">
                 <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">SNACK TICKET DETAILS</p>
-                <p className={`font-unbounded py-1 text-base font-bold md:text-xl lg:py-4 lg:text-2xl ${ticket.status === 'Confirmed' ? 'text-green-400' : 'text-yellow-400'}`}>
-                    VALIDITY: {ticket.status.toUpperCase()}
-                </p>
+                <div className="py-1 w-[200px] relative">
+                    {loading && ticket && (
+                        <div className="absolute inset-0 bg-black/20 rounded flex items-center justify-center z-10">
+                            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                        </div>
+                    )}
+                    <CustomDropdown
+                        value={ticket.status}
+                        onChange={handleDropdownChange}
+                        name="ticketStatus"
+                        placeholder="Select Status"
+                        bgColor="white"
+                        inputBgColor="transparent"
+                        hoverColor="purple-600"
+                        borderColor=""
+                        textColor={getStatusColor(ticket.status)}
+                        dropdownTextColor="black"
+                        height="h-8"
+                        inputTextSize="text-xl"
+                        optionTextSize="text-md"
+                        openDirection="down"
+                        textAlign="center"
+                        forceFillLabel={true}
+                        options={statusOptions}
+                        disabled={loading && ticket}
+                    />
+                </div>
                 <p className="font-unbounded w-[90%] py-1 text-base font-bold text-white md:w-auto md:text-lg lg:text-xl">
                     <span className="block md:inline">LAST SCAN:</span>
                     <span className="block md:inline">{ticket.lastScanAt ? dayjs(ticket.lastScanAt).format('DD/MM/YYYY - HH:mm') : 'NONE'}</span>
@@ -84,7 +160,15 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
     const [now, setNow] = useState(new Date());
     const [ticketCode, setTicketCode] = useState('');
     const { getTicket, ticket, loading, error } = useGetTicketDetailsByCode();
+    const { updateTicketStatus, loading: updateLoading, error: updateError } = useUpdateTicketStatus();
     const [isScannerVisible, setIsScannerVisible] = useState(initialScannerVisible);
+    const [localTicket, setLocalTicket] = useState(null);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Update local ticket when the fetched ticket changes
+    useEffect(() => {
+        setLocalTicket(ticket);
+    }, [ticket]);
 
     // Debounce và cache cho search
     const searchTimeoutRef = useRef(null);
@@ -113,6 +197,47 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
         searchTimeoutRef.current = setTimeout(() => {
             getTicket(cleanCode);
         }, 300);
+    };
+
+    const handleStatusChange = async (newStatus) => {
+        if (!localTicket) return { success: false, error: 'No ticket selected' };
+
+        const ticketCodeToUpdate = localTicket.ticketCode || localTicket.snackTicketCode;
+        if (!ticketCodeToUpdate) return { success: false, error: 'No ticket code found' };
+
+        try {
+            // Set updating status to show loading state while keeping ticket visible
+            setIsUpdatingStatus(true);
+            
+            const result = await updateTicketStatus(ticketCodeToUpdate, newStatus);
+            
+            if (result.success) {
+                // Small delay to ensure backend has processed the update
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Force refresh by calling getTicket with forceRefresh=true to bypass cache
+                const refreshResult = await getTicket(ticketCodeToUpdate, true);
+                
+                if (refreshResult.success) {
+                    showSuccess('Status Updated', `Ticket status has been updated to ${newStatus}`);
+                    return { success: true };
+                } else {
+                    // Backend update succeeded but re-fetch failed
+                    showError('Update Warning', 'Status updated but failed to refresh ticket data. Please search again.');
+                    return { success: true }; // Status was updated successfully
+                }
+            } else {
+                showError('Update Failed', result.error || 'Failed to update ticket status');
+                return { success: false, error: result.error };
+            }
+        } catch (err) {
+            const errorMessage = 'Failed to update ticket status';
+            showError('Update Failed', errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            // Always clear the updating status
+            setIsUpdatingStatus(false);
+        }
     };
 
     const handleKeyPress = (event) => {
@@ -165,7 +290,13 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
                     >
                         <div className="flex h-full w-full flex-col items-center justify-center">
                             {/* THAY ĐỔI 2: Truyền isScannerVisible xuống cho TicketDetails */}
-                            <TicketDetails ticket={ticket} loading={loading} error={error} isScannerVisible={isScannerVisible} />
+                            <TicketDetails 
+                                ticket={localTicket} 
+                                loading={(loading && !localTicket) || isUpdatingStatus} 
+                                error={error || updateError} 
+                                isScannerVisible={isScannerVisible}
+                                onStatusChange={handleStatusChange}
+                            />
                             <div className="relative mt-auto flex w-full flex-shrink-0 items-center gap-2 pt-3 md:gap-4 md:pt-8 lg:w-[80%]">
                                 <p className="font-unbounded text-start text-sm font-semibold text-white md:text-base">Ticket:</p>
                                 <input
