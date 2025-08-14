@@ -4,7 +4,34 @@ import { useEffect, useRef, useState } from 'react';
 
 // ================================ SEAT COMPONENTS ================================
 
-export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true, isHidden = false }) => {
+// Fallback prices based on seat category
+const FALLBACK_PRICES = {
+    'normal': { regular: 80000, discounted: 60000 },
+    'vip': { regular: 180000, discounted: 135000 },
+    'couple': { regular: 80000, discounted: 60000 }
+};
+
+const getSeatPrice = (seat, isDiscounted = false, getBoth = false) => {
+    // Return the seat's price if it exists, otherwise use fallback based on category
+    const category = seat.category?.toLowerCase() || 'normal';
+    const priceStructure = FALLBACK_PRICES[category] || FALLBACK_PRICES['normal'];
+    
+    if (seat.price && seat.price > 0) {
+        // If seat has custom price, apply discount percentage if needed
+        return isDiscounted ? seat.price.discounted : seat.price.regular;
+    }
+
+    if (getBoth) {
+        return {
+            regular: priceStructure.regular,
+            discounted: priceStructure.discounted
+        };
+    }
+
+    return isDiscounted ? priceStructure.discounted : priceStructure.regular;
+};
+
+export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol, seatRow, canCursor = true, isHidden = false, price, seatNumber }) => {
     const seatSize = 'w-[' + Math.round(100 / (seatCol > seatRow ? seatCol : seatRow)).toString() + '%]';
 
     const handleClick = () => {
@@ -17,6 +44,7 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
         <div
             className={`${seatSize} min-w-[30px] ${isHidden ? 'opacity-0' : 'opacity-100'} group relative flex aspect-square flex-col gap-[10%] ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
             onClick={isHidden ? undefined : handleClick}
+            title={`Seat ${seatNumber}`}
         >
             <div
                 className={`relative z-1 h-full w-full cursor-pointer transition-colors duration-200 md:h-[70%] ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}
@@ -24,11 +52,18 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
             <div
                 className={`relative z-1 hidden h-[20%] w-full cursor-pointer transition-colors duration-200 md:block ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor} rounded-sm`}
             />
+            {/* Price tooltip */}
+            {price && !isHidden && (
+                <div className="absolute w-[300%] -top-6 left-1/2 z-50 hidden -translate-x-1/2 transform rounded bg-black px-2 py-1 text-xs text-center text-white shadow-lg group-hover:block">
+                    {price.discounted/1000}k - {price.regular/1000}k
+                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 transform border-l-2 border-r-2 border-t-4 border-l-transparent border-r-transparent border-t-black"></div>
+                </div>
+            )}
         </div>
     );
 };
 
-export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden = false }) => {
+export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, isTaken, canCursor = true, isHidden = false, price, seatNumber }) => {
     const seatSize = 'w-[' + Math.round((100 / (seatCol > seatRow ? seatCol : seatRow)) * 2).toString() + '%]';
 
     const handleClick = () => {
@@ -41,15 +76,24 @@ export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, i
         <div
             className={`${seatSize} min-w-[68px] ${isHidden ? 'opacity-0' : 'opacity-100'} group relative flex flex-row gap-2 ${isTaken || !canCursor || isHidden ? 'pointer-events-none' : 'cursor-pointer'}`}
             onClick={isHidden ? undefined : handleClick}
+            title={`Couple Seat ${seatNumber}`}
         >
-            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
-            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} />
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} seatNumber={seatNumber}/>
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} seatNumber={seatNumber}/>
             <div
                 className={`r-[50%] absolute inset-0 top-1 z-0 mx-auto flex h-[75%] w-5 items-center justify-center transition-colors md:h-[55%] ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`}
             />
+            {/* Price tooltip */}
+            {price && !isHidden && (
+                <div className="absolute w-[150%] -top-6 text-center left-1/2 z-50 hidden -translate-x-1/2 transform rounded bg-black px-2 py-1 text-xs text-white shadow-lg group-hover:block">
+                    {price.discounted*2/1000}k - {price.regular*2/1000}k
+                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 transform border-l-2 border-r-2 border-t-4 border-l-transparent border-r-transparent border-t-black"></div>
+                </div>
+            )}
         </div>
     );
 };
+
 
 // ================================ MINI MAP COMPONENT ================================
 
@@ -59,6 +103,8 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
     const [viewportRect, setViewportRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
     const [hideMiniMap, setHideMiniMap] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [isInTopRightCorner, setIsInTopRightCorner] = useState(false);
+    const [hideTimeout, setHideTimeout] = useState(null);
     const rowKeys = Object.keys(seatMap).sort();
 
     useEffect(() => {
@@ -96,6 +142,13 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
             const coverageX = viewportWidth / miniWidth;
             const coverageY = viewportHeight / miniHeight;
             setHideMiniMap(coverageX > 0.9 && coverageY > 0.9);
+
+            // Check if viewport is in top-right corner (within 10% margin)
+            const marginX = miniWidth * 0.1;
+            const marginY = miniHeight * 0.1;
+            const isTopRight = viewportX + viewportWidth >= miniWidth - marginX && viewportY <= marginY;
+            
+            setIsInTopRightCorner(isTopRight);
         };
 
         updateMiniMap();
@@ -110,6 +163,42 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
             container.removeEventListener('scroll', updateMiniMap);
         };
     }, [needsScrolling, containerRef, contentRef]);
+
+    // Handle auto-hide logic with timeout
+    useEffect(() => {
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+            setHideTimeout(null);
+        }
+
+        if (isInTopRightCorner && !isDragging) {
+            // Set a timeout to hide the minimap after 2 seconds
+            const timeout = setTimeout(() => {
+                setHideMiniMap(true);
+            }, 2000);
+            setHideTimeout(timeout);
+        } else if (!isInTopRightCorner) {
+            // Show minimap immediately when not in corner
+            setHideMiniMap(false);
+        }
+
+        return () => {
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+            }
+        };
+    }, [isInTopRightCorner, isDragging]);
+
+    // Clear timeout and show minimap when dragging starts
+    useEffect(() => {
+        if (isDragging) {
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                setHideTimeout(null);
+            }
+            setHideMiniMap(false);
+        }
+    }, [isDragging]);
 
     const handleMiniMapClick = (e) => {
         if (!containerRef.current || !miniMapRef.current) return;
@@ -208,7 +297,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
     if (!needsScrolling || hideMiniMap) return null;
 
     return (
-        <div className="absolute top-[10%] right-0 z-40 rounded-lg border border-gray-600 bg-black/80 p-2 backdrop-blur-lg">
+        <div className={`absolute top-[10%] right-0 z-40 rounded-lg border border-gray-600 bg-black/80 p-2 backdrop-blur-lg transition-opacity duration-300 ${isInTopRightCorner && !isDragging ? 'hidden' : 'opacity-100'}`}>
             <div
                 ref={miniMapRef}
                 className={`relative overflow-hidden rounded bg-gray-800 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -250,7 +339,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber + '-' + next.seatNumber}
-                                                        className={`h-1.5 w-[14px] rounded-[1px] ${isHidden && nextIsHidden ? 'opacity-0' : 'opacity-100'} ${isTaken || nextIsTaken ? 'bg-gray-400' : 'bg-yellow-400'}`}
+                                                        className={`h-1.5 w-[14px] rounded-[1px] ${isHidden && nextIsHidden ? 'opacity-0' : 'opacity-100'} ${isTaken || nextIsTaken ? 'bg-gray-400' : 'bg-indigo-400'}`}
                                                     />,
                                                 );
                                                 i += 2;
@@ -258,7 +347,9 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber}
-                                                        className={`h-1.5 w-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${isTaken ? 'bg-gray-400' : current.category.toLowerCase() === 'couple' ? 'bg-yellow-400' : 'bg-blue-400'}`}
+                                                        className={`h-1.5 w-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${isTaken ? 'bg-gray-400' : 
+                                                            current.category.toLowerCase() === 'couple' ? 'bg-indigo-400' : 
+                                                            current.category.toLowerCase() === 'vip' ? 'bg-red-400' : 'bg-blue-400'}`}
                                                     />,
                                                 );
                                                 i += 1;
@@ -285,6 +376,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
         </div>
     );
 };
+
 
 // ================================ MAIN SEAT LAYOUT COMPONENT ================================
 
@@ -423,32 +515,48 @@ const SeatLayout = ({
                                             const current = seats[i];
                                             const next = seats[i + 1];
 
-                                            // Check for couple seat: both VIP
+                                            // Check for couple seat: both couple category
                                             if (current.category.toLowerCase() === 'couple' && next && next.category.toLowerCase() === 'couple') {
+                                                const couplePrice = getSeatPrice(current, false, true) || getSeatPrice(next, false, true);
                                                 seatElements.push(
                                                     <CoupleSeat
                                                         key={current.seatNumber + '-' + next.seatNumber}
-                                                        seatColor="bg-yellow-400 group-hover:bg-yellow-500"
+                                                        seatColor="bg-indigo-400 group-hover:bg-indigo-500"
                                                         isTaken={current.status === 'occupied' || current.status === 'holding'}
                                                         isSelected={selectedSeats.includes(current.seatNumber) || selectedSeats.includes(next.seatNumber)}
                                                         onClick={() => onClick?.([current.seatNumber, next.seatNumber])}
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
                                                         isHidden={current.isHidden || next.isHidden}
+                                                        price={couplePrice}
+                                                        seatNumber={`${current.seatNumber}-${next.seatNumber}`}
                                                     />,
                                                 );
                                                 i += 2;
                                             } else {
+                                                const getSeatColor = (category) => {
+                                                    switch (category.toLowerCase()) {
+                                                        case 'couple':
+                                                            return 'bg-indigo-400 group-hover:bg-yellow-500';
+                                                        case 'vip':
+                                                            return 'bg-red-400 group-hover:bg-red-500';
+                                                        default:
+                                                            return 'bg-blue-400 group-hover:bg-blue-500';
+                                                    }
+                                                };
+
                                                 seatElements.push(
                                                     <Seats
                                                         key={current.seatNumber}
-                                                        seatColor={current.category.toLowerCase() === 'couple' ? 'bg-yellow-400 group-hover:bg-yellow-500' : 'bg-blue-400 group-hover:bg-blue-500'}
+                                                        seatColor={getSeatColor(current.category)}
                                                         isTaken={current.status === 'occupied' || current.status === 'holding'}
                                                         isHidden={current.isHidden}
                                                         isSelected={selectedSeats.includes(current.seatNumber)}
                                                         onClick={() => onClick?.(current.seatNumber)}
                                                         seatCol={seats.length}
                                                         seatRow={rowKeys.length}
+                                                        price={getSeatPrice(current, false, true)}
+                                                        seatNumber={current.seatNumber}
                                                     />,
                                                 );
                                                 i += 1;
@@ -470,3 +578,4 @@ const SeatLayout = ({
 };
 
 export default SeatLayout;
+export { getSeatPrice, FALLBACK_PRICES };
