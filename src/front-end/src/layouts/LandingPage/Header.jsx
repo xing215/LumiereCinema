@@ -97,12 +97,14 @@ const Header = () => {
 
     const MobileMenuButton = () => (
         <div className="z-50 flex h-[36px] w-auto items-center">
+
             <button
                 className="h-10 w-10 p-1 transition-transform duration-200 hover:scale-110 hover:cursor-pointer sm:h-13 sm:w-13 md:h-13 md:w-13"
                 aria-label="Toggle menu"
                 onClick={toggleMobileMenu}
             >
                 {isMobileMenuOpen ? <X className="h-full w-full text-white" strokeWidth={2.5} /> : <Menu className="h-full w-full text-white" strokeWidth={2.5} />}
+
             </button>
         </div>
     );
@@ -116,6 +118,7 @@ const Header = () => {
             <div className="flex flex-col space-y-1 px-3 py-2">
                 <button
                     className="rounded-md px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-slate-800/50"
+
                     onClick={() => {
                         navigate(ROUTES.MOVIES);
                         closeMobileMenu();
@@ -125,6 +128,7 @@ const Header = () => {
                 </button>
                 <button
                     className="rounded-md px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-slate-800/50"
+
                     onClick={() => {
                         navigate(ROUTES.BUY_SNACK);
                         closeMobileMenu();
@@ -132,8 +136,10 @@ const Header = () => {
                 >
                     Buy Snacks
                 </button>
+
                 <button
                     className="rounded-md px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-slate-800/50"
+
                     onClick={() => {
                         handleAccountClick();
                         closeMobileMenu();
@@ -146,6 +152,7 @@ const Header = () => {
                         <div className="mx-2 my-1 h-px bg-slate-700/50" />
                         <button
                             className="flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-red-400 transition-colors hover:bg-red-900/20"
+
                             onClick={() => {
                                 handleLogout();
                                 closeMobileMenu();
@@ -173,6 +180,7 @@ const Header = () => {
 
             {/* Desktop Navigation - justify-center (LG and above) */}
             <div className="relative mx-auto hidden max-w-screen flex-nowrap content-center items-center justify-center overflow-x-hidden pt-2 md:gap-3 md:pt-3 lg:flex lg:gap-5 lg:pt-5.5 xl:gap-10 xl:pt-9">
+
                 <Logo onClick={() => navigate(ROUTES.HOME)} />
                 <NavButton name="Buy Tickets" onClick={() => navigate(ROUTES.MOVIES)} />
                 <NavButton name="Buy Snacks" onClick={() => navigate(ROUTES.BUY_SNACK)} />
