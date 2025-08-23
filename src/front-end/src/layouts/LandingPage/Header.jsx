@@ -5,14 +5,14 @@ import { useUser } from '@contexts/UserContext.jsx';
 import { ROUTES } from '@routes/routeConfig.js';
 import { useLogout } from '@hooks/useAuth';
 import NavButton from '@components/buttons/header/navButton.jsx';
-import SearchButton from '@components/buttons/searchButton.jsx';
 import Logo from '@components/buttons/logoButton.jsx';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 
 const Header = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useUser();
     const { logoutUser, loading } = useLogout();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
     const handleLogout = async () => {
         const result = await Swal.fire({
@@ -53,6 +53,39 @@ const Header = () => {
         }
     };
 
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
+    const closeMobileMenu = () => {
+        setIsMobileMenuOpen(false);
+    };
+
+    // Close mobile menu when clicking outside or on escape
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isMobileMenuOpen && !event.target.closest('header')) {
+                closeMobileMenu();
+            }
+        };
+
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                closeMobileMenu();
+            }
+        };
+
+        if (isMobileMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isMobileMenuOpen]);
+
     const LogoutButton = () => (
         <div className="z-50 flex h-[36px] w-auto -translate-y-1 items-center">
             <div className="h-full w-[5px] md:w-[10px] lg:w-[15px]" />
@@ -62,18 +95,97 @@ const Header = () => {
         </div>
     );
 
+    const MobileMenuButton = () => (
+        <div className="z-50 flex h-[36px] w-auto items-center">
+            <button 
+                className="h-10 w-10 sm:h-13 sm:w-13 md:h-13 md:w-13 hover:cursor-pointer transition-transform duration-200 hover:scale-110 p-1" 
+                aria-label="Toggle menu" 
+                onClick={toggleMobileMenu}
+            >
+                {isMobileMenuOpen ? (
+                    <X className="h-full w-full text-white" strokeWidth={2.5} />
+                ) : (
+                    <Menu className="h-full w-full text-white" strokeWidth={2.5} />
+                )}
+            </button>
+        </div>
+    );
+
+    const MobileMenu = () => (
+    <div 
+        className={`lg:hidden absolute top-full right-4 w-48 sm:w-52 md:w-56 z-40 bg-zinc-800/30 backdrop-blur-md border border-slate-700/60 rounded-lg transition-all duration-300 ${
+            isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
+    >
+            <div className="flex flex-col py-2 px-3 space-y-1">
+                <button 
+                    className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
+                    onClick={() => {
+                        navigate(ROUTES.MOVIES);
+                        closeMobileMenu();
+                    }}
+                >
+                    Buy Tickets
+                </button>
+                <button 
+                    className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
+                    onClick={() => {
+                        navigate(ROUTES.BUY_SNACK);
+                        closeMobileMenu();
+                    }}
+                >
+                    Buy Snacks
+                </button>
+                <button 
+                    className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
+                    onClick={() => {
+                        handleAccountClick();
+                        closeMobileMenu();
+                    }}
+                >
+                    {isAuthenticated ? 'Account' : 'Login/Register'}
+                </button>
+                {isAuthenticated && (
+                    <>
+                        <div className="h-px bg-slate-700/50 mx-2 my-1" />
+                        <button 
+                            className="text-red-400 text-left py-2.5 px-3 rounded-md hover:bg-red-900/20 transition-colors font-medium flex items-center gap-2 text-sm"
+                            onClick={() => {
+                                handleLogout();
+                                closeMobileMenu();
+                            }}
+                        >
+                            <LogOut className="h-3.5 w-3.5" strokeWidth={2} />
+                            Logout
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+
     return (
-        <header className="bg-opacity-100 no-scrollbar fixed top-0 z-100 w-screen overflow-y-visible bg-transparent">
+        <header className="bg-opacity-10 no-scrollbar fixed top-0 z-100 w-screen overflow-y-visible bg-transparent">
             <div className="absolute top-0 left-1/2 z-20 h-8 w-[calc(120vw+2rem)] -translate-x-1/2 transform bg-gradient-to-b from-slate-950 via-slate-950 to-transparent sm:h-10 lg:h-20" />
             <div className="absolute top-0 left-1/2 z-20 h-15 w-[calc(120vw+2rem)] -translate-x-1/2 transform bg-gradient-to-b from-slate-950 via-slate-950 to-transparent blur-sm sm:h-20 sm:blur-lg lg:h-30 lg:blur-md" />
-            <div className="relative mx-auto flex max-w-screen flex-nowrap content-center items-center justify-center overflow-x-hidden pt-2 md:gap-3 md:pt-3 lg:gap-5 lg:pt-5.5 xl:gap-10 xl:pt-9">
+            
+            {/* Mobile & SM & MD Navigation - justify-between */}
+            <div className="lg:hidden relative mx-auto flex max-w-screen flex-nowrap content-center items-center justify-between overflow-x-hidden pt-2 px-4 sm:pt-3 md:pt-3">
+                <Logo onClick={() => navigate(ROUTES.HOME)} />
+                <MobileMenuButton />
+            </div>
+            
+            {/* Desktop Navigation - justify-center (LG and above) */}
+            <div className="hidden lg:flex relative mx-auto max-w-screen flex-nowrap content-center items-center justify-center overflow-x-hidden pt-2 md:gap-3 md:pt-3 lg:gap-5 lg:pt-5.5 xl:gap-10 xl:pt-9">
                 <Logo onClick={() => navigate(ROUTES.HOME)} />
                 <NavButton name="Buy Tickets" onClick={() => navigate(ROUTES.MOVIES)} />
                 <NavButton name="Buy Snacks" onClick={() => navigate(ROUTES.BUY_SNACK)} />
                 <NavButton name={isAuthenticated ? 'Account' : 'Login/Register'} onClick={handleAccountClick} />
-                <SearchButton />
                 {isAuthenticated && <LogoutButton />}
             </div>
+            
+            {/* Mobile & SM & MD Dropdown Menu */}
+            <MobileMenu />
         </header>
     );
 };

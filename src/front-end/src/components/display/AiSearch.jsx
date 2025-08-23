@@ -9,7 +9,7 @@ import SearchMovieCard from '@components/UI/SearchMovieCard';
 const Icon = () => {
     return (
         <div className="absolute top-1/2 right-1.5 -translate-y-1/2 sm:right-2 md:right-3 lg:right-5 xl:right-10">
-            <img src={ChatbotIcon} alt="Chatbot" className="h-3 w-3 sm:h-5 sm:w-5 md:h-7 md:w-7 lg:h-8 lg:w-8 xl:h-12 xl:w-12" />
+            <img src={ChatbotIcon} alt="Chatbot" className="h-5 w-5 sm:h-5 sm:w-5 md:h-7 md:w-7 lg:h-8 lg:w-8 xl:h-12 xl:w-12" />
         </div>
     );
 };
@@ -219,19 +219,20 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
 
     return (
         <div className="relative z-10 w-screen items-center pt-7 md:pt-15 lg:pt-20 xl:pt-30">
-            <div ref={containerRef} className="relative min-h-[20px] md:min-h-[35px] lg:min-h-[50px] xl:min-h-[66px]" style={{ overflow: 'visible' }}>
+            <div ref={containerRef} className="relative min-h-[30px] md:min-h-[35px] lg:min-h-[50px] xl:min-h-[66px]" style={{ overflow: 'visible' }}>
                 {/* Original Button Design */}
                 {!isInputVisible && (
                     <button
                         onClick={handleButtonClick}
-                        className="absolute top-1/2 left-1/2 h-[20px] w-[300px] -translate-x-1/2 -translate-y-1/2 transform rounded-2xl bg-gray-300/70 transition-all duration-200 hover:bg-gray-300/90 md:h-[35px] md:w-[580px] lg:h-[50px] lg:w-[850px] xl:h-[66px] xl:w-[1350px]"
+                        className="absolute top-1/2 left-1/2 h-[30px] w-[300px] -translate-x-1/2 -translate-y-1/2 transform rounded-2xl bg-gray-300/70 transition-all duration-200 hover:bg-gray-300/90 md:h-[35px] md:w-[580px] lg:h-[50px] lg:w-[850px] xl:h-[66px] xl:w-[1350px]"
                     >
                         <Icon />
                     </button>
                 )}                {/* Input Field with Dropdown Container (shows when button is clicked) */}
                 {isInputVisible && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">                        {/* Input wrapper with relative positioning for dropdown */}
-                        <div className="relative" style={{ overflow: 'visible', zIndex: 999998 }}>                            <input
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">                 
+                        <div className="relative" style={{ overflow: 'visible', zIndex: 999 }}>                            
+                            <input
                                 ref={inputRef}
                                 type="text"
                                 value={query}
@@ -240,7 +241,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
                                 onFocus={handleFocus}
                                 onBlur={handleBlur}
                                 placeholder={placeholder}
-                                className="h-[20px] w-[300px] rounded-2xl bg-gray-300/70 px-3 pr-8 text-xs text-gray-800 placeholder-gray-500 shadow-lg backdrop-blur-sm focus:outline-none md:h-[35px] md:w-[580px] md:px-4 md:pr-12 md:text-sm lg:h-[50px] lg:w-[850px] lg:px-6 lg:pr-16 lg:text-base xl:h-[66px] xl:w-[1350px] xl:px-8 xl:pr-20 xl:text-lg"
+                                className="h-[30px] w-[300px] rounded-2xl bg-gray-300/70 px-3 pr-8 text-xs text-gray-800 placeholder-gray-500 shadow-lg backdrop-blur-sm focus:outline-none md:h-[35px] md:w-[580px] md:px-4 md:pr-12 md:text-sm lg:h-[50px] lg:w-[850px] lg:px-6 lg:pr-16 lg:text-base xl:h-[66px] xl:w-[1350px] xl:px-8 xl:pr-20 xl:text-lg"
                             />
                             <Icon />
                         </div>
