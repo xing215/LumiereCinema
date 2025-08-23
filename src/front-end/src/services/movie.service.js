@@ -7,13 +7,15 @@ import { getApiUrl, getApiUrlWithParams } from '@config/api.config';
 
 export const movieService = {
     // Public movie endpoints
-    getNowShowingMovies: async () => {
-        const response = await axios.get(getApiUrl('nowShowingMovies'));
+    getNowShowingMovies: async (branchId = null) => {
+        const params = branchId ? { branchId } : {};
+        const response = await axios.get(getApiUrl('nowShowingMovies'), { params });
         return response.data;
     },
 
-    getUpcomingMovies: async () => {
-        const response = await axios.get(getApiUrl('upcomingMovies'));
+    getUpcomingMovies: async (branchId = null) => {
+        const params = branchId ? { branchId } : {};
+        const response = await axios.get(getApiUrl('upcomingMovies'), { params });
         return response.data;
     },
 

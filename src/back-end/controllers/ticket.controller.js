@@ -1197,17 +1197,12 @@ const getTicketByCode = async (req, res) => {
         }
 
         const previousScanTimestamp = ticket.lastScanAt || null;
-        const isFirstScan = ticket.status === 'Confirmed';
-        const currentScanTimestamp = new Date();        if (isFirstScan) {
-            await Model.findByIdAndUpdate(ticket._id, {
-                status: 'CheckedIn',
-                lastScanAt: currentScanTimestamp
-            });
-        } else {
-            await Model.findByIdAndUpdate(ticket._id, {
-                lastScanAt: currentScanTimestamp
-            });
-        }
+        const currentScanTimestamp = new Date();
+
+        // Only update the lastScanAt timestamp, don't auto-change status
+        await Model.findByIdAndUpdate(ticket._id, {
+            lastScanAt: currentScanTimestamp
+        });
 
         // Invalidate cache since ticket was updated
         await TicketCacheManager.invalidateTicket(ticketCode);
@@ -1228,7 +1223,6 @@ const getTicketByCode = async (req, res) => {
 
         const populatedTicket = await query.lean();        const finalResponse = {
             ...populatedTicket,
-            status: isFirstScan ? 'Confirmed' : populatedTicket.status,
             ticketType: ticketType,
             lastScanAt: previousScanTimestamp
         };
@@ -1247,8 +1241,9 @@ const getTicketByCode = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const { ticketCode } = req.params;
-    const isSnack = req.baseUrl.includes('/snacks');
-    const isMovie = req.baseUrl.includes('/movies');
+    const routePath = req.route.path;
+    const isSnack = routePath.includes('/snack/');
+    const isMovie = routePath.includes('/movie/');
     const updateData = req.body;
 
     if (isSnack) {
@@ -1277,6 +1272,9 @@ const updateTicket = async (req, res) => {
 
       await ticket.save();
 
+      // Invalidate cache since ticket was updated
+      await TicketCacheManager.invalidateTicket(ticketCode);
+
       return res.status(200).json({
         message: 'Snack ticket updated successfully.',
         ticket,
@@ -1284,8 +1282,38 @@ const updateTicket = async (req, res) => {
     }
 
     if (isMovie) {
-      // TODO: Handle movie ticket update later
-      return res.status(501).json({ message: 'Movie ticket update not implemented yet.' });
+      const ticket = await Ticket.findOne({ ticketCode: ticketCode });
+
+      if (!ticket) {
+        return res.status(404).json({ message: 'Movie ticket not found.' });
+      }
+
+      // Chỉ cho phép cập nhật một số trường quan trọng
+      const allowedFields = ['status', 'seller', 'noLoginCustomerInfo'];
+
+      if(updateData.seller) {
+        const seller = await User.findById(updateData.seller);
+        if (!seller || !seller.roles.includes('cashier')) {
+          return res.status(400).json({ message: 'Invalid seller.' });
+        }
+      }
+
+      for (const field in updateData) {
+        if (!allowedFields.includes(field)) {
+          return res.status(400).json({ message: `Field ${field} cannot be updated.` });
+        }
+        ticket[field] = updateData[field];
+      }
+
+      await ticket.save();
+
+      // Invalidate cache since ticket was updated
+      await TicketCacheManager.invalidateTicket(ticketCode);
+
+      return res.status(200).json({
+        message: 'Movie ticket updated successfully.',
+        ticket,
+      });
     }
 
     return res.status(400).json({ message: 'Unknown ticket type in URL.' });

@@ -13,7 +13,8 @@ const DETAIL_CACHE_EXPIRATION = 3600;
  * @route   GET /api/movies/now-showing
  */
 const getNowShowingMovies = async (req, res) => {
-    const cacheKey = 'movies:now-showing';
+    const { branchId } = req.query;
+    const cacheKey = branchId ? `movies:now-showing:${branchId}` : 'movies:now-showing';
 
     try {
         // 1. Check cache first
@@ -39,13 +40,36 @@ const getNowShowingMovies = async (req, res) => {
                 })
                 .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
                 .map(async (movie) => {
-                    // Find the closest upcoming schedule for this movie
-                    const closestSchedule = await Schedule.findOne({
+                    // Build schedule query - filter by branch if provided
+                    let scheduleQuery = {
                         movie: movie._id,
                         startTime: { $gte: now }
-                    })
-                    .sort({ startTime: 1 })
-                    .populate('screen', 'screenName size branch');
+                    };
+
+                    // Find the closest upcoming schedule for this movie
+                    let closestSchedule = await Schedule.findOne(scheduleQuery)
+                        .sort({ startTime: 1 })
+                        .populate('screen', 'screenName size branch');
+
+                    // If branch filter is provided, check if schedule belongs to that branch
+                    if (branchId && closestSchedule) {
+                        if (!closestSchedule.screen || !closestSchedule.screen.branch || 
+                            String(closestSchedule.screen.branch) !== branchId) {
+                            // Find a schedule for the specific branch
+                            closestSchedule = await Schedule.findOne(scheduleQuery)
+                                .sort({ startTime: 1 })
+                                .populate({
+                                    path: 'screen',
+                                    select: 'screenName size branch',
+                                    match: { branch: branchId }
+                                });
+                        }
+                    }
+
+                    // If branch is specified and no schedule found for that branch, skip this movie
+                    if (branchId && (!closestSchedule || !closestSchedule.screen)) {
+                        return null;
+                    }
 
                     let remainingSeats = null;
                     if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
@@ -63,16 +87,34 @@ const getNowShowingMovies = async (req, res) => {
                     }
 
                     // Find all schedules for this movie to collect branch IDs (only future schedules)
-                    const allSchedules = await Schedule.find({ 
+                    let allSchedulesQuery = { 
                         movie: movie._id,
                         startTime: { $gte: now }
-                    }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    };
+
+                    const allSchedules = await Schedule.find(allSchedulesQuery)
+                        .populate({ 
+                            path: 'screen', 
+                            select: 'branch', 
+                            populate: { path: 'branch', select: '_id' },
+                            ...(branchId && { match: { branch: branchId } })
+                        });
+
                     const branchSet = new Set();
                     allSchedules.forEach(sch => {
-                        const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
-                        if (branchId) branchSet.add(branchId);
+                        if (sch.screen && sch.screen.branch && sch.screen.branch._id) {
+                            const branchIdStr = String(sch.screen.branch._id);
+                            if (!branchId || branchIdStr === branchId) {
+                                branchSet.add(branchIdStr);
+                            }
+                        }
                     });
                     const branches = Array.from(branchSet);
+
+                    // If branch filter is applied and no branches found, skip this movie
+                    if (branchId && branches.length === 0) {
+                        return null;
+                    }
 
                     return {
                         _id: movie._id,
@@ -94,12 +136,16 @@ const getNowShowingMovies = async (req, res) => {
                     };
                 })
         );
+
+        // Filter out null values (movies that don't match branch criteria)
+        const filteredMovies = nowShowingMovies.filter(movie => movie !== null);
+
         // 3. Save result to cache for next time
-        await redisClient.set(cacheKey, JSON.stringify(nowShowingMovies), {
+        await redisClient.set(cacheKey, JSON.stringify(filteredMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(nowShowingMovies);
+        res.status(200).json(filteredMovies);
 
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
@@ -114,7 +160,8 @@ const getNowShowingMovies = async (req, res) => {
  */
 
 const getUpcomingMovies = async (req, res) => {
-    const cacheKey = 'movies:upcoming';
+    const { branchId } = req.query;
+    const cacheKey = branchId ? `movies:upcoming:${branchId}` : 'movies:upcoming';
 
     try {
         // 1. Check cache first
@@ -140,13 +187,36 @@ const getUpcomingMovies = async (req, res) => {
                 })
                 .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
                 .map(async (movie) => {
-                    // Find the closest upcoming schedule for this movie
-                    const closestSchedule = await Schedule.findOne({
+                    // Build schedule query - filter by branch if provided
+                    let scheduleQuery = {
                         movie: movie._id,
                         startTime: { $gte: now }
-                    })
-                    .sort({ startTime: 1 })
-                    .populate('screen', 'screenName size branch');
+                    };
+
+                    // Find the closest upcoming schedule for this movie
+                    let closestSchedule = await Schedule.findOne(scheduleQuery)
+                        .sort({ startTime: 1 })
+                        .populate('screen', 'screenName size branch');
+
+                    // If branch filter is provided, check if schedule belongs to that branch
+                    if (branchId && closestSchedule) {
+                        if (!closestSchedule.screen || !closestSchedule.screen.branch || 
+                            String(closestSchedule.screen.branch) !== branchId) {
+                            // Find a schedule for the specific branch
+                            closestSchedule = await Schedule.findOne(scheduleQuery)
+                                .sort({ startTime: 1 })
+                                .populate({
+                                    path: 'screen',
+                                    select: 'screenName size branch',
+                                    match: { branch: branchId }
+                                });
+                        }
+                    }
+
+                    // If branch is specified and no schedule found for that branch, skip this movie
+                    if (branchId && (!closestSchedule || !closestSchedule.screen)) {
+                        return null;
+                    }
 
                     let remainingSeats = null;
                     if (closestSchedule && closestSchedule.screen && closestSchedule.screen.size) {
@@ -164,16 +234,34 @@ const getUpcomingMovies = async (req, res) => {
                     }
 
                     // Find all schedules for this movie to collect branch IDs (only future schedules)
-                    const allSchedules = await Schedule.find({ 
+                    let allSchedulesQuery = { 
                         movie: movie._id,
                         startTime: { $gte: now }
-                    }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+                    };
+
+                    const allSchedules = await Schedule.find(allSchedulesQuery)
+                        .populate({ 
+                            path: 'screen', 
+                            select: 'branch', 
+                            populate: { path: 'branch', select: '_id' },
+                            ...(branchId && { match: { branch: branchId } })
+                        });
+
                     const branchSet = new Set();
                     allSchedules.forEach(sch => {
-                        const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
-                        if (branchId) branchSet.add(branchId);
+                        if (sch.screen && sch.screen.branch && sch.screen.branch._id) {
+                            const branchIdStr = String(sch.screen.branch._id);
+                            if (!branchId || branchIdStr === branchId) {
+                                branchSet.add(branchIdStr);
+                            }
+                        }
                     });
                     const branches = Array.from(branchSet);
+
+                    // If branch filter is applied and no branches found, skip this movie
+                    if (branchId && branches.length === 0) {
+                        return null;
+                    }
 
                     return {
                         _id: movie._id,
@@ -192,12 +280,16 @@ const getUpcomingMovies = async (req, res) => {
                     };
                 })
         );
+
+        // Filter out null values (movies that don't match branch criteria)
+        const filteredMovies = upcomingMovies.filter(movie => movie !== null);
+
         // 3. Save to cache
-        await redisClient.set(cacheKey, JSON.stringify(upcomingMovies), {
+        await redisClient.set(cacheKey, JSON.stringify(filteredMovies), {
             EX: DEFAULT_EXPIRATION,
         });
 
-        res.status(200).json(upcomingMovies);
+        res.status(200).json(filteredMovies);
     } catch (error) {
         console.error('Get Upcoming Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });

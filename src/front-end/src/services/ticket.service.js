@@ -205,4 +205,34 @@ export const ticketService = {
         );
         return response.data;
     },
+
+    // Update ticket status for both movie and snack tickets
+    updateTicketStatus: async (ticketCode, status, authToken) => {
+        // First try to update as movie ticket
+        try {
+            const response = await axios.patch(
+                getApiUrlWithParams('movieTicketDetails', { ticketCode }),
+                { status },
+                {
+                    headers: { Authorization: `Bearer ${authToken}` },
+                }
+            );
+            return response.data;
+        } catch (movieError) {
+            // If movie ticket update fails, try snack ticket
+            try {
+                const response = await axios.patch(
+                    getApiUrlWithParams('snackTicketDetails', { ticketCode }),
+                    { status },
+                    {
+                        headers: { Authorization: `Bearer ${authToken}` },
+                    }
+                );
+                return response.data;
+            } catch (snackError) {
+                // If both fail, throw the original movie error
+                throw movieError;
+            }
+        }
+    },
 };

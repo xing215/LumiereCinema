@@ -183,9 +183,14 @@ const SellTicket = () => {
     }, [branch]);
 
     useEffect(() => {
-        fetchNowShowing();
-        fetchComingSoon();
-    }, []);
+        if (cashierBranchId) {
+            fetchNowShowing(cashierBranchId);
+            fetchComingSoon(cashierBranchId);
+        } else {
+            fetchNowShowing();
+            fetchComingSoon();
+        }
+    }, [cashierBranchId]);
 
     useEffect(() => {
         if (snackTicketData?.branch?._id) {
