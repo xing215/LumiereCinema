@@ -2,7 +2,17 @@ const express = require('express');
 const router = express.Router();
 
 // Import the `changePassword` function
-const { register, activateAccount, login, staffLogin, logout, changePassword, forgotPassword, staffForgotPassword, resetPassword } = require('../controllers/auth.controller.js');
+const {
+    register,
+    activateAccount,
+    login,
+    staffLogin,
+    logout,
+    changePassword,
+    forgotPassword,
+    staffForgotPassword,
+    resetPassword,
+} = require('../controllers/auth.controller.js');
 const { protect } = require('../middlewares/auth.middleware.js');
 
 // Public routes

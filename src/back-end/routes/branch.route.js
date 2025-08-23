@@ -4,29 +4,29 @@ const router = express.Router();
 const { protect, restrictTo, getUser } = require('../middlewares/auth.middleware.js');
 
 const {
-  createSnack,
-  editSnack,
-  deleteSnack,
-  getSnackList,
-  getAvailableBranches,
-  getBranchById,
-  // Schedule management functions
-  scheduleMovieScreening,
-  editMovieSchedule,
-  deleteMovieSchedule,
-  getMovieSchedules,
-  // Screen management functions
-  getBranchScreens,
-  createScreen,
-  getScreenById,
-  updateScreen,
-  deleteScreen,
-  // Seat management functions
-  getScreenSeats,
-  createSeat,
-  bulkCreateSeats,
-  updateSeat,
-  deleteSeat
+    createSnack,
+    editSnack,
+    deleteSnack,
+    getSnackList,
+    getAvailableBranches,
+    getBranchById,
+    // Schedule management functions
+    scheduleMovieScreening,
+    editMovieSchedule,
+    deleteMovieSchedule,
+    getMovieSchedules,
+    // Screen management functions
+    getBranchScreens,
+    createScreen,
+    getScreenById,
+    updateScreen,
+    deleteScreen,
+    // Seat management functions
+    getScreenSeats,
+    createSeat,
+    bulkCreateSeats,
+    updateSeat,
+    deleteSeat,
 } = require('../controllers/branch.controller.js');
 
 /**

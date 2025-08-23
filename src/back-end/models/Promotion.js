@@ -1,93 +1,95 @@
 const mongoose = require('mongoose');
 
-const promotionSchema = new mongoose.Schema({
-  // PromotionCode (PK): Promotion code that users will enter
-  promotionCode: {
-    type: String,
-    required: true,
-    unique: true,
-    uppercase: true,
-    trim: true,
-  },
+const promotionSchema = new mongoose.Schema(
+    {
+        // PromotionCode (PK): Promotion code that users will enter
+        promotionCode: {
+            type: String,
+            required: true,
+            unique: true,
+            uppercase: true,
+            trim: true,
+        },
 
-  // Name: Name or short description of the program
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
+        // Name: Name or short description of the program
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-  // DiscountRate: Discount rate or discount amount
-  discountRate: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
+        // DiscountRate: Discount rate or discount amount
+        discountRate: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
 
-  maximumDiscount: {
-    type: Number,
-    default: null, // No limit if no value
-    min: 0
-  },
+        maximumDiscount: {
+            type: Number,
+            default: null, // No limit if no value
+            min: 0,
+        },
 
-  bannerImage: {
-    type: String,
-    default: null, // Optional banner image URL
-  },
-  
-  appliedProduct: {
-    type: String, // Store 'productType' (example: 'Movie', 'Snack', 'All')
-    enum: ['Movie', 'Snack', 'All'], // Only applies to this product type
-    required: true,
-  },
+        bannerImage: {
+            type: String,
+            default: null, // Optional banner image URL
+        },
 
-  appliedLoyaltyRank: {
-    type: String, // Store 'rankName' from LoyaltyRank
-    default: null, // Default to null - anyone can apply if not specified
-    validate: {
-      validator: function(value) {
-        // Allow null/undefined or valid loyalty ranks
-        return value === null || value === undefined || ['SILVER', 'GOLD', 'PLATINUM'].includes(value);
-      },
-      message: '{VALUE} is not a valid loyalty rank. Must be SILVER, GOLD, PLATINUM, or null.'
-    }
-  },
-  
-  // RemainingUse: Number of uses remaining
-  remainingUse: {
-      type: Number,
-      default: null
-  },
+        appliedProduct: {
+            type: String, // Store 'productType' (example: 'Movie', 'Snack', 'All')
+            enum: ['Movie', 'Snack', 'All'], // Only applies to this product type
+            required: true,
+        },
 
-  // MinimumSpend: Minimum spending requirement to apply
-  minimumSpend: {
-    type: Number,
-    required: true,
-    default: 0
-  },
+        appliedLoyaltyRank: {
+            type: String, // Store 'rankName' from LoyaltyRank
+            default: null, // Default to null - anyone can apply if not specified
+            validate: {
+                validator: function (value) {
+                    // Allow null/undefined or valid loyalty ranks
+                    return value === null || value === undefined || ['SILVER', 'GOLD', 'PLATINUM'].includes(value);
+                },
+                message: '{VALUE} is not a valid loyalty rank. Must be SILVER, GOLD, PLATINUM, or null.',
+            },
+        },
 
-  // Start and end dates
-  startDate: {
-    type: Date,
-    //required: true,
-    default: null
-  },
-  endDate: {
-    type: Date,
-    //required: true,
-    default: null
-  },
+        // RemainingUse: Number of uses remaining
+        remainingUse: {
+            type: Number,
+            default: null,
+        },
 
-  // Active status
-  isActive: {
-    type: Boolean,
-    default: true
-  }
+        // MinimumSpend: Minimum spending requirement to apply
+        minimumSpend: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
 
-}, { timestamps: true });
+        // Start and end dates
+        startDate: {
+            type: Date,
+            //required: true,
+            default: null,
+        },
+        endDate: {
+            type: Date,
+            //required: true,
+            default: null,
+        },
+
+        // Active status
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+    },
+    { timestamps: true },
+);
 
 // Middleware to validate dates
-promotionSchema.pre('save', function(next) {
+promotionSchema.pre('save', function (next) {
     if (this.endDate < this.startDate) {
         return next(new Error('The end date must be after the start date.'));
     }
