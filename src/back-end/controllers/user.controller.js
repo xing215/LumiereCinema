@@ -149,7 +149,7 @@ const addToWishlist = async (req, res) => {
         // Fast check: movie exists and user can add
         const [movieExists, userCheck] = await Promise.all([
             Movie.findById(movieId).select('_id').lean(),
-            User.findById(userId).select('wishlist').lean()
+            User.findById(userId).select('wishlist').lean(),
         ]);
 
         if (!movieExists) {
@@ -166,10 +166,7 @@ const addToWishlist = async (req, res) => {
         }
 
         // Atomic update
-        const updateResult = await User.updateOne(
-            { _id: userId },
-            { $addToSet: { wishlist: movieId } }
-        );
+        const updateResult = await User.updateOne({ _id: userId }, { $addToSet: { wishlist: movieId } });
 
         if (updateResult.modifiedCount === 0) {
             return res.status(400).json({ message: 'Failed to add to wishlist.', success: false });
@@ -178,9 +175,9 @@ const addToWishlist = async (req, res) => {
         // Clear cache asynchronously
         redisClient.del(cacheKey).catch(err => console.warn('Cache clear error:', err));
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Movie added to wishlist successfully.',
-            success: true
+            success: true,
         });
     } catch (error) {
         console.error('Error adding to wishlist:', error);
@@ -210,10 +207,7 @@ const removeFromWishlist = async (req, res) => {
         }
 
         // Atomic update
-        const updateResult = await User.updateOne(
-            { _id: userId },
-            { $pull: { wishlist: movieId } }
-        );
+        const updateResult = await User.updateOne({ _id: userId }, { $pull: { wishlist: movieId } });
 
         if (updateResult.modifiedCount === 0) {
             return res.status(400).json({ message: 'Failed to remove from wishlist.', success: false });
@@ -222,9 +216,9 @@ const removeFromWishlist = async (req, res) => {
         // Clear cache asynchronously
         redisClient.del(cacheKey).catch(err => console.warn('Cache clear error:', err));
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Movie removed from wishlist successfully.',
-            success: true
+            success: true,
         });
     } catch (error) {
         console.error('Error removing from wishlist:', error);

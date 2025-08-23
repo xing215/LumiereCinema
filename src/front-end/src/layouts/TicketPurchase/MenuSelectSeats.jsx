@@ -15,21 +15,11 @@ const SeatName = ({ type, text, isCouple = false, isVip = false }) => (
         {isCouple ? (
             <CoupleSeat seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-indigo-400'} canCursor={false} />
         ) : (
-            <Seats 
-                type={type} 
-                isSelected={type === 'Selected'} 
-                seatColor={
-                    type === 'Taken' ? 'bg-gray-400' : 
-                    isVip ? 'bg-red-400' : 
-                    'bg-blue-400'
-                } 
-                canCursor={false} 
-            />
+            <Seats type={type} isSelected={type === 'Selected'} seatColor={type === 'Taken' ? 'bg-gray-400' : isVip ? 'bg-red-400' : 'bg-blue-400'} canCursor={false} />
         )}
         <div className="relative justify-start text-center font-['Unbounded'] text-xs font-normal text-white">{text}</div>
     </div>
 );
-
 
 // ================================ MAIN COMPONENT ================================
 
@@ -38,7 +28,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
 
     const [isBottomBarVisible, setIsBottomBarVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
-
 
     // ================================ DATA FETCHING EFFECTS ================================
 
@@ -53,7 +42,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
         const total = calculateTotalPrice();
         updateMovieTicket({ total: total });
     }, [movieTicketData?.seats, movieTicketData?.adultTickets, movieTicketData?.discountedTickets, seats]);
-
 
     // ================================ EVENT HANDLERS ================================
 
@@ -85,31 +73,31 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
         }
 
         // Get both regular and discounted prices for each selected seat
-        const seatPriceData = movieTicketData.seats.map(seatNumber => {
+        const seatPriceData = movieTicketData.seats.map((seatNumber) => {
             const rowLetter = seatNumber.charAt(0);
             const rowSeats = seats.seatsByRow[rowLetter];
-            
+
             if (!rowSeats) {
                 return {
                     seatNumber,
                     regularPrice: FALLBACK_PRICES.normal.regular,
-                    discountedPrice: FALLBACK_PRICES.normal.discounted
+                    discountedPrice: FALLBACK_PRICES.normal.discounted,
                 };
             }
 
-            const seat = rowSeats.find(s => s.seatNumber === seatNumber);
+            const seat = rowSeats.find((s) => s.seatNumber === seatNumber);
             if (!seat) {
                 return {
                     seatNumber,
                     regularPrice: FALLBACK_PRICES.normal.regular,
-                    discountedPrice: FALLBACK_PRICES.normal.discounted
+                    discountedPrice: FALLBACK_PRICES.normal.discounted,
                 };
             }
 
             return {
                 seatNumber,
                 regularPrice: getSeatPrice(seat, false),
-                discountedPrice: getSeatPrice(seat, true)
+                discountedPrice: getSeatPrice(seat, true),
             };
         });
 
@@ -121,7 +109,7 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
         const maxDiscountTickets = movieTicketData.discountedTickets || 0;
 
         // Assign discount tickets to seats with cheapest discounted prices first
-        sortedSeats.forEach(seatData => {
+        sortedSeats.forEach((seatData) => {
             if (discountTicketsUsed < maxDiscountTickets) {
                 // Use discounted price
                 total += seatData.discountedPrice;
@@ -187,7 +175,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
         return hasGap;
     };
 
-
     // ================================ NAVIGATION FUNCTIONS ================================
 
     const canProceed = movieTicketData?.seats.length > 0;
@@ -211,7 +198,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
 
         onNext();
     };
-
 
     // ================================ SCROLL EFFECTS ================================
 
@@ -249,11 +235,7 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
                 <div className="relative flex min-w-[56vw] flex-1 flex-col items-center justify-between xl:min-w-0 2xl:min-w-[56vw]">
                     <div className="relative flex flex-col items-center justify-between gap-5 px-4 py-5 md:h-[407px] md:flex-row md:px-6">
                         <div className="relative flex shrink flex-row items-center justify-start md:w-[90%] md:flex-col lg:justify-start lg:gap-1 xl:w-[40%]">
-                            <TicketSelect
-                                ticket_type="Adult"
-                                amount={movieTicketData.adultTickets}
-                                onChange={(fn) => updateMovieTicket({ adultTickets: fn(movieTicketData.adultTickets) })}
-                            />
+                            <TicketSelect ticket_type="Adult" amount={movieTicketData.adultTickets} onChange={(fn) => updateMovieTicket({ adultTickets: fn(movieTicketData.adultTickets) })} />
                             <div className="h-2 w-10 md:h-3 lg:h-0" />
                             <TicketSelect
                                 ticket_type="Student/ Elders"
@@ -319,7 +301,7 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
                             <br />
                             Seats: {movieTicketData?.seats && movieTicketData.seats.length > 0 ? movieTicketData.seats.join(', ') : 'None selected'}
                             <br />
-                            Total: {movieTicketData?.total ? movieTicketData.total.toLocaleString('en-US')  : '0'} VND
+                            Total: {movieTicketData?.total ? movieTicketData.total.toLocaleString('en-US') : '0'} VND
                         </div>
 
                         <NextNaviButton text="INFO" onClick={handleNext} />

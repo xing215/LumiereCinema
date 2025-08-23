@@ -31,7 +31,11 @@ const ErrorModal = ({ errorCode = null, errorMsg = 'An error occurs', onClose })
                         <X className="pointer-events-none absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-red-800 sm:h-6 sm:w-6 md:h-7 md:w-7" strokeWidth={4} />
                     )}
                 </div>
-                <div className="ml-2 flex-1 cursor-pointer overflow-hidden font-['Unbounded'] text-xs font-medium text-slate-900 sm:ml-3 sm:text-sm md:ml-4 md:text-base" style={{ display: 'block' }} title={fullMsg}>
+                <div
+                    className="ml-2 flex-1 cursor-pointer overflow-hidden font-['Unbounded'] text-xs font-medium text-slate-900 sm:ml-3 sm:text-sm md:ml-4 md:text-base"
+                    style={{ display: 'block' }}
+                    title={fullMsg}
+                >
                     {isSessionExpired && <span className="font-semibold text-red-700">Session Expired: </span>}
                     {isAuthError && !isSessionExpired && <span className="font-semibold text-red-700">Access Denied: </span>}
                     <span className="break-words">{errorMsg}</span>

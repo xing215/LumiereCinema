@@ -99,9 +99,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
             <div
                 ref={cardRef}
                 className={`group relative aspect-[300/470] h-full justify-start overflow-hidden bg-transparent shadow-lg ${
-                    page === 'Home' 
-                        ? 'min-w-[85px] sm:min-w-[100px] md:min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' 
-                        : 'h-full w-full'
+                    page === 'Home' ? 'min-w-[85px] sm:min-w-[100px] md:min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'
                 }`}
                 onMouseEnter={() => setShowOverlay(true)}
                 onMouseLeave={() => setShowOverlay(false)}

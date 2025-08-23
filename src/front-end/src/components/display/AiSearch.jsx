@@ -29,14 +29,11 @@ const SearchSuggestions = ({ suggestions, onSelect, show, loading, inputRect }) 
         borderRadius: '12px',
         border: '1px solid #d1d5db',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        overflow: 'auto'
+        overflow: 'auto',
     };
 
     return createPortal(
-        <div 
-            data-search-dropdown="true"
-            style={dropdownStyle}
-        >
+        <div data-search-dropdown="true" style={dropdownStyle}>
             {loading ? (
                 <div className="px-4 py-6 text-center text-gray-500">
                     <div className="animate-pulse">
@@ -54,7 +51,8 @@ const SearchSuggestions = ({ suggestions, onSelect, show, loading, inputRect }) 
                 <div className="px-4 py-6 text-center text-gray-500">
                     <div className="mb-2 text-4xl">🎬</div>
                     <p className="text-sm">No movies found</p>
-                </div>            ) : suggestions && suggestions.length > 0 ? (
+                </div>
+            ) : suggestions && suggestions.length > 0 ? (
                 <>
                     {suggestions.map((movie, index) => (
                         <SearchMovieCard key={movie._id || index} movie={movie} onClick={onSelect} />
@@ -62,7 +60,7 @@ const SearchSuggestions = ({ suggestions, onSelect, show, loading, inputRect }) 
                 </>
             ) : null}
         </div>,
-        document.body
+        document.body,
     );
 };
 
@@ -91,7 +89,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
             const rect = inputRef.current.getBoundingClientRect();
             setInputRect(rect);
         }
-    };// Handle button click to show input
+    }; // Handle button click to show input
     const handleButtonClick = () => {
         setIsInputVisible(true);
         setTimeout(() => {
@@ -99,7 +97,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
                 inputRef.current.focus();
             }
         }, 100);
-    };    // Handle input changes
+    }; // Handle input changes
     const handleInputChange = (e) => {
         const value = e.target.value;
         setQuery(value);
@@ -112,7 +110,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
             clearSuggestions();
             setShowSuggestions(false);
         }
-    };    // Handle suggestion selection
+    }; // Handle suggestion selection
     const handleSuggestionSelect = (movie) => {
         // Add to history
         addToHistory(movie.title);
@@ -123,7 +121,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
         setIsInputVisible(false);
         setIsFocused(false);
         clearSuggestions();
-    };    // Handle focus
+    }; // Handle focus
     const handleFocus = () => {
         setIsFocused(true);
         if (query.trim().length >= 2) {
@@ -140,7 +138,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
                 setShowSuggestions(false);
             }
         }, 300);
-    };// Handle key events
+    }; // Handle key events
     const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
             setQuery('');
@@ -152,7 +150,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
                 inputRef.current.blur();
             }
         }
-    };    // Handle click outside to close suggestions
+    }; // Handle click outside to close suggestions
     useEffect(() => {
         const handleClickOutside = (event) => {
             const isInsideContainer = containerRef.current && containerRef.current.contains(event.target);
@@ -174,7 +172,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
     // Update position on scroll/resize with throttling
     useEffect(() => {
         let isThrottled = false;
-        
+
         const handlePositionUpdate = () => {
             if (!isThrottled && showSuggestions && inputRef.current) {
                 isThrottled = true;
@@ -189,7 +187,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
             window.addEventListener('scroll', handlePositionUpdate, { passive: true });
             window.addEventListener('resize', handlePositionUpdate);
         }
-        
+
         return () => {
             window.removeEventListener('scroll', handlePositionUpdate);
             window.removeEventListener('resize', handlePositionUpdate);
@@ -209,7 +207,7 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
             setShowSuggestions(false);
             clearSuggestions();
         };
-    }, [clearSuggestions]);    // Auto-show suggestions when data is available
+    }, [clearSuggestions]); // Auto-show suggestions when data is available
     useEffect(() => {
         if (suggestions && suggestions.length > 0 && query.trim().length >= 2 && !loading) {
             setShowSuggestions(true);
@@ -228,10 +226,11 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
                     >
                         <Icon />
                     </button>
-                )}                {/* Input Field with Dropdown Container (shows when button is clicked) */}
+                )}{' '}
+                {/* Input Field with Dropdown Container (shows when button is clicked) */}
                 {isInputVisible && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">                 
-                        <div className="relative" style={{ overflow: 'visible', zIndex: 999 }}>                            
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                        <div className="relative" style={{ overflow: 'visible', zIndex: 999 }}>
                             <input
                                 ref={inputRef}
                                 type="text"
@@ -246,14 +245,9 @@ const AiSearch = ({ placeholder = 'Search movies, actors, directors...' }) => {
                             <Icon />
                         </div>
                     </div>
-                )}                {/* Portal-based dropdown - renders outside of container constraints */}
-                <SearchSuggestions 
-                    suggestions={suggestions} 
-                    onSelect={handleSuggestionSelect} 
-                    show={showSuggestions} 
-                    loading={loading}
-                    inputRect={inputRect}
-                />
+                )}{' '}
+                {/* Portal-based dropdown - renders outside of container constraints */}
+                <SearchSuggestions suggestions={suggestions} onSelect={handleSuggestionSelect} show={showSuggestions} loading={loading} inputRect={inputRect} />
             </div>
         </div>
     );

@@ -215,7 +215,7 @@ export const ticketService = {
                 { status },
                 {
                     headers: { Authorization: `Bearer ${authToken}` },
-                }
+                },
             );
             return response.data;
         } catch (movieError) {
@@ -226,7 +226,7 @@ export const ticketService = {
                     { status },
                     {
                         headers: { Authorization: `Bearer ${authToken}` },
-                    }
+                    },
                 );
                 return response.data;
             } catch (snackError) {

@@ -404,7 +404,7 @@ const IntegratedMap = ({
                     getAllCinemasClick={getAllCinemasClick}
                 />
             </div>
-            <div ref={mapRef} className="absolute top-0 z-0 h-full overflow-auto rounded-xl border-gray-200 left-5 right-5 md:left-0 md:right-0 md:w-full" />
+            <div ref={mapRef} className="absolute top-0 right-5 left-5 z-0 h-full overflow-auto rounded-xl border-gray-200 md:right-0 md:left-0 md:w-full" />
 
             {/* Zoom Tooltip */}
             {requireCtrlToZoom && showZoomTooltip && (

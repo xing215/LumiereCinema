@@ -151,12 +151,7 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
     return (
         <div ref={cardRef} className="relative w-44 flex-shrink-0 sm:w-48 md:w-64 lg:w-72">
             <MovieCard movie={movie} page={page} />
-            {overlayOpacity > 0 && (
-                <div 
-                    className="pointer-events-none absolute inset-0 z-20 rounded-xl hidden md:block" 
-                    style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} 
-                />
-            )}
+            {overlayOpacity > 0 && <div className="pointer-events-none absolute inset-0 z-20 hidden rounded-xl md:block" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />}
         </div>
     );
 };

@@ -103,9 +103,9 @@ export const useGetWishlist = () => {
             const cached = sessionStorage.getItem('wishlist_cache');
             const cacheTime = sessionStorage.getItem('wishlist_cache_time');
             const now = Date.now();
-            
+
             // Use cache if less than 5 minutes old
-            if (cached && cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+            if (cached && cacheTime && now - parseInt(cacheTime) < 5 * 60 * 1000) {
                 const cachedWishlist = JSON.parse(cached);
                 setWishlist(cachedWishlist);
                 return { success: true, data: { wishlist: cachedWishlist } };
@@ -145,11 +145,11 @@ export const useAddToWishlist = () => {
         setError(null);
         try {
             const data = await userService.addToWishlist(movieId, token);
-            
+
             // Clear cache to force refresh on next load
             sessionStorage.removeItem('wishlist_cache');
             sessionStorage.removeItem('wishlist_cache_time');
-            
+
             return { success: true, data };
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Failed to add to wishlist';
@@ -173,11 +173,11 @@ export const useRemoveFromWishlist = () => {
         setError(null);
         try {
             const data = await userService.removeFromWishlist(movieId, token);
-            
+
             // Clear cache to force refresh on next load
             sessionStorage.removeItem('wishlist_cache');
             sessionStorage.removeItem('wishlist_cache_time');
-            
+
             return { success: true, data };
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Failed to remove from wishlist';

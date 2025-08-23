@@ -6,7 +6,7 @@ import React from 'react';
 
 const WishlistButton = ({ movie, className = '' }) => {
     const { token } = useUser();
-    
+
     // Simple local state for maximum reliability
     const [isInWishlist, setIsInWishlist] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(false);
@@ -26,13 +26,13 @@ const WishlistButton = ({ movie, className = '' }) => {
 
     const loadWishlistStatus = async () => {
         if (!token || !movie?._id) return;
-        
+
         try {
             // Try cache first
             const cached = localStorage.getItem('lumiere_wishlist_cache');
             if (cached) {
                 const wishlistData = JSON.parse(cached);
-                const inWishlist = wishlistData.some(item => String(item._id || item) === String(movie._id));
+                const inWishlist = wishlistData.some((item) => String(item._id || item) === String(movie._id));
                 setIsInWishlist(inWishlist);
                 setInitialized(true);
             }
@@ -40,11 +40,11 @@ const WishlistButton = ({ movie, className = '' }) => {
             // Load fresh data in background
             const data = await userService.getWishlist(token);
             const wishlistData = data.wishlist || data || [];
-            const inWishlist = wishlistData.some(item => String(item._id || item) === String(movie._id));
-            
+            const inWishlist = wishlistData.some((item) => String(item._id || item) === String(movie._id));
+
             setIsInWishlist(inWishlist);
             setInitialized(true);
-            
+
             // Update cache
             localStorage.setItem('lumiere_wishlist_cache', JSON.stringify(wishlistData));
         } catch (error) {
@@ -55,15 +55,15 @@ const WishlistButton = ({ movie, className = '' }) => {
 
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
-        
+
         console.log('Wishlist click:', { movieId: movie._id, currentState: isInWishlist, token: !!token });
-        
+
         // Check auth immediately
         if (!token) {
             setShowAuthError(true);
             return;
         }
-        
+
         if (isLoading || !movie?._id) return;
 
         // Immediate visual feedback
@@ -95,9 +95,8 @@ const WishlistButton = ({ movie, className = '' }) => {
             if (result && (result.success === false || result.error)) {
                 console.log('API returned error, reverting state');
                 setIsInWishlist(!newState); // Revert
-                
-                if (result.error?.includes('401') || result.error?.includes('403') || 
-                    result.error?.includes('logged in')) {
+
+                if (result.error?.includes('401') || result.error?.includes('403') || result.error?.includes('logged in')) {
                     setShowAuthError(true);
                 }
                 console.warn('Wishlist operation failed:', result.error);
@@ -110,12 +109,12 @@ const WishlistButton = ({ movie, className = '' }) => {
                         let wishlistData = JSON.parse(cached);
                         if (newState) {
                             // Add to cache
-                            if (!wishlistData.some(item => String(item._id || item) === String(movie._id))) {
+                            if (!wishlistData.some((item) => String(item._id || item) === String(movie._id))) {
                                 wishlistData.push({ _id: movie._id });
                             }
                         } else {
                             // Remove from cache
-                            wishlistData = wishlistData.filter(item => String(item._id || item) !== String(movie._id));
+                            wishlistData = wishlistData.filter((item) => String(item._id || item) !== String(movie._id));
                         }
                         localStorage.setItem('lumiere_wishlist_cache', JSON.stringify(wishlistData));
                         console.log('Cache updated successfully');
@@ -124,11 +123,10 @@ const WishlistButton = ({ movie, className = '' }) => {
                     console.warn('Cache update failed:', cacheError);
                 }
             }
-            
         } catch (error) {
             console.error('Wishlist operation error:', error);
             setIsInWishlist(!newState); // Revert on error
-            
+
             if (error.response?.status === 401 || error.response?.status === 403) {
                 setShowAuthError(true);
             }
@@ -139,43 +137,29 @@ const WishlistButton = ({ movie, className = '' }) => {
 
     return (
         <>
-            {showAuthError && (
-                <ErrorModal 
-                    errorMsg="Please login to save your favourite movies." 
-                    onClose={() => setShowAuthError(false)} 
-                />
-            )}
+            {showAuthError && <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />}
             <div
-                className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className} 
-                    transition-all duration-200 hover:scale-105 active:scale-95 
-                    ${isLoading ? 'animate-pulse' : ''}`}
+                className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className} transition-all duration-200 hover:scale-105 active:scale-95 ${isLoading ? 'animate-pulse' : ''}`}
                 onClick={handleWishlistClick}
                 title={isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
             >
                 {/* Single Heart with smooth transitions */}
-                <Heart 
-                    className={`absolute h-full w-full transition-all duration-300 ease-out
-                        ${hasAnimated ? 'animate-bounce' : ''}
-                        ${isInWishlist 
-                            ? 'text-red-500 scale-110 drop-shadow-lg' 
-                            : 'text-white/80 hover:text-red-400 sm:text-gray-300 sm:hover:text-red-400'
-                        }`} 
-                    strokeWidth={isInWishlist ? 2.5 : 2} 
-                    fill={isInWishlist ? 'currentColor' : 'none'} 
+                <Heart
+                    className={`absolute h-full w-full transition-all duration-300 ease-out ${hasAnimated ? 'animate-bounce' : ''} ${
+                        isInWishlist ? 'scale-110 text-red-500 drop-shadow-lg' : 'text-white/80 hover:text-red-400 sm:text-gray-300 sm:hover:text-red-400'
+                    }`}
+                    strokeWidth={isInWishlist ? 2.5 : 2}
+                    fill={isInWishlist ? 'currentColor' : 'none'}
                     style={{
-                        filter: isInWishlist ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'none'
+                        filter: isInWishlist ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'none',
                     }}
                 />
 
                 {/* Loading ring for feedback */}
-                {isLoading && (
-                    <div className="absolute -inset-1 rounded-full border-2 border-red-500/40 animate-spin border-t-red-500"></div>
-                )}
+                {isLoading && <div className="absolute -inset-1 animate-spin rounded-full border-2 border-red-500/40 border-t-red-500"></div>}
 
                 {/* Success pulse */}
-                {hasAnimated && !isLoading && (
-                    <div className="absolute -inset-2 rounded-full bg-red-500/20 animate-ping"></div>
-                )}
+                {hasAnimated && !isLoading && <div className="absolute -inset-2 animate-ping rounded-full bg-red-500/20"></div>}
             </div>
         </>
     );

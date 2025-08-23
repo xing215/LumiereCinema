@@ -77,7 +77,7 @@ const MainBody = () => {
     } else if (movieStatusFilter === 'up') {
         filteredMovies = filteredMovies.filter((m) => m.status === 'Upcoming');
     }
-    
+
     // Sort movies: movies with schedules (branches) first, then movies without schedules
     filteredMovies = filteredMovies.sort((a, b) => {
         const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
