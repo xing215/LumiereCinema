@@ -1,101 +1,180 @@
 import { Heart } from 'lucide-react';
-import { useWishlist } from '@contexts/WishlistContext';
+import { useUser } from '@contexts/UserContext';
+import { userService } from '@services';
 import ErrorModal from '@layouts/Error.jsx';
 import React from 'react';
 
 const WishlistButton = ({ movie, className = '' }) => {
-    const { 
-        isInWishlist, 
-        addToWishlist, 
-        removeFromWishlist, 
-        loading,
-        error 
-    } = useWishlist();
+    const { token } = useUser();
     
+    // Simple local state for maximum reliability
+    const [isInWishlist, setIsInWishlist] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(false);
     const [showAuthError, setShowAuthError] = React.useState(false);
-    const [isProcessing, setIsProcessing] = React.useState(false);
     const [hasAnimated, setHasAnimated] = React.useState(false);
+    const [initialized, setInitialized] = React.useState(false);
 
-    const movieInWishlist = movie?._id ? isInWishlist(movie._id) : false;
+    // Load wishlist status on mount and when movie changes
+    React.useEffect(() => {
+        if (token && movie?._id && !initialized) {
+            loadWishlistStatus();
+        } else if (!token) {
+            setIsInWishlist(false);
+            setInitialized(false);
+        }
+    }, [token, movie?._id, initialized]);
 
-    const isAuthError = (error) => {
-        return error && (error.toString().includes('401') || error.toString().includes('403') || 
-                        error.includes('logged in'));
+    const loadWishlistStatus = async () => {
+        if (!token || !movie?._id) return;
+        
+        try {
+            // Try cache first
+            const cached = localStorage.getItem('lumiere_wishlist_cache');
+            if (cached) {
+                const wishlistData = JSON.parse(cached);
+                const inWishlist = wishlistData.some(item => String(item._id || item) === String(movie._id));
+                setIsInWishlist(inWishlist);
+                setInitialized(true);
+            }
+
+            // Load fresh data in background
+            const data = await userService.getWishlist(token);
+            const wishlistData = data.wishlist || data || [];
+            const inWishlist = wishlistData.some(item => String(item._id || item) === String(movie._id));
+            
+            setIsInWishlist(inWishlist);
+            setInitialized(true);
+            
+            // Update cache
+            localStorage.setItem('lumiere_wishlist_cache', JSON.stringify(wishlistData));
+        } catch (error) {
+            console.warn('Failed to load wishlist status:', error);
+            setInitialized(true);
+        }
     };
 
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
         
-        // Prevent multiple clicks during processing
-        if (isProcessing || loading) return;
+        console.log('Wishlist click:', { movieId: movie._id, currentState: isInWishlist, token: !!token });
         
-        // Check for auth errors
-        if (isAuthError(error)) {
+        // Check auth immediately
+        if (!token) {
             setShowAuthError(true);
             return;
         }
         
-        if (!movie?._id) return;
+        if (isLoading || !movie?._id) return;
 
-        setIsProcessing(true);
-        
-        // Animation trigger
+        // Immediate visual feedback
+        const newState = !isInWishlist;
+        setIsInWishlist(newState);
+        setIsLoading(true);
         setHasAnimated(true);
-        setTimeout(() => setHasAnimated(false), 300);
+
+        console.log('Optimistic update:', { from: !newState, to: newState });
+
+        // Clear animation after delay
+        setTimeout(() => setHasAnimated(false), 400);
 
         try {
             let result;
-            if (movieInWishlist) {
-                result = await removeFromWishlist(movie._id);
+            if (!newState) {
+                // Removing from wishlist
+                console.log('Removing from wishlist...');
+                result = await userService.removeFromWishlist(movie._id, token);
             } else {
-                result = await addToWishlist(movie._id);
+                // Adding to wishlist
+                console.log('Adding to wishlist...');
+                result = await userService.addToWishlist(movie._id, token);
             }
 
-            // Handle auth errors
-            if (isAuthError(result?.error)) {
-                setShowAuthError(true);
-                return;
-            }
+            console.log('API Result:', result);
 
-            // Handle other errors
-            if (result?.error) {
+            // Check for errors and revert if needed
+            if (result && (result.success === false || result.error)) {
+                console.log('API returned error, reverting state');
+                setIsInWishlist(!newState); // Revert
+                
+                if (result.error?.includes('401') || result.error?.includes('403') || 
+                    result.error?.includes('logged in')) {
+                    setShowAuthError(true);
+                }
                 console.warn('Wishlist operation failed:', result.error);
-                return;
+            } else {
+                console.log('Success! Updating cache...');
+                // Success - update cache
+                try {
+                    const cached = localStorage.getItem('lumiere_wishlist_cache');
+                    if (cached) {
+                        let wishlistData = JSON.parse(cached);
+                        if (newState) {
+                            // Add to cache
+                            if (!wishlistData.some(item => String(item._id || item) === String(movie._id))) {
+                                wishlistData.push({ _id: movie._id });
+                            }
+                        } else {
+                            // Remove from cache
+                            wishlistData = wishlistData.filter(item => String(item._id || item) !== String(movie._id));
+                        }
+                        localStorage.setItem('lumiere_wishlist_cache', JSON.stringify(wishlistData));
+                        console.log('Cache updated successfully');
+                    }
+                } catch (cacheError) {
+                    console.warn('Cache update failed:', cacheError);
+                }
             }
             
         } catch (error) {
             console.error('Wishlist operation error:', error);
+            setIsInWishlist(!newState); // Revert on error
+            
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                setShowAuthError(true);
+            }
         } finally {
-            setIsProcessing(false);
+            setIsLoading(false);
         }
     };
 
-    const isLoading = isProcessing || loading;
-
     return (
         <>
-            {showAuthError && <ErrorModal errorMsg="Please login to save your favourite movies." onClose={() => setShowAuthError(false)} />}
-            <div
-                className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className} ${isLoading ? 'opacity-70' : ''} transition-all duration-200 hover:scale-110 active:scale-95`}
-                onClick={handleWishlistClick}
-                title={movieInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
-            >
-                <Heart 
-                    className={`absolute h-full w-full transition-all duration-300 ${
-                        isLoading ? 'animate-pulse' : ''
-                    } ${
-                        hasAnimated ? 'animate-bounce' : ''
-                    } ${
-                        movieInWishlist ? 'text-red-500 scale-110' : 'text-gray-300 hover:text-red-400'
-                    }`} 
-                    strokeWidth={movieInWishlist ? 2 : 1.5} 
-                    fill={movieInWishlist ? 'currentColor' : 'none'} 
+            {showAuthError && (
+                <ErrorModal 
+                    errorMsg="Please login to save your favourite movies." 
+                    onClose={() => setShowAuthError(false)} 
                 />
-                {/* Loading indicator */}
+            )}
+            <div
+                className={`relative h-7 w-7 hover:cursor-pointer sm:h-10 sm:w-10 lg:h-11 lg:w-11 xl:h-12 xl:w-12 ${className} 
+                    transition-all duration-200 hover:scale-105 active:scale-95 
+                    ${isLoading ? 'animate-pulse' : ''}`}
+                onClick={handleWishlistClick}
+                title={isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+                {/* Single Heart with smooth transitions */}
+                <Heart 
+                    className={`absolute h-full w-full transition-all duration-300 ease-out
+                        ${hasAnimated ? 'animate-bounce' : ''}
+                        ${isInWishlist 
+                            ? 'text-red-500 scale-110 drop-shadow-lg' 
+                            : 'text-white/80 hover:text-red-400 sm:text-gray-300 sm:hover:text-red-400'
+                        }`} 
+                    strokeWidth={isInWishlist ? 2.5 : 2} 
+                    fill={isInWishlist ? 'currentColor' : 'none'} 
+                    style={{
+                        filter: isInWishlist ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'none'
+                    }}
+                />
+
+                {/* Loading ring for feedback */}
                 {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-4 sm:w-4"></div>
-                    </div>
+                    <div className="absolute -inset-1 rounded-full border-2 border-red-500/40 animate-spin border-t-red-500"></div>
+                )}
+
+                {/* Success pulse */}
+                {hasAnimated && !isLoading && (
+                    <div className="absolute -inset-2 rounded-full bg-red-500/20 animate-ping"></div>
                 )}
             </div>
         </>
