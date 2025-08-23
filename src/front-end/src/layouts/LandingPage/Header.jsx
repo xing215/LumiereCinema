@@ -112,11 +112,11 @@ const Header = () => {
     );
 
     const MobileMenu = () => (
-        <div 
-            className={`lg:hidden absolute top-full right-4 w-48 sm:w-52 md:w-56 z-40 bg-slate-950/95 backdrop-blur-md border border-slate-800/50 rounded-lg transition-all duration-300 ${
-                isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-            }`}
-        >
+    <div 
+        className={`lg:hidden absolute top-full right-4 w-48 sm:w-52 md:w-56 z-40 bg-zinc-800/30 backdrop-blur-md border border-slate-700/60 rounded-lg transition-all duration-300 ${
+            isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
+    >
             <div className="flex flex-col py-2 px-3 space-y-1">
                 <button 
                     className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
