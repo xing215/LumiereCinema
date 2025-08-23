@@ -91,20 +91,37 @@ export const useGetWishlist = () => {
     const [wishlist, setWishlist] = useState([]);
     const { token } = useUser();
 
-    const getWishlist = async () => {
+    const getWishlist = async (force = false) => {
         if (!token) {
             setWishlist([]);
             setError('You must be logged in to view wishlist');
             return { success: false, error: 'You must be logged in to view wishlist' };
         }
+
+        // Check cache first (only if not forced)
+        if (!force) {
+            const cached = sessionStorage.getItem('wishlist_cache');
+            const cacheTime = sessionStorage.getItem('wishlist_cache_time');
+            const now = Date.now();
+            
+            // Use cache if less than 5 minutes old
+            if (cached && cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+                const cachedWishlist = JSON.parse(cached);
+                setWishlist(cachedWishlist);
+                return { success: true, data: { wishlist: cachedWishlist } };
+            }
+        }
+
         setLoading(true);
         setError(null);
         try {
             const data = await userService.getWishlist(token);
-
-            // Xử lý đúng cấu trúc dữ liệu từ backend
             const wishlistData = data.wishlist || data;
             setWishlist(wishlistData);
+
+            // Cache the result
+            sessionStorage.setItem('wishlist_cache', JSON.stringify(wishlistData));
+            sessionStorage.setItem('wishlist_cache_time', Date.now().toString());
 
             return { success: true, data };
         } catch (err) {
@@ -128,6 +145,11 @@ export const useAddToWishlist = () => {
         setError(null);
         try {
             const data = await userService.addToWishlist(movieId, token);
+            
+            // Clear cache to force refresh on next load
+            sessionStorage.removeItem('wishlist_cache');
+            sessionStorage.removeItem('wishlist_cache_time');
+            
             return { success: true, data };
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Failed to add to wishlist';
@@ -140,6 +162,7 @@ export const useAddToWishlist = () => {
 
     return { addToWishlist, loading, error };
 };
+
 export const useRemoveFromWishlist = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -150,6 +173,11 @@ export const useRemoveFromWishlist = () => {
         setError(null);
         try {
             const data = await userService.removeFromWishlist(movieId, token);
+            
+            // Clear cache to force refresh on next load
+            sessionStorage.removeItem('wishlist_cache');
+            sessionStorage.removeItem('wishlist_cache_time');
+            
             return { success: true, data };
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Failed to remove from wishlist';

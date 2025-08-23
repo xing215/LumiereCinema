@@ -146,21 +146,50 @@ const addToWishlist = async (req, res) => {
             return res.status(400).json({ message: 'Movie ID is required.' });
         }
 
-        const user = await User.findById(userId);
+        // Validate movieId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(400).json({ message: 'Invalid movie ID format.' });
+        }
+
+        // Check if movie exists
+        const movieExists = await Movie.findById(movieId).select('_id');
+        if (!movieExists) {
+            return res.status(404).json({ message: 'Movie not found.' });
+        }
+
+        // Use atomic operation to prevent race conditions
+        const user = await User.findOneAndUpdate(
+            { 
+                _id: userId, 
+                wishlist: { $ne: movieId } // Only update if movieId not in wishlist
+            },
+            { 
+                $addToSet: { wishlist: movieId } // Add only if not exists
+            },
+            { 
+                new: true,
+                select: 'wishlist'
+            }
+        );
+
         if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
+            // Either user not found or movie already in wishlist
+            const existingUser = await User.findById(userId).select('wishlist');
+            if (!existingUser) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+            if (existingUser.wishlist.includes(movieId)) {
+                return res.status(400).json({ message: 'Movie already in wishlist.' });
+            }
         }
 
-        if (user.wishlist.includes(movieId)) {
-            return res.status(400).json({ message: 'Movie already in wishlist.' });
-        }
+        // Clear cache only after successful operation
+        await redisClient.del(cacheKey);
 
-        user.wishlist.push(movieId);
-        await user.save();
-
-        await redisClient.del(cacheKey); // Xóa cache khi có thay đổi
-
-        res.status(200).json({ message: 'Movie added to wishlist successfully.', wishlist: user.wishlist });
+        res.status(200).json({ 
+            message: 'Movie added to wishlist successfully.',
+            success: true
+        });
     } catch (error) {
         console.error('Error adding to wishlist:', error);
         res.status(500).json({ message: 'Server error', error });
@@ -177,21 +206,44 @@ const removeFromWishlist = async (req, res) => {
             return res.status(400).json({ message: 'Movie ID is required.' });
         }
 
-        const user = await User.findById(userId);
+        // Validate movieId format
+        if (!mongoose.Types.ObjectId.isValid(movieId)) {
+            return res.status(400).json({ message: 'Invalid movie ID format.' });
+        }
+
+        // Use atomic operation to prevent race conditions
+        const user = await User.findOneAndUpdate(
+            { 
+                _id: userId, 
+                wishlist: movieId // Only update if movieId is in wishlist
+            },
+            { 
+                $pull: { wishlist: movieId } // Remove from array
+            },
+            { 
+                new: true,
+                select: 'wishlist'
+            }
+        );
+
         if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
+            // Either user not found or movie not in wishlist
+            const existingUser = await User.findById(userId).select('wishlist');
+            if (!existingUser) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+            if (!existingUser.wishlist.includes(movieId)) {
+                return res.status(400).json({ message: 'Movie not found in wishlist.' });
+            }
         }
 
-        if (!user.wishlist.includes(movieId)) {
-            return res.status(400).json({ message: 'Movie not found in wishlist.' });
-        }
+        // Clear cache only after successful operation
+        await redisClient.del(cacheKey);
 
-        user.wishlist = user.wishlist.filter(id => id.toString() !== movieId);
-        await user.save();
-
-        await redisClient.del(cacheKey); // Xóa cache khi có thay đổi
-
-        res.status(200).json({ message: 'Movie removed from wishlist successfully.', wishlist: user.wishlist });
+        res.status(200).json({ 
+            message: 'Movie removed from wishlist successfully.',
+            success: true
+        });
     } catch (error) {
         console.error('Error removing from wishlist:', error);
         res.status(500).json({ message: 'Server error', error });

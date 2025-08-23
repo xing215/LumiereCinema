@@ -1,5 +1,6 @@
 import React from 'react';
 import { UserProvider } from '@contexts/UserContext.jsx';
+import { WishlistProvider } from '@contexts/WishlistContext.jsx';
 import { ErrorProvider, useError } from '@contexts/ErrorContext.jsx';
 import ErrorModal from '@layouts/Error.jsx';
 import AppRoutes from '@routes/AppRoutes.jsx';
@@ -14,8 +15,10 @@ const App = () => {
     return (
         <ErrorProvider>
             <UserProvider>
-                <ErrorModalWrapper />
-                <AppRoutes />
+                <WishlistProvider>
+                    <ErrorModalWrapper />
+                    <AppRoutes />
+                </WishlistProvider>
             </UserProvider>
         </ErrorProvider>
     );
