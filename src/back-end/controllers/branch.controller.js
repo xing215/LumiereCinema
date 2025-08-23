@@ -2053,9 +2053,7 @@ const getBranchScreens = async (req, res) => {
         return res.status(409).json({ 
           message: 'A seat already exists at this location.' 
         });
-      }
-
-      // 9. Create new seat
+      }      // 9. Create new seat
       const newSeat = new Seat({
         seatNumber: seatNumber.trim(),
         location: {
@@ -2068,6 +2066,18 @@ const getBranchScreens = async (req, res) => {
       });
 
       await newSeat.save();
+
+      // Clear seat layout cache as seat configuration changed
+      const screenForCache = await Screen.findById(screenId);
+      if (screenForCache) {
+        await Promise.all([
+          redisClient.del(`seat_layout_${screenForCache.size.rows}_${screenForCache.size.columns}`),
+          // Clear any cached seat maps for schedules using this screen
+          redisClient.keys(`seat_map_*`).then(keys => {
+            if (keys.length > 0) return redisClient.del(keys);
+          })
+        ]);
+      }
 
       res.status(201).json({
         message: 'Seat created successfully.',
@@ -2218,6 +2228,18 @@ const getBranchScreens = async (req, res) => {
 
       // 8. Create all seats
       const createdSeats = await Seat.insertMany(validatedSeats);
+
+      // Clear seat layout cache as seat configuration changed
+      const screenForCache = await Screen.findById(screenId);
+      if (screenForCache) {
+        await Promise.all([
+          redisClient.del(`seat_layout_${screenForCache.size.rows}_${screenForCache.size.columns}`),
+          // Clear any cached seat maps for schedules using this screen
+          redisClient.keys(`seat_map_*`).then(keys => {
+            if (keys.length > 0) return redisClient.del(keys);
+          })
+        ]);
+      }
 
       res.status(201).json({
         message: `${createdSeats.length} seats created successfully.`,
@@ -2375,6 +2397,18 @@ const getBranchScreens = async (req, res) => {
         { new: true, runValidators: true }
       );
 
+      // Clear seat layout cache as seat configuration may have changed
+      const screenForCache = await Screen.findById(screenId);
+      if (screenForCache) {
+        await Promise.all([
+          redisClient.del(`seat_layout_${screenForCache.size.rows}_${screenForCache.size.columns}`),
+          // Clear any cached seat maps for schedules using this screen
+          redisClient.keys(`seat_map_*`).then(keys => {
+            if (keys.length > 0) return redisClient.del(keys);
+          })
+        ]);
+      }
+
       res.status(200).json({
         message: 'Seat updated successfully.',
         seat: updatedSeat
@@ -2451,15 +2485,22 @@ const getBranchScreens = async (req, res) => {
       const scheduleCount = await Schedule.countDocuments({ 
         screen: screenId,
         startTime: { $gte: new Date() } // Only future schedules
-      });
-
-      if (scheduleCount > 0) {
+      });      if (scheduleCount > 0) {
         // If there are future schedules, just hide the seat instead of deleting
         const hiddenSeat = await Seat.findByIdAndUpdate(
           seatId,
           { isHidden: true },
           { new: true }
         );
+
+        // Clear seat layout cache as seat visibility changed
+        await Promise.all([
+          redisClient.del(`seat_layout_${screen.size.rows}_${screen.size.columns}`),
+          // Clear any cached seat maps for schedules using this screen
+          redisClient.keys(`seat_map_*`).then(keys => {
+            if (keys.length > 0) return redisClient.del(keys);
+          })
+        ]);
 
         return res.status(200).json({
           message: `Seat cannot be deleted due to existing schedules (${scheduleCount}). Seat has been hidden instead.`,
@@ -2469,6 +2510,18 @@ const getBranchScreens = async (req, res) => {
 
       // 7. Delete the seat
       await Seat.findByIdAndDelete(seatId);
+
+      // Clear seat layout cache as seat configuration changed
+      const screenForCache = await Screen.findById(screenId);
+      if (screenForCache) {
+        await Promise.all([
+          redisClient.del(`seat_layout_${screenForCache.size.rows}_${screenForCache.size.columns}`),
+          // Clear any cached seat maps for schedules using this screen
+          redisClient.keys(`seat_map_*`).then(keys => {
+            if (keys.length > 0) return redisClient.del(keys);
+          })
+        ]);
+      }
 
       res.status(200).json({
         message: 'Seat deleted successfully.',
