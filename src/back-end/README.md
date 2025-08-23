@@ -1,6 +1,7 @@
 # Lumiere Cinema Back-End Documentation
 
 ## Table of Contents
+
 1. [Introduction](#introduction)
 2. [Setup and Installation](#setup-and-installation)
 3. [Running the Back-End](#running-the-back-end)
@@ -15,6 +16,7 @@
 ---
 
 ## Introduction
+
 The Lumiere Cinema Back-End is a Node.js application that provides APIs for managing cinema operations, including ticket booking, branch management, movie schedules, and more. This document will guide you through setting up the back-end, running it, and adding new features.
 
 ---
@@ -22,24 +24,29 @@ The Lumiere Cinema Back-End is a Node.js application that provides APIs for mana
 ## Setup and Installation
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - MongoDB (local or cloud instance)
 - Redis (for caching)
 
 ### Steps
+
 1. **Clone the Repository**
+
    ```bash
    git clone <repository-url>
    cd LumiereCinema/Project/src/back-end
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set Up Environment Variables**
    Create a `.env` file in the `src/back-end` directory with the following variables:
+
    ```env
    PORT=3000
    MONGO_URI=mongodb://localhost:27017/lumiere_cinema
@@ -49,7 +56,6 @@ The Lumiere Cinema Back-End is a Node.js application that provides APIs for mana
    ```
 
 4. **Start MongoDB and Redis**
-
    - **If Redis is already installed on your system:**
      1. Start the Redis server by running the following command in your terminal:
         ```bash
@@ -103,9 +109,11 @@ The Lumiere Cinema Back-End is a Node.js application that provides APIs for mana
 ## Running the Back-End
 
 1. **Start the Server**
+
    ```bash
    npm run dev
    ```
+
    The server will start on `http://localhost:3000`.
 
 2. **Access API Documentation**
@@ -134,6 +142,7 @@ back-end/
 ### Example: Adding a Feature to Manage "Reviews"
 
 ### Step 1: Define the Route
+
 Create a new file `review.route.js` in the `routes/` folder:
 
 ```javascript
@@ -149,6 +158,7 @@ module.exports = router;
 ```
 
 ### Step 2: Create Middleware (Optional)
+
 If you need to validate requests, create a middleware in `middlewares/`:
 
 ```javascript
@@ -167,6 +177,7 @@ module.exports = validateReview;
 ```
 
 ### Step 3: Implement the Controller
+
 Create a new file `review.controller.js` in the `controllers/` folder:
 
 ```javascript
@@ -199,6 +210,7 @@ module.exports = { createReview, getReviews };
 ```
 
 ### Step 4: Define the Model
+
 Create a new file `Review.js` in the `models/` folder:
 
 ```javascript
@@ -209,13 +221,14 @@ const reviewSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   rating: { type: Number, required: true },
   comment: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model('Review', reviewSchema);
 ```
 
 ### Step 5: Test the Feature
+
 Use Postman or any API testing tool to test the new endpoints:
 
 1. **Add a Review**

@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getProfile,
-  updateProfile,
-  rateMovie,
-  getRatingMovie,
-  addToWishlist,
-  removeFromWishlist,
-  getWishlist,
-  getWatchHistory,
-  removeFromWatchHistory,
-  getUserTickets
+    getProfile,
+    updateProfile,
+    rateMovie,
+    getRatingMovie,
+    addToWishlist,
+    removeFromWishlist,
+    getWishlist,
+    getWatchHistory,
+    removeFromWatchHistory,
+    getUserTickets,
 } = require('../controllers/user.controller');
 
 const { protect, restrictTo } = require('../middlewares/auth.middleware.js');

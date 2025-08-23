@@ -26,8 +26,8 @@ const getNowShowingMovies = async (req, res) => {
         // 2. Cache miss - fetch from database
         const now = new Date();
         // Use the same logic as virtual property for consistency
-        const movies = await Movie.find({ 
-            isHidden: false
+        const movies = await Movie.find({
+            isHidden: false,
         });
 
         // For each movie, find the closest schedule and remaining seats
@@ -39,11 +39,11 @@ const getNowShowingMovies = async (req, res) => {
                     return !movie.isHidden && releaseDate <= now;
                 })
                 .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
-                .map(async (movie) => {
+                .map(async movie => {
                     // Build schedule query - filter by branch if provided
                     let scheduleQuery = {
                         movie: movie._id,
-                        startTime: { $gte: now }
+                        startTime: { $gte: now },
                     };
 
                     // Find the closest upcoming schedule for this movie
@@ -53,15 +53,18 @@ const getNowShowingMovies = async (req, res) => {
 
                     // If branch filter is provided, check if schedule belongs to that branch
                     if (branchId && closestSchedule) {
-                        if (!closestSchedule.screen || !closestSchedule.screen.branch || 
-                            String(closestSchedule.screen.branch) !== branchId) {
+                        if (
+                            !closestSchedule.screen ||
+                            !closestSchedule.screen.branch ||
+                            String(closestSchedule.screen.branch) !== branchId
+                        ) {
                             // Find a schedule for the specific branch
                             closestSchedule = await Schedule.findOne(scheduleQuery)
                                 .sort({ startTime: 1 })
                                 .populate({
                                     path: 'screen',
                                     select: 'screenName size branch',
-                                    match: { branch: branchId }
+                                    match: { branch: branchId },
                                 });
                         }
                     }
@@ -77,28 +80,29 @@ const getNowShowingMovies = async (req, res) => {
                         const { rows, columns } = closestSchedule.screen.size;
                         const totalSeats = rows * columns;
                         // Occupied seats
-                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat) ? closestSchedule.OccupiedSeat.length : 0;
+                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat)
+                            ? closestSchedule.OccupiedSeat.length
+                            : 0;
                         // Held seats (not expired)
                         const heldSeatsCount = await SeatHold.countDocuments({
                             schedule: closestSchedule._id,
-                            expiresAt: { $gt: new Date() }
+                            expiresAt: { $gt: new Date() },
                         });
                         remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
                     }
 
                     // Find all schedules for this movie to collect branch IDs (only future schedules)
-                    let allSchedulesQuery = { 
+                    let allSchedulesQuery = {
                         movie: movie._id,
-                        startTime: { $gte: now }
+                        startTime: { $gte: now },
                     };
 
-                    const allSchedules = await Schedule.find(allSchedulesQuery)
-                        .populate({ 
-                            path: 'screen', 
-                            select: 'branch', 
-                            populate: { path: 'branch', select: '_id' },
-                            ...(branchId && { match: { branch: branchId } })
-                        });
+                    const allSchedules = await Schedule.find(allSchedulesQuery).populate({
+                        path: 'screen',
+                        select: 'branch',
+                        populate: { path: 'branch', select: '_id' },
+                        ...(branchId && { match: { branch: branchId } }),
+                    });
 
                     const branchSet = new Set();
                     allSchedules.forEach(sch => {
@@ -126,15 +130,17 @@ const getNowShowingMovies = async (req, res) => {
                         ageRating: movie.ageRating,
                         ratingsAverage: movie.ratingsAverage,
                         releaseDate: movie.releaseDate,
-                        closestSchedule: closestSchedule ? {
-                            _id: closestSchedule._id,
-                            startTime: closestSchedule.startTime
-                        } : null,
+                        closestSchedule: closestSchedule
+                            ? {
+                                  _id: closestSchedule._id,
+                                  startTime: closestSchedule.startTime,
+                              }
+                            : null,
                         remainingSeats,
                         branches,
-                        status: movie.status
+                        status: movie.status,
                     };
-                })
+                }),
         );
 
         // Filter out null values (movies that don't match branch criteria)
@@ -146,7 +152,6 @@ const getNowShowingMovies = async (req, res) => {
         });
 
         res.status(200).json(filteredMovies);
-
     } catch (error) {
         console.error('Get Now Showing Movies Error:', error);
         res.status(500).json({ message: 'Server error occurred.' });
@@ -173,8 +178,8 @@ const getUpcomingMovies = async (req, res) => {
         // 2. Cache miss - fetch from database
         const now = new Date();
         // Use the same logic as virtual property for consistency
-        const movies = await Movie.find({ 
-            isHidden: false
+        const movies = await Movie.find({
+            isHidden: false,
         });
 
         // For each upcoming movie, find the closest schedule and remaining seats
@@ -186,11 +191,11 @@ const getUpcomingMovies = async (req, res) => {
                     return !movie.isHidden && releaseDate > now;
                 })
                 .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
-                .map(async (movie) => {
+                .map(async movie => {
                     // Build schedule query - filter by branch if provided
                     let scheduleQuery = {
                         movie: movie._id,
-                        startTime: { $gte: now }
+                        startTime: { $gte: now },
                     };
 
                     // Find the closest upcoming schedule for this movie
@@ -200,15 +205,18 @@ const getUpcomingMovies = async (req, res) => {
 
                     // If branch filter is provided, check if schedule belongs to that branch
                     if (branchId && closestSchedule) {
-                        if (!closestSchedule.screen || !closestSchedule.screen.branch || 
-                            String(closestSchedule.screen.branch) !== branchId) {
+                        if (
+                            !closestSchedule.screen ||
+                            !closestSchedule.screen.branch ||
+                            String(closestSchedule.screen.branch) !== branchId
+                        ) {
                             // Find a schedule for the specific branch
                             closestSchedule = await Schedule.findOne(scheduleQuery)
                                 .sort({ startTime: 1 })
                                 .populate({
                                     path: 'screen',
                                     select: 'screenName size branch',
-                                    match: { branch: branchId }
+                                    match: { branch: branchId },
                                 });
                         }
                     }
@@ -224,28 +232,29 @@ const getUpcomingMovies = async (req, res) => {
                         const { rows, columns } = closestSchedule.screen.size;
                         const totalSeats = rows * columns;
                         // Occupied seats
-                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat) ? closestSchedule.OccupiedSeat.length : 0;
+                        const occupiedSeatsCount = Array.isArray(closestSchedule.OccupiedSeat)
+                            ? closestSchedule.OccupiedSeat.length
+                            : 0;
                         // Held seats (not expired)
                         const heldSeatsCount = await SeatHold.countDocuments({
                             schedule: closestSchedule._id,
-                            expiresAt: { $gt: new Date() }
+                            expiresAt: { $gt: new Date() },
                         });
                         remainingSeats = totalSeats - (occupiedSeatsCount + heldSeatsCount);
                     }
 
                     // Find all schedules for this movie to collect branch IDs (only future schedules)
-                    let allSchedulesQuery = { 
+                    let allSchedulesQuery = {
                         movie: movie._id,
-                        startTime: { $gte: now }
+                        startTime: { $gte: now },
                     };
 
-                    const allSchedules = await Schedule.find(allSchedulesQuery)
-                        .populate({ 
-                            path: 'screen', 
-                            select: 'branch', 
-                            populate: { path: 'branch', select: '_id' },
-                            ...(branchId && { match: { branch: branchId } })
-                        });
+                    const allSchedules = await Schedule.find(allSchedulesQuery).populate({
+                        path: 'screen',
+                        select: 'branch',
+                        populate: { path: 'branch', select: '_id' },
+                        ...(branchId && { match: { branch: branchId } }),
+                    });
 
                     const branchSet = new Set();
                     allSchedules.forEach(sch => {
@@ -270,15 +279,17 @@ const getUpcomingMovies = async (req, res) => {
                         posterURL: movie.posterURL,
                         releaseDate: movie.releaseDate,
                         genre: movie.genre,
-                        closestSchedule: closestSchedule ? {
-                            _id: closestSchedule._id,
-                            startTime: closestSchedule.startTime
-                        } : null,
+                        closestSchedule: closestSchedule
+                            ? {
+                                  _id: closestSchedule._id,
+                                  startTime: closestSchedule.startTime,
+                              }
+                            : null,
                         remainingSeats,
                         branches,
-                        status: movie.status
+                        status: movie.status,
                     };
-                })
+                }),
         );
 
         // Filter out null values (movies that don't match branch criteria)
@@ -331,9 +342,9 @@ const getMovieDetails = async (req, res) => {
                 $group: {
                     _id: '$movie',
                     ratingsQuantity: { $sum: 1 },
-                    ratingsAverage: { $avg: '$star' }
-                }
-            }
+                    ratingsAverage: { $avg: '$star' },
+                },
+            },
         ]);
 
         let ratingsAverage = 0;
@@ -344,16 +355,16 @@ const getMovieDetails = async (req, res) => {
         }
 
         // Find all schedules for this movie, populate screen.branch (only future schedules)
-        const schedules = await Schedule.find({ 
+        const schedules = await Schedule.find({
             movie: movie._id,
-            startTime: { $gte: new Date() }
-        })
-            .populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
+            startTime: { $gte: new Date() },
+        }).populate({ path: 'screen', select: 'branch', populate: { path: 'branch', select: '_id' } });
 
         // Collect unique branch IDs
         const branchSet = new Set();
         schedules.forEach(sch => {
-            const branchId = sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
+            const branchId =
+                sch.screen && sch.screen.branch && sch.screen.branch._id ? String(sch.screen.branch._id) : null;
             if (branchId) branchSet.add(branchId);
         });
         const branches = Array.from(branchSet);
@@ -376,7 +387,6 @@ const getMovieDetails = async (req, res) => {
     }
 };
 
-
 /**
  * @desc    Search movies using simple regex search with caching
  * @route   GET /api/movies/search?q=...&page=1&limit=10
@@ -386,12 +396,12 @@ const searchMovies = async (req, res) => {
     try {
         const keyword = req.query.q?.trim();
         if (!keyword) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Search keyword is required.',
                 results: [],
                 totalResults: 0,
                 currentPage: 1,
-                totalPages: 0
+                totalPages: 0,
             });
         }
 
@@ -415,7 +425,7 @@ const searchMovies = async (req, res) => {
 
         // Build search query using regex (case-insensitive)
         const searchRegex = new RegExp(keyword, 'i');
-        
+
         const searchQuery = {
             isHidden: false,
             $or: [
@@ -423,13 +433,13 @@ const searchMovies = async (req, res) => {
                 { description: { $regex: searchRegex } },
                 { director: { $regex: searchRegex } },
                 { cast: { $in: [searchRegex] } },
-                { genre: { $in: [searchRegex] } }
-            ]
+                { genre: { $in: [searchRegex] } },
+            ],
         };
 
         // Get total count for pagination
         const totalResults = await Movie.countDocuments(searchQuery);
-        const totalPages = Math.ceil(totalResults / limit);        // Execute search query with sorting and pagination
+        const totalPages = Math.ceil(totalResults / limit); // Execute search query with sorting and pagination
         const movies = await Movie.find(searchQuery)
             .select('_id title description posterURL duration genre ageRating director cast releaseDate ratingsAverage')
             .sort({ ratingsAverage: -1, releaseDate: -1, title: 1 })
@@ -440,7 +450,7 @@ const searchMovies = async (req, res) => {
         // Add status to each movie
         const moviesWithStatus = movies.map(movie => ({
             ...movie,
-            status: new Date(movie.releaseDate) > new Date() ? 'Upcoming' : 'Now Showing'
+            status: new Date(movie.releaseDate) > new Date() ? 'Upcoming' : 'Now Showing',
         }));
 
         const response = {
@@ -452,8 +462,8 @@ const searchMovies = async (req, res) => {
                 totalResults: totalResults,
                 limit: limit,
                 hasNextPage: page < totalPages,
-                hasPrevPage: page > 1
-            }
+                hasPrevPage: page > 1,
+            },
         };
 
         // Cache the results for 5 minutes (search results can change frequently)
@@ -464,15 +474,14 @@ const searchMovies = async (req, res) => {
         }
 
         res.status(200).json(response);
-
     } catch (error) {
         console.error('Search Movies Error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Server error occurred.',
             results: [],
             totalResults: 0,
             currentPage: 1,
-            totalPages: 0
+            totalPages: 0,
         });
     }
 };
@@ -486,14 +495,14 @@ const getSearchSuggestions = async (req, res) => {
     try {
         const keyword = req.query.q?.trim();
         if (!keyword || keyword.length < 2) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Search keyword must be at least 2 characters.',
-                suggestions: []
+                suggestions: [],
             });
         }
 
         const limit = Math.min(10, Math.max(1, parseInt(req.query.limit) || 5));
-        
+
         // Create cache key for suggestions
         const cacheKey = `suggest:movies:${keyword.toLowerCase()}:${limit}`;
 
@@ -509,16 +518,16 @@ const getSearchSuggestions = async (req, res) => {
 
         // Build search query using regex (case-insensitive)
         const searchRegex = new RegExp(keyword, 'i');
-        
+
         // Prioritize title matches first
         const titleMatches = await Movie.find({
             isHidden: false,
-            title: { $regex: searchRegex }
+            title: { $regex: searchRegex },
         })
-        .select('_id title posterURL genre ageRating director cast releaseDate ratingsAverage')
-        .sort({ ratingsAverage: -1, title: 1 })
-        .limit(Math.ceil(limit / 2))
-        .lean();
+            .select('_id title posterURL genre ageRating director cast releaseDate ratingsAverage')
+            .sort({ ratingsAverage: -1, title: 1 })
+            .limit(Math.ceil(limit / 2))
+            .lean();
 
         // Then get matches from other fields
         const otherMatches = await Movie.find({
@@ -527,13 +536,13 @@ const getSearchSuggestions = async (req, res) => {
             $or: [
                 { director: { $regex: searchRegex } },
                 { cast: { $in: [searchRegex] } },
-                { genre: { $in: [searchRegex] } }
-            ]
+                { genre: { $in: [searchRegex] } },
+            ],
         })
-        .select('_id title posterURL genre ageRating director cast releaseDate ratingsAverage')
-        .sort({ ratingsAverage: -1, title: 1 })
-        .limit(limit - titleMatches.length)
-        .lean();
+            .select('_id title posterURL genre ageRating director cast releaseDate ratingsAverage')
+            .sort({ ratingsAverage: -1, title: 1 })
+            .limit(limit - titleMatches.length)
+            .lean();
 
         // Combine results
         const allSuggestions = [...titleMatches, ...otherMatches];
@@ -541,12 +550,12 @@ const getSearchSuggestions = async (req, res) => {
         // Add status to each movie
         const suggestionsWithStatus = allSuggestions.map(movie => ({
             ...movie,
-            status: new Date(movie.releaseDate) > new Date() ? 'Upcoming' : 'Now Showing'
+            status: new Date(movie.releaseDate) > new Date() ? 'Upcoming' : 'Now Showing',
         }));
 
         const response = {
             keyword: keyword,
-            suggestions: suggestionsWithStatus.slice(0, limit)
+            suggestions: suggestionsWithStatus.slice(0, limit),
         };
 
         // Cache suggestions for 2 minutes
@@ -557,12 +566,11 @@ const getSearchSuggestions = async (req, res) => {
         }
 
         res.status(200).json(response);
-
     } catch (error) {
         console.error('Get Search Suggestions Error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Server error occurred.',
-            suggestions: []
+            suggestions: [],
         });
     }
 };
@@ -577,16 +585,16 @@ const clearSearchCache = async (req, res) => {
         // Get all search-related cache keys
         const searchKeys = await redisClient.keys('search:movies:*');
         const suggestKeys = await redisClient.keys('suggest:movies:*');
-        
+
         const allKeys = [...searchKeys, ...suggestKeys];
-        
+
         if (allKeys.length > 0) {
             await redisClient.del(allKeys);
         }
 
         res.status(200).json({
             message: 'Search cache cleared successfully.',
-            clearedKeys: allKeys.length
+            clearedKeys: allKeys.length,
         });
     } catch (error) {
         console.error('Clear Search Cache Error:', error);
@@ -604,8 +612,10 @@ const getAllMovies = async (req, res) => {
         // Get all movies including isHidden field for management
         const movies = await Movie.find({})
             .sort({ createdAt: -1 })
-            .select('title description posterURL trailerURL duration genre ageRating director cast language ratingsAverage releaseDate isHidden createdAt');
-        
+            .select(
+                'title description posterURL trailerURL duration genre ageRating director cast language ratingsAverage releaseDate isHidden createdAt',
+            );
+
         res.status(200).json(movies);
     } catch (error) {
         console.error('Get All Movies Error:', error);
@@ -621,7 +631,7 @@ const getAllMovies = async (req, res) => {
 const addMovie = async (req, res) => {
     try {
         const movieData = req.body;
-        
+
         // Check if movie already exists
         const existingMovie = await Movie.findOne({ title: movieData.title });
         if (existingMovie) {
@@ -644,15 +654,15 @@ const addMovie = async (req, res) => {
             // Set default values
             ratingsAverage: 0,
             ratingsQuantity: 0,
-            isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true
+            isHidden: movieData.isHidden !== undefined ? movieData.isHidden : true,
         };
 
         const newMovie = new Movie(movieToAdd);
         await newMovie.save();
-          // Clear cache to update with new data
+        // Clear cache to update with new data
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
-        
+
         // Clear search cache as well
         const searchKeys = await redisClient.keys('search:movies:*');
         const suggestKeys = await redisClient.keys('suggest:movies:*');
@@ -660,10 +670,10 @@ const addMovie = async (req, res) => {
         if (allSearchKeys.length > 0) {
             await redisClient.del(allSearchKeys);
         }
-        
+
         res.status(201).json({
             message: 'Movie added successfully.',
-            movie: newMovie
+            movie: newMovie,
         });
     } catch (error) {
         console.error('Add Movie Error:', error);
@@ -674,9 +684,9 @@ const addMovie = async (req, res) => {
         // Validation error
         if (error.name === 'ValidationError') {
             const validationErrors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Validation failed.',
-                errors: validationErrors
+                errors: validationErrors,
             });
         }
         res.status(500).json({ message: 'Server error occurred.' });
@@ -693,23 +703,19 @@ const updateMovie = async (req, res) => {
     try {
         const { movieId } = req.params;
         const updateData = req.body;
-        
+
         // Use $set to update only provided fields
         // Works for both PUT and PATCH
-        const movie = await Movie.findByIdAndUpdate(
-            movieId,
-            { $set: updateData },
-            { new: true, runValidators: true }
-        );
-          if (!movie) {
+        const movie = await Movie.findByIdAndUpdate(movieId, { $set: updateData }, { new: true, runValidators: true });
+        if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
-        
+
         // Clear related cache
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         await redisClient.del(`movie:${movieId}`);
-        
+
         // Clear search cache as well
         const searchKeys = await redisClient.keys('search:movies:*');
         const suggestKeys = await redisClient.keys('suggest:movies:*');
@@ -717,10 +723,10 @@ const updateMovie = async (req, res) => {
         if (allSearchKeys.length > 0) {
             await redisClient.del(allSearchKeys);
         }
-        
+
         res.status(200).json({
             message: 'Movie updated successfully.',
-            movie
+            movie,
         });
     } catch (error) {
         console.error('Update Movie Error:', error);
@@ -736,36 +742,36 @@ const updateMovie = async (req, res) => {
 const deleteMovie = async (req, res) => {
     try {
         const { movieId } = req.params;
-        
+
         // Check if movie exists first
         const movie = await Movie.findById(movieId);
         if (!movie) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
-        
+
         // Check if movie has any active schedules
         const hasSchedules = await Schedule.findOne({ movie: movieId });
         if (hasSchedules) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Cannot delete movie. Movie has active schedules. Please remove all schedules first.',
-                action: 'delete_blocked'
+                action: 'delete_blocked',
             });
         }
-        
+
         // Check if movie has any ratings
         const hasRatings = await MovieRating.findOne({ movieId: movieId });
         if (hasRatings) {
             // Delete all ratings for this movie first
             await MovieRating.deleteMany({ movieId: movieId });
         }
-          // Perform hard delete - permanently remove from database
+        // Perform hard delete - permanently remove from database
         await Movie.findByIdAndDelete(movieId);
-        
+
         // Clear related cache
         await redisClient.del('movies:now-showing');
         await redisClient.del('movies:upcoming');
         await redisClient.del(`movie:${movieId}`);
-        
+
         // Clear search cache as well
         const searchKeys = await redisClient.keys('search:movies:*');
         const suggestKeys = await redisClient.keys('suggest:movies:*');
@@ -773,14 +779,14 @@ const deleteMovie = async (req, res) => {
         if (allSearchKeys.length > 0) {
             await redisClient.del(allSearchKeys);
         }
-        
+
         res.status(200).json({
             message: 'Movie has been permanently deleted from database.',
             action: 'hard_delete',
             deletedMovie: {
                 id: movie._id,
-                title: movie.title
-            }
+                title: movie.title,
+            },
         });
     } catch (error) {
         console.error('Delete Movie Error:', error);
@@ -797,35 +803,35 @@ const getMovieShowtimes = async (req, res) => {
     try {
         const { movieId } = req.params;
         const { date } = req.query;
-        
+
         // Check if movie exists and is not hidden
         const movie = await Movie.findById(movieId);
         if (!movie || movie.isHidden) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
-        
+
         let query = { movie: movieId };
-        
+
         // If filtering by date
         if (date) {
             const startDate = new Date(date);
             const endDate = new Date(date);
             endDate.setDate(endDate.getDate() + 1);
-            
+
             query.startTime = {
                 $gte: startDate,
-                $lt: endDate
+                $lt: endDate,
             };
         } else {
             // Only get showtimes from current time onwards
             query.startTime = { $gte: new Date() };
         }
-        
+
         const schedules = await Schedule.find(query)
             .populate('screen', 'screenName capacity')
             .populate('movie', 'title duration')
             .sort({ startTime: 1 });
-        
+
         res.status(200).json(schedules);
     } catch (error) {
         console.error('Get Movie Showtimes Error:', error);
@@ -841,22 +847,20 @@ const getMovieShowtimes = async (req, res) => {
 const getMovieRatingSummary = async (req, res) => {
     try {
         const { movieId } = req.params;
-        
+
         // Check if movie exists and is not hidden
         const movie = await Movie.findById(movieId);
         if (!movie || movie.isHidden) {
             return res.status(404).json({ message: 'Movie not found.' });
         }
-                
-        const ratings = await MovieRating.find({ movieId: movieId })
-            .populate('userId', 'name')
-            .sort({ createdAt: -1 });
-        
+
+        const ratings = await MovieRating.find({ movieId: movieId }).populate('userId', 'name').sort({ createdAt: -1 });
+
         res.status(200).json({
             ratings,
             totalRatings,
             ratingsAverage: movie.ratingsAverage,
-            ratingsQuantity: movie.ratingsQuantity
+            ratingsQuantity: movie.ratingsQuantity,
         });
     } catch (error) {
         console.error('Get Movie Rating Summary Error:', error);

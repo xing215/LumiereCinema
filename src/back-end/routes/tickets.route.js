@@ -3,32 +3,31 @@ const router = express.Router();
 
 const { protect, restrictTo, getUser } = require('../middlewares/auth.middleware.js');
 
-const { 
-  getSeatMapBySchedule,
-  createTicket,
-  holdSeats,
-  manageSeatHold,
-  releaseBulkHolds,
-  cleanupExpiredHolds,
-  getSnacksByBranch,
-  getCacheStats,
-  cleanupCache,
-  preloadCache,
-  getTicketByCode,
-  getAllTickets,
-  updateTicket,
-  deleteTicket,
-  calculateDiscountedTotal,
-  // New ticket cache management functions
-  preloadTicketCache,
-  getTicketCacheStats,
-  clearTicketCache,
+const {
+    getSeatMapBySchedule,
+    createTicket,
+    holdSeats,
+    manageSeatHold,
+    releaseBulkHolds,
+    cleanupExpiredHolds,
+    getSnacksByBranch,
+    getCacheStats,
+    cleanupCache,
+    preloadCache,
+    getTicketByCode,
+    getAllTickets,
+    updateTicket,
+    deleteTicket,
+    calculateDiscountedTotal,
+    // New ticket cache management functions
+    preloadTicketCache,
+    getTicketCacheStats,
+    clearTicketCache,
 } = require('../controllers/ticket.controller.js');
 
 // =============================================================================
 // GENERAL TICKET ROUTES (Both Movie and Snack)
 // =============================================================================
-
 
 /**
  * GET /screen/:scheduleId
@@ -40,8 +39,8 @@ router.get('/screen/:scheduleId', getSeatMapBySchedule);
 /**
  * POST /create
  * Tạo vé thống nhất (có thể tạo movie ticket, snack ticket, hoặc cả hai)
- * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?, 
- *         movieTicket?: { schedule, seats }, 
+ * Body: { customer?, noLoginCustomerInfo?, branch, seller?, promotionCode?,
+ *         movieTicket?: { schedule, seats },
  *         snackTicket?: { snackList: [{ shortname, quantity }] } }
  */
 router.post('/create', getUser, createTicket);
@@ -102,7 +101,7 @@ router.patch('/movie/admin/:ticketCode', protect, restrictTo('administrator'), u
 router.delete('/movie/admin/:ticketCode', protect, restrictTo('administrator'), deleteTicket);
 
 // =============================================================================
-// SNACK TICKET SPECIFIC ROUTES  
+// SNACK TICKET SPECIFIC ROUTES
 // =============================================================================
 
 /**
@@ -164,7 +163,7 @@ router.post('/cache/preload', protect, restrictTo('administrator'), preloadCache
 // POST /cache/tickets/preload - Preload recent tickets to cache
 router.post('/cache/tickets/preload', protect, restrictTo('administrator'), preloadTicketCache);
 
-// GET /cache/tickets/stats - Get ticket cache statistics  
+// GET /cache/tickets/stats - Get ticket cache statistics
 router.get('/cache/tickets/stats', protect, restrictTo('administrator'), getTicketCacheStats);
 
 // DELETE /cache/tickets/clear - Clear ticket cache
