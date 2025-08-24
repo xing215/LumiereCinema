@@ -252,6 +252,7 @@ const RegistrationForm = () => {
                                                 escapeWithReference: false,
                                                 boundariesElement: 'viewport',
                                             },
+
                                         }}
                                     />
                                 </div>
@@ -326,6 +327,7 @@ const RegistrationForm = () => {
                                         '&::-ms-reveal': { display: 'none' },
                                         '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
                                         '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' },
+
                                     }}
                                     required
                                 />
@@ -357,6 +359,7 @@ const RegistrationForm = () => {
                                         '&::-ms-reveal': { display: 'none' },
                                         '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
                                         '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' },
+
                                     }}
                                     required
                                 />

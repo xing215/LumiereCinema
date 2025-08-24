@@ -30,7 +30,6 @@ const Role = ({ index, role, isChecked, onTick }) => {
 const InputTemplate = ({ text, className, value, onChange, type = 'text', disabled = false, autoComplete }) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
-
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
@@ -50,6 +49,7 @@ const InputTemplate = ({ text, className, value, onChange, type = 'text', disabl
                               }
                             : {}
                     }
+
                 />
                 {isPassword && (
                     <button
@@ -59,6 +59,7 @@ const InputTemplate = ({ text, className, value, onChange, type = 'text', disabl
                         className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <img src={showPassword ? HideIcon : ShowIcon} alt={showPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
+
                     </button>
                 )}
             </div>

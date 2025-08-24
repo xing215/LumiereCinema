@@ -237,6 +237,7 @@ const Banner = () => {
                                     style={{
                                         objectPosition: 'center center',
                                         userSelect: 'none',
+
                                     }}
                                 />
                                 <div className="swiper-lazy-preloader"></div>

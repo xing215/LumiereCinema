@@ -300,7 +300,6 @@
         font-size: 9px;
         width: 26px;
     }
-
     .react-datepicker-custom .react-datepicker__header {
         padding: 12px 0;
     }
@@ -316,14 +315,12 @@
         min-width: 290px;
         max-width: 90vw;
     }
-
     .react-datepicker-custom .react-datepicker__day {
         width: 28px;
         height: 28px;
         line-height: 28px;
         font-size: 12px;
     }
-
     .react-datepicker-custom .react-datepicker__current-month {
         font-size: 14px;
     }
@@ -339,18 +336,15 @@
         min-width: 320px;
         max-width: 400px;
     }
-
     .react-datepicker-custom .react-datepicker__day {
         width: 34px;
         height: 34px;
         line-height: 34px;
         font-size: 14px;
     }
-
     .react-datepicker-custom .react-datepicker__current-month {
         font-size: 16px;
     }
-
     .react-datepicker-custom .react-datepicker__day-name {
         font-size: 12px;
         width: 34px;
@@ -368,7 +362,17 @@
         max-height: 80vh;
         overflow-y: auto;
     }
-
+    
+    .react-datepicker-custom {
+        max-width: 90vw;
+        min-width: 300px;
+    }
+    
+    .react-datepicker-custom .react-datepicker__month-dropdown,
+    .react-datepicker-custom .react-datepicker__year-dropdown {
+        max-height: 120px;
+    }
+}
     .react-datepicker-custom {
         max-width: 90vw;
         min-width: 300px;
@@ -386,7 +390,6 @@
         min-width: 260px;
         max-width: 98vw;
     }
-
     .react-datepicker-custom .react-datepicker__day {
         width: 24px;
         height: 24px;
@@ -394,12 +397,10 @@
         font-size: 10px;
         margin: 0.5px;
     }
-
     .react-datepicker-custom .react-datepicker__day-name {
         font-size: 8px;
         width: 24px;
     }
-
     .react-datepicker-custom .react-datepicker__current-month {
         font-size: 12px;
     }
@@ -409,12 +410,12 @@
     }
 }
 
-/* Additional fixes for better calendar visibility */
 .react-datepicker-popper[data-placement^='bottom'] {
     margin-top: 4px;
 }
 
 .react-datepicker-popper[data-placement^='top'] {
+
     margin-bottom: 4px;
 }
 
