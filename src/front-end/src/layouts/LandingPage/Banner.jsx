@@ -1,6 +1,14 @@
 import axios from 'axios';
 import { getApiUrl } from '@config/api.config';
 import React from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/autoplay';
+import 'swiper/css/effect-fade';
+import '@styles/swiper-banner.css';
 import BackwardButton from '@components/buttons/backwardButton';
 import ForwardButton from '@components/buttons/forwardButton';
 import Decoration from '@assets/img/Banner_Decoration.png';
@@ -40,12 +48,8 @@ const Label = () => {
 
 const Banner = () => {
     const [banners, setBanners] = React.useState([]);
-    const [current, setCurrent] = React.useState(0);
     const [loading, setLoading] = React.useState(true);
-    const [isDragging, setIsDragging] = React.useState(false);
-    const [startX, setStartX] = React.useState(0);
-    const [currentTranslate, setCurrentTranslate] = React.useState(0);
-    const [prevTranslate, setPrevTranslate] = React.useState(0);
+    const [swiperInstance, setSwiperInstance] = React.useState(null);
     
     // Tỉ lệ ảnh banner (width:height) - bạn có thể thay đổi theo ý muốn
     const aspectRatio = 4 / 3; // Ví dụ: 16:9, có thể thay thành 21:9, 4:3, v.v.
@@ -103,91 +107,20 @@ const Banner = () => {
         fetchBanners();
     }, []);
 
+    // Navigation handlers for custom buttons
     const handlePrev = () => {
-        if (!banners.length) return;
-        setCurrent((prev) => {
-            const newIndex = prev === 0 ? banners.length - 1 : prev - 1;
-            setPrevTranslate(-newIndex * (100 / banners.length));
-            return newIndex;
-        });
+        if (swiperInstance) {
+            swiperInstance.slidePrev();
+        }
     };
+
     const handleNext = () => {
-        if (!banners.length) return;
-        setCurrent((prev) => {
-            const newIndex = (prev + 1) % banners.length;
-            setPrevTranslate(-newIndex * (100 / banners.length));
-            return newIndex;
-        });
-    };
-
-    // Drag handlers
-    const handleDragStart = (e) => {
-        if (!banners.length) return;
-        setIsDragging(true);
-        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
-        setStartX(clientX);
-        setCurrentTranslate(prevTranslate);
-    };
-
-    const handleDragMove = (e) => {
-        if (!isDragging || !banners.length) return;
-        e.preventDefault();
-        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
-        const diff = clientX - startX;
-        const slideWidth = 100 / banners.length;
-        setCurrentTranslate(prevTranslate + (diff / window.innerWidth) * 100);
-    };
-
-    const handleDragEnd = () => {
-        if (!isDragging || !banners.length) return;
-        setIsDragging(false);
-
-        const slideWidth = 100 / banners.length;
-        const movedBy = currentTranslate - prevTranslate;
-
-        if (Math.abs(movedBy) > slideWidth / 3) {
-            if (movedBy > 0 && current > 0) {
-                // Dragged right, go to previous
-                handlePrev();
-            } else if (movedBy < 0 && current < banners.length - 1) {
-                // Dragged left, go to next
-                handleNext();
-            } else if (movedBy < 0 && current === banners.length - 1) {
-                // Last slide, go to first
-                setCurrent(0);
-                setPrevTranslate(0);
-            } else if (movedBy > 0 && current === 0) {
-                // First slide, go to last
-                setCurrent(banners.length - 1);
-                setPrevTranslate(-(banners.length - 1) * slideWidth);
-            } else {
-                // Snap back
-                setCurrentTranslate(prevTranslate);
-            }
-        } else {
-            // Snap back
-            setCurrentTranslate(prevTranslate);
+        if (swiperInstance) {
+            swiperInstance.slideNext();
         }
     };
 
-    // Auto-advance banner every 5 seconds
-    React.useEffect(() => {
-        if (!banners.length || isDragging) return;
-        const interval = setInterval(() => {
-            handleNext();
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [banners, isDragging]);
-
-    // Update prevTranslate when current changes (not from dragging)
-    React.useEffect(() => {
-        if (!isDragging && banners.length) {
-            setPrevTranslate(-current * (100 / banners.length));
-            setCurrentTranslate(-current * (100 / banners.length));
-        }
-    }, [current, banners.length, isDragging]);
-
-    // Poster container with sliding animation
+    // Poster container with Swiper
     const renderPoster = () => {
         const currentHeight = responsiveHeight;
 
@@ -197,6 +130,7 @@ const Banner = () => {
                     Loading...
                 </div>
             );
+        
         if (!banners.length) {
             return (
                 <div className="flex w-full items-center justify-center" style={{ height: currentHeight }}>
@@ -221,47 +155,100 @@ const Banner = () => {
                     aspectRatio: aspectRatio,
                 }}
             >
-                <div
-                    className={`flex h-full ${isDragging ? '' : 'transition-transform duration-500 ease-in-out'}`}
-                    style={{
-                        transform: `translateX(${isDragging ? currentTranslate : -current * (100 / banners.length)}%)`,
-                        width: `${banners.length * 100}%`,
-                        cursor: isDragging ? 'grabbing' : 'grab',
+                <Swiper
+                    modules={[Navigation, Pagination, Autoplay, EffectFade]}
+                    spaceBetween={0}
+                    slidesPerView={1}
+                    loop={banners.length > 1}
+                    autoplay={{
+                        delay: 5000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                        waitForTransition: true,
                     }}
-                    onMouseDown={handleDragStart}
-                    onMouseMove={handleDragMove}
-                    onMouseUp={handleDragEnd}
-                    onMouseLeave={handleDragEnd}
-                    onTouchStart={handleDragStart}
-                    onTouchMove={handleDragMove}
-                    onTouchEnd={handleDragEnd}
+                    speed={800}
+                    effect="slide"
+                    grabCursor={true}
+                    touchRatio={1}
+                    touchAngle={45}
+                    threshold={5}
+                    longSwipesRatio={0.3}
+                    longSwipesMs={200}
+                    followFinger={true}
+                    allowTouchMove={true}
+                    resistance={true}
+                    resistanceRatio={0.85}
+                    watchSlidesProgress={true}
+                    preventClicks={false}
+                    preventClicksPropagation={false}
+                    slideToClickedSlide={false}
+                    centeredSlides={false}
+                    lazy={{
+                        loadPrevNext: true,
+                        loadPrevNextAmount: 1,
+                    }}
+                    preloadImages={false}
+                    updateOnWindowResize={true}
+                    resizeObserver={true}
+                    // pagination={{
+                    //     el: '.banner-pagination',
+                    //     clickable: true,
+                    //     bulletClass: 'swiper-pagination-bullet banner-bullet',
+                    //     bulletActiveClass: 'banner-bullet-active',
+                    //     dynamicBullets: banners.length > 5,
+                    //     dynamicMainBullets: 3,
+                    // }}
+                    keyboard={{
+                        enabled: true,
+                        onlyInViewport: true,
+                    }}
+                    mousewheel={{
+                        forceToAxis: true,
+                        sensitivity: 1,
+                        releaseOnEdges: true,
+                    }}
+                    breakpoints={{
+                        320: {
+                            touchRatio: 1.2,
+                            threshold: 8,
+                        },
+                        640: {
+                            touchRatio: 1,
+                            threshold: 5,
+                        },
+                        1024: {
+                            touchRatio: 0.8,
+                            threshold: 3,
+                        },
+                    }}
+                    onSwiper={setSwiperInstance}
+                    className="h-full w-full banner-swiper"
                 >
                     {banners.map((banner, index) => {
                         const img = banner?.image || banner;
                         return (
-                            <div
-                                key={index}
-                                className="h-full w-full flex-shrink-0"
-                                style={{
-                                    width: `${100 / banners.length}%`,
-                                    userSelect: 'none',
-                                    pointerEvents: isDragging ? 'none' : 'auto',
-                                }}
-                            >
-
+                            <SwiperSlide key={index} className="h-full w-full">
                                 <img
                                     src={img}
                                     alt={`Banner ${index + 1}`}
-                                    className="block h-full w-full object-cover"
+                                    className="swiper-lazy block h-full w-full object-cover"
                                     draggable={false}
+                                    loading="lazy"
                                     style={{
                                         objectPosition: 'center center',
+                                        userSelect: 'none',
                                     }}
                                 />
-                            </div>
+                                <div className="swiper-lazy-preloader"></div>
+                            </SwiperSlide>
                         );
                     })}
-                </div>
+                </Swiper>
+
+                {/* Custom pagination dots - Temporarily disabled for testing */}
+                {/* {banners.length > 1 && (
+                    <div className="banner-pagination absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 transform space-x-2"></div>
+                )} */}
             </div>
         );
     };

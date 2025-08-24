@@ -1,0 +1,231 @@
+/* Custom Swiper Banner Styles */
+
+/* Custom pagination bullets */
+.banner-bullet {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    opacity: 1 !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    margin: 0 4px !important;
+    border: 2px solid transparent !important;
+}
+
+.banner-bullet:hover {
+    background: rgba(255, 255, 255, 0.6) !important;
+    transform: scale(1.1) !important;
+}
+
+.banner-bullet-active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.6) !important;
+}
+
+/* Swiper container customizations */
+.swiper {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+.swiper-slide {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+.swiper-slide img {
+    transition: transform 0.3s ease !important;
+}
+
+.swiper-slide:hover img {
+    transform: scale(1.02) !important;
+}
+
+/* Custom navigation arrows (if needed) */
+.swiper-button-next,
+.swiper-button-prev {
+    color: white !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    margin-top: -20px !important;
+    transition: all 0.3s ease !important;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background: rgba(0, 0, 0, 0.6) !important;
+    transform: scale(1.1) !important;
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 16px !important;
+    font-weight: bold !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .banner-bullet {
+        width: 10px !important;
+        height: 10px !important;
+        margin: 0 3px !important;
+    }
+    
+    .swiper-button-next,
+    .swiper-button-prev {
+        width: 32px !important;
+        height: 32px !important;
+        margin-top: -16px !important;
+    }
+    
+    .swiper-button-next::after,
+    .swiper-button-prev::after {
+        font-size: 12px !important;
+    }
+}
+
+/* Tablet responsive */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .banner-bullet {
+        width: 14px !important;
+        height: 14px !important;
+        margin: 0 5px !important;
+    }
+}
+
+/* Smooth loading animation */
+.swiper-wrapper {
+    transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+/* Prevent image selection and dragging */
+.swiper-slide img {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    -khtml-user-drag: none !important;
+    -moz-user-drag: none !important;
+    -o-user-drag: none !important;
+    pointer-events: auto !important;
+}
+
+/* Loading placeholder animation */
+.swiper-lazy-preloader {
+    border: 4px solid rgba(255, 255, 255, 0.3) !important;
+    border-left-color: #667eea !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    animation: swiper-preloader-spin 1s linear infinite !important;
+}
+
+@keyframes swiper-preloader-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced touch feedback */
+.swiper-slide-active {
+    z-index: 2 !important;
+}
+
+/* Pagination container styling */
+.banner-pagination {
+    padding: 4px 8px !important;
+    background: transparent !important;
+    border-radius: 20px !important;
+}
+
+/* Hide pagination if only one slide */
+.swiper-pagination-hidden {
+    display: none !important;
+}
+
+/* Banner Swiper specific styles */
+.banner-swiper {
+    --swiper-theme-color: #667eea !important;
+    --swiper-navigation-size: 24px !important;
+}
+
+.banner-swiper .swiper-wrapper {
+    align-items: center !important;
+}
+
+.banner-swiper .swiper-slide {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* Enhanced loading states */
+.banner-swiper .swiper-slide-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%) !important;
+    background-size: 200% 100% !important;
+    animation: loading-shimmer 1.5s infinite !important;
+}
+
+@keyframes loading-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Touch feedback improvements */
+.banner-swiper .swiper-slide-active {
+    transition: transform 0.3s ease !important;
+}
+
+/* Performance optimizations */
+.banner-swiper * {
+    will-change: transform !important;
+    backface-visibility: hidden !important;
+    perspective: 1000px !important;
+}
+
+/* Accessibility improvements */
+.banner-swiper:focus {
+    outline: 2px solid #667eea !important;
+    outline-offset: 2px !important;
+}
+
+.banner-bullet:focus {
+    outline: 2px solid #667eea !important;
+    outline-offset: 2px !important;
+}
+
+/* Override default Swiper styles that might cause bars */
+.swiper-pagination {
+    display: none !important;
+}
+
+.swiper-pagination-bullets {
+    display: none !important;
+}
+
+.swiper-pagination-bullet {
+    display: none !important;
+}
+
+/* Remove any default Swiper overlays */
+.swiper::before,
+.swiper::after {
+    display: none !important;
+}
+
+.swiper-wrapper::before,
+.swiper-wrapper::after {
+    display: none !important;
+}
+
+/* Ensure no pseudo elements create bars */
+.banner-swiper::before,
+.banner-swiper::after {
+    display: none !important;
+}
