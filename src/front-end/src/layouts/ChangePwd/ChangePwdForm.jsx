@@ -129,11 +129,14 @@ const ChangePwdForm = ({ ResetToken = null }) => {
             setMessage(response.data?.message || response.error || 'Password changed successfully.');
             setIsSuccess(response.success);
 
-            // Redirect to login page after successful password change/reset
-            setTimeout(() => {
-                navigate(ROUTES.LOGIN);
-            }, 2000);
+            if (response.success) {
+                // Redirect to profile page after successful password change/reset
+                setTimeout(() => {
+                    navigate(ROUTES.PROFILE);
+                }, 2000);
+            }
         } catch (error) {
+
             console.error('Password change error:', error);
             setMessage(response.error || 'An error occurred. Please try again.');
             setIsSuccess(false);
