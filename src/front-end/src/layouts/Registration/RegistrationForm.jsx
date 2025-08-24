@@ -265,7 +265,15 @@ const RegistrationForm = () => {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleInputChange}
+                                    autoComplete="new-password"
                                     className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.password ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                                    style={{
+                                        WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                                        // Hide browser's password reveal button
+                                        '&::-ms-reveal': { display: 'none' },
+                                        '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
+                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' }
+                                    }}
                                     required
                                 />
                                 <button
@@ -288,7 +296,15 @@ const RegistrationForm = () => {
                                     name="retypePassword"
                                     value={formData.retypePassword}
                                     onChange={handleInputChange}
+                                    autoComplete="new-password"
                                     className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypePassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                                    style={{
+                                        WebkitTextSecurity: showRetypePassword ? 'none' : 'disc',
+                                        // Hide browser's password reveal button
+                                        '&::-ms-reveal': { display: 'none' },
+                                        '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
+                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' }
+                                    }}
                                     required
                                 />
                                 <button
