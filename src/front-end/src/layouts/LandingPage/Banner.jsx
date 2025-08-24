@@ -50,7 +50,7 @@ const Banner = () => {
     const [banners, setBanners] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const [swiperInstance, setSwiperInstance] = React.useState(null);
-    
+
     // Tỉ lệ ảnh banner (width:height) - bạn có thể thay đổi theo ý muốn
     const aspectRatio = 4 / 3; // Ví dụ: 16:9, có thể thay thành 21:9, 4:3, v.v.
     const bannerHeight = 300; // Chiều cao cố định (px), có thể responsive
@@ -130,7 +130,7 @@ const Banner = () => {
                     Loading...
                 </div>
             );
-        
+
         if (!banners.length) {
             return (
                 <div className="flex w-full items-center justify-center" style={{ height: currentHeight }}>
@@ -222,7 +222,7 @@ const Banner = () => {
                         },
                     }}
                     onSwiper={setSwiperInstance}
-                    className="h-full w-full banner-swiper"
+                    className="banner-swiper h-full w-full"
                 >
                     {banners.map((banner, index) => {
                         const img = banner?.image || banner;

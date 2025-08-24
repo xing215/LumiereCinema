@@ -119,23 +119,23 @@ const RegistrationForm = () => {
     const handleDateChange = (date) => {
         if (date) {
             const formattedDate = date.toISOString().split('T')[0];
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
-                birthday: formattedDate
+                birthday: formattedDate,
             }));
             const error = validateField('birthday', formattedDate);
-            setErrors(prev => ({
+            setErrors((prev) => ({
                 ...prev,
-                birthday: error
+                birthday: error,
             }));
         } else {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
-                birthday: ''
+                birthday: '',
             }));
-            setErrors(prev => ({
+            setErrors((prev) => ({
                 ...prev,
-                birthday: ''
+                birthday: '',
             }));
         }
     };
@@ -250,8 +250,8 @@ const RegistrationForm = () => {
                                             preventOverflow: {
                                                 enabled: true,
                                                 escapeWithReference: false,
-                                                boundariesElement: 'viewport'
-                                            }
+                                                boundariesElement: 'viewport',
+                                            },
                                         }}
                                     />
                                 </div>
@@ -325,7 +325,7 @@ const RegistrationForm = () => {
                                         // Hide browser's password reveal button
                                         '&::-ms-reveal': { display: 'none' },
                                         '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
-                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' }
+                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' },
                                     }}
                                     required
                                 />
@@ -356,7 +356,7 @@ const RegistrationForm = () => {
                                         // Hide browser's password reveal button
                                         '&::-ms-reveal': { display: 'none' },
                                         '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
-                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' }
+                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' },
                                     }}
                                     required
                                 />
