@@ -18,12 +18,21 @@ const PaymentButton = ({ text, selected, onSelect }) => (
     </button>
 );
 
-const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange, onBlur, promotion, productType = 'All' }) => {
+const DiscountDropdown = ({ className = '', labelClass = '', direction = 'up', value, onChange, onBlur, onSelect, promotion, productType = 'All' }) => {
     return (
         <div className={`h-auto w-[80vw] min-w-0 flex-row items-center justify-center gap-2 md:max-w-[350px] md:min-w-[250px] ${className}`}>
             <div className={`h-auto w-auto justify-start font-['Unbounded'] font-bold text-white ${labelClass}`}>DISCOUNT:</div>
             <div className="z-3 h-auto flex-1">
-                <PromotionDropdown value={value} onChange={onChange} onBlur={onBlur} promotion={promotion} placeholder="Enter promotion code" className="w-full" productType={productType} />
+                <PromotionDropdown 
+                    value={value} 
+                    onChange={onChange} 
+                    onBlur={onBlur} 
+                    onSelect={onSelect}
+                    promotion={promotion} 
+                    placeholder="Enter promotion code" 
+                    className="w-full" 
+                    productType={productType} 
+                />
             </div>
         </div>
     );
@@ -165,7 +174,7 @@ const MenuPayment = ({
         }
 
         if (error) {
-            showError('Promotion Error', error);
+            showError('Promotion Error', error.message || 'Failed to apply promotion code.');
             setDiscountValue('');
             updateMovieTicket({ promotion: null, discount: 0 });
             updateSnackTicket({ promotion: null, discount: 0 });
@@ -232,6 +241,30 @@ const MenuPayment = ({
             movieTotal: movieTicketData?.total,
             noLoginCustomerInfo: movieTicketData?.noLoginCustomerInfo || snackTicketData?.noLoginCustomerInfo,
         });
+    };
+
+    // Handle dropdown selection (when user selects from dropdown)
+    const handleDropdownSelect = async (e) => {
+        console.log('handleDropdownSelect called, value:', e.target.value);
+        
+        const selectedValue = e.target.value.trim();
+
+        if (!selectedValue) {
+            console.log('No discount value from selection, returning early');
+            return;
+        }
+
+        // Clear any pending timeout since user has made a selection
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        // Update the discount value state first to reflect the selection
+        setDiscountValue(selectedValue);
+        
+        console.log('Applying promotion code from selection:', selectedValue);
+        // Use the selected value directly instead of discountValue state to avoid timing issues
+        await applyPromotionCode(selectedValue);
     };
 
     const handleSelectPayment = (method) => {
@@ -305,6 +338,7 @@ const MenuPayment = ({
                             value={discountValue}
                             onChange={handleDiscountChange}
                             onBlur={handleDiscountBlurOrEnter}
+                            onSelect={handleDropdownSelect}
                             promotion={movieTicketData?.promotion || snackTicketData?.promotion}
                             productType={productType}
                         />
@@ -324,6 +358,7 @@ const MenuPayment = ({
                             value={discountValue}
                             onChange={handleDiscountChange}
                             onBlur={handleDiscountBlurOrEnter}
+                            onSelect={handleDropdownSelect}
                             promotion={movieTicketData?.promotion || snackTicketData?.promotion}
                             productType={productType}
                         />

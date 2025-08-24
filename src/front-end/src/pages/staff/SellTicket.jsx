@@ -369,7 +369,12 @@ const SellTicket = () => {
     useEffect(() => {
         if (startedHoldSession) {
             setStartedHoldSession(false);
-            clearSession();
+            // Clear session immediately when seats change
+            clearSession().then(() => {
+                console.log('Session cleared after seat change');
+            }).catch(err => {
+                console.error('Error clearing session after seat change:', err);
+            });
             updateMovieTicket({
                 promotion: null,
                 discount: 0,
