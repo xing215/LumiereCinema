@@ -32,6 +32,10 @@ import React, { useState, useRef, useEffect } from 'react';
 const CustomDropdown = ({
     value,
     onChange,
+    onFocus, // Add onFocus prop
+    onBlur, // Add onBlur prop
+    onKeyDown, // Add onKeyDown prop
+    onSelect, // Add onSelect prop for dropdown option selection
     options,
     placeholder,
     name = 'dropdown',
@@ -55,6 +59,7 @@ const CustomDropdown = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [isSelecting, setIsSelecting] = useState(false); // Add flag to track selection
     const dropdownRef = useRef(null);
     // Filter options based on search input
     const filteredOptions = options.filter((option) => {
@@ -68,6 +73,7 @@ const CustomDropdown = ({
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsOpen(false);
+                setIsSelecting(false); // Reset selection flag when clicking outside
             }
         };
 
@@ -78,9 +84,21 @@ const CustomDropdown = ({
     }, []);
 
     const handleSelect = (selectedValue) => {
-        onChange({ target: { name, value: selectedValue } });
+        setIsSelecting(true); // Set flag to prevent blur
+        const syntheticEvent = { target: { name, value: selectedValue } };
+        onChange(syntheticEvent);
         setIsOpen(false);
         setIsTyping(false);
+        
+        // Call onSelect callback if provided
+        if (onSelect) {
+            setTimeout(() => {
+                onSelect(syntheticEvent);
+                setIsSelecting(false); // Reset flag after selection is complete
+            }, 50); // Small delay to ensure state updates
+        } else {
+            setIsSelecting(false); // Reset flag if no onSelect callback
+        }
     };
 
     const handleInputChange = (e) => {
@@ -95,7 +113,23 @@ const CustomDropdown = ({
         if (e.key === 'Enter' && allowOtherInput) {
             setIsOpen(false);
             setIsTyping(false);
+            if (onBlur) onBlur(e); // Trigger onBlur when Enter is pressed
         }
+        if (onKeyDown) onKeyDown(e); // Call external onKeyDown handler
+    };
+
+    const handleInputBlur = (e) => {
+        // Don't trigger blur if we're in the middle of a selection
+        if (isSelecting) {
+            return;
+        }
+        
+        // Small delay to allow click on dropdown options
+        setTimeout(() => {
+            if (!isSelecting && onBlur) {
+                onBlur(e);
+            }
+        }, 150);
     };
 
     const backgroundClass = bgOpacity ? `bg-${bgColor} ${bgOpacity}` : `bg-${bgColor}`;
@@ -152,7 +186,11 @@ const CustomDropdown = ({
                         value={value || ''}
                         onChange={handleInputChange}
                         onKeyDown={handleInputKeyDown}
-                        onFocus={() => setIsOpen(true)}
+                        onBlur={handleInputBlur}
+                        onFocus={(e) => {
+                            setIsOpen(true);
+                            if (onFocus) onFocus(e);
+                        }}
                         placeholder={placeholder}
                         className={` ${height} w-full rounded-lg px-3 pr-10 sm:px-4 ${inputBackgroundClass} text-${textColor} ${borderColor !== '' ? `border border-${borderColor}` : ''} font-['Unbounded'] ring-0 ${inputTextSize} ${getTextAlignClass(textAlign)} transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${isFigmaVariant ? 'font-bold shadow-[inset_0px_0px_50px_3px_rgba(155,47,255,1.00)] hover:bg-purple-700' : 'shadow-sm'} `}
                     />
@@ -198,6 +236,7 @@ const CustomDropdown = ({
                               <button
                                   key={option.value}
                                   type="button"
+                                  onMouseDown={() => setIsSelecting(true)} // Set flag before click
                                   onClick={() => handleSelect(option.value)}
                                   className={`w-full px-3 py-3 ${getTextAlignClass(textAlign)} sm:px-4 text-${dropdownTextColorClass} font-['Unbounded'] ${optionTextSize} hover:bg-${hoverColor} transition-colors ${index !== filteredOptions.length - 1 ? `border-b border-${borderColor}` : ''} hover:cursor-pointer`}
                               >

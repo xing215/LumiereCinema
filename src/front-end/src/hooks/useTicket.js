@@ -77,9 +77,18 @@ export const useApplyPromotion = () => {
             setAppliedPromotion(response.data);
             return { success: true, data: response };
         } catch (err) {
-            const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid promotion code';
+            // Preserve the complete error response including user data
+            const errorResponse = err.response?.data?.error || err.response?.data || {};
+            const errorMessage = errorResponse.message || err.response?.data?.message || 'Invalid promotion code';
+            
             setAppliedPromotion(null);
-            setError(errorMessage);
+            // Set the complete error object so frontend can access user info
+            setError({
+                message: errorMessage,
+                user: errorResponse.user || null,
+                details: errorResponse.details || null,
+                status: errorResponse.status || err.response?.status || 400
+            });
             return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
@@ -248,6 +257,7 @@ export const useStartHoldSession = () => {
                     seatNumbers,
                     sessionId,
                     holdDurationMinutes,
+                    replaceExisting: true, // Always replace existing holds for this session
                 },
                 token,
             );

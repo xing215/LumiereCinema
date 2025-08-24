@@ -24,6 +24,8 @@ const PromotionDropdown = ({
     value,
     onChange,
     onBlur,
+    onKeyDown,
+    onSelect, // Add onSelect prop for when dropdown option is clicked
     className = '',
     promotion = null,
     placeholder = 'Enter promotion code',
@@ -67,11 +69,13 @@ const PromotionDropdown = ({
     // Handle change - need to extract just the promotion code from the selected value
     const handleChange = (e) => {
         let finalValue = e.target.value;
+        let isDropdownSelection = false;
 
         // If the value matches one of our options, extract just the promotion code
         const matchedOption = promotionOptions.find((option) => option.value === finalValue);
         if (matchedOption) {
             finalValue = matchedOption.value;
+            isDropdownSelection = true;
         }
 
         // Create a new event with the clean promotion code
@@ -82,13 +86,23 @@ const PromotionDropdown = ({
         };
 
         onChange(syntheticEvent);
+
+        // If this was a dropdown selection, also trigger the onSelect callback
+        if (isDropdownSelection && onSelect) {
+            setTimeout(() => {
+                onSelect(syntheticEvent);
+            }, 100); // Small delay to ensure state is updated
+        }
     };
 
     // Handle blur/enter - trigger the promotion validation
     const handleBlurOrEnter = (e) => {
-        if (onBlur) {
-            onBlur(e);
-        }
+        // Add a small delay to allow dropdown selection to complete
+        setTimeout(() => {
+            if (onBlur) {
+                onBlur(e);
+            }
+        }, 200); // Increased delay to ensure dropdown selection completes
     };
 
     // If no promotions available, render as simple input field
@@ -104,6 +118,7 @@ const PromotionDropdown = ({
                         if (e.key === 'Enter') {
                             handleBlurOrEnter(e);
                         }
+                        if (onKeyDown) onKeyDown(e);
                     }}
                     placeholder={placeholder}
                     className={`h-10 w-full rounded-lg border bg-zinc-300 px-3 pr-4 text-black ${promotion ? 'border-green-500' : 'border-white'} text-left font-['Unbounded'] text-sm shadow-sm ring-0 transition-shadow duration-200 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none`}
@@ -118,6 +133,8 @@ const PromotionDropdown = ({
                 value={value}
                 onChange={handleChange}
                 onBlur={handleBlurOrEnter}
+                onKeyDown={onKeyDown}
+                onSelect={onSelect} // Pass through onSelect to CustomDropdown
                 options={promotionOptions}
                 placeholder={loading || allLoading ? 'Loading promotions...' : placeholder}
                 name="promotionCode"

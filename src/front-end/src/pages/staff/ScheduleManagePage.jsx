@@ -13,6 +13,15 @@ import { useGetMovies } from '@hooks/useAdmin';
 import AddScheduleModal from '@/components/display/Modal/AddSchedule';
 import EditScheduleModal from '@/components/display/Modal/EditSchedule';
 import ScheduleUploadModal from '@/components/display/Modal/ScheduleUploadModal';
+import { 
+    showLoading, 
+    showSuccess, 
+    showError, 
+    showOperationError,
+    showAddingItems,
+    showItemsAdded,
+    closeSwal 
+} from '@utils/sweetalert.js';
 
 const Schedule = ({ screen = 1, schedules = [], selectedDate, onAddSchedule, onEditSchedule, screens = [], toVietnamTime }) => {
     const scheduleGridRef = useRef(null);
@@ -561,6 +570,10 @@ const ScheduleManagePage = () => {
     const handleConfirmUpload = useCallback(
         async (selectedData) => {
             setImportLoading(true);
+            
+            // Show loading alert
+            showAddingItems('schedules', selectedData.length);
+            
             try {
                 // Process each schedule
                 const promises = selectedData.map(async (schedule) => {
@@ -592,12 +605,29 @@ const ScheduleManagePage = () => {
 
                 const results = await Promise.all(promises);
 
+                // Close loading alert
+                closeSwal();
+
                 // Check if all succeeded
                 const failures = results.filter((result) => !result.success);
                 if (failures.length > 0) {
-                    alert(`${failures.length} out of ${selectedData.length} schedules failed to import. Check console for details.`);
+                    const successCount = selectedData.length - failures.length;
+                    if (successCount > 0) {
+                        // Show partial success
+                        showError(
+                            'Partial Import Success',
+                            `✅ Successfully imported: ${successCount} schedules\n❌ Failed to import: ${failures.length} schedules\n\nCheck console for details about failed imports.`
+                        );
+                    } else {
+                        // Show complete failure
+                        showError(
+                            'Import Failed',
+                            `Failed to import all ${selectedData.length} schedules. Please check the data and try again.`
+                        );
+                    }
                 } else {
-                    alert(`Successfully imported ${selectedData.length} schedules!`);
+                    // Show complete success
+                    showItemsAdded('schedules', selectedData.length);
                 }
 
                 // Refresh schedules and close modal
@@ -605,7 +635,8 @@ const ScheduleManagePage = () => {
                 handleCloseUploadModal();
             } catch (error) {
                 console.error('Error importing schedules:', error);
-                alert('Failed to import schedules. Please check the data and try again.');
+                closeSwal();
+                showOperationError('Schedule Import', error.message || 'Failed to import schedules. Please check the data and try again.');
             } finally {
                 setImportLoading(false);
             }
