@@ -6,16 +6,16 @@ import { useEffect, useRef, useState } from 'react';
 
 // Fallback prices based on seat category
 const FALLBACK_PRICES = {
-    'normal': { regular: 80000, discounted: 60000 },
-    'vip': { regular: 180000, discounted: 135000 },
-    'couple': { regular: 80000, discounted: 60000 }
+    normal: { regular: 80000, discounted: 60000 },
+    vip: { regular: 180000, discounted: 135000 },
+    couple: { regular: 80000, discounted: 60000 },
 };
 
 const getSeatPrice = (seat, isDiscounted = false, getBoth = false) => {
     // Return the seat's price if it exists, otherwise use fallback based on category
     const category = seat.category?.toLowerCase() || 'normal';
     const priceStructure = FALLBACK_PRICES[category] || FALLBACK_PRICES['normal'];
-    
+
     if (seat.price && seat.price > 0) {
         // If seat has custom price, apply discount percentage if needed
         return isDiscounted ? seat.price.discounted : seat.price.regular;
@@ -24,7 +24,7 @@ const getSeatPrice = (seat, isDiscounted = false, getBoth = false) => {
     if (getBoth) {
         return {
             regular: priceStructure.regular,
-            discounted: priceStructure.discounted
+            discounted: priceStructure.discounted,
         };
     }
 
@@ -54,9 +54,9 @@ export const Seats = ({ seatColor, isTaken = false, isSelected, onClick, seatCol
             />
             {/* Price tooltip */}
             {price && !isHidden && (
-                <div className="absolute w-[300%] -top-6 left-1/2 z-50 hidden -translate-x-1/2 transform rounded bg-black px-2 py-1 text-xs text-center text-white shadow-lg group-hover:block">
-                    {price.discounted/1000}k - {price.regular/1000}k
-                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 transform border-l-2 border-r-2 border-t-4 border-l-transparent border-r-transparent border-t-black"></div>
+                <div className="absolute -top-6 left-1/2 z-50 hidden w-[300%] -translate-x-1/2 transform rounded bg-black px-2 py-1 text-center text-xs text-white shadow-lg group-hover:block">
+                    {price.discounted / 1000}k - {price.regular / 1000}k
+                    <div className="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 transform border-t-4 border-r-2 border-l-2 border-t-black border-r-transparent border-l-transparent"></div>
                 </div>
             )}
         </div>
@@ -78,22 +78,21 @@ export const CoupleSeat = ({ seatColor, isSelected, onClick, seatRow, seatCol, i
             onClick={isHidden ? undefined : handleClick}
             title={`Couple Seat ${seatNumber}`}
         >
-            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} seatNumber={seatNumber}/>
-            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} seatNumber={seatNumber}/>
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} seatNumber={seatNumber} />
+            <Seats seatColor={seatColor} isSelected={isSelected} seatRow={seatRow} seatCol={seatCol} isTaken={isTaken} canCursor={canCursor} seatNumber={seatNumber} />
             <div
                 className={`r-[50%] absolute inset-0 top-1 z-0 mx-auto flex h-[75%] w-5 items-center justify-center transition-colors md:h-[55%] ${isTaken ? 'bg-gray-400' : isSelected ? 'bg-purple-500 ring-2 ring-white' : seatColor}`}
             />
             {/* Price tooltip */}
             {price && !isHidden && (
-                <div className="absolute w-[150%] -top-6 text-center left-1/2 z-50 hidden -translate-x-1/2 transform rounded bg-black px-2 py-1 text-xs text-white shadow-lg group-hover:block">
-                    {price.discounted*2/1000}k - {price.regular*2/1000}k
-                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 transform border-l-2 border-r-2 border-t-4 border-l-transparent border-r-transparent border-t-black"></div>
+                <div className="absolute -top-6 left-1/2 z-50 hidden w-[150%] -translate-x-1/2 transform rounded bg-black px-2 py-1 text-center text-xs text-white shadow-lg group-hover:block">
+                    {(price.discounted * 2) / 1000}k - {(price.regular * 2) / 1000}k
+                    <div className="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 transform border-t-4 border-r-2 border-l-2 border-t-black border-r-transparent border-l-transparent"></div>
                 </div>
             )}
         </div>
     );
 };
-
 
 // ================================ MINI MAP COMPONENT ================================
 
@@ -147,7 +146,7 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
             const marginX = miniWidth * 0.1;
             const marginY = miniHeight * 0.1;
             const isTopRight = viewportX + viewportWidth >= miniWidth - marginX && viewportY <= marginY;
-            
+
             setIsInTopRightCorner(isTopRight);
         };
 
@@ -297,7 +296,9 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
     if (!needsScrolling || hideMiniMap) return null;
 
     return (
-        <div className={`absolute top-[10%] right-0 z-40 rounded-lg border border-gray-600 bg-black/80 p-2 backdrop-blur-lg transition-opacity duration-300 ${isInTopRightCorner && !isDragging ? 'hidden' : 'opacity-100'}`}>
+        <div
+            className={`absolute top-[10%] right-0 z-40 rounded-lg border border-gray-600 bg-black/80 p-2 backdrop-blur-lg transition-opacity duration-300 ${isInTopRightCorner && !isDragging ? 'hidden' : 'opacity-100'}`}
+        >
             <div
                 ref={miniMapRef}
                 className={`relative overflow-hidden rounded bg-gray-800 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -347,9 +348,15 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
                                                 seatElements.push(
                                                     <div
                                                         key={current.seatNumber}
-                                                        className={`h-1.5 w-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${isTaken ? 'bg-gray-400' : 
-                                                            current.category.toLowerCase() === 'couple' ? 'bg-indigo-400' : 
-                                                            current.category.toLowerCase() === 'vip' ? 'bg-red-400' : 'bg-blue-400'}`}
+                                                        className={`h-1.5 w-1.5 rounded-[1px] ${isHidden ? 'opacity-0' : 'opacity-100'} ${
+                                                            isTaken
+                                                                ? 'bg-gray-400'
+                                                                : current.category.toLowerCase() === 'couple'
+                                                                  ? 'bg-indigo-400'
+                                                                  : current.category.toLowerCase() === 'vip'
+                                                                    ? 'bg-red-400'
+                                                                    : 'bg-blue-400'
+                                                        }`}
                                                     />,
                                                 );
                                                 i += 1;
@@ -376,7 +383,6 @@ const MiniMap = ({ seatMap, containerRef, contentRef, needsScrolling, onNavigate
         </div>
     );
 };
-
 
 // ================================ MAIN SEAT LAYOUT COMPONENT ================================
 

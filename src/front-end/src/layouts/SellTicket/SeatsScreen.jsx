@@ -19,16 +19,7 @@ const SeatName = ({ type, text, isCouple = false, isVip = false }) => (
         {isCouple ? (
             <CoupleSeat seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-indigo-400'} canCursor={false} />
         ) : (
-            <Seats 
-                type={type} 
-                isSelected={type === 'Selected'} 
-                seatColor={
-                    type === 'Taken' ? 'bg-gray-400' : 
-                    isVip ? 'bg-red-400' : 
-                    'bg-blue-400'
-                } 
-                canCursor={false} 
-            />
+            <Seats type={type} isSelected={type === 'Selected'} seatColor={type === 'Taken' ? 'bg-gray-400' : isVip ? 'bg-red-400' : 'bg-blue-400'} canCursor={false} />
         )}
         <div className="relative justify-start text-center font-['Unbounded'] text-xs font-normal text-white">{text}</div>
     </div>
@@ -88,31 +79,31 @@ const SeatsScreen = ({ seats = [], loading = false, movieTicketData, updateMovie
         }
 
         // Get both regular and discounted prices for each selected seat
-        const seatPriceData = movieTicketData.seats.map(seatNumber => {
+        const seatPriceData = movieTicketData.seats.map((seatNumber) => {
             const rowLetter = seatNumber.charAt(0);
             const rowSeats = seats.seatsByRow[rowLetter];
-            
+
             if (!rowSeats) {
                 return {
                     seatNumber,
                     regularPrice: FALLBACK_PRICES.normal.regular,
-                    discountedPrice: FALLBACK_PRICES.normal.discounted
+                    discountedPrice: FALLBACK_PRICES.normal.discounted,
                 };
             }
 
-            const seat = rowSeats.find(s => s.seatNumber === seatNumber);
+            const seat = rowSeats.find((s) => s.seatNumber === seatNumber);
             if (!seat) {
                 return {
                     seatNumber,
                     regularPrice: FALLBACK_PRICES.normal.regular,
-                    discountedPrice: FALLBACK_PRICES.normal.discounted
+                    discountedPrice: FALLBACK_PRICES.normal.discounted,
                 };
             }
 
             return {
                 seatNumber,
                 regularPrice: getSeatPrice(seat, false),
-                discountedPrice: getSeatPrice(seat, true)
+                discountedPrice: getSeatPrice(seat, true),
             };
         });
 
@@ -124,7 +115,7 @@ const SeatsScreen = ({ seats = [], loading = false, movieTicketData, updateMovie
         const maxDiscountTickets = movieTicketData.discountedTickets || 0;
 
         // Assign discount tickets to seats with cheapest discounted prices first
-        sortedSeats.forEach(seatData => {
+        sortedSeats.forEach((seatData) => {
             if (discountTicketsUsed < maxDiscountTickets) {
                 // Use discounted price
                 total += seatData.discountedPrice;
@@ -228,11 +219,7 @@ const SeatsScreen = ({ seats = [], loading = false, movieTicketData, updateMovie
                 <div className="flex h-full w-full flex-row">
                     <div className="m-5 flex h-auto max-h-full w-[30%] flex-col items-center gap-8 pt-6">
                         <div className="flex h-[40%] w-full flex-col items-center justify-center gap-4">
-                            <TicketSelect 
-                                ticket_type="Adult" 
-                                amount={movieTicketData.adultTickets} 
-                                onChange={(fn) => handleTicketChange('adult', fn)} 
-                            />
+                            <TicketSelect ticket_type="Adult" amount={movieTicketData.adultTickets} onChange={(fn) => handleTicketChange('adult', fn)} />
                             <TicketSelect
                                 ticket_type="Student/ Elders"
                                 amount={movieTicketData.discountedTickets}
@@ -251,9 +238,7 @@ const SeatsScreen = ({ seats = [], loading = false, movieTicketData, updateMovie
 
                         {/* Total Price Display */}
                         <div className="mt-4 w-full text-center">
-                            <div className="font-['Unbounded'] text-sm font-semibold text-white">
-                                Total: {movieTicketData?.total ? movieTicketData.total.toLocaleString('en-US') : '0'} VND
-                            </div>
+                            <div className="font-['Unbounded'] text-sm font-semibold text-white">Total: {movieTicketData?.total ? movieTicketData.total.toLocaleString('en-US') : '0'} VND</div>
                         </div>
                     </div>
 

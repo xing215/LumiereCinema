@@ -11,7 +11,7 @@ const TicketDetails = ({ ticket, loading, error, isScannerVisible, onStatusChang
     const statusOptions = [
         { value: 'Confirmed', label: 'CONFIRMED' },
         { value: 'CheckedIn', label: 'CHECKED IN' },
-        { value: 'Cancelled', label: 'CANCELLED' }
+        { value: 'Cancelled', label: 'CANCELLED' },
     ];
 
     const getStatusColor = (status) => {
@@ -52,9 +52,9 @@ const TicketDetails = ({ ticket, loading, error, isScannerVisible, onStatusChang
         return (
             <div className="flex h-auto max-h-[350px] w-full flex-col items-center md:h-auto md:max-h-[500px] md:overflow-y-auto">
                 <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">TICKET DETAILS</p>
-                <div className="py-1 w-[200px] relative">
+                <div className="relative w-[200px] py-1">
                     {loading && ticket && (
-                        <div className="absolute inset-0 bg-black/20 rounded flex items-center justify-center z-10">
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded bg-black/20">
                             <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                         </div>
                     )}
@@ -109,9 +109,9 @@ const TicketDetails = ({ ticket, loading, error, isScannerVisible, onStatusChang
         return (
             <div className="flex h-auto max-h-[350px] w-full flex-col items-center md:h-auto md:max-h-[500px] md:overflow-y-auto">
                 <p className="font-unbounded flex-nowrap pb-1 text-xl font-black text-white md:pb-2 md:text-xl lg:text-2xl">SNACK TICKET DETAILS</p>
-                <div className="py-1 w-[200px] relative">
+                <div className="relative w-[200px] py-1">
                     {loading && ticket && (
-                        <div className="absolute inset-0 bg-black/20 rounded flex items-center justify-center z-10">
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded bg-black/20">
                             <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                         </div>
                     )}
@@ -208,16 +208,16 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
         try {
             // Set updating status to show loading state while keeping ticket visible
             setIsUpdatingStatus(true);
-            
+
             const result = await updateTicketStatus(ticketCodeToUpdate, newStatus);
-            
+
             if (result.success) {
                 // Small delay to ensure backend has processed the update
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
+                await new Promise((resolve) => setTimeout(resolve, 500));
+
                 // Force refresh by calling getTicket with forceRefresh=true to bypass cache
                 const refreshResult = await getTicket(ticketCodeToUpdate, true);
-                
+
                 if (refreshResult.success) {
                     showSuccess('Status Updated', `Ticket status has been updated to ${newStatus}`);
                     return { success: true };
@@ -290,10 +290,10 @@ const CheckInCounterPage = ({ initialScannerVisible = false }) => {
                     >
                         <div className="flex h-full w-full flex-col items-center justify-center">
                             {/* THAY ĐỔI 2: Truyền isScannerVisible xuống cho TicketDetails */}
-                            <TicketDetails 
-                                ticket={localTicket} 
-                                loading={(loading && !localTicket) || isUpdatingStatus} 
-                                error={error || updateError} 
+                            <TicketDetails
+                                ticket={localTicket}
+                                loading={(loading && !localTicket) || isUpdatingStatus}
+                                error={error || updateError}
                                 isScannerVisible={isScannerVisible}
                                 onStatusChange={handleStatusChange}
                             />

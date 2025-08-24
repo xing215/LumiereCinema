@@ -97,29 +97,28 @@ const Header = () => {
 
     const MobileMenuButton = () => (
         <div className="z-50 flex h-[36px] w-auto items-center">
-            <button 
-                className="h-10 w-10 sm:h-13 sm:w-13 md:h-13 md:w-13 hover:cursor-pointer transition-transform duration-200 hover:scale-110 p-1" 
-                aria-label="Toggle menu" 
+
+            <button
+                className="h-10 w-10 p-1 transition-transform duration-200 hover:scale-110 hover:cursor-pointer sm:h-13 sm:w-13 md:h-13 md:w-13"
+                aria-label="Toggle menu"
                 onClick={toggleMobileMenu}
             >
-                {isMobileMenuOpen ? (
-                    <X className="h-full w-full text-white" strokeWidth={2.5} />
-                ) : (
-                    <Menu className="h-full w-full text-white" strokeWidth={2.5} />
-                )}
+                {isMobileMenuOpen ? <X className="h-full w-full text-white" strokeWidth={2.5} /> : <Menu className="h-full w-full text-white" strokeWidth={2.5} />}
+
             </button>
         </div>
     );
 
     const MobileMenu = () => (
-    <div 
-        className={`lg:hidden absolute top-full right-4 w-48 sm:w-52 md:w-56 z-40 bg-zinc-800/30 backdrop-blur-md border border-slate-700/60 rounded-lg transition-all duration-300 ${
-            isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
-    >
-            <div className="flex flex-col py-2 px-3 space-y-1">
-                <button 
-                    className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
+        <div
+            className={`absolute top-full right-4 z-40 w-48 rounded-lg border border-slate-700/60 bg-zinc-800/30 backdrop-blur-md transition-all duration-300 sm:w-52 md:w-56 lg:hidden ${
+                isMobileMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'
+            }`}
+        >
+            <div className="flex flex-col space-y-1 px-3 py-2">
+                <button
+                    className="rounded-md px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-slate-800/50"
+
                     onClick={() => {
                         navigate(ROUTES.MOVIES);
                         closeMobileMenu();
@@ -127,8 +126,9 @@ const Header = () => {
                 >
                     Buy Tickets
                 </button>
-                <button 
-                    className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
+                <button
+                    className="rounded-md px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-slate-800/50"
+
                     onClick={() => {
                         navigate(ROUTES.BUY_SNACK);
                         closeMobileMenu();
@@ -136,8 +136,10 @@ const Header = () => {
                 >
                     Buy Snacks
                 </button>
-                <button 
-                    className="text-white text-left py-2.5 px-3 rounded-md hover:bg-slate-800/50 transition-colors font-medium text-sm"
+
+                <button
+                    className="rounded-md px-3 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-slate-800/50"
+
                     onClick={() => {
                         handleAccountClick();
                         closeMobileMenu();
@@ -147,9 +149,10 @@ const Header = () => {
                 </button>
                 {isAuthenticated && (
                     <>
-                        <div className="h-px bg-slate-700/50 mx-2 my-1" />
-                        <button 
-                            className="text-red-400 text-left py-2.5 px-3 rounded-md hover:bg-red-900/20 transition-colors font-medium flex items-center gap-2 text-sm"
+                        <div className="mx-2 my-1 h-px bg-slate-700/50" />
+                        <button
+                            className="flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-red-400 transition-colors hover:bg-red-900/20"
+
                             onClick={() => {
                                 handleLogout();
                                 closeMobileMenu();
@@ -168,22 +171,23 @@ const Header = () => {
         <header className="bg-opacity-10 no-scrollbar fixed top-0 z-100 w-screen overflow-y-visible bg-transparent">
             <div className="absolute top-0 left-1/2 z-20 h-8 w-[calc(120vw+2rem)] -translate-x-1/2 transform bg-gradient-to-b from-slate-950 via-slate-950 to-transparent sm:h-10 lg:h-20" />
             <div className="absolute top-0 left-1/2 z-20 h-15 w-[calc(120vw+2rem)] -translate-x-1/2 transform bg-gradient-to-b from-slate-950 via-slate-950 to-transparent blur-sm sm:h-20 sm:blur-lg lg:h-30 lg:blur-md" />
-            
+
             {/* Mobile & SM & MD Navigation - justify-between */}
-            <div className="lg:hidden relative mx-auto flex max-w-screen flex-nowrap content-center items-center justify-between overflow-x-hidden pt-2 px-4 sm:pt-3 md:pt-3">
+            <div className="relative mx-auto flex max-w-screen flex-nowrap content-center items-center justify-between overflow-x-hidden px-4 pt-2 sm:pt-3 md:pt-3 lg:hidden">
                 <Logo onClick={() => navigate(ROUTES.HOME)} />
                 <MobileMenuButton />
             </div>
-            
+
             {/* Desktop Navigation - justify-center (LG and above) */}
-            <div className="hidden lg:flex relative mx-auto max-w-screen flex-nowrap content-center items-center justify-center overflow-x-hidden pt-2 md:gap-3 md:pt-3 lg:gap-5 lg:pt-5.5 xl:gap-10 xl:pt-9">
+            <div className="relative mx-auto hidden max-w-screen flex-nowrap content-center items-center justify-center overflow-x-hidden pt-2 md:gap-3 md:pt-3 lg:flex lg:gap-5 lg:pt-5.5 xl:gap-10 xl:pt-9">
+
                 <Logo onClick={() => navigate(ROUTES.HOME)} />
                 <NavButton name="Buy Tickets" onClick={() => navigate(ROUTES.MOVIES)} />
                 <NavButton name="Buy Snacks" onClick={() => navigate(ROUTES.BUY_SNACK)} />
                 <NavButton name={isAuthenticated ? 'Account' : 'Login/Register'} onClick={handleAccountClick} />
                 {isAuthenticated && <LogoutButton />}
             </div>
-            
+
             {/* Mobile & SM & MD Dropdown Menu */}
             <MobileMenu />
         </header>

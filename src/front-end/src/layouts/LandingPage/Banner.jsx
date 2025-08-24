@@ -74,6 +74,33 @@ const Banner = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Tỉ lệ ảnh banner (width:height) - bạn có thể thay đổi theo ý muốn
+    const aspectRatio = 4 / 3; // Ví dụ: 16:9, có thể thay thành 21:9, 4:3, v.v.
+    const bannerHeight = 300; // Chiều cao cố định (px), có thể responsive
+
+    // Hàm tính toán responsive height dựa trên screen size
+    const getResponsiveHeight = () => {
+        if (typeof window === 'undefined') return bannerHeight;
+        const screenWidth = window.innerWidth;
+
+        if (screenWidth < 640) return 250; // mobile
+        if (screenWidth < 1024) return 400; // tablet
+        if (screenWidth < 1280) return 500; // desktop
+        return 700; // large desktop
+    };
+
+    const [responsiveHeight, setResponsiveHeight] = React.useState(getResponsiveHeight);
+
+    // Update responsive height on window resize
+    React.useEffect(() => {
+        const handleResize = () => {
+            setResponsiveHeight(getResponsiveHeight());
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     React.useEffect(() => {
         const fetchBanners = async () => {
             try {
@@ -190,30 +217,36 @@ const Banner = () => {
     // Poster container with sliding animation
     const renderPoster = () => {
         const currentHeight = responsiveHeight;
-        
-        if (loading) return <div className="flex items-center justify-center text-white" style={{ height: currentHeight }}>Loading...</div>;
+
+        if (loading)
+            return (
+                <div className="flex items-center justify-center text-white" style={{ height: currentHeight }}>
+                    Loading...
+                </div>
+            );
         if (!banners.length) {
             return (
                 <div className="flex w-full items-center justify-center" style={{ height: currentHeight }}>
-                    <img 
-                        src={defaultBanner} 
-                        alt="Default Banner" 
-                        className="block w-full rounded-xl object-cover shadow-lg" 
-                        style={{ 
+                    <img
+                        src={defaultBanner}
+                        alt="Default Banner"
+                        className="block w-full rounded-xl object-cover shadow-lg"
+                        style={{
                             height: currentHeight,
-                            aspectRatio: aspectRatio 
-                        }} 
+                            aspectRatio: aspectRatio,
+                        }}
+
                     />
                 </div>
             );
         }
 
         return (
-            <div 
-                className="relative w-full overflow-hidden rounded-xl shadow-lg" 
-                style={{ 
+            <div
+                className="relative w-full overflow-hidden rounded-xl shadow-lg"
+                style={{
                     height: currentHeight,
-                    aspectRatio: aspectRatio 
+                    aspectRatio: aspectRatio,
                 }}
             >
                 <div
@@ -243,13 +276,15 @@ const Banner = () => {
                                     pointerEvents: isDragging ? 'none' : 'auto',
                                 }}
                             >
-                                <img 
-                                    src={img} 
-                                    alt={`Banner ${index + 1}`} 
-                                    className="block h-full w-full object-cover" 
+
+                                <img
+                                    src={img}
+                                    alt={`Banner ${index + 1}`}
+                                    className="block h-full w-full object-cover"
                                     draggable={false}
                                     style={{
-                                        objectPosition: 'center center'
+                                        objectPosition: 'center center',
+
                                     }}
                                 />
                             </div>
@@ -264,18 +299,18 @@ const Banner = () => {
         <section className="relative z-10 w-screen max-w-none min-w-0 gap-8 overflow-hidden bg-slate-950 lg:pt-3">
             <div className="relative flex w-screen max-w-none min-w-0 items-center justify-center">
                 {/*Left*/}
-                <div className="absolute top-0 left-0 z-15 h-full w-10 blur-sm bg-gradient-to-r from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
+
+                <div className="absolute top-0 left-0 z-15 h-full w-10 bg-gradient-to-r from-black via-slate-900/80 to-transparent blur-sm sm:w-20 lg:w-30" />
                 {/*Right*/}
-                <div className="absolute top-0 right-0 z-15 h-full w-10 blur-sm bg-gradient-to-l from-black via-slate-900/80 to-transparent sm:w-20 lg:w-30" />
+                <div className="absolute top-0 right-0 z-15 h-full w-10 bg-gradient-to-l from-black via-slate-900/80 to-transparent blur-sm sm:w-20 lg:w-30" />
                 {/* Slideable Poster */}
                 {/* Only show navigation if there are banners to slide */}
                 {banners.length > 0 && <BackwardButton onClick={handlePrev} position="absolute" />}
-                <div className="flex flex-1 items-center justify-center px-2 sm:px-8 lg:px-10">
-                    {renderPoster()}
-                </div>
+                <div className="flex flex-1 items-center justify-center px-2 sm:px-8 lg:px-10">{renderPoster()}</div>
                 {banners.length > 0 && <ForwardButton onClick={handleNext} position="absolute" />}
                 {/*Bottom*/}
-                <div className="absolute bottom-[-15px] xl:bottom-[-22px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:h-15 xl:blur-md" />
+                <div className="absolute bottom-[-15px] left-0 z-20 h-9 w-full bg-gradient-to-t from-black via-slate-950 to-transparent blur-xs sm:h-11 sm:blur-sm lg:h-12.5 xl:bottom-[-22px] xl:h-15 xl:blur-md" />
+
                 <Decoration1 />
                 <Decoration2 />
             </div>

@@ -246,8 +246,7 @@ const EditAccountInformationModal = ({ onClose, handleConfirm, isEdit = false, a
                     {!isEdit && <InputTemplate text="Password" className="w-[100%]" type="password" value={accountData?.password || ''} onChange={(value) => handleFieldChange('password', value)} />}
                     {/* Show branch dropdown if user has staff roles (cashier, checkin, branchmanager) 
                         OR if admin has additional staff roles */}
-                    {([2, 3, 4].some(chosenRole.has, chosenRole) || 
-                      (chosenRole.has(5) && chosenRole.size > 1 && [2, 3, 4].some(role => chosenRole.has(role)))) ? (
+                    {[2, 3, 4].some(chosenRole.has, chosenRole) || (chosenRole.has(5) && chosenRole.size > 1 && [2, 3, 4].some((role) => chosenRole.has(role))) ? (
                         <DropdownTemplate
                             text="Branch"
                             className="w-[100%]"
