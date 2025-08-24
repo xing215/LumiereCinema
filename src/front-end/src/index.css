@@ -49,6 +49,21 @@
         background-color: rgba(255, 255, 255, 1);
     }
 
+    /* Hide browser's default password reveal buttons */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+        display: none !important;
+    }
+
+    input[type="password"]::-webkit-credentials-auto-fill-button,
+    input[type="password"]::-webkit-strong-password-auto-fill-button {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        right: -9999px !important;
+    }
+
     ::-webkit-scrollbar-track {
         background-color: rgba(229, 231, 235, 0.2);
         border-radius: 10px;

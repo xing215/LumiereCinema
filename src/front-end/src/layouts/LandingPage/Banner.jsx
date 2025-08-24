@@ -48,33 +48,6 @@ const Banner = () => {
     const [prevTranslate, setPrevTranslate] = React.useState(0);
     
     // Tỉ lệ ảnh banner (width:height) - bạn có thể thay đổi theo ý muốn
-    const aspectRatio = 4/3; // Ví dụ: 16:9, có thể thay thành 21:9, 4:3, v.v.
-    const bannerHeight = 300; // Chiều cao cố định (px), có thể responsive
-
-    // Hàm tính toán responsive height dựa trên screen size
-    const getResponsiveHeight = () => {
-        if (typeof window === 'undefined') return bannerHeight;
-        const screenWidth = window.innerWidth;
-        
-        if (screenWidth < 640) return 250; // mobile
-        if (screenWidth < 1024) return 400; // tablet
-        if (screenWidth < 1280) return 500; // desktop
-        return 700; // large desktop
-    };
-
-    const [responsiveHeight, setResponsiveHeight] = React.useState(getResponsiveHeight);
-
-    // Update responsive height on window resize
-    React.useEffect(() => {
-        const handleResize = () => {
-            setResponsiveHeight(getResponsiveHeight());
-        };
-        
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    // Tỉ lệ ảnh banner (width:height) - bạn có thể thay đổi theo ý muốn
     const aspectRatio = 4 / 3; // Ví dụ: 16:9, có thể thay thành 21:9, 4:3, v.v.
     const bannerHeight = 300; // Chiều cao cố định (px), có thể responsive
 
@@ -235,7 +208,6 @@ const Banner = () => {
                             height: currentHeight,
                             aspectRatio: aspectRatio,
                         }}
-
                     />
                 </div>
             );
@@ -284,7 +256,6 @@ const Banner = () => {
                                     draggable={false}
                                     style={{
                                         objectPosition: 'center center',
-
                                     }}
                                 />
                             </div>
