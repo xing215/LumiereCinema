@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ROUTES } from '@routes/routeConfig';
 import { useNavigate } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@styles/datepicker.css';
+import { CalendarIcon } from 'lucide-react';
 
 import { validatePassword, formatPasswordErrors } from '@/utils/auth.utils';
 import CustomDropdown from '@components/UI/CustomDropdown';
@@ -20,6 +24,7 @@ const Buttons = ({ text, onClick, loading }) => {
 const ProfileForm = () => {
     const [hovered, setHovered] = useState(false);
     const navigate = useNavigate();
+    const datePickerRef = useRef(null);
 
     const { fetchProfile, profile, loading, error } = useFetchProfile();
     const { updateProfile, loading: updating, error: updateError } = useUpdateProfile();
@@ -136,6 +141,30 @@ const ProfileForm = () => {
         }));
     };
 
+    const handleDateChange = (date) => {
+        if (date) {
+            const formattedDate = date.toISOString().split('T')[0];
+            setFormData((prev) => ({
+                ...prev,
+                birthday: formattedDate,
+            }));
+            const error = validateField('birthday', formattedDate);
+            setErrors((prev) => ({
+                ...prev,
+                birthday: error,
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                birthday: '',
+            }));
+            setErrors((prev) => ({
+                ...prev,
+                birthday: '',
+            }));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -200,15 +229,49 @@ const ProfileForm = () => {
                 <div className="flex flex-col gap-4 md:flex-row md:gap-4">
                     <div className="flex-1">
                         <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Birthday</label>
-                        <input
-                            type="date"
-                            name="birthday"
-                            value={formData.birthday}
-                            onChange={handleInputChange}
-                            className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black focus:ring-2 focus:outline-none disabled:bg-zinc-300/5 disabled:text-white disabled:ring-1 disabled:ring-amber-50 sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.birthday ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
-                            required
-                            disabled={canEdit}
-                        />
+                        {!canEdit ? (
+                            <div className="relative overflow-visible">
+                                <div className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 transform">
+                                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                                </div>
+                                <DatePicker
+                                    ref={datePickerRef}
+                                    selected={formData.birthday ? new Date(formData.birthday) : null}
+                                    onChange={handleDateChange}
+                                    dateFormat="dd/MM/yyyy"
+                                    className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 pr-8 pl-10 text-black focus:ring-2 focus:outline-none sm:h-11 md:h-12 lg:h-13 xl:h-14 ${errors.birthday ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                                    calendarClassName="react-datepicker-custom"
+                                    showPopperArrow={false}
+                                    autoComplete="off"
+                                    placeholderText="Select birthday"
+                                    isClearable
+                                    todayButton="Today"
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
+                                    maxDate={new Date()}
+                                    minDate={new Date('1900-01-01')}
+                                    shouldCloseOnSelect={true}
+                                    popperPlacement="bottom-start"
+                                    popperModifiers={{
+                                        preventOverflow: {
+                                            enabled: true,
+                                            escapeWithReference: false,
+                                            boundariesElement: 'viewport'
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <input
+                                type="date"
+                                name="birthday"
+                                value={formData.birthday}
+                                onChange={handleInputChange}
+                                className="bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300/5 px-3 text-white ring-1 ring-amber-50 sm:h-11 md:h-12 lg:h-13 xl:h-14 disabled:cursor-not-allowed font-['Unbounded'] text-sm sm:text-base md:text-lg"
+                                disabled
+                            />
+                        )}
                         {errors.birthday && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.birthday}</p>}
                     </div>
                     <div className="flex-1">
