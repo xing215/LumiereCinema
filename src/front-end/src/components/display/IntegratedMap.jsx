@@ -406,7 +406,6 @@ const IntegratedMap = ({
             </div>
             <div ref={mapRef} className="absolute top-0 right-5 left-5 z-0 h-full overflow-auto rounded-xl border-gray-200 md:right-0 md:left-0 md:w-full" />
 
-
             {/* Zoom Tooltip */}
             {requireCtrlToZoom && showZoomTooltip && (
                 <div className="bg-opacity-80 pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 transform rounded-md bg-slate-950 px-3 py-2 text-sm font-medium text-white">

@@ -257,8 +257,9 @@ const ProfileForm = () => {
                                         preventOverflow: {
                                             enabled: true,
                                             escapeWithReference: false,
-                                            boundariesElement: 'viewport'
-                                        }
+                                            boundariesElement: 'viewport',
+                                        },
+
                                     }}
                                 />
                             </div>
@@ -268,7 +269,8 @@ const ProfileForm = () => {
                                 name="birthday"
                                 value={formData.birthday}
                                 onChange={handleInputChange}
-                                className="bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300/5 px-3 text-white ring-1 ring-amber-50 sm:h-11 md:h-12 lg:h-13 xl:h-14 disabled:cursor-not-allowed font-['Unbounded'] text-sm sm:text-base md:text-lg"
+                                className="bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300/5 px-3 font-['Unbounded'] text-sm text-white ring-1 ring-amber-50 disabled:cursor-not-allowed sm:h-11 sm:text-base md:h-12 md:text-lg lg:h-13 xl:h-14"
+
                                 disabled
                             />
                         )}

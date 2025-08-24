@@ -74,21 +74,18 @@ const Wishlist = () => {
     // Handle delete selected movies
     const handleDeleteSelected = async () => {
         if (selectedMovies.length === 0) {
-            await showWarning(
-                'No Selection',
-                'Please select at least one movie to remove from your wishlist.'
-            );
+            await showWarning('No Selection', 'Please select at least one movie to remove from your wishlist.');
+
             return;
         }
 
         const movieCount = selectedMovies.length;
         const movieText = movieCount === 1 ? 'movie' : 'movies';
-        
         const confirmation = await showConfirmation(
             `Remove ${movieText} from Wishlist?`,
             `Are you sure you want to remove ${movieCount} ${movieText} from your wishlist? This action cannot be undone!`,
             'Remove',
-            'Cancel'
+            'Cancel',
         );
 
         if (!confirmation.isConfirmed) return;
@@ -104,21 +101,15 @@ const Wishlist = () => {
 
             // Show success with custom message
             const successTitle = movieCount === 1 ? 'Movie Removed!' : 'Movies Removed!';
-            const successText = movieCount === 1 
-                ? 'The movie has been successfully removed from your wishlist.' 
-                : `${movieCount} movies have been successfully removed from your wishlist.`;
-            
+            const successText = movieCount === 1 ? 'The movie has been successfully removed from your wishlist.' : `${movieCount} movies have been successfully removed from your wishlist.`;
             await showSuccess(successTitle, successText, 3000);
-
             // Refresh wishlist and clear selections
             await getWishlist();
             setSelectedMovies([]);
         } catch (error) {
             console.error('Error removing movies from wishlist:', error);
-            await showOperationError(
-                'Remove from wishlist', 
-                error?.message || 'Failed to remove movies from wishlist. Please try again.'
-            );
+            await showOperationError('Remove from wishlist', error?.message || 'Failed to remove movies from wishlist. Please try again.');
+
         }
     };
 

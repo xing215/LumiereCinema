@@ -153,7 +153,6 @@ const MovieCardWithOverlay = ({ movie, page, cardIdx, scrollRef }) => {
             <MovieCard movie={movie} page={page} />
 
             {overlayOpacity > 0 && <div className="pointer-events-none absolute inset-0 z-20 hidden rounded-xl md:block" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />}
-
         </div>
     );
 };
