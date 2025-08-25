@@ -1,0 +1,5 @@
+Test cases :
+- Buy ticket:
+ + BT-08: Changed Session timeout during seat selection to Session timeout during payment, and revise the test steps.
+- Buy snack:
+ + BS-05: Revise test steps and expected results
