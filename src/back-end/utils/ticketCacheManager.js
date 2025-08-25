@@ -69,42 +69,42 @@ class TicketCacheManager {
     async preloadRecentTickets() {
         try {
             console.log('🔄 Preloading recent tickets to cache...');
-            
+
             // Lấy các movie tickets gần đây với status Confirmed
             const recentMovieTickets = await Ticket.find({
                 status: 'Confirmed',
-                createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Trong 24 giờ qua
+                createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Trong 24 giờ qua
             })
-            .populate('branch', 'name address')
-            .populate({
-                path: 'schedule',
-                populate: [
-                    { path: 'movie', select: 'title' },
-                    { path: 'screen', select: 'screenName' }
-                ]
-            })
-            .limit(this.PRELOAD_LIMIT)
-            .lean();
+                .populate('branch', 'name address')
+                .populate({
+                    path: 'schedule',
+                    populate: [
+                        { path: 'movie', select: 'title' },
+                        { path: 'screen', select: 'screenName' },
+                    ],
+                })
+                .limit(this.PRELOAD_LIMIT)
+                .lean();
 
             // Lấy các snack tickets gần đây
             const recentSnackTickets = await SnackTicket.find({
                 status: 'Confirmed',
-                createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+                createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
             })
-            .populate('branch', 'name address')
-            .populate({
-                path: 'snackList.snack',
-                select: 'name price'
-            })
-            .limit(this.PRELOAD_LIMIT)
-            .lean();
+                .populate('branch', 'name address')
+                .populate({
+                    path: 'snackList.snack',
+                    select: 'name price',
+                })
+                .limit(this.PRELOAD_LIMIT)
+                .lean();
 
             // Cache movie tickets
             for (const ticket of recentMovieTickets) {
                 const cacheData = {
                     ...ticket,
                     ticketType: 'Movie',
-                    lastScanAt: ticket.lastScanAt
+                    lastScanAt: ticket.lastScanAt,
                 };
                 await this.cacheTicket(ticket.ticketCode, cacheData);
             }
@@ -114,15 +114,17 @@ class TicketCacheManager {
                 const cacheData = {
                     ...ticket,
                     ticketType: 'Snack',
-                    lastScanAt: ticket.lastScanAt
+                    lastScanAt: ticket.lastScanAt,
                 };
                 await this.cacheTicket(ticket.snackTicketCode, cacheData);
             }
 
-            console.log(`Preloaded ${recentMovieTickets.length} movie tickets and ${recentSnackTickets.length} snack tickets to cache`);
+            console.log(
+                `Preloaded ${recentMovieTickets.length} movie tickets and ${recentSnackTickets.length} snack tickets to cache`,
+            );
             return {
                 movieTickets: recentMovieTickets.length,
-                snackTickets: recentSnackTickets.length
+                snackTickets: recentSnackTickets.length,
             };
         } catch (error) {
             console.error('Error preloading tickets:', error);
@@ -139,7 +141,7 @@ class TicketCacheManager {
             return {
                 totalCachedTickets: keys.length,
                 cachePrefix: this.CACHE_PREFIX,
-                cacheDuration: this.CACHE_DURATION
+                cacheDuration: this.CACHE_DURATION,
             };
         } catch (error) {
             console.warn('Cache stats error:', error);

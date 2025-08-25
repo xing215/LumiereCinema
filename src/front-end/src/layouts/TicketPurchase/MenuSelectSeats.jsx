@@ -3,25 +3,23 @@ import { useState, useEffect } from 'react';
 import BPoster from '@components/UI/BPoster';
 import NextNaviButton, { BackNaviButton } from '@components/buttons/NaviButton';
 import TicketSelect from '@components/UI/TicketSelect';
-import SeatLayout, { Seats, CoupleSeat } from '@/layouts/TicketPurchase/SeatLayout';
+import SeatLayout, { Seats, CoupleSeat, getSeatPrice, FALLBACK_PRICES } from '@/layouts/TicketPurchase/SeatLayout';
 
 // SweetAlert for popup notifications
 import { showError, showWarning, showInfo } from '@utils/sweetalert.js';
 
 // ================================ COMPONENTS ================================
 
-const SeatName = ({ type, text, isCouple = false }) => (
+const SeatName = ({ type, text, isCouple = false, isVip = false }) => (
     <div className="flex w-auto flex-row items-center justify-start gap-3">
         {isCouple ? (
-            <CoupleSeat seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-yellow-400'} canCursor={false} />
+            <CoupleSeat seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-indigo-400'} canCursor={false} />
         ) : (
-            <Seats type={type} isSelected={type === 'Selected'} seatColor={type === 'Taken' ? 'bg-gray-400' : 'bg-blue-400'} canCursor={false} />
+            <Seats type={type} isSelected={type === 'Selected'} seatColor={type === 'Taken' ? 'bg-gray-400' : isVip ? 'bg-red-400' : 'bg-blue-400'} canCursor={false} />
         )}
         <div className="relative justify-start text-center font-['Unbounded'] text-xs font-normal text-white">{text}</div>
     </div>
 );
-
-// ================================ MAIN COMPONENT ================================
 
 // ================================ MAIN COMPONENT ================================
 
@@ -33,8 +31,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
 
     // ================================ DATA FETCHING EFFECTS ================================
 
-    // ================================ DATA FETCHING EFFECTS ================================
-
     useEffect(() => {
         console.log(seats);
         if (movieTicketData.schedule && seats.length === 0) {
@@ -43,10 +39,9 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
     }, []);
 
     useEffect(() => {
-        updateMovieTicket({ total: movieTicketData?.adultTickets * 80000 + movieTicketData?.discountedTickets * 45000 });
-    }, [movieTicketData?.adultTickets, movieTicketData?.discountedTickets]);
-
-    // ================================ EVENT HANDLERS ================================
+        const total = calculateTotalPrice();
+        updateMovieTicket({ total: total });
+    }, [movieTicketData?.seats, movieTicketData?.adultTickets, movieTicketData?.discountedTickets, seats]);
 
     // ================================ EVENT HANDLERS ================================
 
@@ -70,6 +65,63 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
     };
 
     // ================================ UTILITY FUNCTIONS ================================
+
+    // Calculate total price based on selected seats and ticket types
+    const calculateTotalPrice = () => {
+        if (!movieTicketData?.seats || !seats?.seatsByRow) {
+            return 0;
+        }
+
+        // Get both regular and discounted prices for each selected seat
+        const seatPriceData = movieTicketData.seats.map((seatNumber) => {
+            const rowLetter = seatNumber.charAt(0);
+            const rowSeats = seats.seatsByRow[rowLetter];
+
+            if (!rowSeats) {
+                return {
+                    seatNumber,
+                    regularPrice: FALLBACK_PRICES.normal.regular,
+                    discountedPrice: FALLBACK_PRICES.normal.discounted,
+                };
+            }
+
+            const seat = rowSeats.find((s) => s.seatNumber === seatNumber);
+            if (!seat) {
+                return {
+                    seatNumber,
+                    regularPrice: FALLBACK_PRICES.normal.regular,
+                    discountedPrice: FALLBACK_PRICES.normal.discounted,
+                };
+            }
+
+            return {
+                seatNumber,
+                regularPrice: getSeatPrice(seat, false),
+                discountedPrice: getSeatPrice(seat, true),
+            };
+        });
+
+        // Sort by discounted price (cheapest discounted price first) to prioritize cheaper seats for discount tickets
+        const sortedSeats = [...seatPriceData].sort((a, b) => a.discountedPrice - b.discountedPrice);
+
+        let total = 0;
+        let discountTicketsUsed = 0;
+        const maxDiscountTickets = movieTicketData.discountedTickets || 0;
+
+        // Assign discount tickets to seats with cheapest discounted prices first
+        sortedSeats.forEach((seatData) => {
+            if (discountTicketsUsed < maxDiscountTickets) {
+                // Use discounted price
+                total += seatData.discountedPrice;
+                discountTicketsUsed++;
+            } else {
+                // Use regular price for adult tickets
+                total += seatData.regularPrice;
+            }
+        });
+
+        return total;
+    };
 
     const checkSeatGaps = (selectedSeats) => {
         if (!seats || !seats.seatsByRow) return false;
@@ -125,8 +177,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
 
     // ================================ NAVIGATION FUNCTIONS ================================
 
-    // ================================ NAVIGATION FUNCTIONS ================================
-
     const canProceed = movieTicketData?.seats.length > 0;
 
     const handleNext = () => {
@@ -148,8 +198,6 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
 
         onNext();
     };
-
-    // ================================ SCROLL EFFECTS ================================
 
     // ================================ SCROLL EFFECTS ================================
 
@@ -187,16 +235,10 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
                 <div className="relative flex min-w-[56vw] flex-1 flex-col items-center justify-between xl:min-w-0 2xl:min-w-[56vw]">
                     <div className="relative flex flex-col items-center justify-between gap-5 px-4 py-5 md:h-[407px] md:flex-row md:px-6">
                         <div className="relative flex shrink flex-row items-center justify-start md:w-[90%] md:flex-col lg:justify-start lg:gap-1 xl:w-[40%]">
-                            <TicketSelect
-                                ticket_type="Adult"
-                                price={'80,000'}
-                                amount={movieTicketData.adultTickets}
-                                onChange={(fn) => updateMovieTicket({ adultTickets: fn(movieTicketData.adultTickets) })}
-                            />
+                            <TicketSelect ticket_type="Adult" amount={movieTicketData.adultTickets} onChange={(fn) => updateMovieTicket({ adultTickets: fn(movieTicketData.adultTickets) })} />
                             <div className="h-2 w-10 md:h-3 lg:h-0" />
                             <TicketSelect
                                 ticket_type="Student/ Elders"
-                                price={'45,000'}
                                 amount={movieTicketData.discountedTickets}
                                 onChange={(fn) => updateMovieTicket({ discountedTickets: fn(movieTicketData.discountedTickets) })}
                                 hover_message="Please show your ID at the ticket counter."
@@ -205,6 +247,7 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
 
                             <div className="hidden h-auto w-full flex-row flex-wrap justify-start gap-2 md:flex">
                                 <SeatName type="Normal" text="Normal Seat" />
+                                <SeatName type="Normal" text="VIP Seat" isVip={true} />
                                 <SeatName type="Taken" text="Taken Seat" />
                                 <SeatName type="Couple" text="Couple Seat" isCouple={true} />
                                 <SeatName type="Selected" text="Selected Seat" />
@@ -212,6 +255,7 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
                         </div>
                         <div className="flex h-auto w-full flex-row flex-wrap justify-center gap-3 py-5 md:hidden">
                             <SeatName type="Normal" text="Normal Seat" />
+                            <SeatName type="Normal" text="VIP Seat" isVip={true} />
                             <SeatName type="Taken" text="Taken Seat" />
                             <SeatName type="Couple" text="Couple Seat" isCouple={true} />
                             <SeatName type="Selected" text="Selected Seat" />
@@ -236,6 +280,8 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
                             {movieTicketData.discountedTickets > 0 && <>{movieTicketData.discountedTickets} Student/Elder Ticket(s)</>}
                             <br />
                             Seats: {movieTicketData?.seats && movieTicketData.seats.length > 0 ? movieTicketData.seats.join(', ') : 'None selected'}
+                            <br />
+                            Total: {movieTicketData?.total ? movieTicketData.total.toLocaleString('en-US') : '0'} VND
                         </div>
                         <BackNaviButton onClick={onBack} />
                         <NextNaviButton text="SEATINGS" onClick={handleNext} />
@@ -254,6 +300,8 @@ const MenuSelectSeats = ({ onNext, onBack, movieTicketData, updateMovieTicket, c
                             {movieTicketData.discountedTickets > 0 && <>{movieTicketData.discountedTickets} Student/Elder Ticket(s)</>}
                             <br />
                             Seats: {movieTicketData?.seats && movieTicketData.seats.length > 0 ? movieTicketData.seats.join(', ') : 'None selected'}
+                            <br />
+                            Total: {movieTicketData?.total ? movieTicketData.total.toLocaleString('en-US') : '0'} VND
                         </div>
 
                         <NextNaviButton text="INFO" onClick={handleNext} />

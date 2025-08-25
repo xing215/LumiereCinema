@@ -95,7 +95,6 @@ const TicketSelect = ({ ticket_type, onChange, price, amount = 0, hover_message 
                     +
                 </button>
             </div>
-            <div className="relative justify-start pb-1 text-center font-['Unbounded'] text-[10px] font-semibold text-white">{price} VND</div>
         </div>
     );
 };

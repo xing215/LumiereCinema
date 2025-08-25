@@ -77,9 +77,18 @@ export const useApplyPromotion = () => {
             setAppliedPromotion(response.data);
             return { success: true, data: response };
         } catch (err) {
-            const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Invalid promotion code';
+            // Preserve the complete error response including user data
+            const errorResponse = err.response?.data?.error || err.response?.data || {};
+            const errorMessage = errorResponse.message || err.response?.data?.message || 'Invalid promotion code';
+            
             setAppliedPromotion(null);
-            setError(errorMessage);
+            // Set the complete error object so frontend can access user info
+            setError({
+                message: errorMessage,
+                user: errorResponse.user || null,
+                details: errorResponse.details || null,
+                status: errorResponse.status || err.response?.status || 400
+            });
             return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
@@ -248,6 +257,7 @@ export const useStartHoldSession = () => {
                     seatNumbers,
                     sessionId,
                     holdDurationMinutes,
+                    replaceExisting: true, // Always replace existing holds for this session
                 },
                 token,
             );
@@ -379,23 +389,28 @@ export const useGetTicketDetailsByCode = () => {
     const activeRequest = useRef(null);
     const REQUEST_DEBOUNCE = 500; // 500ms debounce
 
-    const getTicket = async (ticketCode) => {
+    const getTicket = async (ticketCode, forceRefresh = false) => {
         if (!ticketCode) return;
 
         const cleanCode = ticketCode.trim().toUpperCase();
         const currentTime = Date.now();
 
-        // Kiểm tra debounce
-        if (currentTime - lastRequestTime.current < REQUEST_DEBOUNCE) {
+        // Kiểm tra debounce (skip nếu forceRefresh)
+        if (!forceRefresh && currentTime - lastRequestTime.current < REQUEST_DEBOUNCE) {
             return activeRequest.current;
         }
 
-        // Kiểm tra cache
-        const cachedData = ticketCache.current.get(cleanCode);
-        if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
-            setTicket(cachedData.data);
-            setError(null);
-            return { success: true, data: cachedData.data, fromCache: true };
+        // Kiểm tra cache (skip nếu forceRefresh)
+        if (!forceRefresh) {
+            const cachedData = ticketCache.current.get(cleanCode);
+            if (cachedData && currentTime - cachedData.timestamp < CACHE_DURATION) {
+                setTicket(cachedData.data);
+                setError(null);
+                return { success: true, data: cachedData.data, fromCache: true };
+            }
+        } else {
+            // Clear cache entry if forcing refresh
+            ticketCache.current.delete(cleanCode);
         }
 
         // Hủy request trước đó nếu có
@@ -418,8 +433,19 @@ export const useGetTicketDetailsByCode = () => {
 
     const performTicketRequest = async (ticketCode, controller) => {
         try {
-            // Sử dụng AbortController để có thể cancel request
-            const response = await ticketService.getMovieTicketDetails(ticketCode, token, { signal: controller.signal });
+            // Try movie ticket first, then snack ticket if movie ticket fails
+            let response;
+            try {
+                response = await ticketService.getMovieTicketDetails(ticketCode, token, { signal: controller.signal });
+            } catch (movieError) {
+                // If movie ticket fails, try snack ticket
+                try {
+                    response = await ticketService.getSnackTicketDetails(ticketCode, token, { signal: controller.signal });
+                } catch (snackError) {
+                    // If both fail, throw the original movie error
+                    throw movieError;
+                }
+            }
 
             // Cache kết quả
             ticketCache.current.set(ticketCode, {
@@ -454,6 +480,30 @@ export const useGetTicketDetailsByCode = () => {
     }, []);
 
     return { getTicket, ticket, loading, error };
+};
+
+export const useUpdateTicketStatus = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const { token } = useUser();
+
+    const updateTicketStatus = async (ticketCode, newStatus) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await ticketService.updateTicketStatus(ticketCode, newStatus, token);
+            return { success: true, data: response };
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to update ticket status';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { updateTicketStatus, loading, error };
 };
 
 export const useGetSnacksByBranch = () => {

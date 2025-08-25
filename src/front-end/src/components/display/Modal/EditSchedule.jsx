@@ -1,5 +1,6 @@
 import CustomDropdown from '@components/UI/CustomDropdown.jsx';
 import { useState, useEffect, useCallback } from 'react';
+import { showError, showSuccess, showConfirmation } from '@utils/sweetalert.js';
 
 const EditScheduleModal = ({
     isOpen,
@@ -155,12 +156,37 @@ const EditScheduleModal = ({
 
     const handleMovieChange = (e) => {
         const { value } = e.target;
-        const selectedMovie = movies.find((movie) => movie._id === value);
-        setFormData((prev) => ({
-            ...prev,
-            movie: selectedMovie ? selectedMovie.title : '',
-            movieId: value,
-        }));
+        
+        // Check if the value is a movie ID from dropdown selection
+        const selectedMovieById = movies.find((movie) => movie._id === value);
+        if (selectedMovieById) {
+            // User selected from dropdown - value is movie ID
+            setFormData((prev) => ({
+                ...prev,
+                movie: selectedMovieById.title,
+                movieId: selectedMovieById._id,
+            }));
+        } else {
+            // User is typing text - always update the movie field
+            // Try to find exact match by title
+            const selectedMovieByTitle = movies.find((movie) => 
+                movie.title.toLowerCase() === value.toLowerCase()
+            );
+            
+            setFormData((prev) => ({
+                ...prev,
+                movie: value, // Keep the typed value
+                movieId: selectedMovieByTitle ? selectedMovieByTitle._id : '', // Set ID if exact match found
+            }));
+        }
+    };
+
+    const handleMovieFocus = (e) => {
+        // When user focuses on the input and there's already a value, select all text
+        // This allows them to easily replace the entire value
+        if (formData.movie && formData.movieId) {
+            e.target.select();
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -179,49 +205,77 @@ const EditScheduleModal = ({
         };
 
         if (!branchId) {
-            alert('Branch ID not found.');
+            showError('Error', 'Branch ID not found. Please try again.');
             return;
         }
 
         try {
             const result = await updateSchedule(branchId, scheduleData);
             if (result.success) {
+                // Close modal first, then show success message
+                onClose();
                 setTimeout(() => {
-                    onClose();
+                    showSuccess('Schedule Updated!', `${formData.movie} schedule has been updated successfully for ${formData.screen} at ${formData.startTime}`);
                     if (onScheduleSuccess) onScheduleSuccess();
-                }, 500); // 500ms delay
+                }, 300); // Small delay to ensure modal closes first
             } else {
-                alert(result.error || 'Failed to update schedule');
+                // Close modal first, then show error message
+                onClose();
+                setTimeout(() => {
+                    showError('Failed to Update Schedule', result.error || 'An error occurred while updating the schedule. Please try again.');
+                }, 300); // Small delay to ensure modal closes first
             }
         } catch (error) {
             console.error('Error updating schedule:', error);
-            alert('Failed to update schedule');
+            // Close modal first, then show error message
+            onClose();
+            setTimeout(() => {
+                showError('Update Failed', 'An unexpected error occurred while updating the schedule. Please try again.');
+            }, 300); // Small delay to ensure modal closes first
         }
     };
 
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this schedule?')) {
+        // Show confirmation dialog
+        const result = await showConfirmation(
+            'Delete Schedule?',
+            `Are you sure you want to delete the schedule for "${formData.movie}" on ${formData.screen} at ${formData.startTime}? This action cannot be undone.`,
+            'Delete',
+            'Cancel'
+        );
+
+        if (!result.isConfirmed) {
             return;
         }
 
         if (!branchId || !schedule?._id) {
-            alert('Missing branch ID or schedule ID.');
+            showError('Error', 'Missing branch ID or schedule ID. Please try again.');
             return;
         }
 
         try {
             const result = await removeSchedule(branchId, schedule._id);
             if (result.success) {
+                // Close modal first, then show success message
+                onClose();
                 setTimeout(() => {
-                    onClose();
+                    showSuccess('Schedule Deleted!', `The schedule for "${formData.movie}" has been deleted successfully.`);
                     if (onScheduleSuccess) onScheduleSuccess();
-                }, 500); // 500ms delay
+                }, 300); // Small delay to ensure modal closes first
             } else {
-                alert(result.error || 'Failed to delete schedule');
+                // Close modal first, then show error message
+                onClose();
+                setTimeout(() => {
+                    showError('Failed to Delete Schedule', result.error || 'An error occurred while deleting the schedule. Please try again.');
+                }, 300); // Small delay to ensure modal closes first
             }
         } catch (error) {
             console.error('Error deleting schedule:', error);
-            alert('Failed to delete schedule');
+            // Close modal first, then show error message
+            onClose();
+            setTimeout(() => {
+                showError('Delete Failed', 'An unexpected error occurred while deleting the schedule. Please try again.');
+            }, 300); // Small delay to ensure modal closes first
         }
     };
 
@@ -291,6 +345,7 @@ const EditScheduleModal = ({
                                 <CustomDropdown
                                     value={formData.movie}
                                     onChange={handleMovieChange}
+                                    onFocus={handleMovieFocus}
                                     name="movieId"
                                     bgColor=" bg-indigo-900/30 backdrop-blur-xl"
                                     inputBgColor="zinc-300"

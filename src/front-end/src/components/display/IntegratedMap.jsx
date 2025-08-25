@@ -389,7 +389,7 @@ const IntegratedMap = ({
     }
 
     return (
-        <div className="relative flex h-[70vh] w-screen items-start justify-center gap-3 md:block md:min-h-[300px] lg:w-[70vw] lg:gap-0">
+        <div className="relative flex h-[55vh] w-screen items-start justify-center gap-3 px-4 md:block md:h-[50vh] md:min-h-[260px] md:px-0 lg:h-[70vh] lg:w-[75vw] lg:gap-0">
             <div className="relative z-10 mt-[1%] ml-0 h-[40%] w-[95%] pt-2 md:ml-3 md:h-[98%] md:w-[25%]">
                 <LocationTable
                     cinemas={filteredCinemas}
@@ -404,7 +404,7 @@ const IntegratedMap = ({
                     getAllCinemasClick={getAllCinemasClick}
                 />
             </div>
-            <div ref={mapRef} className="absolute top-0 z-0 h-full w-full overflow-auto rounded-xl border-gray-200" />
+            <div ref={mapRef} className="absolute top-0 right-5 left-5 z-0 h-full overflow-auto rounded-xl border-gray-200 md:right-0 md:left-0 md:w-full" />
 
             {/* Zoom Tooltip */}
             {requireCtrlToZoom && showZoomTooltip && (

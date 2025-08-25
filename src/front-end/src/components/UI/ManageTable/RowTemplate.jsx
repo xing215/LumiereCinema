@@ -230,30 +230,7 @@ const RowTemplate = (props) => {
                                     props.isHeader ? (
                                         <span>Actions</span>
                                     ) : (
-                                        <div className="action-button flex w-full justify-center gap-3" onClick={(e) => e.stopPropagation()}>
-                                            <button
-                                                onClick={() => value.onConfirm?.()}
-                                                className="transform rounded-lg border-2 border-amber-800 bg-gradient-to-r from-amber-600 to-yellow-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-amber-700 hover:to-yellow-700"
-                                                title="Confirm Add"
-                                                style={{
-                                                    fontFamily: 'serif',
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
-                                                }}
-                                            >
-                                                ✓ OK
-                                            </button>
-                                            <button
-                                                onClick={() => value.onCancel?.()}
-                                                className="transform rounded-lg border-2 border-red-900 bg-gradient-to-r from-red-700 to-red-800 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-red-800 hover:to-red-900"
-                                                title="Cancel Add"
-                                                style={{
-                                                    fontFamily: 'serif',
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
-                                                }}
-                                            >
-                                                ✗ Cancel
-                                            </button>
-                                        </div>
+                                        <span>Add Movie</span>
                                     )
                                 ) : value && typeof value === 'object' && value.type === 'StatusIndicator' ? (
                                     props.isHeader ? (

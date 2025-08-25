@@ -24,6 +24,7 @@ const AUTH_ERROR_WHITELIST_ALIASES = [
     'activateAccount', // Account activation with token parameter
     'forgotPassword', // Password reset request
     'resetPassword', // Password reset with token
+    'changePassword', // Change password (while logged in)
     'staffLogin', // Staff login
     'staffForgotPassword', // Staff password reset
 

@@ -67,10 +67,10 @@ const restrictTo = (...roles) => {
 
         // Check if user has at least one allowed role
         const hasPermission = req.user.roles.some(role => roles.includes(role));
-        
+
         if (!hasPermission) {
-            return res.status(403).json({ 
-                message: 'You do not have permission to access this resource.' 
+            return res.status(403).json({
+                message: 'You do not have permission to access this resource.',
             });
         }
 

@@ -1,4 +1,3 @@
-import SeeMoreButton from '@components/buttons/seeMoreButton.jsx';
 import UpComingFrame from '@layouts/LandingPage/UpcomingFrame/UpComingMovieFrame.jsx';
 
 const UpComing = () => {

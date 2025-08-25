@@ -159,7 +159,12 @@ const LoginForm = ({ isCustomer = true }) => {
                             value={formData.password}
                             onChange={handleInputChange}
                             disabled={loading}
+                            autoComplete="current-password"
                             className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.password ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
+                            style={{
+                                WebkitTextSecurity: showPassword ? 'none' : 'disc',
+
+                            }}
                             required
                         />
                         <button

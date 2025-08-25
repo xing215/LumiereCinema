@@ -2,6 +2,7 @@
 import CustomDropdown from '@components/UI/CustomDropdown.jsx';
 import { useState, useEffect, useCallback } from 'react';
 import { useUpdateSchedule } from '@hooks/useBranch';
+import { showError, showSuccess } from '@utils/sweetalert.js';
 
 const AddScheduleModal = ({
     isOpen,
@@ -149,12 +150,37 @@ const AddScheduleModal = ({
 
     const handleMovieChange = (e) => {
         const { value } = e.target;
-        const selectedMovie = movies.find((movie) => movie._id === value);
-        setFormData((prev) => ({
-            ...prev,
-            movie: selectedMovie ? selectedMovie.title : '',
-            movieId: value,
-        }));
+        
+        // Check if the value is a movie ID from dropdown selection
+        const selectedMovieById = movies.find((movie) => movie._id === value);
+        if (selectedMovieById) {
+            // User selected from dropdown - value is movie ID
+            setFormData((prev) => ({
+                ...prev,
+                movie: selectedMovieById.title,
+                movieId: selectedMovieById._id,
+            }));
+        } else {
+            // User is typing text - always update the movie field
+            // Try to find exact match by title
+            const selectedMovieByTitle = movies.find((movie) => 
+                movie.title.toLowerCase() === value.toLowerCase()
+            );
+            
+            setFormData((prev) => ({
+                ...prev,
+                movie: value, // Keep the typed value
+                movieId: selectedMovieByTitle ? selectedMovieByTitle._id : '', // Set ID if exact match found
+            }));
+        }
+    };
+
+    const handleMovieFocus = (e) => {
+        // When user focuses on the input and there's already a value, select all text
+        // This allows them to easily replace the entire value
+        if (formData.movie && formData.movieId) {
+            e.target.select();
+        }
     };
 
     const handleSubmit = (e) => {
@@ -172,20 +198,24 @@ const AddScheduleModal = ({
         };
         // Find branchId from screens (assume all screens belong to same branch)
         if (!branchId) {
-            alert('Branch ID not found.');
+            showError('Error', 'Branch ID not found. Please try again.');
             return;
         }
         scheduleMovieScreening(branchId, screeningData).then((result) => {
             if (result.success) {
                 if (fetchSchedule) fetchSchedule;
-                // Call success callback
-                // Add a small delay before closing modal to show loading
+                // Close modal first, then show success message
+                onClose();
                 setTimeout(() => {
-                    onClose();
+                    showSuccess('Schedule Added!', `${formData.movie} has been scheduled successfully for ${formData.screen} at ${formData.startTime}`);
                     if (onScheduleSuccess) onScheduleSuccess();
-                }, 500); // 500ms delay
+                }, 300); // Small delay to ensure modal closes first
             } else {
-                alert(result.error || 'Failed to add schedule');
+                // Close modal first, then show error message
+                onClose();
+                setTimeout(() => {
+                    showError('Failed to Add Schedule', result.error || 'An error occurred while adding the schedule. Please try again.');
+                }, 300); // Small delay to ensure modal closes first
             }
         });
     };
@@ -254,6 +284,7 @@ const AddScheduleModal = ({
                                 <CustomDropdown
                                     value={formData.movie}
                                     onChange={handleMovieChange}
+                                    onFocus={handleMovieFocus}
                                     name="movieId"
                                     bgColor=" bg-indigo-900/30 backdrop-blur-xl"
                                     inputBgColor="zinc-300"

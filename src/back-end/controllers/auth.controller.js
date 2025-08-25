@@ -8,11 +8,16 @@ const nodemailer = require('nodemailer');
 // Create a reusable password validation schema
 const passwordSchema = new passwordValidator();
 passwordSchema
-    .is().min(8)                                    // Must have at least 8 characters
-    .has().uppercase()                              // Must have uppercase letters
-    .has().lowercase()                              // Must have lowercase letters
-    .has().digits()                                 // Must have digits
-    .has().symbols();                               // Must have special characters
+    .is()
+    .min(8) // Must have at least 8 characters
+    .has()
+    .uppercase() // Must have uppercase letters
+    .has()
+    .lowercase() // Must have lowercase letters
+    .has()
+    .digits() // Must have digits
+    .has()
+    .symbols(); // Must have special characters
 
 /**
  * @desc    Register new user
@@ -30,7 +35,8 @@ const register = async (req, res) => {
         if (!passwordSchema.validate(password)) {
             return res.status(400).json({
                 message: 'Password is not strong enough.',
-                details: 'Password must have at least 8 characters, including uppercase, lowercase, numbers and special characters.'
+                details:
+                    'Password must have at least 8 characters, including uppercase, lowercase, numbers and special characters.',
             });
         }
 
@@ -74,8 +80,8 @@ const register = async (req, res) => {
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
+                pass: process.env.EMAIL_PASS,
+            },
         });
 
         const fs = require('fs');
@@ -88,7 +94,7 @@ const register = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Account Activation - Lumiere Cinema',
-            html: emailHtml
+            html: emailHtml,
         };
 
         await transporter.sendMail(mailOptions);
@@ -100,9 +106,8 @@ const register = async (req, res) => {
                 id: newUser._id,
                 name: newUser.name,
                 email: newUser.email,
-            }
+            },
         });
-
     } catch (error) {
         console.error('Register Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -120,15 +125,15 @@ const activateAccount = async (req, res) => {
             return res.status(400).json({ message: 'Activation token is required.' });
         }
 
-        const user = await User.findOne({ activationToken: token});
+        const user = await User.findOne({ activationToken: token });
 
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired activation token.\nConsider re-creating your account.' });
-        }
-        else if (user.activateStatus) {
+            return res
+                .status(400)
+                .json({ message: 'Invalid or expired activation token.\nConsider re-creating your account.' });
+        } else if (user.activateStatus) {
             return res.status(200).json({ message: 'Your account is already activated.' });
-        }
-        else if (user.activationExpires < Date.now()) {
+        } else if (user.activationExpires < Date.now()) {
             // Delete account if activation token is expired
             try {
                 await User.deleteOne({ _id: user._id });
@@ -140,14 +145,15 @@ const activateAccount = async (req, res) => {
                 await user.save();
                 console.error('Error deleting expired user account:', error);
             }
-            return res.status(400).json({ message: 'Invalid or expired activation token.\nConsider re-creating your account.' });
+            return res
+                .status(400)
+                .json({ message: 'Invalid or expired activation token.\nConsider re-creating your account.' });
         }
 
         user.activateStatus = true;
         await user.save();
 
         res.status(200).json({ message: 'Account activated successfully.' });
-
     } catch (error) {
         console.error('Activate Account Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -196,7 +202,9 @@ const login = async (req, res) => {
                 }
                 return res.status(401).json({ message: 'Email or password is incorrect.' });
             }
-            return res.status(403).json({ message: 'Your account is not activated. Please check your email for the activation link.' });
+            return res
+                .status(403)
+                .json({ message: 'Your account is not activated. Please check your email for the activation link.' });
         }
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -212,9 +220,8 @@ const login = async (req, res) => {
                 email: user.email,
                 roles: user.roles,
                 loyaltyRank: user.loyaltyRank || null,
-            }
+            },
         });
-
     } catch (error) {
         console.error('Login Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -242,7 +249,7 @@ const staffLogin = async (req, res) => {
         // Check if user has any staff role
         const staffRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
         const hasStaffRole = user.roles.some(role => staffRoles.includes(role));
-        
+
         if (!hasStaffRole) {
             return res.status(401).json({ message: 'Email or password is incorrect.' });
         }
@@ -259,10 +266,9 @@ const staffLogin = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 roles: user.roles,
-                branch: user.branch
-            }
+                branch: user.branch,
+            },
         });
-
     } catch (error) {
         console.error('Staff Login Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -300,7 +306,8 @@ const changePassword = async (req, res) => {
         if (!passwordSchema.validate(newPassword)) {
             return res.status(400).json({
                 message: 'New password is not strong enough.',
-                details: 'Password must have at least 8 characters, including uppercase, lowercase, numbers and special characters.'
+                details:
+                    'Password must have at least 8 characters, including uppercase, lowercase, numbers and special characters.',
             });
         }
 
@@ -313,7 +320,6 @@ const changePassword = async (req, res) => {
         await user.save();
 
         res.status(200).json({ message: 'Password changed successfully.' });
-
     } catch (error) {
         console.error('Change Password Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -335,15 +341,15 @@ const forgotPassword = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) {
             // Don't reveal if user exists or not for security
-            return res.status(200).json({ 
-                message: 'If the email exists in our system, a password reset link has been sent.' 
+            return res.status(200).json({
+                message: 'If the email exists in our system, a password reset link has been sent.',
             });
         }
 
         // Check if user is a customer (only customers can use /forgot-password)
         if (!user.roles.includes('customer')) {
-            return res.status(200).json({ 
-                message: 'If the email exists in our system, a password reset link has been sent.' 
+            return res.status(200).json({
+                message: 'If the email exists in our system, a password reset link has been sent.',
             });
         }
 
@@ -364,8 +370,8 @@ const forgotPassword = async (req, res) => {
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
+                pass: process.env.EMAIL_PASS,
+            },
         });
 
         const fs = require('fs');
@@ -377,15 +383,14 @@ const forgotPassword = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Password Reset Request - Lumiere Cinema',
-            html: emailHtml
+            html: emailHtml,
         };
 
         await transporter.sendMail(mailOptions);
 
-        res.status(200).json({ 
-            message: 'If the email exists in our system, a password reset link has been sent.' 
+        res.status(200).json({
+            message: 'If the email exists in our system, a password reset link has been sent.',
         });
-
     } catch (error) {
         console.error('Forgot Password Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -407,18 +412,18 @@ const staffForgotPassword = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) {
             // Don't reveal if user exists or not for security
-            return res.status(200).json({ 
-                message: 'If the email exists in our system, a password reset link has been sent.' 
+            return res.status(200).json({
+                message: 'If the email exists in our system, a password reset link has been sent.',
             });
         }
 
         // Check if user has any staff role
         const staffRoles = ['cashier', 'checkincounter', 'branchmanager', 'administrator'];
         const hasStaffRole = user.roles.some(role => staffRoles.includes(role));
-        
+
         if (!hasStaffRole) {
-            return res.status(200).json({ 
-                message: 'If the email exists in our system, a password reset link has been sent.' 
+            return res.status(200).json({
+                message: 'If the email exists in our system, a password reset link has been sent.',
             });
         }
 
@@ -439,8 +444,8 @@ const staffForgotPassword = async (req, res) => {
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
+                pass: process.env.EMAIL_PASS,
+            },
         });
 
         const fs = require('fs');
@@ -452,15 +457,14 @@ const staffForgotPassword = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Password Reset Request - Lumiere Cinema',
-            html: emailHtml
+            html: emailHtml,
         };
 
         await transporter.sendMail(mailOptions);
 
-        res.status(200).json({ 
-            message: 'If the email exists in our system, a password reset link has been sent.' 
+        res.status(200).json({
+            message: 'If the email exists in our system, a password reset link has been sent.',
         });
-
     } catch (error) {
         console.error('Staff Forgot Password Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });
@@ -486,7 +490,7 @@ const resetPassword = async (req, res) => {
         // Find user with valid token
         const user = await User.findOne({
             passwordResetToken: token,
-            passwordResetExpires: { $gt: Date.now() }
+            passwordResetExpires: { $gt: Date.now() },
         });
 
         if (!user) {
@@ -497,7 +501,8 @@ const resetPassword = async (req, res) => {
         if (!passwordSchema.validate(newPassword)) {
             return res.status(400).json({
                 message: 'New password is not strong enough.',
-                details: 'Password must have at least 8 characters, including uppercase, lowercase, numbers and special characters.'
+                details:
+                    'Password must have at least 8 characters, including uppercase, lowercase, numbers and special characters.',
             });
         }
 
@@ -512,7 +517,6 @@ const resetPassword = async (req, res) => {
         await user.save();
 
         res.status(200).json({ message: 'Password reset successful.' });
-
     } catch (error) {
         console.error('Reset Password Error:', error);
         res.status(500).json({ message: 'A server error occurred.' });

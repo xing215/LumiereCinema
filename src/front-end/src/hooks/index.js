@@ -36,6 +36,9 @@ export {
     useClearSession,
     useCheckin,
     useActiveTicket,
+    useGetTicketDetailsByCode,
+    useUpdateTicketStatus,
+    useGetSnacksByBranch,
 } from './useTicket';
 
 // Export all report hooks

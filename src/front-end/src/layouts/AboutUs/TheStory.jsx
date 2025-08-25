@@ -2,7 +2,7 @@ import Logo from '@assets/img/Logo.svg';
 
 const TheStory = () => {
     return (
-        <section className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 py-6 md:flex-row">
+        <section className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 py-6 lg:flex-row">
             {/* Logo bên trái */}
             <div className="flex w-full items-center justify-center md:w-1/3">
                 <img src={Logo} alt="Lumiere Logo" className="h-auto w-[170px] object-contain md:w-[300px]" />

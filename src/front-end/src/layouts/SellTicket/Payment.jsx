@@ -60,31 +60,52 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
     const [selectedPayment, setSelectedPayment] = useState('');
     const [timeLeft, setTimeLeft] = useState(null);
     const [isExpired, setIsExpired] = useState(false);
-    const [customerInfo, setCustomerInfo] = useState('');
+    const [customerPhone, setCustomerPhone] = useState(''); // Always store the phone number
+    const [customerDisplayName, setCustomerDisplayName] = useState(''); // Store found user's name
+    const [isShowingUserName, setIsShowingUserName] = useState(false); // Flag to show if displaying user name
     const [discountValue, setDiscountValue] = useState('');
-    const [displayingName, setDisplayingName] = useState(false);
+    const [isApplyingPromotion, setIsApplyingPromotion] = useState(false); // Prevent duplicate calls
     const customerInputRef = useRef(null);
     const discountInputRef = useRef(null);
-    const typingTimeoutRef = useRef(null);
+
+    // =============================================================================
+    // UTILITY FUNCTIONS
+    // =============================================================================
+    
+    // Helper function to extract customer information from various sources
+    const getCustomerInfo = (userFromResponse = null) => {
+        // Priority 1: User from backend response (promotion success/error)
+        if (userFromResponse?.name) {
+            console.log('Customer info found from backend response:', userFromResponse.name);
+            return userFromResponse.name;
+        }
+        
+        // Priority 2: Existing customer info in ticket data
+        const movieCustomerInfo = safeMovieTicketData?.noLoginCustomerInfo;
+        const snackCustomerInfo = safeSnackTicketData?.noLoginCustomerInfo;
+        
+        if (movieCustomerInfo?.name && movieCustomerInfo.name !== 'in-store customer') {
+            console.log('Customer info found from movie ticket data:', movieCustomerInfo.name);
+            return movieCustomerInfo.name;
+        } else if (snackCustomerInfo?.name && snackCustomerInfo.name !== 'in-store customer') {
+            console.log('Customer info found from snack ticket data:', snackCustomerInfo.name);
+            return snackCustomerInfo.name;
+        }
+        
+        if (customerDisplayName) {
+            console.log('Customer phone found from movie ticket data:', customerDisplayName);
+            return `${customerDisplayName}`;
+        }
+        
+        console.log('No customer information found');
+        return null;
+    };
 
     // =============================================================================
     // HOOKS
     // =============================================================================
 
     const { applyPromotion, appliedPromotion, loading: promotionLoading, error } = useApplyPromotion();
-
-    // =============================================================================
-    // CLEANUP EFFECTS
-    // =============================================================================
-
-    // Cleanup timeout on component unmount
-    useEffect(() => {
-        return () => {
-            if (typingTimeoutRef.current) {
-                clearTimeout(typingTimeoutRef.current);
-            }
-        };
-    }, []);
 
     // =============================================================================
     // TIMER MANAGEMENT EFFECTS
@@ -106,6 +127,8 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
             setIsExpired(difference === 0);
             if (difference === 0 && !expiredCalled) {
                 expiredCalled = true;
+                // Clear all selections when session expires
+                clearAllSelections();
                 if (typeof onExpire === 'function') onExpire();
             }
         };
@@ -136,25 +159,35 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
             if (finalMovieDiscount === 0) {
                 updateMovieTicket({ promotion: null, discount: 0 });
             }
+            
             console.log(user);
-            if (user?.name) {
-                setDisplayingName(true);
-                setCustomerInfo(user?.name);
+            
+            // Get customer name using the utility function
+            const customerName = getCustomerInfo(user);
+            
+            if (customerName) {
+                setCustomerDisplayName(customerName);
+                setIsShowingUserName(true);
             } else {
-                setDisplayingName(true);
-                setCustomerInfo('No user found');
+                setCustomerDisplayName('No customer found');
+                setIsShowingUserName(true);
             }
         }
 
         if (error) {
             console.error('Promotion application error:', error);
-            if (error?.user?.name) {
-                setDisplayingName(true);
-                setCustomerInfo(error?.user?.name);
+            
+            // Get customer name using the utility function
+            const customerName = getCustomerInfo(error?.user);
+            
+            if (customerName) {
+                setCustomerDisplayName(customerName);
+                setIsShowingUserName(true);
             } else {
-                setDisplayingName(true);
-                setCustomerInfo('No user found');
+                setCustomerDisplayName('No customer found');
+                setIsShowingUserName(true);
             }
+            
             showError('Promotion Error', `Error applying promotion: ${error?.message}`, 1000);
             setDiscountValue('');
             updateMovieTicket({ promotion: null, discount: 0 });
@@ -165,6 +198,40 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
     // =============================================================================
     // EVENT HANDLERS
     // =============================================================================
+
+    // Clear all selections when session expires
+    const clearAllSelections = () => {
+        // Clear movie ticket data
+        updateMovieTicket({ 
+            seats: [],
+            selectedSeats: [],
+            scheduleId: null,
+            movieId: null,
+            total: 0,
+            promotion: null,
+            discount: 0,
+            noLoginCustomerInfo: null
+        });
+
+        // Clear snack ticket data
+        updateSnackTicket({ 
+            snacks: [],
+            selectedSnacks: [],
+            total: 0,
+            promotion: null,
+            discount: 0,
+            noLoginCustomerInfo: null
+        });
+
+        // Clear local form state
+        setCustomerPhone('');
+        setCustomerDisplayName('');
+        setIsShowingUserName(false);
+        setDiscountValue('');
+        setSelectedPayment('');
+
+        console.log('All selections cleared due to session expiry');
+    };
 
     const handleSelectPayment = async (method) => {
         if (isExpired) {
@@ -178,30 +245,32 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
     };
 
     const handleCustomerInfoChange = (e) => {
-        if (displayingName) setDisplayingName(false);
-        setCustomerInfo(e.target.value);
+        const newValue = e.target.value;
+        setCustomerPhone(newValue);
+        
+        // If user starts typing, hide the user name display
+        if (isShowingUserName) {
+            setIsShowingUserName(false);
+            setCustomerDisplayName('');
+        }
     };
 
     const handleCustomerInfoBlurOrEnter = async (e) => {
-        if (!displayingName) {
-            if (customerInfo.trim()) {
-                if (updateMovieTicket)
-                    updateMovieTicket({
-                        noLoginCustomerInfo: {
-                            phone: customerInfo.trim(),
-                            name: 'in-store customer',
-                            email: null,
-                        },
-                    });
+        // Always use the phone number for backend communication
+        const phoneToUse = customerPhone.trim();
+        if (phoneToUse) {
+            const customerInfo = {
+                phone: phoneToUse,
+                name: 'in-store customer',
+                email: null,
+            };
 
-                if (snackTicketData)
-                    updateSnackTicket({
-                        noLoginCustomerInfo: {
-                            phone: customerInfo.trim(),
-                            name: 'in-store customer',
-                            email: null,
-                        },
-                    });
+            if (updateMovieTicket) {
+                updateMovieTicket({ noLoginCustomerInfo: customerInfo });
+            }
+
+            if (snackTicketData) {
+                updateSnackTicket({ noLoginCustomerInfo: customerInfo });
             }
         }
     };
@@ -210,11 +279,6 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
         const newValue = e.target.value;
         setDiscountValue(newValue);
 
-        // Clear any existing timeout
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-        }
-
         // If user clears the input, immediately clear promotions
         if (!newValue.trim()) {
             updateMovieTicket({ promotion: null, discount: 0 });
@@ -222,43 +286,85 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
             return;
         }
 
-        // This is typing - debounce the API call
-        typingTimeoutRef.current = setTimeout(() => {
-            applyPromotionCode(newValue.trim());
-        }, 1000); // Wait 1 second after user stops typing
+        // Only update the input value, don't send requests while typing
     };
 
-    const handleDiscountBlurOrEnter = async (e) => {
-        // Clear any pending timeout since user has finished input
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
+    // Alternative handler for dropdown component
+    const handleDropdownBlur = async () => {
+        console.log('handleDropdownBlur called, discountValue:', discountValue);
+        
+        // Prevent duplicate calls
+        if (isApplyingPromotion) {
+            console.log('Already applying promotion, skipping...');
+            return;
         }
 
         const currentValue = discountValue.trim();
 
         if (!currentValue) {
-            return; // Already handled in onChange
+            console.log('No discount value, returning early');
+            return;
         }
 
-        // Apply immediately when user finishes input
+        console.log('Applying promotion code from dropdown:', currentValue);
         await applyPromotionCode(currentValue);
     };
 
-    // Helper function to apply promotion code
-    const applyPromotionCode = async (code) => {
-        if (!code || appliedPromotion?.promotion?.promotionCode === code) {
-            return; // Don't apply if empty or already applied
+    const handleDropdownSelect = async (e) => {
+        console.log('handleDropdownSelect called, value:', e.target.value);
+        
+        if (isApplyingPromotion) {
+            console.log('Already applying promotion, skipping selection...');
+            return;
         }
 
+        const selectedValue = e.target.value.trim();
+
+        if (!selectedValue) {
+            console.log('No discount value from selection, returning early');
+            return;
+        }
+
+        // Update the discount value state first to reflect the selection
+        setDiscountValue(selectedValue);
+        
+        console.log('Applying promotion code from selection:', selectedValue);
+        // Use the selected value directly instead of discountValue state to avoid timing issues
+        await applyPromotionCode(selectedValue);
+    };
+
+    const handleDropdownKeyDown = async (e) => {
+        console.log('handleDropdownKeyDown called with key:', e.key);
+    };
+
+    const applyPromotionCode = async (code) => {
+        if (!code || appliedPromotion?.promotion?.promotionCode === code) {
+            console.log('Skipping promotion application - empty code or already applied');
+            return; 
+        }
+
+        if (isApplyingPromotion) {
+            console.log('Already applying promotion, skipping duplicate call...');
+            return;
+        }
+
+        setIsApplyingPromotion(true);
+        console.log('Setting isApplyingPromotion to true');
+
         customerInputRef.current?.blur();
+
+        const customerInfoForPromotion = customerPhone.trim() ? {
+            phone: customerPhone.trim(),
+            name: 'in-store customer',
+            email: null,
+        } : (safeMovieTicketData?.noLoginCustomerInfo || safeSnackTicketData?.noLoginCustomerInfo);
 
         console.log('Applying promotion with data:', {
             promotionCode: code,
             snackTotal: safeSnackTicketData?.total,
             movieTotal: safeMovieTicketData?.total,
-            noLoginCustomerInfo: safeMovieTicketData?.noLoginCustomerInfo || safeSnackTicketData?.noLoginCustomerInfo,
-            snackTicketData: safeSnackTicketData,
-            movieTicketData: safeMovieTicketData,
+            noLoginCustomerInfo: customerInfoForPromotion,
+            customerPhone: customerPhone, // Debug log
         });
 
         try {
@@ -266,10 +372,15 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
                 promotionCode: code,
                 snackTotal: safeSnackTicketData?.total || 0,
                 movieTotal: safeMovieTicketData?.total || 0,
-                noLoginCustomerInfo: safeMovieTicketData?.noLoginCustomerInfo || safeSnackTicketData?.noLoginCustomerInfo,
+                noLoginCustomerInfo: customerInfoForPromotion,
             });
         } catch (err) {
             console.error('Error in applyPromotionCode:', err);
+        } finally {
+            setTimeout(() => {
+                setIsApplyingPromotion(false);
+                console.log('Setting isApplyingPromotion to false');
+            }, 500); // Small delay to prevent rapid re-triggers
         }
     };
 
@@ -297,10 +408,11 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
                             <input
                                 ref={customerInputRef}
                                 type="text"
-                                value={customerInfo}
+                                value={isShowingUserName ? customerDisplayName : customerPhone}
                                 onChange={handleCustomerInfoChange}
                                 onBlur={handleCustomerInfoBlurOrEnter}
-                                className="mb-2 h-10 w-[65%] rounded-md border bg-zinc-300 px-2 font-['Unbounded'] text-black"
+                                placeholder="Enter phone number"
+                                className={`mb-2 h-10 w-[65%] rounded-md border bg-zinc-300 px-2 font-['Unbounded'] text-black ${isShowingUserName ? 'border-green-500 border-2' : 'border-white'}`}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         customerInputRef.current?.blur();
@@ -327,7 +439,9 @@ const Payment = ({ createTicket, sessionExpiresAt, onExpire, movieTicketData, sn
                             <PromotionDropdown
                                 value={discountValue}
                                 onChange={handleDiscountChange}
-                                onBlur={handleDiscountBlurOrEnter}
+                                onBlur={handleDropdownBlur}
+                                onKeyDown={handleDropdownKeyDown}
+                                onSelect={handleDropdownSelect}
                                 promotion={movieTicketData?.promotion || snackTicketData?.promotion}
                                 productType={movieTicketData && snackTicketData ? 'All' : movieTicketData ? 'Movie' : 'Snack'}
                                 className="h-10 w-[65%]"

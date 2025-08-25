@@ -98,17 +98,19 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
         <>
             <div
                 ref={cardRef}
-                className={`group relative aspect-[300/470] h-full justify-start overflow-hidden bg-transparent shadow-lg ${page === 'Home' ? 'min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'}`}
+                className={`group relative aspect-[300/470] h-full justify-start overflow-hidden bg-transparent shadow-lg ${
+                    page === 'Home' ? 'min-w-[85px] sm:min-w-[100px] md:min-w-1/3 lg:min-w-1/4 xl:min-w-1/6' : 'h-full w-full'
+                }`}
                 onMouseEnter={() => setShowOverlay(true)}
                 onMouseLeave={() => setShowOverlay(false)}
                 onTouchStart={() => setShowOverlay(true)}
             >
-                <div className="relative flex h-full w-full flex-col overflow-hidden rounded-sm md:rounded-lg lg:rounded-xl xl:rounded-2xl">
+                <div className="relative flex h-full w-full flex-col overflow-hidden rounded-lg md:rounded-lg lg:rounded-xl xl:rounded-2xl">
                     <img
                         src={linkImg}
                         alt={movie?.title || 'Movie'}
                         className={[
-                            'h-full w-full rounded-sm object-cover text-white transition-all duration-200 md:rounded-lg lg:rounded-xl xl:rounded-2xl',
+                            'h-full w-full rounded-lg object-cover text-white transition-all duration-200 md:rounded-lg lg:rounded-xl xl:rounded-2xl',
                             showOverlay ? 'blur-sm' : '',
                             !showOverlay ? 'group-hover:blur-sm' : '',
                         ].join(' ')}
@@ -122,7 +124,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                             className={[
                                 'absolute inset-0 z-10 opacity-100',
                                 'pointer-events-none transition-opacity duration-200',
-                                'rounded-sm',
+                                'rounded-lg',
                                 'md:rounded-lg',
                                 'lg:rounded-xl',
                                 'xl:rounded-2xl',
@@ -135,7 +137,7 @@ const MovieCard = ({ movie, page, selectedBranch = undefined }) => {
                             className={[
                                 'absolute inset-0 z-10 opacity-0 group-hover:opacity-100',
                                 'pointer-events-none transition-opacity duration-200',
-                                'rounded-sm',
+                                'rounded-lg',
                                 'md:rounded-lg',
                                 'lg:rounded-xl',
                                 'xl:rounded-2xl',

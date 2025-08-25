@@ -183,9 +183,14 @@ const SellTicket = () => {
     }, [branch]);
 
     useEffect(() => {
-        fetchNowShowing();
-        fetchComingSoon();
-    }, []);
+        if (cashierBranchId) {
+            fetchNowShowing(cashierBranchId);
+            fetchComingSoon(cashierBranchId);
+        } else {
+            fetchNowShowing();
+            fetchComingSoon();
+        }
+    }, [cashierBranchId]);
 
     useEffect(() => {
         if (snackTicketData?.branch?._id) {
@@ -364,7 +369,12 @@ const SellTicket = () => {
     useEffect(() => {
         if (startedHoldSession) {
             setStartedHoldSession(false);
-            clearSession();
+            // Clear session immediately when seats change
+            clearSession().then(() => {
+                console.log('Session cleared after seat change');
+            }).catch(err => {
+                console.error('Error clearing session after seat change:', err);
+            });
             updateMovieTicket({
                 promotion: null,
                 discount: 0,

@@ -7,6 +7,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@styles/datepicker.css';
 import { showError } from '@/utils/sweetalert';
+import ShowIcon from '@assets/icons/show.svg';
+import HideIcon from '@assets/icons/hide.svg';
 
 const TickButton = ({ onTick, check }) => {
     return (
@@ -25,18 +27,42 @@ const Role = ({ index, role, isChecked, onTick }) => {
     );
 };
 
-const InputTemplate = ({ text, className, value, onChange, type = 'text', disabled = false }) => {
+const InputTemplate = ({ text, className, value, onChange, type = 'text', disabled = false, autoComplete }) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const isPassword = type === 'password';
     return (
         <div className={`relative justify-start text-start ${className || ''}`}>
             <p className="font-libre-franklin relative text-xl font-normal text-white">{text}</p>
-            <input
-                type={type}
-                value={value || ''}
-                onChange={(e) => onChange && onChange(e.target.value)}
-                disabled={disabled}
-                className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 font-['Unbounded'] text-base text-black shadow-sm transition-shadow duration-200 placeholder:text-gray-500 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
-                placeholder={disabled ? 'Read-only' : `Enter ${text.toLowerCase()}`}
-            />
+            <div className="relative">
+                <input
+                    type={isPassword && showPassword ? 'text' : type}
+                    value={value || ''}
+                    onChange={(e) => onChange && onChange(e.target.value)}
+                    disabled={disabled}
+                    autoComplete={autoComplete}
+                    className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 ${isPassword ? 'pr-10' : ''} font-['Unbounded'] text-base text-black shadow-sm transition-shadow duration-200 placeholder:text-gray-500 hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                    placeholder={disabled ? 'Read-only' : `Enter ${text.toLowerCase()}`}
+                    style={
+                        isPassword
+                            ? {
+                                  WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                              }
+                            : {}
+                    }
+
+                />
+                {isPassword && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={disabled}
+                        className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 transform items-center justify-center text-gray-600 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <img src={showPassword ? HideIcon : ShowIcon} alt={showPassword ? 'Hide password' : 'Show password'} className="h-full w-full filter" />
+
+                    </button>
+                )}
+            </div>
         </div>
     );
 };
@@ -243,11 +269,19 @@ const EditAccountInformationModal = ({ onClose, handleConfirm, isEdit = false, a
                     </div>
                     <InputTemplate text="Email" className="w-[100%]" type="email" value={accountData?.email || ''} onChange={(value) => handleFieldChange('email', value)} />
                     <InputTemplate text="Phone Number" className="w-[100%]" type="tel" value={accountData?.phone || ''} onChange={(value) => handleFieldChange('phone', value)} />
-                    {!isEdit && <InputTemplate text="Password" className="w-[100%]" type="password" value={accountData?.password || ''} onChange={(value) => handleFieldChange('password', value)} />}
+                    {!isEdit && (
+                        <InputTemplate
+                            text="Password"
+                            className="w-[100%]"
+                            type="password"
+                            value={accountData?.password || ''}
+                            onChange={(value) => handleFieldChange('password', value)}
+                            autoComplete="new-password"
+                        />
+                    )}
                     {/* Show branch dropdown if user has staff roles (cashier, checkin, branchmanager) 
                         OR if admin has additional staff roles */}
-                    {([2, 3, 4].some(chosenRole.has, chosenRole) || 
-                      (chosenRole.has(5) && chosenRole.size > 1 && [2, 3, 4].some(role => chosenRole.has(role)))) ? (
+                    {[2, 3, 4].some(chosenRole.has, chosenRole) || (chosenRole.has(5) && chosenRole.size > 1 && [2, 3, 4].some((role) => chosenRole.has(role))) ? (
                         <DropdownTemplate
                             text="Branch"
                             className="w-[100%]"

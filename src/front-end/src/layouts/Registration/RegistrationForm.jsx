@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@styles/datepicker.css';
+import { CalendarIcon } from 'lucide-react';
 import { useUser } from '@contexts/UserContext';
 import { useRegister } from '@hooks/useAuth';
 import { ROUTES } from '@routes/routeConfig';
@@ -12,6 +16,7 @@ const RegistrationForm = () => {
     const navigate = useNavigate();
     const { login } = useUser();
     const { registerUser, loading, error } = useRegister();
+    const datePickerRef = useRef(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -111,6 +116,30 @@ const RegistrationForm = () => {
         }
     };
 
+    const handleDateChange = (date) => {
+        if (date) {
+            const formattedDate = date.toISOString().split('T')[0];
+            setFormData((prev) => ({
+                ...prev,
+                birthday: formattedDate,
+            }));
+            const error = validateField('birthday', formattedDate);
+            setErrors((prev) => ({
+                ...prev,
+                birthday: error,
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                birthday: '',
+            }));
+            setErrors((prev) => ({
+                ...prev,
+                birthday: '',
+            }));
+        }
+    };
+
     const [registered, setRegistered] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -194,14 +223,39 @@ const RegistrationForm = () => {
                         <div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
                             <div className="flex-1">
                                 <label className="mb-2 block font-['Libre_Franklin'] text-sm font-bold text-white sm:text-base md:text-lg lg:text-xl">Birthday</label>
-                                <input
-                                    type="date"
-                                    name="birthday"
-                                    value={formData.birthday}
-                                    onChange={handleInputChange}
-                                    className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 text-black focus:ring-2 focus:outline-none sm:h-11 sm:px-4 md:h-12 lg:h-13 xl:h-14 ${errors.birthday ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
-                                    required
-                                />
+                                <div className="relative overflow-visible">
+                                    <div className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 transform">
+                                        <CalendarIcon className="h-4 w-4 text-gray-500" />
+                                    </div>
+                                    <DatePicker
+                                        ref={datePickerRef}
+                                        selected={formData.birthday ? new Date(formData.birthday) : null}
+                                        onChange={handleDateChange}
+                                        dateFormat="dd/MM/yyyy"
+                                        className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 pr-8 pl-10 text-black focus:ring-2 focus:outline-none sm:h-11 md:h-12 lg:h-13 xl:h-14 ${errors.birthday ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                                        calendarClassName="react-datepicker-custom"
+                                        showPopperArrow={false}
+                                        autoComplete="off"
+                                        placeholderText="Select birthday"
+                                        isClearable
+                                        todayButton="Today"
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
+                                        maxDate={new Date()}
+                                        minDate={new Date('1900-01-01')}
+                                        shouldCloseOnSelect={true}
+                                        popperPlacement="bottom-start"
+                                        popperModifiers={{
+                                            preventOverflow: {
+                                                enabled: true,
+                                                escapeWithReference: false,
+                                                boundariesElement: 'viewport',
+                                            },
+
+                                        }}
+                                    />
+                                </div>
                                 {errors.birthday && <p className="mt-1 font-['Libre_Franklin'] text-xs text-red-400 sm:text-sm">{errors.birthday}</p>}
                             </div>
                             <div className="flex-1">
@@ -265,7 +319,16 @@ const RegistrationForm = () => {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleInputChange}
+                                    autoComplete="new-password"
                                     className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.password ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                                    style={{
+                                        WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                                        // Hide browser's password reveal button
+                                        '&::-ms-reveal': { display: 'none' },
+                                        '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
+                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' },
+
+                                    }}
                                     required
                                 />
                                 <button
@@ -288,7 +351,16 @@ const RegistrationForm = () => {
                                     name="retypePassword"
                                     value={formData.retypePassword}
                                     onChange={handleInputChange}
+                                    autoComplete="new-password"
                                     className={`bg-opacity-70 h-10 w-full rounded-lg bg-zinc-300 px-3 pr-10 text-black placeholder-gray-600 focus:ring-2 focus:outline-none sm:h-11 sm:px-4 sm:pr-12 md:h-12 lg:h-13 xl:h-14 ${errors.retypePassword ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-purple-500'} focus:bg-opacity-90 font-['Unbounded'] text-sm sm:text-base md:text-lg`}
+                                    style={{
+                                        WebkitTextSecurity: showRetypePassword ? 'none' : 'disc',
+                                        // Hide browser's password reveal button
+                                        '&::-ms-reveal': { display: 'none' },
+                                        '&::-webkit-credentials-auto-fill-button': { display: 'none !important' },
+                                        '&::-webkit-strong-password-auto-fill-button': { display: 'none !important' },
+
+                                    }}
                                     required
                                 />
                                 <button

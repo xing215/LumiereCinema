@@ -6,6 +6,7 @@ import { useGetWishlist, useRemoveFromWishlist } from '@/hooks/useUser';
 import MovieCard from '@/components/UI/MovieCard';
 import { AlignJustify, Grid3X3, Trash2 } from 'lucide-react';
 import TickButton from '@/components/buttons/Staff/TickButton';
+import { showConfirmation, showDeletingItems, showItemsDeleted, showOperationError, showWarning, showSuccess } from '@/utils/sweetalert';
 
 const Wishlist = () => {
     const location = useLocation();
@@ -21,7 +22,6 @@ const Wishlist = () => {
     const [filterStatus, setFilterStatus] = useState('All'); // 'All', 'Now Showing', 'Up Coming'
     const itemsPerPage = viewMode === 'grid' ? 6 : 5; // Grid: 6 cards, List: 5 rows
     const [selectedMovies, setSelectedMovies] = useState([]); // Array of selected movie IDs
-    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
     useEffect(() => {
         getWishlist();
@@ -74,30 +74,43 @@ const Wishlist = () => {
     // Handle delete selected movies
     const handleDeleteSelected = async () => {
         if (selectedMovies.length === 0) {
-            setShowDeleteAlert(true);
+            await showWarning('No Selection', 'Please select at least one movie to remove from your wishlist.');
+
             return;
         }
 
-        const confirmDelete = window.confirm(`Are you sure you want to remove ${selectedMovies.length} movie(s) from your wishlist?`);
-        if (!confirmDelete) return;
+        const movieCount = selectedMovies.length;
+        const movieText = movieCount === 1 ? 'movie' : 'movies';
+        const confirmation = await showConfirmation(
+            `Remove ${movieText} from Wishlist?`,
+            `Are you sure you want to remove ${movieCount} ${movieText} from your wishlist? This action cannot be undone!`,
+            'Remove',
+            'Cancel',
+        );
+
+        if (!confirmation.isConfirmed) return;
 
         try {
+            // Show loading
+            showDeletingItems('movies from wishlist', movieCount);
+
             // Remove movies one by one (you could batch this if backend supports it)
             for (const movieId of selectedMovies) {
                 await removeFromWishlist(movieId);
             }
 
+            // Show success with custom message
+            const successTitle = movieCount === 1 ? 'Movie Removed!' : 'Movies Removed!';
+            const successText = movieCount === 1 ? 'The movie has been successfully removed from your wishlist.' : `${movieCount} movies have been successfully removed from your wishlist.`;
+            await showSuccess(successTitle, successText, 3000);
             // Refresh wishlist and clear selections
             await getWishlist();
             setSelectedMovies([]);
         } catch (error) {
             console.error('Error removing movies from wishlist:', error);
-        }
-    };
+            await showOperationError('Remove from wishlist', error?.message || 'Failed to remove movies from wishlist. Please try again.');
 
-    // Handle close alert
-    const handleCloseAlert = () => {
-        setShowDeleteAlert(false);
+        }
     };
 
     const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -199,21 +212,6 @@ const Wishlist = () => {
 
     return (
         <div className="relative flex w-full items-center justify-center overflow-hidden">
-            {/* Alert Popup */}
-            {showDeleteAlert && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="mx-4 w-[90%] max-w-sm rounded-lg bg-zinc-800 p-6">
-                        <h3 className="mb-4 font-['Libre_Franklin'] text-lg font-bold text-white">No Selection</h3>
-                        <p className="mb-6 font-['Unbounded'] text-sm text-white opacity-75">Please select at least one movie to delete from your wishlist.</p>
-                        <div className="flex justify-center">
-                            <button onClick={handleCloseAlert} className="rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-500">
-                                OK
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="relative flex h-full w-full flex-col items-center justify-center rounded-xl md:min-h-[470px] md:flex-row md:items-start md:justify-start md:gap-3 lg:h-auto">
                 {/* Main Content */}
                 <div className="relative h-auto w-full">

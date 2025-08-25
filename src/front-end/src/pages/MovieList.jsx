@@ -64,11 +64,12 @@ const MainBody = () => {
     }, [branches, searchParams]);
 
     useEffect(() => {
-        fetchNowShowing();
-        fetchComingSoon();
-    }, []);
+        const branchId = selectedBranch?._id || null;
+        fetchNowShowing(branchId);
+        fetchComingSoon(branchId);
+    }, [selectedBranch]);
 
-    // Combine and filter movies based on status filter and selected branch
+    // Combine and filter movies based on status filter
     let allMovies = [...nowShowingMovies, ...upcomingMovies];
     let filteredMovies = allMovies;
     if (movieStatusFilter === 'now') {
@@ -76,9 +77,7 @@ const MainBody = () => {
     } else if (movieStatusFilter === 'up') {
         filteredMovies = filteredMovies.filter((m) => m.status === 'Upcoming');
     }
-    if (selectedBranch && selectedBranch._id) {
-        filteredMovies = filteredMovies.filter((m) => Array.isArray(m.branches) && m.branches.includes(String(selectedBranch._id)));
-    }
+
     // Sort movies: movies with schedules (branches) first, then movies without schedules
     filteredMovies = filteredMovies.sort((a, b) => {
         const aHasSchedules = Array.isArray(a.branches) && a.branches.length > 0;
